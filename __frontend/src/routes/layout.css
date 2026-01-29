@@ -37,6 +37,29 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+    --mbo-dark-blue: #011555;
+    --mbo-tangy-blue: #0228aa;
+    --mbo-midnight-blue: #022275;
+    --mbo-light-blue: #ebf0ff;
+    --mbo-electric-blue: #2353ff;
+    --mbo-cardano-blue: #002891;
+    --mbo-orange: #fd551f;
+    --mbo-dark-orange: #d63f1e;
+    --mbo-white: #fff;
+    --mbo-black: #000;
+    --mbo-dark-grey: #575757;
+    --mbo-grey: #a5a6a7;
+    --mbo-light-green: #d7fce0;
+    --mbo-light-yellow: #ece5cd;
+    --mbo-vibrant-yellow: #fec104;
+    --mbo-yellow: #f4c43b;
+    --mbo-light-oatmeal: #efede1;
+    --mbo-text-gray: #506288;
+    --mbo-primary-surface: #3052f51f;
+    --mbo-text-black: #212a3d;
+    --mbo-darker-blue: #010e7d;
+    --mbo-black-700: #1b1f27;
+    --mbo-sky-blue: #C8D5FD;
 }
 
 .dark {
