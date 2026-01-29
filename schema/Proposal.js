@@ -29,6 +29,22 @@ const proposalSchema = new Schema(
             type: [String],
             required: false,
         },
+        mileStones: {
+            type: [{
+                title: String,
+                description: String,
+                dueDate: Date,
+            }],
+            required: false,
+        },
+        totalBudget: {
+            type: Number,
+            required: true,
+        },
+        conversionRate: {
+            type: Number,
+            required: true,
+        },
         status: {
             type: String,
             required: true,
@@ -41,6 +57,10 @@ const proposalSchema = new Schema(
                 comment: String,
                 date: Date,
             },
+            required: false,
+        },
+        submittedAt: {
+            type: Date,
             required: false,
         },
         createdAt: {

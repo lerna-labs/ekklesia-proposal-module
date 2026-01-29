@@ -6,7 +6,7 @@ const categorySchema = new Schema(
         budgetId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Budget",
-            required: true,
+            required: false,
         },
         title: {
             type: String,
@@ -16,6 +16,11 @@ const categorySchema = new Schema(
             type: String,
             required: true,
         },
+        pillar: { type: String },
+        pillarDescription: { type: String },
+        highLevelThematicArea: { type: String },
+        descriptionStrategy: { type: String },
+        expectedEnhancement: { type: String },
     },
     {
         timestamps: true,
