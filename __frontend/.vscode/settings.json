@@ -1,5 +1,16 @@
 {
-	"files.associations": {
-		"*.css": "tailwindcss"
-	}
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "workbench.colorCustomizations": {
+    "panel.border": "#d4ebf2",
+    "sash.hoverBorder": "#d4ebf2",
+    "sideBar.border": "#d4ebf2",
+    "statusBar.background": "#add8e6",
+    "statusBar.foreground": "#15202b",
+    "statusBarItem.hoverBackground": "#86c5da",
+    "statusBarItem.remoteBackground": "#add8e6",
+    "statusBarItem.remoteForeground": "#15202b"
+  },
+  "peacock.color": "lightblue"
 }
