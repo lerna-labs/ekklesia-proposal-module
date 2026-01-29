@@ -1,6 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
+  import BudgetConversion from "$lib/BudgetConversion.svelte";
 
   /**
    * @typedef {Object} Proposal
@@ -9,14 +10,15 @@
    * @property {string} [description]
    * @property {number} [amount]
    * @property {number} [totalBudget]
+   * @property {number} [conversionRate]
    * @property {string} [category]
    * @property {string} [status]
    * @property {string} [_id]
    * @property {string} [id]
    */
 
-	/** @type {{ proposal: Proposal, budgetSlug?: string, class?: string }} */
-	let { proposal, budgetSlug, class: className } = $props();
+  /** @type {{ proposal: Proposal, budgetSlug?: string, class?: string }} */
+  let { proposal, budgetSlug, class: className } = $props();
 
   const proposalHref = $derived(
     budgetSlug && (proposal._id || proposal.id)
@@ -47,16 +49,20 @@
     {/if}
     {#if proposal.totalBudget !== undefined}
       <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-muted-foreground">Total Budget:</span>
-        <span class="text-sm font-semibold">
-          ${proposal.totalBudget?.toLocaleString() || "0"}
+        <span class="text-sm font-medium text-muted-foreground">
+          Total Budget:
         </span>
+        <BudgetConversion
+          totalBudget={proposal.totalBudget}
+          conversionRate={proposal.conversionRate}
+          class="text-sm"
+        />
       </div>
     {/if}
-    {#if proposal.category}
+    {#if proposal.categoryTitle}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Category:</span>
-        <span class="text-sm">{proposal.category}</span>
+        <span class="text-sm">{proposal.categoryTitle}</span>
       </div>
     {/if}
     {#if proposal.status}

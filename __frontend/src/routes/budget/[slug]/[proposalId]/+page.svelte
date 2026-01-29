@@ -2,6 +2,7 @@
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
   import PillarInfo from "$lib/PillarInfo.svelte";
+  import BudgetConversion from "$lib/BudgetConversion.svelte";
 
   /** @type {import('./$types').PageProps} */
   let { data } = $props();
@@ -46,9 +47,11 @@
           <span class="text-sm font-medium text-muted-foreground">
             Total Budget:
           </span>
-          <span class="text-sm font-semibold">
-            ${proposal.totalBudget?.toLocaleString() || "0"}
-          </span>
+          <BudgetConversion
+            totalBudget={proposal.totalBudget}
+            conversionRate={proposal.conversionRate}
+            class="text-sm"
+          />
         </div>
       {/if}
       {#if proposal.category}
