@@ -27,7 +27,7 @@
  * const name = await fetchDrepName("drep1y22hlaj8wuyygpnjy5cf96tg9tgvjrz39kxvqgv898uj9scfc55t7");
  * console.log(name); // "Maureen"
  */
-async function fetchDrepName(drepId) {
+export async function fetchDrepName(drepId) {
     try {
         const response = await fetch(`${API_URL}/drep_info?registered=eq.true`,
             {
@@ -112,7 +112,7 @@ async function fetchDrepName(drepId) {
  * const handle = await fetchHandle("addr1q8q25anxdp5hsmukxm99h7fh95rcuxed4ryk4jwzwhj7rpl8y7qqf0xuarfnjyljdqa2szayfdev9ytselvy47jh8aaq06gp78");
  * console.log(handle); // "bob"
  */
-async function fetchHandle(address) {
+export async function fetchHandle(address) {
     const handlePolicyId = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
     let endpoint;
     let body;
@@ -172,4 +172,74 @@ async function fetchHandle(address) {
         console.error("Error fetching endpoint:", error);
         return null;
     }
+}
+
+
+/**
+ * Fetches script information from the Koios API for a given script hash.
+ * 
+ * This function validates the script hash format, makes an authenticated request
+ * to the Koios API's script_info endpoint, and returns the script data if found.
+ * 
+ * @param {string} scriptHash - The hexadecimal script hash to look up
+ * @returns {Promise<Object|false>} The script data object if found, false otherwise
+ * @throws {Error} If API_URL or API_TOKEN are not set, or if scriptHash is invalid
+ * 
+ * @example
+ * const scriptData = await getScript("abc123...");
+ * if (scriptData) {
+ *   console.log("Script found:", scriptData);
+ * }
+ */
+export async function getScript(scriptHash) {
+    const API_URL = process.env.API_URL;
+    const API_TOKEN = process.env.API_TOKEN;
+
+    // Validate that API configuration is set
+    if (!API_URL) {
+        console.error("API_URL is not set in the environment variables.");
+        throw new Error("API URL is not set!");
+    }
+
+    if (!API_TOKEN) {
+        console.error("API_TOKEN is not set in the environment variables.");
+        throw new Error("API Token is not set!");
+    }
+
+    // Validate and parse the script hash format
+    let script_hash;
+    try {
+        script_hash = ScriptHash.from_hex(scriptHash);
+    } catch (error) {
+        console.error(`Not a valid script hash: ${script_hash}`);
+        throw new Error("Not a valid script hash");
+    }
+
+    try {
+        // Make authenticated POST request to Koios script_info endpoint
+        const scripts = await fetch(API_URL + "/script_info", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Prefer: "count=exact", // Request exact count in response headers
+                authorization: `Bearer ${API_TOKEN}`,
+            },
+            body: JSON.stringify({ _script_hashes: [scriptHash] }),
+        });
+
+        const script_data = await scripts.json();
+        // TODO: Cache the fetched/returned script data so we can save on calls to Koios in the future
+
+        // Return the first script if any results were found
+        if (script_data.length > 0) {
+            return script_data[0];
+        }
+        return false;
+    } catch (error) {
+        // Log error but don't throw - return false to indicate failure
+        console.log("Error fetching script hash:", scriptHash);
+        console.error(error);
+    }
+
+    return false;
 }

@@ -56,17 +56,20 @@ async function startServer() {
     app.use(express.static(join(__dirname, "public")));
 
     // Handle SPA routing - serve index.html for all non-API routes
-    app.get("*", (req, res, next) => {
-      // Skip API routes
-      if (req.path.startsWith("/api/")) {
+    app.get(/^(?!\/api).*/, (req, res, next) => {
+      // Skip if it's a static file request (has extension)
+      if (req.path.match(/\.[a-zA-Z0-9]+$/)) {
         return next();
       }
       res.sendFile(join(__dirname, "public", "index.html"));
     });
 
     // 404 handler (only for API routes now)
-    app.use("/api/*", (req, res) => {
-      res.status(404).json({ error: "API route not found" });
+    app.use((req, res, next) => {
+      if (req.path.startsWith("/api/")) {
+        return res.status(404).json({ error: "API route not found" });
+      }
+      next();
     });
 
     // Error handlers (must be last!)
