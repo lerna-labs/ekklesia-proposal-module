@@ -4,6 +4,7 @@ const router = Router();
 
 // schema import
 import { Proposal } from "../../../schema/Proposal.js";
+import { Category } from "../../../schema/Category.js";
 
 // helper imports
 import mongoose from "mongoose";
@@ -15,7 +16,7 @@ import mongoose from "mongoose";
  *
  * @param {string} proposalId - The ID of the proposal to retrieve (must be valid ObjectId)
  *
- * @returns {Object} 200 - Proposal document
+ * @returns {Object} 200 - Proposal document with category data included (category object when found)
  * @returns {Object} 400 - Invalid proposalId format
  * @returns {Object} 404 - Proposal not found
  */
@@ -44,8 +45,15 @@ router.get("/:proposalId", async (req, res) => {
       });
     }
 
-    // Return proposal data directly as an object
-    return res.status(200).json(proposal);
+    // Include category data when returning a single proposal (omit budgetId and timestamps)
+    const categoryDoc = await Category.findById(proposal.categoryId).lean();
+    let payload = proposal;
+    if (categoryDoc) {
+      const { budgetId, createdAt, updatedAt, ...category } = categoryDoc;
+      payload = { ...proposal, category };
+    }
+
+    return res.status(200).json(payload);
   } catch (error) {
     console.error("Error fetching proposal by ID:", error);
     return res.status(500).json({
@@ -70,7 +78,7 @@ router.get("/:proposalId", async (req, res) => {
  * @query {string} [direction] - Sort direction: asc or desc. Default: desc
  *
  * @returns {Object} 200 - Response object containing:
- *   - data: Array of proposal documents (status = "live" by default)
+ *   - data: Array of proposal documents (status = "live" by default), each with categoryId and categoryTitle
  *   - pagination: Object containing:
  *     - currentPage: Current page number
  *     - totalPages: Total number of pages
@@ -201,13 +209,24 @@ router.get("/", async (req, res) => {
       Proposal.countDocuments(query), // Get total count for pagination
     ]);
 
+    // Attach category title as categoryTitle for each proposal (keep categoryId)
+    const categoryIds = [...new Set(proposals.map((p) => p.categoryId).filter(Boolean))];
+    const categories = await Category.find({ _id: { $in: categoryIds } })
+      .select("_id title")
+      .lean();
+    const titleByCategoryId = new Map(categories.map((c) => [c._id.toString(), c.title]));
+    const data = proposals.map((p) => ({
+      ...p,
+      categoryTitle: p.categoryId ? titleByCategoryId.get(p.categoryId.toString()) ?? null : null,
+    }));
+
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / limitNum);
     const hasNextPage = pageNum < totalPages;
     const hasPreviousPage = pageNum > 1;
 
     return res.status(200).json({
-      data: proposals,
+      data,
       pagination: {
         currentPage: pageNum,
         totalPages,
