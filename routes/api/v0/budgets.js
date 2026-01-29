@@ -11,6 +11,64 @@ import mongoose from "mongoose";
 import { isAuthenticated } from "../../../helper/middleWare.js";
 
 /**
+ * @route GET /api/v0/budgets/:slug
+ * @description Get a single budget by slug. Returns the budget with its categories.
+ * @access Public
+ *
+ * @param {string} slug - The slug of the budget to retrieve
+ *
+ * @returns {Object} 200 - Budget document including a categories array
+ * @returns {Object} 404 - Budget not found
+ */
+router.get("/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // Find budget by slug
+    const budget = await Budget.findOne({ slug }).lean();
+
+    if (!budget) {
+      return res.status(404).json({
+        status: "error",
+        message: "Budget not found",
+      });
+    }
+
+    // Fetch categories for this budget
+    const categories = await Category.find({
+      budgetId: budget._id,
+    }).lean();
+
+    // Format categories, including _id, title and description
+    const formattedCategories = categories.map((category) => ({
+      _id: category._id,
+      title: category.title,
+      description: category.description,
+      pillar: category.pillar,
+      pillarDescription: category.pillarDescription,
+      highLevelThematicArea: category.highLevelThematicArea,
+      descriptionStrategy: category.descriptionStrategy,
+      expectedEnhancement: category.expectedEnhancement,
+    }));
+
+    // Exclude admins and timestamps from budget response
+    const { admins, createdAt, updatedAt, ...budgetWithoutExcluded } = budget;
+
+    // Return budget data directly as an object
+    return res.status(200).json({
+      ...budgetWithoutExcluded,
+      categories: formattedCategories,
+    });
+  } catch (error) {
+    console.error("Error fetching budget by slug:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
  * @route GET /api/v0/budgets
  * @description Get budgets with search and pagination. Supports searching by title (case-insensitive partial match) or _id (exact match).
  * @access Private (requires authentication)
@@ -31,7 +89,7 @@ import { isAuthenticated } from "../../../helper/middleWare.js";
  * @returns {Object} 400 - Error if pagination parameters are invalid
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
-router.get("/", isAuthenticated, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const { search, page = 1, limit = 10 } = req.query;
 
