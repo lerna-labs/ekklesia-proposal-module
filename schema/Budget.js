@@ -11,6 +11,10 @@ const budgetSchema = new Schema(
             type: String,
             required: true,
         },
+        slug: {
+            type: String,
+            required: true,
+        },
         admins: {
             type: [String],
             required: true,
@@ -32,9 +36,8 @@ const budgetSchema = new Schema(
 );
 
 // Pre-save middleware to update the updatedAt field
-budgetSchema.pre("save", function (next) {
+budgetSchema.pre("save", async function () {
     this.updatedAt = new Date();
-    next();
 });
 
 const Budget = mongoose.model("Budget", budgetSchema);

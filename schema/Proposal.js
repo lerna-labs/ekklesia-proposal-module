@@ -65,9 +65,8 @@ proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 })
 
 // Pre-save middleware to update the updatedAt field
-proposalSchema.pre("save", function (next) {
+proposalSchema.pre("save", async function () {
     this.updatedAt = new Date();
-    next();
 });
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
