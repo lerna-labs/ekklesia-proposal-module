@@ -5,9 +5,60 @@ const router = Router();
 // schema import
 import { Proposal } from "../../../schema/Proposal.js";
 import { Category } from "../../../schema/Category.js";
+import { Comment } from "../../../schema/Comment.js";
 
 // helper imports
 import mongoose from "mongoose";
+
+/**
+ * @route GET /api/v0/proposals/:proposalId/comments
+ * @description Get all comments for a given proposal ID. Returns an array of comment documents.
+ * @access Public
+ *
+ * @param {string} proposalId - The ID of the proposal to retrieve comments for (must be valid ObjectId)
+ *
+ * @returns {Array} 200 - Array of comment documents for the proposal
+ * @returns {Object} 400 - Invalid proposalId format
+ * @returns {Object} 404 - Proposal not found
+ */
+router.get("/:proposalId/comments", async (req, res) => {
+  try {
+    const { proposalId } = req.params;
+
+    // Validate proposalId format
+    if (
+      !mongoose.Types.ObjectId.isValid(proposalId) ||
+      proposalId.length !== 24
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid proposalId parameter. Must be a valid ObjectId.",
+      });
+    }
+
+    // Verify proposal exists
+    const proposal = await Proposal.findById(proposalId).lean();
+    if (!proposal) {
+      return res.status(404).json({
+        status: "error",
+        message: "Proposal not found",
+      });
+    }
+
+    // Find all comments for this proposal
+    const comments = await Comment.find({ proposalId })
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .lean();
+
+    return res.status(200).json(comments);
+  } catch (error) {
+    console.error("Error fetching comments for proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
 
 /**
  * @route GET /api/v0/proposals/:proposalId
