@@ -13,7 +13,7 @@ const commentSchema = new Schema(
             ref: "Proposal",
             required: true,
         },
-        comment: {
+        content: {
             type: String,
             required: true,
         },

@@ -6,18 +6,19 @@ const router = Router();
 import { Proposal } from "../../../schema/Proposal.js";
 import { Category } from "../../../schema/Category.js";
 import { Comment } from "../../../schema/Comment.js";
+import { User } from "../../../schema/User.js";
 
 // helper imports
 import mongoose from "mongoose";
 
 /**
  * @route GET /api/v0/proposals/:proposalId/comments
- * @description Get all comments for a given proposal ID. Returns an array of comment documents.
+ * @description Get all comments for a given proposal ID. Returns an array of comment documents with user objects included. Excludes proposalId and status fields.
  * @access Public
  *
  * @param {string} proposalId - The ID of the proposal to retrieve comments for (must be valid ObjectId)
  *
- * @returns {Array} 200 - Array of comment documents for the proposal
+ * @returns {Array} 200 - Array of comment documents for the proposal (without proposalId and status, with user object included)
  * @returns {Object} 400 - Invalid proposalId format
  * @returns {Object} 404 - Proposal not found
  */
@@ -50,7 +51,22 @@ router.get("/:proposalId/comments", async (req, res) => {
       .sort({ createdAt: -1 }) // Sort by newest first
       .lean();
 
-    return res.status(200).json(comments);
+    // Get unique userIds and fetch user data
+    const userIds = [...new Set(comments.map((c) => c.userId?.toString()).filter(Boolean))];
+    const users = await User.find({ _id: { $in: userIds } }).lean();
+    const userMap = new Map(users.map((u) => [u._id, u]));
+
+    // Map comments with user data and exclude proposalId and status
+    const commentsWithUsers = comments.map((comment) => {
+      const { proposalId: _, status: __, ...commentWithoutFields } = comment;
+      const user = comment.userId ? userMap.get(comment.userId.toString()) : null;
+      return {
+        ...commentWithoutFields,
+        user: user || null,
+      };
+    });
+
+    return res.status(200).json(commentsWithUsers);
   } catch (error) {
     console.error("Error fetching comments for proposal:", error);
     return res.status(500).json({
