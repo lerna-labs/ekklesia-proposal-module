@@ -1,6 +1,4 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
   import {
     Composer,
     ContentEditable,
@@ -12,25 +10,30 @@
     ALL_TRANSFORMERS,
     UNORDERED_LIST,
     ORDERED_LIST,
+    convertFromMarkdownString,
   } from "svelte-lexical";
-  import { ListNode, ListItemNode } from "svelte-lexical";
+  import { ListNode, ListItemNode, QuoteNode } from "svelte-lexical";
   import { theme } from "svelte-lexical/dist/themes/default";
-
-  import {
-    $getRoot as getRoot,
-    $createTextNode as createTextNode,
-    $createParagraphNode as createParagraphNode,
-  } from "svelte-lexical";
-
   import EditorToolbar from "./EditorToolbar.svelte";
+  let { quote } = $props();
 
   const initialConfig = {
     theme: theme,
-    nodes: [ListNode, ListItemNode],
+    nodes: [ListNode, ListItemNode, QuoteNode],
     onError: (error) => {
       throw error;
     },
-    editorState: () => {},
+    editorState: () => {
+      if (quote) {
+        // Wrap content in markdown blockquote syntax
+        const quotedContent = quote.content
+          .split("\n")
+          .map((line) => `> ${line}`)
+          .join("\n");
+        return convertFromMarkdownString(quotedContent, ALL_TRANSFORMERS);
+      }
+      return null;
+    },
   };
 
   let composer = $state(Composer);
@@ -38,40 +41,36 @@
   // Use both list transformers - ORDERED_LIST should handle "1. " pattern
   const listTransformers = [UNORDERED_LIST, ORDERED_LIST];
 
+  let isSaving = $state(false);
+
   const saveComment = () => {
+    isSaving = true;
     const editor = composer.getEditor();
+
+    // Convert editor content directly to markdown
     editor.read(() => {
       const markdown = convertToMarkdownString(ALL_TRANSFORMERS);
-      console.log(markdown);
+      console.log("Markdown:", markdown);
+      // TODO: Save markdown to database
     });
+
+    isSaving = false;
   };
 </script>
 
-<Card.Root class="gap-0 mt-4">
-  <Card.Header class="pb-0 mb-0">
-    <Card.Title>Comment</Card.Title>
-    <Card.Description>Add a comment to the proposal</Card.Description>
-  </Card.Header>
-  <Card.Content class="pt-4 pb-4">
-    <Composer {initialConfig} bind:this={composer}>
-      <div class="editor-shell svelte-lexical">
-        <EditorToolbar />
-        <div class="editor-container">
-          <div class="editor-scroller">
-            <div class="editor">
-              <ContentEditable />
-            </div>
-          </div>
-          <RichTextPlugin />
-          <HistoryPlugin />
-          <ListPlugin />
-          <MarkdownShortcutPlugin transformers={listTransformers} />
+<Composer {initialConfig} bind:this={composer}>
+  <div class="editor-shell svelte-lexical">
+    <EditorToolbar />
+    <div class="editor-container">
+      <div class="editor-scroller">
+        <div class="editor">
+          <ContentEditable />
         </div>
       </div>
-    </Composer>
-  </Card.Content>
-  <Card.Footer class="flex justify-end gap-1">
-    <Button variant="outline" size="sm" class="text-xs">Save</Button>
-    <Button variant="outline" size="sm" class="text-xs">Cancel</Button>
-  </Card.Footer>
-</Card.Root>
+      <RichTextPlugin />
+      <HistoryPlugin />
+      <ListPlugin />
+      <MarkdownShortcutPlugin transformers={listTransformers} />
+    </div>
+  </div>
+</Composer>

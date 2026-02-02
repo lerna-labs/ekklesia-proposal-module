@@ -3,11 +3,10 @@
   import * as Button from "$lib/components/ui/button";
   import PillarInfo from "$lib/PillarInfo.svelte";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
-  import Editor from "$lib/editor/Editor.svelte";
-  /** @type {import('./$types').PageProps} */
+  import Comments from "$lib/Comments.svelte";
   let { data } = $props();
 
-  let { budget, proposal, slug } = $derived(data);
+  let { budget, proposal, slug, comments } = $derived(data);
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
@@ -75,5 +74,7 @@
     <PillarInfo {proposal} />
   </section>
 
-  <Editor />
+  <section class="mt-8" id="comments">
+    <Comments {comments} />
+  </section>
 </div>

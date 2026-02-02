@@ -162,3 +162,8 @@
   display: list-item;
 }
 
+.svelte-lexical blockquote {
+  border-left: 2px solid var(--mbo-grey);
+  padding-left: 0.5em;
+  margin-left: 0.5em;
+}

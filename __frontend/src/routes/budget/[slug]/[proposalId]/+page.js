@@ -1,6 +1,4 @@
 import { error } from '@sveltejs/kit';
-
-/** @type {import('./$types').PageLoad} */
 export async function load({ params, fetch }) {
 	const { slug, proposalId } = params;
 
@@ -18,10 +16,17 @@ export async function load({ params, fetch }) {
 	}
 	const proposal = await proposalResponse.json();
 
+	const commentsResponse = await fetch(`${apiUrl}/proposals/${proposalId}/comments`);
+	if (!commentsResponse.ok) {
+		error(commentsResponse.status, `Failed to load comments: ${commentsResponse.statusText}`);
+	}
+	const comments = await commentsResponse.json();
+
 	return {
 		budget,
 		proposal,
 		slug,
 		proposalId,
+		comments,
 	};
 }
