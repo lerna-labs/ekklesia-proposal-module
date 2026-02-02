@@ -3,7 +3,7 @@
   import * as Button from "$lib/components/ui/button";
   import PillarInfo from "$lib/PillarInfo.svelte";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
-
+  import Editor from "$lib/editor/Editor.svelte";
   /** @type {import('./$types').PageProps} */
   let { data } = $props();
 
@@ -74,4 +74,6 @@
   <section class="mt-4">
     <PillarInfo {proposal} />
   </section>
+
+  <Editor />
 </div>

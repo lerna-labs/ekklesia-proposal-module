@@ -142,3 +142,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure svelte-lexical lists display properly */
+.svelte-lexical {
+  margin:0 !important;  
+}
+
+.svelte-lexical ul {
+  list-style-type: disc;
+  padding-left: 0em;
+}
+
+.svelte-lexical ol {
+  list-style-type: decimal;
+  padding-left: 0em;
+}
+
+.svelte-lexical li {
+  display: list-item;
+}
+

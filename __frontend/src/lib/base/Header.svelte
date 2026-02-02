@@ -16,7 +16,14 @@
     <nav>
       <ul>
         <li>
-          <Button href="/budget/test-budget-2026">View Budget</Button>
+          <Button
+            href="/budget/test-budget-2026"
+            variant="outline"
+            size="sm"
+            class="text-xs text-black"
+          >
+            View Budget
+          </Button>
         </li>
       </ul>
     </nav>
