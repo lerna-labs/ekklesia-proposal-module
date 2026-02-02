@@ -11,10 +11,14 @@ loadEnvironmentVariables();
 // use dbManager for database connection
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
 
+// import mongoose for ObjectId generation
+import mongoose from "mongoose";
+
 // import schemas
 import { Budget } from "../schema/Budget.js";
 import { Category } from "../schema/Category.js";
 import { Proposal } from "../schema/Proposal.js";
+import { Comment } from "../schema/Comment.js";
 
 async function createDummyData() {
     try {
@@ -91,6 +95,138 @@ async function createDummyData() {
             console.log(`  ${index + 1}. ${proposal.title} - Status: ${proposal.status}`);
         });
 
+        // Create random comments and replies
+        console.log("\nCreating comments and replies...");
+        const commentTemplates = [
+            "This looks like a great proposal! I fully support this initiative.",
+            "I have some concerns about the budget allocation. Can we discuss this further?",
+            "Excellent work on putting this together. The community will benefit greatly.",
+            "I think we need more details on the implementation timeline.",
+            "This aligns perfectly with our long-term goals. Count me in!",
+            "Have we considered the potential risks? I'd like to see a risk assessment.",
+            "The budget seems reasonable for what's being proposed.",
+            "I'm not sure this is the right time for this proposal. Can we revisit next quarter?",
+            "This is exactly what we need! Thank you for proposing this.",
+            "I have a few questions about the milestones. Can someone clarify?",
+            "Great proposal! I'd like to suggest a small modification to the timeline.",
+            "I support this but think we should increase the budget slightly.",
+            "This is a well-thought-out proposal. I appreciate the detail.",
+            "Can we get more information on the expected outcomes?",
+            "I'm concerned about the sustainability of this project.",
+            "This proposal addresses a real need in our community.",
+            "I think we should wait for more community feedback before proceeding.",
+            "Excellent initiative! How can I help support this?",
+            "The conversion rate seems optimistic. Can we review the assumptions?",
+            "I love this idea! When can we expect to see results?"
+        ];
+
+        const replyTemplates = [
+            "Thanks for your feedback! I'll address your concerns in the next update.",
+            "Great point! I've added more details to address this.",
+            "I appreciate your support. Let me clarify that for you.",
+            "That's a valid concern. Here's what I'm thinking...",
+            "Thanks for the suggestion! I'll consider incorporating that.",
+            "I understand your point. Let me provide more context.",
+            "Good question! I've updated the proposal with that information.",
+            "I see where you're coming from. Here's my response...",
+            "Thank you! I'm glad you see the value in this proposal.",
+            "I'll make sure to include that in the next revision."
+        ];
+
+        const authorTypes = ["user", "proposer", "admin"];
+        const statuses = ["live", "live", "live", "live", "draft"]; // Mostly live, some draft
+
+        const comments = [];
+        const createdComments = [];
+
+        // Create top-level comments (not replies)
+        for (let i = 0; i < createdProposals.length; i++) {
+            const proposal = createdProposals[i];
+            // Each proposal gets 1-4 random comments
+            const numComments = Math.floor(Math.random() * 4) + 1;
+            
+            for (let j = 0; j < numComments; j++) {
+                const randomUserId = new mongoose.Types.ObjectId();
+                const randomAuthorType = authorTypes[Math.floor(Math.random() * authorTypes.length)];
+                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                const randomComment = commentTemplates[Math.floor(Math.random() * commentTemplates.length)];
+
+                comments.push({
+                    userId: randomUserId,
+                    proposalId: proposal._id,
+                    content: randomComment,
+                    replyTo: null,
+                    authorType: randomAuthorType,
+                    status: randomStatus
+                });
+            }
+        }
+
+        // Insert top-level comments
+        const insertedComments = await Comment.insertMany(comments);
+        createdComments.push(...insertedComments);
+        console.log(`Created ${insertedComments.length} top-level comments`);
+
+        // Create replies to some comments
+        const numReplies = Math.floor(createdComments.length * 0.4); // 40% of comments get replies
+        const replies = [];
+
+        for (let i = 0; i < numReplies; i++) {
+            const parentComment = createdComments[Math.floor(Math.random() * createdComments.length)];
+            const randomUserId = new mongoose.Types.ObjectId();
+            const randomAuthorType = authorTypes[Math.floor(Math.random() * authorTypes.length)];
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            const randomReply = replyTemplates[Math.floor(Math.random() * replyTemplates.length)];
+
+            replies.push({
+                userId: randomUserId,
+                proposalId: parentComment.proposalId,
+                content: randomReply,
+                replyTo: parentComment._id,
+                authorType: randomAuthorType,
+                status: randomStatus
+            });
+        }
+
+        // Insert replies
+        if (replies.length > 0) {
+            const insertedReplies = await Comment.insertMany(replies);
+            createdComments.push(...insertedReplies);
+            console.log(`Created ${insertedReplies.length} replies`);
+        }
+
+        // Create some nested replies (replies to replies)
+        const numNestedReplies = Math.floor(replies.length * 0.3); // 30% of replies get nested replies
+        const nestedReplies = [];
+        const replyComments = createdComments.filter(c => c.replyTo); // Get all reply comments
+
+        for (let i = 0; i < numNestedReplies && replyComments.length > 0; i++) {
+            const parentReply = replyComments[Math.floor(Math.random() * replyComments.length)];
+            
+            const randomUserId = new mongoose.Types.ObjectId();
+            const randomAuthorType = authorTypes[Math.floor(Math.random() * authorTypes.length)];
+            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            const randomReply = replyTemplates[Math.floor(Math.random() * replyTemplates.length)];
+
+            nestedReplies.push({
+                userId: randomUserId,
+                proposalId: parentReply.proposalId,
+                content: randomReply,
+                replyTo: parentReply._id,
+                authorType: randomAuthorType,
+                status: randomStatus
+            });
+        }
+
+        // Insert nested replies
+        if (nestedReplies.length > 0) {
+            const insertedNestedReplies = await Comment.insertMany(nestedReplies);
+            createdComments.push(...insertedNestedReplies);
+            console.log(`Created ${insertedNestedReplies.length} nested replies`);
+        }
+
+        console.log(`\nTotal comments created: ${createdComments.length} (${insertedComments.length} top-level, ${replies.length} replies, ${nestedReplies.length} nested)`);
+
         console.log("\n✅ Dummy data created successfully!");
         console.log(`Budget ID: ${budget._id}`);
         console.log(`Categories linked: ${categories.length}`);
@@ -98,6 +234,7 @@ async function createDummyData() {
             console.log(`  Category ${index + 1} ID: ${cat._id} - ${cat.title}`);
         });
         console.log(`Proposals created: ${createdProposals.length}`);
+        console.log(`Comments created: ${createdComments.length}`);
 
     } catch (error) {
         console.error("Error creating dummy data:", error);

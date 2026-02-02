@@ -18,11 +18,13 @@ await connectToDatabase();
 import { Budget } from "../schema/Budget.js";
 import { Category } from "../schema/Category.js";
 import { Proposal } from "../schema/Proposal.js";
+import { Comment } from "../schema/Comment.js";
 
 // wipe database
 await Budget.deleteMany({});
-await Category.deleteMany({});
+// await Category.deleteMany({});
 await Proposal.deleteMany({});
+await Comment.deleteMany({});
 
 // disconnect from database
 await disconnectFromDatabase();
