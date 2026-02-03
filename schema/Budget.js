@@ -43,15 +43,7 @@ const budgetSchema = new Schema(
             type: Date,
             required: true,
         },
-        createdAt: {
-            type: Date,
-            default: Date.now,
-            immutable: true,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        },
+
     },
     {
         timestamps: true,
@@ -59,10 +51,6 @@ const budgetSchema = new Schema(
     }
 );
 
-// Pre-save middleware to update the updatedAt field
-budgetSchema.pre("save", async function () {
-    this.updatedAt = new Date();
-});
 
 const Budget = mongoose.model("Budget", budgetSchema);
 export { Budget };

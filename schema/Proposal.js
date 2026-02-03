@@ -241,15 +241,6 @@ const proposalSchema = new Schema(
             type: Date,
             required: false,
         },
-        createdAt: {
-            type: Date,
-            default: Date.now,
-            immutable: true,
-        },
-        updatedAt: {
-            type: Date,
-            default: Date.now,
-        },
     },
     {
         timestamps: true,
@@ -304,11 +295,6 @@ proposalSchema.pre("validate", function (next) {
         }
     }
     next();
-});
-
-// Pre-save middleware to update the updatedAt field
-proposalSchema.pre("save", async function () {
-    this.updatedAt = new Date();
 });
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
