@@ -2,22 +2,6 @@
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
-
-  /**
-   * @typedef {Object} Proposal
-   * @property {string} [title]
-   * @property {string} [name]
-   * @property {string} [description]
-   * @property {number} [amount]
-   * @property {number} [totalBudget]
-   * @property {number} [conversionRate]
-   * @property {string} [category]
-   * @property {string} [status]
-   * @property {string} [_id]
-   * @property {string} [id]
-   */
-
-  /** @type {{ proposal: Proposal, budgetSlug?: string, class?: string }} */
   let { proposal, budgetSlug, class: className } = $props();
 
   const proposalHref = $derived(
