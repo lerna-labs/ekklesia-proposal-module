@@ -20,7 +20,11 @@
     "@tailwindcss/vite": "^4.1.18",
     "bits-ui": "^2.15.4",
     "clsx": "^2.1.1",
+    "formsnap": "^2.0.1",
+    "mode-watcher": "^1.1.0",
     "svelte": "^5.48.2",
+    "svelte-sonner": "^1.0.7",
+    "sveltekit-superforms": "^2.29.1",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.18",
@@ -28,6 +32,7 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
+    "dayjs": "^1.11.19",
     "svelte-lexical": "^0.6.3"
   }
 }
