@@ -8,10 +8,7 @@
   import Search from "$lib/Search.svelte";
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
-
-  /** @type {import('./$types').PageProps} */
   let { data } = $props();
-
   let budget = $derived(data.budget);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
@@ -25,10 +22,6 @@
     { value: "amount", label: "Amount" },
   ];
 
-  /**
-   * Navigate to a specific page of proposals. Updates the URL with ?page=N and triggers a reload.
-   * @param {number} pageNum - The page number to navigate to (1-based).
-   */
   function navigate(pageNum) {
     const pathname = page.url.pathname;
     const searchParams = new URLSearchParams(page.url.searchParams);
@@ -79,7 +72,9 @@
 
   <!-- Proposals Section -->
   <div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+    >
       <h2 class="text-xl font-semibold">
         Proposals
         <span class="text-muted-foreground font-normal">
