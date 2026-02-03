@@ -19,6 +19,30 @@ const budgetSchema = new Schema(
             type: [String],
             required: true,
         },
+        submissionStartDate: {
+            type: Date,
+            required: true,
+        },
+        submissionEndDate: {
+            type: Date,
+            required: true,
+        },
+        feedbackStartDate: {
+            type: Date,
+            required: true,
+        },
+        feedbackEndDate: {
+            type: Date,
+            required: true,
+        },
+        reviewStartDate: {
+            type: Date,
+            required: true,
+        },
+        reviewEndDate: {
+            type: Date,
+            required: true,
+        },
         createdAt: {
             type: Date,
             default: Date.now,

@@ -3,34 +3,34 @@ const { Schema } = mongoose;
 
 const commentSchema = new Schema(
     {
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Proposer",
-            required: true,
-        },
         proposalId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Proposal",
             required: true,
         },
-        content: {
-            type: String,
-            required: true,
-        },
-        replyTo: {
+        parentId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Comment",
             required: false,
         },
-        authorType: {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        userType: {
             type: String,
             required: true,
             enum: ["user", "proposer", "admin"],
         },
+        content: {
+            type: String,
+            required: true,
+        },
         status: {
             type: String,
             required: true,
-            enum: ["draft", "live", "withdrawnByProposer", "withdrawnByAdmin"],
+            enum: ["live", "withdrawnByAuthor", "withdrawnByAdmin"],
         },
         withdrawalReason: {
             type: {
@@ -58,7 +58,7 @@ const commentSchema = new Schema(
 );
 
 // Indexes for faster queries
-commentSchema.index({ userId: 1 });
+commentSchema.index({ parentId: 1 });
 commentSchema.index({ proposalId: 1 });
 
 // Pre-save middleware to update the updatedAt field
