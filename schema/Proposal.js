@@ -14,11 +14,6 @@ const proposalSchema = new Schema(
             ref: "Budget",
             required: true,
         },
-        version: {
-            type: Number,
-            required: true,
-            default: 1,
-        },
         title: {
             type: String,
             required: true,
@@ -227,7 +222,7 @@ const proposalSchema = new Schema(
         status: {
             type: String,
             required: true,
-            enum: ["draft", "live", "withdrawnByProposer", "withdrawnByAdmin"],
+            enum: ["draft", "live", "withdrawnByProposer", "withdrawnByAdmin", "archived"], // new status archived for updated proposals to track changes
         },
         withdrawalReason: {
             type: {
@@ -238,8 +233,24 @@ const proposalSchema = new Schema(
             },
             required: false,
         },
+        versions: [ // track former versions of the proposal
+            {
+                _id: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    required: true,
+                },
+                createdAt: {
+                    type: Date,
+                    required: true,
+                },
+            }
+        ],
         submittedAt: {
             type: Date,
+            required: false,
+        },
+        signature: {
+            type: String,
             required: false,
         },
     },
