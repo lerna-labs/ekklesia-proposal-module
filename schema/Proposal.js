@@ -14,21 +14,17 @@ const proposalSchema = new Schema(
             ref: "Budget",
             required: true,
         },
+        version: {
+            type: Number,
+            required: true,
+            default: 1,
+        },
         title: {
             type: String,
             required: true,
         },
         description: { // executive summary here
             type: String,
-            required: false,
-        },
-        categories: { // is only one value in the current Budget process
-            type: [mongoose.Schema.Types.ObjectId],
-            ref: "Category",
-            required: true,
-        },
-        tags: { // not really used by Intersect, we could store "Technical (software/IT)" or "Non-technical" here, also if company or individual proposal
-            type: [String],
             required: false,
         },
         metaData: { // still WIP
@@ -82,6 +78,11 @@ const proposalSchema = new Schema(
                     submitted: Boolean,
                     email: String,
                 },
+            },
+            strategicFocusArea: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Category",
+                required: true,
             },
             keyPerformanceIndicators: {
                 type: [
@@ -293,6 +294,16 @@ proposalSchema.pre("validate", function (next) {
         if (!this.metaData?.legalDeclarations?.noGuarantee) {
             return next(new Error("noGuarantee is required when status is live"));
         }
+    }
+    next();
+});
+
+// Pre-save middleware to increment the version
+proposalSchema.pre("save", function (next) {
+    if (this.isNew) {
+        this.version = 1;
+    } else {
+        this.version++;
     }
     next();
 });
