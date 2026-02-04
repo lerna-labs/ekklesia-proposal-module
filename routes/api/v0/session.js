@@ -1,5 +1,6 @@
 // express router
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 const router = Router();
 
 // schema import
@@ -23,20 +24,57 @@ dayjs.extend(duration);
 import { isAuthenticated } from "../../../helper/middleWare.js";
 import { validateSessionRequest } from "../../../helper/middleWare.js";
 
+// Validate JWT configuration at module load
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET is not defined in environment variables");
+  throw new Error("JWT_SECRET must be configured");
+}
+
+// Validate and set default for JWT_MAX_AGE
+let JWT_MAX_AGE = process.env.JWT_MAX_AGE || "1d";
+if (!JWT_MAX_AGE.match(/^\d+[smhd]$/) && !JWT_MAX_AGE.match(/^\d+$/)) {
+  console.warn(`Invalid JWT_MAX_AGE format: ${JWT_MAX_AGE}, defaulting to 1d`);
+  JWT_MAX_AGE = "1d";
+  process.env.JWT_MAX_AGE = "1d";
+}
+
+// Rate limiters for authentication endpoints
+const nonceRequestLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // 5 requests per minute per IP
+  message: {
+    status: "error",
+    message: "Too many nonce requests. Please try again later.",
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+const sessionVerificationLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute per IP
+  message: {
+    status: "error",
+    message: "Too many authentication attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 /**
  * @route GET /api/v0/session
- * @description Validate JWT token and return voter ID. Used to check if user is authenticated and get their voter ID.
+ * @description Validate JWT token and return user ID. Used to check if user is authenticated and get their user ID.
  * @access Private (requires authentication)
  *
  * @returns {Object} 200 - Object containing:
- *   - voterId: The voter ID from the validated JWT token
+ *   - userId: The user ID from the validated JWT token
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
 router.get("/", isAuthenticated, async (req, res) => {
-  const { voterId } = req;
+  const { userId } = req;
 
   return res.status(200).json({
-    voterId: voterId,
+    userId: userId,
   });
 });
 
@@ -51,16 +89,16 @@ router.get("/", isAuthenticated, async (req, res) => {
  *
  * @returns {Object} 200 - Response object containing:
  *   - dataHex: Nonce string to sign (hex-encoded)
- *   - voterId: Bech32 address of the voter
- *   - voterIdHex: Hex-encoded signer address
+ *   - userId: Bech32 address of the user
+ *   - userIdHex: Hex-encoded signer address
  *   - signerAddressHex: Hex-encoded signer address
- *   - calidusID: Calidus ID for pool signers (only present when signType is "pool")
  * @returns {Object} 400 - Error if:
  *   - Address is a script address (must use /multisig route)
  *   - Address validation fails
- *   - Pool not found or no calidus key registered (for pool signType)
+ * @returns {Object} 500 - Error if:
+ *   - Database operation fails
  */
-router.post("/", validateSessionRequest, async (req, res) => {
+router.post("/", nonceRequestLimiter, validateSessionRequest, async (req, res) => {
   // Get validated address from middleware
   const { addressBech32, isScript } = req;
 
@@ -78,12 +116,20 @@ router.post("/", validateSessionRequest, async (req, res) => {
   // create nonce
   const nonce = generateNonce("Sign in! ");
 
-  // Store nonce in the database
-  const login = new Session({
-    userId: addressBech32,
-    nonce,
-  });
-  await login.save();
+  // Store nonce in the database with error handling
+  try {
+    const login = new Session({
+      userId: addressBech32,
+      nonce,
+    });
+    await login.save();
+  } catch (error) {
+    console.error("Error saving session to database:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to create authentication session. Please try again.",
+    });
+  }
 
   // return nonce and voterId
   const response = {
@@ -98,7 +144,7 @@ router.post("/", validateSessionRequest, async (req, res) => {
 
 /**
  * @route PUT /api/v0/session
- * @description Verify signature of nonce and issue JWT token for authentication. After successful verification, sets HTTP-only cookie with JWT token and clears nonce from session records. Also pings Hydra (non-blocking) to notify of voter login.
+ * @description Verify signature of nonce and issue JWT token for authentication. After successful verification, sets HTTP-only cookie with JWT token and clears nonce from session records. Also creates or updates the User record with the user's name (fetched from DRep registry or handle service).
  * @access Public
  *
  * @param {Object} req.body
@@ -115,7 +161,7 @@ router.post("/", validateSessionRequest, async (req, res) => {
  *   - Signature verification fails
  *   - Signature verification throws an exception
  */
-router.put("/", validateSessionRequest, async (req, res) => {
+router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, res) => {
   // Get signer address and signature from request body (already validated by middleware)
   const { signerAddress, signType, addressBech32, isScript } = req;
   const { signature } = req.body;
@@ -128,14 +174,50 @@ router.put("/", validateSessionRequest, async (req, res) => {
     });
   }
 
-  // get nonce from db
-  const nonceData = await Session.findOne({
-    userId: addressBech32,
-  }).sort({ createdAt: -1 });
+  // Use generic error message to prevent information leakage
+  const AUTH_ERROR_MESSAGE = "Authentication failed. Please request a new nonce and try again.";
+
+  // Check if nonce has expired (5 minutes TTL)
+  const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+  const nonceExpiryTime = new Date(Date.now() - NONCE_TTL_MS);
+
+  // Atomically find and mark nonce as used to prevent race conditions
+  // This ensures only one request can use a nonce
+  let nonceData;
+  try {
+    nonceData = await Session.findOneAndUpdate(
+      {
+        userId: addressBech32,
+        nonce: { $ne: null },
+        createdAt: { $gte: nonceExpiryTime }, // Only get non-expired nonces
+      },
+      { $set: { nonce: null } }, // Mark as used immediately
+      {
+        sort: { createdAt: -1 },
+        new: false, // Return the document before update
+      }
+    );
+  } catch (error) {
+    console.error("Error fetching nonce from database:", error);
+    return res.status(500).json({
+      status: "error",
+      message: AUTH_ERROR_MESSAGE,
+    });
+  }
+
   if (!nonceData) {
     return res.status(400).json({
       status: "error",
-      message: "Nonce not found",
+      message: AUTH_ERROR_MESSAGE,
+    });
+  }
+
+  // Validate signature object structure before verification
+  if (!signature || typeof signature !== "object") {
+    console.error("Invalid signature format", signerAddress);
+    return res.status(400).json({
+      status: "error",
+      message: AUTH_ERROR_MESSAGE,
     });
   }
 
@@ -151,7 +233,7 @@ router.put("/", validateSessionRequest, async (req, res) => {
     console.error("Signature verification error", error);
     return res.status(400).json({
       status: "error",
-      message: "Signature verification error",
+      message: AUTH_ERROR_MESSAGE,
     });
   }
 
@@ -163,22 +245,30 @@ router.put("/", validateSessionRequest, async (req, res) => {
     );
     return res.status(400).json({
       status: "error",
-      message: signatureVerification.error,
+      message: AUTH_ERROR_MESSAGE,
     });
   }
 
-  // create jwt token
-  const token = jwt.sign(
-    { userId: addressBech32, signType },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_MAX_AGE,
-    }
-  );
+  // create jwt token with validated JWT_MAX_AGE
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: addressBech32, signType },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: JWT_MAX_AGE,
+      }
+    );
+  } catch (error) {
+    console.error("Error creating JWT token:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to create authentication token. Please try again.",
+    });
+  }
 
-  // !! CHECK IF STILL NEEDD
   // Calculate the actual expiration date for the frontend
-  const expiresIn = process.env.JWT_MAX_AGE;
+  const expiresIn = JWT_MAX_AGE;
   let expiryDate;
 
   // Parse the expiration format (support formats like "1d", "3600s", or seconds as number)
@@ -208,33 +298,61 @@ router.put("/", validateSessionRequest, async (req, res) => {
     expiryDate = dayjs().add(1, "hour").toDate();
   }
 
-  // Delete all nonces from the database for address, but leave the login record
-  await Session.updateMany(
-    { userId: signerAddress },
-    {
-      $set: {
-        nonce: null,
-      },
-    }
-  );
+  // Clear any other nonces for this user (nonce already marked as used atomically above)
+  try {
+    await Session.updateMany(
+      { userId: addressBech32, nonce: { $ne: null } },
+      {
+        $set: {
+          nonce: null,
+        },
+      }
+    );
+  } catch (error) {
+    // Log but don't fail - nonce already marked as used
+    console.error("Error clearing other nonces:", error);
+  }
 
-  // fetch DRep Name or Handle
+  // Clean up old sessions with null nonces (older than 30 minutes) to prevent database bloat
+  // The TTL index will handle sessions older than 1 hour, but we clean up more aggressively here
+  try {
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    await Session.deleteMany({
+      userId: addressBech32,
+      nonce: null,
+      createdAt: { $lt: thirtyMinutesAgo },
+    });
+  } catch (error) {
+    // Log but don't fail - cleanup is non-critical
+    console.error("Error cleaning up old sessions:", error);
+  }
+
+  // fetch DRep Name or Handle with error handling
   let userName;
-  if (signType === "drep") {
-    const drepName = await fetchDrepName(addressBech32);
-    userName = drepName;
-  }
-  if (signType === "stake" || signType === "addr") {
-    const stakeName = await fetchHandle(addressBech32);
-    userName = stakeName;
+  try {
+    if (signType === "drep") {
+      userName = await fetchDrepName(addressBech32);
+      // fetchDrepName returns null/undefined on error, which is acceptable
+    } else if (signType === "stake" || signType === "addr") {
+      userName = await fetchHandle(addressBech32);
+      // fetchHandle returns null on error, which is acceptable
+    }
+  } catch (error) {
+    // Log but don't fail - userName can be undefined
+    console.error("Error fetching user name:", error);
   }
 
-  // upsert User to db and set last_login
-  User.findOneAndUpdate(
-    { _id: addressBech32 },
-    { $set: { name: userName, lastLogin: new Date() } },
-    { upsert: true }
-  );
+  // upsert User to db and set last_login with error handling
+  try {
+    await User.findOneAndUpdate(
+      { _id: addressBech32 },
+      { $set: { name: userName, lastLogin: new Date() } },
+      { upsert: true }
+    );
+  } catch (error) {
+    // Log but don't fail - user creation is non-critical for authentication
+    console.error("Error upserting user:", error);
+  }
 
   // Log the successful login
   console.log("Login successful:", signerAddress);
@@ -276,7 +394,7 @@ router.delete("/", isAuthenticated, async (req, res) => {
     path: "/",
   });
 
-  console.log("Logout success", voterId);
+  console.log("Logout success", userId);
 
   return res.status(200).json({
     status: "success",
