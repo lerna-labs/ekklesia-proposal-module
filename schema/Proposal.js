@@ -5,8 +5,9 @@ const { Schema } = mongoose;
 
 const proposalSchema = new Schema(
     {
-        userId: {
+        proposerId: {
             type: String,
+            ref: "User",
             required: true,
         },
         budgetId: {
@@ -224,10 +225,10 @@ const proposalSchema = new Schema(
             required: true,
             enum: ["draft", "live", "withdrawnByProposer", "withdrawnByAdmin", "archived"], // new status archived for updated proposals to track changes
         },
-        withdrawalReason: {
+        withdrawalDetails: {
             type: {
                 category: ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
-                userId: mongoose.Schema.Types.ObjectId,
+                userId: String,
                 comment: String,
                 date: Date,
             },
@@ -251,6 +252,10 @@ const proposalSchema = new Schema(
         },
         signature: {
             type: String,
+            required: false,
+        },
+        totalBudget: {
+            type: Number,
             required: false,
         },
     },

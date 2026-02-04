@@ -14,14 +14,9 @@ const commentSchema = new Schema(
             required: false,
         },
         userId: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: String,
             ref: "User",
             required: true,
-        },
-        userType: {
-            type: String,
-            required: true,
-            enum: ["user", "proposer", "admin"],
         },
         content: {
             type: String,
@@ -30,12 +25,12 @@ const commentSchema = new Schema(
         status: {
             type: String,
             required: true,
-            enum: ["live", "withdrawnByAuthor", "withdrawnByAdmin"],
+            enum: ["live", "withdrawnByAdmin"],
         },
-        withdrawalReason: {
+        withdrawalDetails: {
             type: {
                 category: ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"],
-                userId: mongoose.Schema.Types.ObjectId,
+                userId: String,
                 comment: String,
                 date: Date,
             },

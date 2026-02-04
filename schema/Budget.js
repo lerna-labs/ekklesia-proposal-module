@@ -16,7 +16,7 @@ const budgetSchema = new Schema(
             required: true,
         },
         admins: {
-            type: [String],
+            type: [String], // bech32 stake addresses
             required: true,
         },
         submissionStartDate: {
@@ -43,7 +43,6 @@ const budgetSchema = new Schema(
             type: Date,
             required: true,
         },
-
     },
     {
         timestamps: true,
