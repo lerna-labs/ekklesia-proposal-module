@@ -9,8 +9,7 @@ import { verifyToken } from "../../../helper/verifyToken.js";
 
 const router = Router();
 
-const COMMENT_STATUSES = ["live", "withdrawnByAuthor", "withdrawnByAdmin"];
-const STATUS_WITHDRAWN = "withdrawn";
+const COMMENT_STATUSES = ["live", "withdrawnByAdmin"];
 
 function getAuthenticatedUserId(req) {
   const tokenResult = verifyToken(req);
@@ -32,7 +31,7 @@ function isBudgetAdmin(proposal, budget, userId) {
 
 /**
  * Returns MongoDB status condition for comment queries. Default (no param or non-admin) is { status: "live" }.
- * Only admins can pass status=live|withdrawn|withdrawnByAuthor|withdrawnByAdmin. Returns { error, message } for invalid/unauthorized.
+ * Only admins can pass status=live|withdrawn|withdrawnByAdmin. Returns { error, message } for invalid/unauthorized.
  */
 function getCommentStatusFilter(statusParam, isAdmin) {
   if (!statusParam || typeof statusParam !== "string") {
@@ -46,9 +45,9 @@ function getCommentStatusFilter(statusParam, isAdmin) {
     return { status: "live" };
   }
   if (s === "live") return { status: "live" };
-  if (s === STATUS_WITHDRAWN) return { status: { $in: ["withdrawnByAuthor", "withdrawnByAdmin"] } };
+  if (s === "withdrawn") return { status: "withdrawnByAdmin" };
   if (COMMENT_STATUSES.includes(s)) return { status: s };
-  return { error: true, message: `Invalid status parameter. Must be: live, ${STATUS_WITHDRAWN}, withdrawnByAuthor, or withdrawnByAdmin.` };
+  return { error: true, message: "Invalid status parameter. Must be: live, withdrawn, or withdrawnByAdmin." };
 }
 
 /** Build comment response shape: user with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches comment.userId. */
@@ -68,7 +67,7 @@ async function formatComment(comment, proposal, budget, authenticatedUserId = nu
   const isAuthor = authenticatedUserId && user && user._id === authenticatedUserId;
   const result = {
     _id: comment._id,
-    userType: comment.userType,
+    userType: type,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
@@ -83,177 +82,9 @@ async function formatComment(comment, proposal, budget, authenticatedUserId = nu
 }
 
 /**
- * @route GET /api/v0/comments/:commentId/replies
- * @description Get paginated replies (parentId=commentId), ordered by createdAt ascending. Default status=live; admins can use status param to filter.
- */
-router.get("/:commentId/replies", async (req, res) => {
-  try {
-    const { commentId } = req.params;
-    const statusParam = req.query.status;
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
-
-    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
-      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
-    }
-    if (page < 1 || isNaN(page)) {
-      return res.status(400).json({ status: "error", message: "Invalid page parameter. Must be a positive integer." });
-    }
-    if (limit < 1 || isNaN(limit)) {
-      return res.status(400).json({ status: "error", message: "Invalid limit parameter. Must be a positive integer between 1 and 100." });
-    }
-
-    const parentComment = await Comment.findById(commentId).lean();
-    if (!parentComment || parentComment.status !== "live") {
-      return res.status(404).json({ status: "error", message: "Comment not found" });
-    }
-
-    const proposal = parentComment.proposalId
-      ? await Proposal.findById(parentComment.proposalId).select("proposerId budgetId").lean()
-      : null;
-    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
-    const userId = getAuthenticatedUserId(req);
-    const isAdmin = isBudgetAdmin(proposal, budget, userId);
-    const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
-    if (statusFilter.error) {
-      return res.status(400).json({ status: "error", message: statusFilter.message });
-    }
-
-    const commentObjectId = new mongoose.Types.ObjectId(commentId);
-    let replyQuery = { parentId: commentObjectId, ...statusFilter };
-    if (statusFilter.status === "live" && userId) {
-      // Filter authors' own withdrawn comments after fetching
-      // We'll filter in memory after the query since User._id (String) and comment.userId (ObjectId) don't match directly
-      replyQuery = {
-        parentId: commentObjectId,
-        $or: [
-          { status: "live" },
-          { status: { $in: ["withdrawnByAuthor", "withdrawnByAdmin"] } },
-        ],
-      };
-    }
-
-    // If filtering for authors' withdrawn comments, we need to fetch all and filter in memory
-    // because User._id (String/bech32) and comment.userId (ObjectId) don't match directly
-    let replies, total;
-    if (statusFilter.status === "live" && userId) {
-      const allReplies = await Comment.find(replyQuery).sort({ createdAt: 1 }).lean();
-      // Lookup users for all replies to check authorship
-      const repliesWithUsers = await Promise.all(
-        allReplies.map(async (r) => {
-          // User._id is String (bech32), and comment.userId is now also String
-          const commentUser = r.userId ? await User.findById(r.userId).select("_id").lean() : null;
-          return { reply: r, user: commentUser };
-        })
-      );
-      const filteredReplies = repliesWithUsers
-        .filter(({ reply, user }) => {
-          if (reply.status === "live") return true;
-          // Only include if the comment's user _id matches the authenticated userId (bech32)
-          return user && user._id === userId;
-        })
-        .map(({ reply }) => reply);
-      total = filteredReplies.length;
-      replies = filteredReplies.slice((page - 1) * limit, page * limit);
-    } else {
-      [replies, total] = await Promise.all([
-        Comment.find(replyQuery)
-          .sort({ createdAt: 1 })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .lean(),
-        Comment.countDocuments(replyQuery),
-      ]);
-    }
-
-    const data = await Promise.all(replies.map((r) => formatComment(r, proposal, budget, userId)));
-    const totalPages = Math.ceil(total / limit);
-    return res.status(200).json({
-      data,
-      meta: { page, limit, total, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
-    });
-  } catch (error) {
-    console.error("Error fetching comment replies:", error);
-    return res.status(500).json({ status: "error", message: "Internal server error" });
-  }
-});
-
-/**
- * @route GET /api/v0/comments/:commentId
- * @description Get a single comment by id. Public: only live. Admins can pass status to retrieve non-live comments.
- */
-router.get("/:commentId", async (req, res) => {
-  try {
-    const { commentId } = req.params;
-    const statusParam = req.query.status;
-    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
-      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
-    }
-
-    const comment = await Comment.findById(commentId).lean();
-    if (!comment) {
-      return res.status(404).json({ status: "error", message: "Comment not found" });
-    }
-
-    const proposal = comment.proposalId
-      ? await Proposal.findById(comment.proposalId).select("proposerId budgetId").lean()
-      : null;
-    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
-    const userId = getAuthenticatedUserId(req);
-    const isAdmin = isBudgetAdmin(proposal, budget, userId);
-    // User._id is String (bech32), and comment.userId is now also String
-    const commentUser = comment.userId ? await User.findById(comment.userId).select("_id").lean() : null;
-    const isAuthor = userId && commentUser && commentUser._id === userId;
-
-    if (statusParam) {
-      const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
-      if (statusFilter.error) {
-        return res.status(400).json({ status: "error", message: statusFilter.message });
-      }
-      if (isAdmin) {
-        if (comment.status === "live") {
-          if (statusFilter.status !== "live") {
-            return res.status(404).json({ status: "error", message: "Comment not found" });
-          }
-        } else {
-          const matches = statusFilter.status === "live"
-            ? comment.status === "live"
-            : statusFilter.status?.$in
-              ? statusFilter.status.$in.includes(comment.status)
-              : comment.status === statusFilter.status;
-          if (!matches) {
-            return res.status(404).json({ status: "error", message: "Comment not found" });
-          }
-        }
-      }
-    }
-    if (comment.status !== "live" && !isAdmin && !isAuthor) {
-      return res.status(404).json({ status: "error", message: "Comment not found" });
-    }
-
-    const data = await formatComment(comment, proposal, budget, userId);
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error("Error fetching comment:", error);
-    return res.status(500).json({ status: "error", message: "Internal server error" });
-  }
-});
-
-/**
- * @route GET /api/v0/comments
- * @description Get paginated top-level comments (parentId = null) for a proposal. Query param proposal required. Optional sort (date = createdAt) and direction (asc/desc). Excludes proposalId, status from comments; user excludes lastLogin, createdAt, updatedAt.
- * @access Public
- *
- * @query {string} proposal - Proposal ID (required, valid ObjectId)
- * @query {string} [status] - Comment status filter. Default live. Admins only: live, withdrawn, withdrawnByAuthor, withdrawnByAdmin.
- * @query {string} [sort=date] - Sort field: date (createdAt), replyCount, or likeCount
- * @query {string} [direction=desc] - Sort direction: asc or desc
- * @query {number} [page=1] - Page number (1-based)
- * @query {number} [limit=10] - Items per page (max 100)
- *
- * @returns {Object} 200 - { data: comments, meta: pagination }
- * @returns {Object} 400 - Missing/invalid proposal, status, sort, direction or pagination params
- * @returns {Object} 404 - Proposal not found
+ * GET /comments
+ * API spec §3.6 — Paginated top-level comments for a proposal. Query: proposal (required), status, sort, direction, page, limit.
+ * Public: live only. Admins can filter by status (live, withdrawn, withdrawnByAdmin). Response excludes proposalId, status, parentId, userId.
  */
 router.get("/", async (req, res) => {
   try {
@@ -335,21 +166,7 @@ router.get("/", async (req, res) => {
     const sortDirection = direction === "asc" ? 1 : -1;
     const skip = (page - 1) * limit;
 
-    let matchCondition = { proposalId: proposalObjectId, parentId: null, ...statusFilter };
-    let filterAuthorWithdrawnAfterLookup = false;
-    if (statusFilter.status === "live" && userId) {
-      // We need to filter authors' withdrawn comments after User lookup
-      // because User._id is String (bech32) but comment.userId is ObjectId
-      filterAuthorWithdrawnAfterLookup = true;
-      matchCondition = {
-        proposalId: proposalObjectId,
-        parentId: null,
-        $or: [
-          { status: "live" },
-          { status: { $in: ["withdrawnByAuthor", "withdrawnByAdmin"] } },
-        ],
-      };
-    }
+    const matchCondition = { proposalId: proposalObjectId, parentId: null, ...statusFilter };
 
     const pipeline = [
       { $match: matchCondition },
@@ -428,23 +245,6 @@ router.get("/", async (req, res) => {
                 },
               },
             },
-            ...(filterAuthorWithdrawnAfterLookup
-              ? [
-                  {
-                    $match: {
-                      $or: [
-                        { status: "live" },
-                        {
-                          $and: [
-                            { status: { $in: ["withdrawnByAuthor", "withdrawnByAdmin"] } },
-                            { "user._id": userId },
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                ]
-              : []),
             {
               $project: {
                 proposalId: 0,
@@ -460,82 +260,10 @@ router.get("/", async (req, res) => {
       },
     ];
 
-    // If filtering for authors' withdrawn comments, we need to filter before pagination
-    // So we'll modify the pipeline to fetch all matching comments, filter, then paginate
-    if (filterAuthorWithdrawnAfterLookup) {
-      // Remove pagination from pipeline, filter after user lookup, then apply pagination
-      const pipelineWithoutPagination = pipeline.slice(0, -1); // Remove $facet
-      const sortStage = pipeline[pipeline.length - 2]; // Get $sort stage
-      const facetStage = pipeline[pipeline.length - 1]; // Get $facet stage
-      
-      // Modify facet to not paginate yet
-      const modifiedFacet = {
-        ...facetStage.$facet,
-        items: [
-          ...facetStage.$facet.items.slice(0, -3), // Remove $skip, $limit, and keep user lookup
-          {
-            $match: {
-              $or: [
-                { status: "live" },
-                {
-                  $and: [
-                    { status: { $in: ["withdrawnByAuthor", "withdrawnByAdmin"] } },
-                    { "user._id": userId },
-                  ],
-                },
-              ],
-            },
-          },
-          ...facetStage.$facet.items.slice(-3), // Add back $skip, $limit after filtering
-        ],
-      };
-      
-      pipeline[pipeline.length - 1] = { $facet: modifiedFacet };
-    }
-    
     const [result] = await Comment.aggregate(pipeline);
-    let total = result?.total?.[0]?.n ?? 0;
-    let items = result?.items ?? [];
-
-    // Format all comments first
-    let formattedItems = await Promise.all(items.map((doc) => formatComment(doc, proposal, budget, userId)));
-    
-    // If filtering for authors' withdrawn comments, filter after formatting
-    // This is necessary because User._id (String/bech32) and comment.userId (ObjectId) 
-    // don't match directly, so the aggregation $lookup may not work correctly
-    if (filterAuthorWithdrawnAfterLookup) {
-      // Keep track of original items to check status
-      const itemsMap = new Map(items.map((item) => [item._id.toString(), item]));
-      
-      formattedItems = formattedItems.filter((item) => {
-        const originalComment = itemsMap.get(item._id.toString());
-        if (!originalComment) return false;
-        // Include all live comments
-        if (originalComment.status === "live") return true;
-        // Only include withdrawn comments if user._id matches authenticated userId (bech32)
-        return item.user && item.user._id === userId;
-      });
-      
-      // Recalculate total by counting all matching comments (not just paginated ones)
-      // Note: This is approximate since we'd need to format all comments to get exact count
-      // For better accuracy, we could fetch all matching comments, format, filter, and count
-      // But that's expensive. For now, use a separate count query.
-      const allMatchingComments = await Comment.find(matchCondition).lean();
-      const allFormatted = await Promise.all(
-        allMatchingComments.map((doc) => formatComment(doc, proposal, budget, userId))
-      );
-      const filteredCount = allFormatted.filter((item) => {
-        const originalComment = allMatchingComments.find(
-          (c) => c._id.toString() === item._id.toString()
-        );
-        if (!originalComment) return false;
-        if (originalComment.status === "live") return true;
-        return item.user && item.user._id === userId;
-      }).length;
-      total = filteredCount;
-    }
-    
-    const data = formattedItems;
+    const total = result?.total?.[0]?.n ?? 0;
+    const items = result?.items ?? [];
+    const data = await Promise.all(items.map((doc) => formatComment(doc, proposal, budget, userId)));
 
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({
@@ -555,6 +283,426 @@ router.get("/", async (req, res) => {
       status: "error",
       message: "Internal server error",
     });
+  }
+});
+
+/**
+ * POST /comments
+ * API spec §5.5 — Create a comment on a live proposal. Auth required. Before budget feedbackEndDate. Body: proposalId, content, optional parentId.
+ */
+router.post("/", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(401).json({ status: "error", message: "No token provided" });
+    }
+    const userId = tokenResult.userId.toString();
+
+    const { proposalId, content, parentId } = req.body ?? {};
+    if (!proposalId || typeof proposalId !== "string") {
+      return res.status(400).json({ status: "error", message: "proposalId is required." });
+    }
+    if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
+
+    const proposalIdTrim = proposalId.trim();
+    if (!mongoose.Types.ObjectId.isValid(proposalIdTrim) || proposalIdTrim.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid proposalId. Must be a valid ObjectId." });
+    }
+
+    const proposal = await Proposal.findById(proposalIdTrim).select("status budgetId").lean();
+    if (!proposal) {
+      return res.status(404).json({ status: "error", message: "Proposal not found" });
+    }
+    if (proposal.status !== "live") {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments can only be added to live proposals before the budget feedback period ends (feedbackEndDate).",
+      });
+    }
+
+    const budget = proposal.budgetId
+      ? await Budget.findById(proposal.budgetId).select("feedbackEndDate").lean()
+      : null;
+    if (budget && budget.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments can only be added to live proposals before the budget feedback period ends (feedbackEndDate).",
+      });
+    }
+
+    if (parentId != null) {
+      const parentIdStr = typeof parentId === "string" ? parentId.trim() : String(parentId);
+      if (!mongoose.Types.ObjectId.isValid(parentIdStr) || parentIdStr.length !== 24) {
+        return res.status(400).json({ status: "error", message: "Invalid parentId. Must be a valid ObjectId." });
+      }
+      const parentComment = await Comment.findOne({
+        _id: parentIdStr,
+        proposalId: new mongoose.Types.ObjectId(proposalIdTrim),
+      }).lean();
+      if (!parentComment) {
+        return res.status(404).json({ status: "error", message: "Parent comment not found" });
+      }
+    }
+
+    const doc = {
+      proposalId: new mongoose.Types.ObjectId(proposalIdTrim),
+      userId,
+      content: typeof content === "string" ? content.trim() : String(content),
+      status: "live",
+    };
+    if (parentId != null && parentId !== "") {
+      doc.parentId = new mongoose.Types.ObjectId(typeof parentId === "string" ? parentId.trim() : parentId);
+    }
+
+    const comment = await Comment.create(doc);
+    return res.status(201).json({
+      _id: comment._id,
+      proposalId: comment.proposalId,
+      parentId: comment.parentId ?? null,
+      userId: comment.userId,
+      content: comment.content,
+      status: comment.status,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    });
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /comments/:commentId/replies
+ * API spec §3.8 — Paginated replies to a comment. Query: status, page, limit. Ordered by createdAt asc. Parent must exist and be live.
+ */
+router.get("/:commentId/replies", async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const statusParam = req.query.status;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+
+    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
+    }
+    if (page < 1 || isNaN(page)) {
+      return res.status(400).json({ status: "error", message: "Invalid page parameter. Must be a positive integer." });
+    }
+    if (limit < 1 || isNaN(limit)) {
+      return res.status(400).json({ status: "error", message: "Invalid limit parameter. Must be a positive integer between 1 and 100." });
+    }
+
+    const parentComment = await Comment.findById(commentId).lean();
+    if (!parentComment || parentComment.status !== "live") {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+
+    const proposal = parentComment.proposalId
+      ? await Proposal.findById(parentComment.proposalId).select("proposerId budgetId").lean()
+      : null;
+    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
+    const userId = getAuthenticatedUserId(req);
+    const isAdmin = isBudgetAdmin(proposal, budget, userId);
+    const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
+    if (statusFilter.error) {
+      return res.status(400).json({ status: "error", message: statusFilter.message });
+    }
+
+    const commentObjectId = new mongoose.Types.ObjectId(commentId);
+    const replyQuery = { parentId: commentObjectId, ...statusFilter };
+
+    const [replies, total] = await Promise.all([
+      Comment.find(replyQuery)
+        .sort({ createdAt: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Comment.countDocuments(replyQuery),
+    ]);
+
+    const data = await Promise.all(replies.map((r) => formatComment(r, proposal, budget, userId)));
+    const totalPages = Math.ceil(total / limit);
+    return res.status(200).json({
+      data,
+      meta: { page, limit, total, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+    });
+  } catch (error) {
+    console.error("Error fetching comment replies:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+/**
+ * POST /comments/:commentId/like
+ * API spec §5.7 — Toggle like. 201 when added, 200 when removed. Live comment only; before budget feedbackEndDate.
+ */
+router.post("/:commentId/like", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(401).json({ status: "error", message: "No token provided" });
+    }
+    const userId = tokenResult.userId.toString();
+    const { commentId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
+    }
+
+    const comment = await Comment.findById(commentId).select("status proposalId").lean();
+    if (!comment) {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+    if (comment.status !== "live") {
+      return res.status(400).json({ status: "error", message: "Only live comments can be liked." });
+    }
+
+    const proposal = comment.proposalId
+      ? await Proposal.findById(comment.proposalId).select("status budgetId").lean()
+      : null;
+    if (!proposal || proposal.status !== "live") {
+      return res.status(400).json({ status: "error", message: "Only live comments can be liked." });
+    }
+    const budget = proposal.budgetId
+      ? await Budget.findById(proposal.budgetId).select("feedbackEndDate").lean()
+      : null;
+    if (budget?.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments on this proposal can no longer be liked (feedback period has ended).",
+      });
+    }
+
+    const commentObjId = new mongoose.Types.ObjectId(commentId);
+    const existing = await CommentLike.findOne({ commentId: commentObjId, userId });
+    if (existing) {
+      await CommentLike.deleteOne({ _id: existing._id });
+      const likeCount = await CommentLike.countDocuments({ commentId: commentObjId });
+      return res.status(200).json({
+        status: "success",
+        message: "Like removed.",
+        liked: false,
+        likeCount,
+      });
+    }
+    await CommentLike.create({ commentId: commentObjId, userId });
+    const likeCount = await CommentLike.countDocuments({ commentId: commentObjId });
+    return res.status(201).json({
+      status: "success",
+      message: "Comment liked.",
+      liked: true,
+      likeCount,
+    });
+  } catch (error) {
+    console.error("Error toggling comment like:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+/**
+ * PUT /comments/:commentId/withdraw
+ * API spec §5.8 — Budget admin withdraws a live comment. Body: category (required), comment (optional). Until feedbackEndDate.
+ */
+router.put("/:commentId/withdraw", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(401).json({ status: "error", message: "No token provided" });
+    }
+    const userId = tokenResult.userId.toString();
+    const { commentId } = req.params;
+    const { category, comment: commentReason } = req.body ?? {};
+
+    const WITHDRAWAL_CATEGORIES = ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"];
+    if (!category || !WITHDRAWAL_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        status: "error",
+        message: "category is required and must be one of: Inappropriate content, Spam, Policy violation, Duplicate, Other.",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
+    }
+
+    const comment = await Comment.findById(commentId).lean();
+    if (!comment) {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+    if (comment.status !== "live") {
+      return res.status(400).json({
+        status: "error",
+        message: "Only live comments can be withdrawn by an admin.",
+      });
+    }
+
+    const proposal = comment.proposalId
+      ? await Proposal.findById(comment.proposalId).select("budgetId").lean()
+      : null;
+    const budget = proposal?.budgetId
+      ? await Budget.findById(proposal.budgetId).select("admins feedbackEndDate").lean()
+      : null;
+    if (!budget || !Array.isArray(budget.admins) || !budget.admins.includes(userId)) {
+      return res.status(403).json({ status: "error", message: "You do not have permission to withdraw this comment." });
+    }
+    if (budget.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments cannot be withdrawn by an admin after the budget feedback period has ended (feedbackEndDate).",
+      });
+    }
+
+    const updated = await Comment.findByIdAndUpdate(
+      commentId,
+      {
+        status: "withdrawnByAdmin",
+        withdrawalDetails: {
+          category,
+          userId,
+          comment: commentReason != null ? String(commentReason) : undefined,
+          date: new Date(),
+        },
+      },
+      { new: true }
+    ).lean();
+
+    return res.status(200).json({
+      _id: updated._id,
+      proposalId: updated.proposalId,
+      userId: updated.userId,
+      content: updated.content,
+      status: updated.status,
+      withdrawalDetails: updated.withdrawalDetails,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    });
+  } catch (error) {
+    console.error("Error withdrawing comment:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+/**
+ * GET /comments/:commentId
+ * API spec §3.7 — Single comment by ID. Public: live only. Author: own in any status + withdrawalDetails. Admin: any + optional status param.
+ */
+router.get("/:commentId", async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const statusParam = req.query.status;
+    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
+    }
+
+    const comment = await Comment.findById(commentId).lean();
+    if (!comment) {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+
+    const proposal = comment.proposalId
+      ? await Proposal.findById(comment.proposalId).select("proposerId budgetId").lean()
+      : null;
+    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
+    const userId = getAuthenticatedUserId(req);
+    const isAdmin = isBudgetAdmin(proposal, budget, userId);
+    // User._id is String (bech32), and comment.userId is now also String
+    const commentUser = comment.userId ? await User.findById(comment.userId).select("_id").lean() : null;
+    const isAuthor = userId && commentUser && commentUser._id === userId;
+
+    if (statusParam) {
+      const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
+      if (statusFilter.error) {
+        return res.status(400).json({ status: "error", message: statusFilter.message });
+      }
+      if (isAdmin) {
+        if (comment.status === "live") {
+          if (statusFilter.status !== "live") {
+            return res.status(404).json({ status: "error", message: "Comment not found" });
+          }
+        } else {
+          const matches = statusFilter.status === "live"
+            ? comment.status === "live"
+            : statusFilter.status?.$in
+              ? statusFilter.status.$in.includes(comment.status)
+              : comment.status === statusFilter.status;
+          if (!matches) {
+            return res.status(404).json({ status: "error", message: "Comment not found" });
+          }
+        }
+      }
+    }
+    if (comment.status !== "live" && !isAdmin && !isAuthor) {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+
+    const data = await formatComment(comment, proposal, budget, userId);
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching comment:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
+  }
+});
+
+/**
+ * PUT /comments/:commentId
+ * API spec §5.6 — Update comment content. Author only; within 15 minutes of creation.
+ */
+router.put("/:commentId", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(401).json({ status: "error", message: "No token provided" });
+    }
+    const userId = tokenResult.userId.toString();
+    const { commentId } = req.params;
+    const { content } = req.body ?? {};
+
+    if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
+      return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
+    }
+
+    const comment = await Comment.findById(commentId).lean();
+    if (!comment) {
+      return res.status(404).json({ status: "error", message: "Comment not found" });
+    }
+    if (String(comment.userId) !== userId) {
+      return res.status(403).json({ status: "error", message: "You do not have permission to update this comment." });
+    }
+
+    const fifteenMinutesMs = 15 * 60 * 1000;
+    const createdAt = comment.createdAt ? new Date(comment.createdAt).getTime() : 0;
+    if (Date.now() - createdAt > fifteenMinutesMs) {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments can only be updated within 15 minutes of creation.",
+      });
+    }
+
+    const updated = await Comment.findByIdAndUpdate(
+      commentId,
+      { content: typeof content === "string" ? content.trim() : String(content) },
+      { new: true }
+    ).lean();
+
+    return res.status(200).json({
+      _id: updated._id,
+      proposalId: updated.proposalId,
+      parentId: updated.parentId ?? null,
+      userId: updated.userId,
+      content: updated.content,
+      status: updated.status,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    });
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    return res.status(500).json({ status: "error", message: "Internal server error" });
   }
 });
 

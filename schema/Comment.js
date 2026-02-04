@@ -29,7 +29,10 @@ const commentSchema = new Schema(
         },
         withdrawalDetails: {
             type: {
-                category: ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"],
+                category: {
+                    type: String,
+                    enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"],
+                },
                 userId: String,
                 comment: String,
                 date: Date,
