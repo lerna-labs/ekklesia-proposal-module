@@ -1,16 +1,17 @@
 <script>
   import * as Card from "$lib/components/ui/card";
+  /** @type {{ proposal: { metaData: { pillar?: string; pillarDescription?: string; highLevelThematicArea?: string; descriptionStrategy?: string; expectedEnhancement?: string } } }} */
   let { proposal } = $props();
-  let category = $derived(proposal.category);
+  let meta = $derived(proposal?.metaData ?? {});
 </script>
 
 <Card.Root class="bg-slate-200/50">
   <Card.Header class="pb-0 mb-0">
     <Card.Title class="space-y-2 pb-0 mb-0">
       <h1 class="text-xs uppercase text-muted-foreground">Strategic Pillar</h1>
-      <h2>{category.pillar}</h2>
+      <h2>{meta.pillar}</h2>
       <p class="text-xs text-muted-foreground font-normal">
-        {category.pillarDescription}
+        {meta.pillarDescription}
       </p>
     </Card.Title>
   </Card.Header>
@@ -21,7 +22,7 @@
           Thematic Area
         </h3>
         <p class="text-sm text-foreground font-light">
-          {category.highLevelThematicArea}
+          {meta.highLevelThematicArea}
         </p>
       </div>
 
@@ -30,7 +31,7 @@
           Expected Enhancement
         </h3>
         <p class="text-sm text-foreground font-light">
-          {category.expectedEnhancement}
+          {meta.expectedEnhancement}
         </p>
       </div>
     </div>
@@ -40,7 +41,7 @@
         Strategic Approach
       </h3>
       <p class="text-sm text-foreground font-light">
-        {category.descriptionStrategy}
+        {meta.descriptionStrategy}
       </p>
     </div>
   </Card.Content>

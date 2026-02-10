@@ -2,11 +2,11 @@
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
-  let { proposal, budgetSlug, class: className } = $props();
+  let { proposal, budget, class: className } = $props();
 
   const proposalHref = $derived(
-    budgetSlug && (proposal._id || proposal.id)
-      ? `/budget/${budgetSlug}/${proposal._id || proposal.id}`
+    budget && (proposal._id || proposal.id)
+      ? `/budgets/${budget.slug}/${proposal._id || proposal.id}`
       : null,
   );
 </script>
