@@ -1,6 +1,6 @@
 /**
  * Import categories from __setup/categories.csv into the Category collection.
- * CSV is semicolon-delimited; first column is the category (Focus Area).
+ * CSV is semicolon-delimited. Schema: budgetId, title, description, metaData, sortOrder.
  *
  * Usage (from project root):
  *   BUDGET_ID=<mongodb-object-id> node __setup/importCategories.js
@@ -21,6 +21,19 @@ import { Category } from "../schema/Category.js";
 import mongoose from "mongoose";
 
 const CSV_PATH = path.join(__dirname, "categories.csv");
+
+function getBudgetId() {
+    const id = process.env.BUDGET_ID?.trim();
+    if (!id) {
+        console.error("BUDGET_ID is required. Example: BUDGET_ID=507f1f77bcf86cd799439011 node __setup/importCategories.js");
+        process.exit(1);
+    }
+    if (!mongoose.Types.ObjectId.isValid(id) || id.length !== 24) {
+        console.error("BUDGET_ID must be a valid 24-character MongoDB ObjectId.");
+        process.exit(1);
+    }
+    return new mongoose.Types.ObjectId(id);
+}
 
 /**
  * Parse a semicolon-delimited CSV line, respecting double-quoted fields
@@ -62,7 +75,7 @@ function parseCsvLine(line) {
 }
 
 async function importCategories() {
-
+    const budgetId = getBudgetId();
 
     const raw = readFileSync(CSV_PATH, "utf8");
     const lines = raw.split(/\r?\n/).filter((l) => l.trim());
@@ -87,26 +100,40 @@ async function importCategories() {
     await connectToDatabase();
 
     let created = 0;
+    let sortOrder = 0;
 
     for (const row of rows) {
         const title = (row["Focus Area"] ?? "").trim();
         if (!title) continue;
 
+        sortOrder += 1;
+        const descriptionStrategy = (row["Description / Strategy"] ?? "").trim();
+        const pillarDesc = (row["Pillar description"] ?? "").trim();
+
+        const metaData = {};
+        const pillar = (row["Pillar"] ?? "").trim();
+        if (pillar) metaData.pillar = pillar;
+        if (pillarDesc) metaData.pillarDescription = pillarDesc;
+        const hlta = (row["High level thematic area"] ?? "").trim();
+        if (hlta) metaData.highLevelThematicArea = hlta;
+        if (descriptionStrategy) metaData.descriptionStrategy = descriptionStrategy;
+        const expectedEnhancement = (row["Expected Enhancement"] ?? "").trim();
+        if (expectedEnhancement) metaData.expectedEnhancement = expectedEnhancement;
+        metaData.kpis = [];
+
         await Category.create({
+            budgetId,
             title,
-            description: (row["Description / Strategy"] ?? row["Pillar description"] ?? "").trim() || title,
-            pillar: (row["Pillar"] ?? "").trim() || undefined,
-            pillarDescription: (row["Pillar description"] ?? "").trim() || undefined,
-            highLevelThematicArea: (row["High level thematic area"] ?? "").trim() || undefined,
-            descriptionStrategy: (row["Description / Strategy"] ?? "").trim() || undefined,
-            expectedEnhancement: (row["Expected Enhancement"] ?? "").trim() || undefined,
+            description: descriptionStrategy || pillarDesc || title,
+            metaData: Object.keys(metaData).length ? metaData : undefined,
+            sortOrder,
         });
         created++;
         console.log(`  ${created}. ${title}`);
     }
 
     await disconnectFromDatabase();
-    console.log(`\nImported ${created} categories`);
+    console.log(`\nImported ${created} categories for budget ${budgetId}`);
 }
 
 importCategories().catch((err) => {
