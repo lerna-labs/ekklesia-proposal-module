@@ -100,7 +100,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} budgetSlug={data.slug} />
+          <ProposalCard {proposal} {budget} />
         {/each}
       </div>
 
