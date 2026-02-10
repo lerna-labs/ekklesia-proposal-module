@@ -7,9 +7,9 @@
   <Card.Header class="pb-0 mb-0">
     <Card.Title class="space-y-2 pb-0 mb-0">
       <h1 class="text-xs uppercase text-muted-foreground">Strategic Pillar</h1>
-      <h2>{category.pillar}</h2>
+      <h2>{category.metaData.pillar}</h2>
       <p class="text-xs text-muted-foreground font-normal">
-        {category.pillarDescription}
+        {category.metaData.pillarDescription}
       </p>
     </Card.Title>
   </Card.Header>
@@ -20,7 +20,7 @@
           Thematic Area
         </h3>
         <p class="text-sm text-foreground">
-          {category.highLevelThematicArea}
+          {category.metaData.highLevelThematicArea}
         </p>
       </div>
 
@@ -30,7 +30,7 @@
             Expected Enhancement
           </h3>
           <p class="text-sm text-foreground">
-            {category.expectedEnhancement}
+            {category.metaData.expectedEnhancement}
           </p>
         </div>
       {/if}
@@ -41,7 +41,7 @@
         Strategic Approach
       </h3>
       <p class="text-sm text-foreground">
-        {category.descriptionStrategy}
+        {category.metaData.descriptionStrategy}
       </p>
     </div>
   </Card.Content>

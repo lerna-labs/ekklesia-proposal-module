@@ -29,6 +29,14 @@ export const formSchema = z.object({
       placeholder: "Select a focus area...",
       required: true,
     }),
+  kpis: z.array(z.object({
+    title: z.string().min(3).max(255),
+    contributionStrategy: z.string().min(100).max(1000),
+  })).min(1, "At least one KPI is required").meta({
+    label: "Key Performance Indicators",
+    description: "Select specific KPIs you intend to impact (e.g., TVL, Monthly Transactions, Active Users).",
+    required: true,
+  }),
 });
 
 export default formSchema;

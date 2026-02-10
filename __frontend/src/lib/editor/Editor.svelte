@@ -15,6 +15,7 @@
   import { ListNode, ListItemNode, QuoteNode } from "svelte-lexical";
   import { theme } from "svelte-lexical/dist/themes/default";
   import EditorToolbar from "./EditorToolbar.svelte";
+  import "./editor.css";
   let { quote, value = $bindable("") } = $props();
 
   const initialConfig = {
