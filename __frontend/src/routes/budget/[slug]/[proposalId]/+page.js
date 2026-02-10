@@ -16,11 +16,13 @@ export async function load({ params, fetch }) {
 	}
 	const proposal = await proposalResponse.json();
 
-	const commentsResponse = await fetch(`${apiUrl}/proposals/${proposalId}/comments`);
+	// API spec §3.6: GET /comments?proposal={proposalId} — returns { data, meta }
+	const commentsResponse = await fetch(`${apiUrl}/comments?proposal=${proposalId}`);
 	if (!commentsResponse.ok) {
 		error(commentsResponse.status, `Failed to load comments: ${commentsResponse.statusText}`);
 	}
-	const comments = await commentsResponse.json();
+	const commentsJson = await commentsResponse.json();
+	const comments = commentsJson.data ?? [];
 
 	return {
 		budget,

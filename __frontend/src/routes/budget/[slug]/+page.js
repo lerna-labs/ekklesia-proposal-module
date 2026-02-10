@@ -17,25 +17,33 @@ export async function load({ params, url, fetch }) {
 
     const budget = await response.json();
 
-    // Load proposals for this budget (with optional page, search, and sort params)
+    // Load proposals for this budget (API spec §3.4: query param `budget`, response { data, meta })
     const proposalsSearchParams = new URLSearchParams({
-        budgetId: budget._id,
+        budget: budget._id,
         page: pageNum,
+        limit: '10',
+        sort,
+        direction,
     });
     if (search) {
         proposalsSearchParams.set('search', search);
     }
-    proposalsSearchParams.set('sort', sort);
-    proposalsSearchParams.set('direction', direction);
     const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
     const proposalsResponse = await fetch(proposalsUrl);
 
     let proposals = { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } };
     if (proposalsResponse.ok) {
         const json = await proposalsResponse.json();
-        proposals = Array.isArray(json)
-            ? { data: json, pagination: { currentPage: 1, totalPages: 1, totalItems: json.length, itemsPerPage: json.length } }
-            : json;
+        const meta = json.meta ?? {};
+        proposals = {
+            data: json.data ?? [],
+            pagination: {
+                currentPage: meta.page ?? 1,
+                totalPages: meta.totalPages ?? 1,
+                totalItems: meta.total ?? 0,
+                itemsPerPage: meta.limit ?? 10,
+            },
+        };
     }
 
     return {
