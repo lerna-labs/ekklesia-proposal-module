@@ -63,10 +63,13 @@
   let schemaRequired = $derived(
     formSchema.shape[id]?.meta()?.required ? true : false,
   );
-  // TODO: Display Errors where they belong
   let schemaError = $derived(
-    validationErrors?.issues?.find((issue) => issue.path[0] === id)?.message,
+    validationErrors?.properties?.[id]?.errors?.[0],
   );
+  function getContributionError(index) {
+    return validationErrors?.properties?.kpis?.items?.[index]?.properties
+      ?.contributionStrategy?.errors?.[0];
+  }
   const categoryData = $derived(categories.find((c) => c._id === category));
   const kpis = $derived(categoryData?.metaData?.kpis ?? []);
 
@@ -186,7 +189,11 @@
     <!-- CARDS -->
     {#each value as kpi, index}
       <Field.Field>
-        <Card.Root class=" bg-slate-200/50">
+        <Card.Root
+          class="bg-slate-200/50 {getContributionError(index)
+            ? 'border-destructive ring-destructive/20 ring-[3px]'
+            : ''}"
+        >
           <Card.Header>
             <Card.Title class="flex w-full justify-between items-center gap-2">
               {kpi.title}
@@ -219,6 +226,11 @@
                 id={`contributionStrategy-${index}`}
                 bind:value={kpi.contributionStrategy}
               />
+              {#if getContributionError(index)}
+                <Field.Error class="text-xs">
+                  {getContributionError(index)}
+                </Field.Error>
+              {/if}
             </Field.Field>
           </Card.Content>
           <Card.Footer>

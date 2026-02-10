@@ -22,12 +22,11 @@
 
   const schemaError = $derived(
     errorPath?.length
-      ? validationErrors?.issues?.find(
-          (issue) =>
-            issue.path.length === errorPath.length &&
-            issue.path.every((p, i) => p === errorPath[i]),
-        )?.message
-      : validationErrors?.issues?.find((issue) => issue.path[0] === id)?.message,
+      ? errorPath.reduce(
+          (node, key) => node?.properties?.[key],
+          validationErrors,
+        )?.errors?.[0]
+      : validationErrors?.properties?.[id]?.errors?.[0],
   );
 </script>
 

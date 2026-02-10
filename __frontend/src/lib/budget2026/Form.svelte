@@ -31,7 +31,7 @@
       validationErrors = null;
       // TODO: submit to API
     } else {
-      validationErrors = result.error;
+      validationErrors = z.treeifyError(result.error);
     }
   }
 
@@ -41,12 +41,12 @@
   // When validation has failed and the user changes form data, revalidate
   $effect(() => {
     formDataSnapshot;
-    if (untrack(() => !validationErrors?.issues?.length)) return;
+    if (untrack(() => !validationErrors)) return;
     const result = formSchema.safeParse(formData);
     if (result.success) {
       validationErrors = null;
     } else {
-      validationErrors = result.error;
+      validationErrors = z.treeifyError(result.error);
     }
   });
 </script>

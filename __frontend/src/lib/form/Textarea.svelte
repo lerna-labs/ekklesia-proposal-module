@@ -18,7 +18,7 @@
     formSchema.shape[id]?.meta()?.required ? true : false,
   );
   let schemaError = $derived(
-    validationErrors?.issues?.find((issue) => issue.path[0] === id)?.message,
+    validationErrors?.properties?.[id]?.errors?.[0],
   );
   let maxLength = $derived(formSchema.shape[id].maxLength);
 
