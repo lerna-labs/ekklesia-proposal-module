@@ -37,6 +37,14 @@ export const formSchema = z.object({
     description: "Select specific KPIs you intend to impact (e.g., TVL, Monthly Transactions, Active Users).",
     required: true,
   }),
+  timeline: z.object({
+    startDate: z.date("Start Date is required"),
+    endDate: z.date("End Date is required"),
+  }).meta({
+    label: "Timeline",
+    description: "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
+    required: true,
+  }),
 });
 
 export default formSchema;
