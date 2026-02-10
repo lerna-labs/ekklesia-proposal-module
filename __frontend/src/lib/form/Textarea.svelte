@@ -13,7 +13,6 @@
   } = $props();
 
   let label = $derived(formSchema.shape[id]?.meta()?.label);
-
   let schemaMeta = $derived(formSchema.shape[id]?.meta());
   let schemaRequired = $derived(
     formSchema.shape[id]?.meta()?.required ? true : false,
@@ -22,6 +21,25 @@
     validationErrors?.issues?.find((issue) => issue.path[0] === id)?.message,
   );
   let maxLength = $derived(formSchema.shape[id].maxLength);
+
+  /** Strip markdown syntax to get visible character count (for limit display). */
+  function stripMarkdownForCount(text) {
+    if (typeof text !== "string") return "";
+    return text
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1") // ![alt](url) -> alt
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
+      .replace(/(\*\*|__)(.*?)\1/g, "$2") // **bold** __bold__
+      .replace(/(\*|_)(.*?)\1/g, "$2") // *italic* _italic_
+      .replace(/`([^`]+)`/g, "$1") // `code`
+      .replace(/^#{1,6}\s+/gm, "") // # headers
+      .replace(/^>\s*/gm, "") // blockquote
+      .replace(/^[-*+]\s+/gm, "") // unordered list
+      .replace(/^\d+\.\s+/gm, "") // ordered list
+      .replace(/```[\s\S]*?```/g, "") // fenced code blocks
+      .trim();
+  }
+
+  let visibleLength = $derived(stripMarkdownForCount(value).length);
 </script>
 
 <Field.Field class="gap-2 {className}">
@@ -38,7 +56,7 @@
       {/if}
       {#if maxLength}
         <span class="text-xs text-muted-foreground">
-          {value.length}/{maxLength}
+          {visibleLength}/{maxLength}
         </span>
       {/if}
     </div>

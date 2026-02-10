@@ -8,5 +8,5 @@
   <Popover.Trigger class="ml-0 p-0 cursor-pointer {className}">
     <InfoIcon class="size-4 text-muted-foreground ml-0 p-0" />
   </Popover.Trigger>
-  <Popover.Content class="text-sm p-2">{content}</Popover.Content>
+  <Popover.Content class="text-xs p-2">{content}</Popover.Content>
 </Popover.Root>
