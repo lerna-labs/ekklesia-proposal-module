@@ -15,7 +15,7 @@
   import { ListNode, ListItemNode, QuoteNode } from "svelte-lexical";
   import { theme } from "svelte-lexical/dist/themes/default";
   import EditorToolbar from "./EditorToolbar.svelte";
-  let { quote } = $props();
+  let { quote, value = $bindable("") } = $props();
 
   const initialConfig = {
     theme: theme,
@@ -24,6 +24,9 @@
       throw error;
     },
     editorState: () => {
+      if (value != null && value !== "") {
+        return convertFromMarkdownString(value, ALL_TRANSFORMERS);
+      }
       if (quote) {
         // Wrap content in markdown blockquote syntax
         const quotedContent = quote.content
@@ -37,6 +40,17 @@
   };
 
   let composer = $state(Composer);
+
+  $effect(() => {
+    if (!composer) return;
+    const editor = composer.getEditor();
+    const unregister = editor.registerUpdateListener(() => {
+      editor.read(() => {
+        value = convertToMarkdownString(ALL_TRANSFORMERS);
+      });
+    });
+    return () => unregister();
+  });
 
   // Use both list transformers - ORDERED_LIST should handle "1. " pattern
   const listTransformers = [UNORDERED_LIST, ORDERED_LIST];
