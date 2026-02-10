@@ -127,7 +127,7 @@
             type="button"
             variant="outline"
             size="sm"
-            class="text-xs cursor-pointer {selected ? 'active' : ''}"
+            class="text-xs cursor-pointer no-select {selected ? 'active' : ''}"
             onclick={() => toggleKpi(kpi)}
           >
             {kpi}
@@ -140,7 +140,7 @@
             type="button"
             variant="outline"
             size="sm"
-            class="text-xs cursor-pointer {selected ? 'active' : ''}"
+            class="text-xs cursor-pointer no-select {selected ? 'active' : ''}"
             onclick={() => toggleKpi(kpiItem.title)}
           >
             {kpiItem.title}
@@ -175,7 +175,7 @@
         />
         <Button
           variant="outline"
-          class="text-xs cursor-pointer"
+          class="text-xs cursor-pointer no-select"
           onclick={addCustomKpi}
         >
           Add
@@ -225,7 +225,7 @@
             <Button
               variant="outline"
               size="sm"
-              class="text-xs cursor-pointer"
+              class="text-xs cursor-pointer no-select"
               onclick={() => toggleKpi(kpi.title)}
             >
               Remove
