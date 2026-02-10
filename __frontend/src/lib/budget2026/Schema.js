@@ -19,6 +19,16 @@ export const formSchema = z.object({
     placeholder: "Enter Track Record Here",
     required: false,
   }),
+  category: z
+    .string()
+    .length(24, "Please select a focus area")
+    .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
+    .meta({
+      label: "Focus Area",
+      description: "The primary Cardano strategic pillar your project addresses (e.g., L1 Improvements, DeFi, RWA).",
+      placeholder: "Select a focus area...",
+      required: true,
+    }),
 });
 
 export default formSchema;

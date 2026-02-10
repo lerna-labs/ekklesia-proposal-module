@@ -2,8 +2,10 @@
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
+  import CategorySelector from "./CategorySelector.svelte";
   import { formSchema } from "./Schema.js";
   import { z } from "zod";
+  let { budget } = $props();
 
   let formData = $state({
     title: "",
@@ -62,6 +64,14 @@
 
   <section class="space-y-2" id="project-details">
     <h2 class="text-2xl font-medium mb-4">2. Strategic Roadmap Alignment</h2>
+
+    <CategorySelector
+      id="category"
+      {budget}
+      {formSchema}
+      {validationErrors}
+      bind:value={formData.category}
+    />
   </section>
 
   <section class="" id="controls">
