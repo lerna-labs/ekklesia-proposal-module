@@ -15,6 +15,7 @@ export async function load({ url, fetch }) {
 	if (slug) params.set('slug', slug);
 
 	const response = await fetch(`${apiUrl}/budgets?${params.toString()}`);
+	console.log(response);
 
 	// Spec: 404 when search or slug provided but no matching budgets — treat as empty result
 	if (response.status === 404) {

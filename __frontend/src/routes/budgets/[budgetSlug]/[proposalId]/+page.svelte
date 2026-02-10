@@ -6,7 +6,7 @@
   import Comments from "$lib/Comments.svelte";
   let { data } = $props();
 
-  let { budget, proposal, slug, comments } = $derived(data);
+  let { budget, proposal, comments } = $derived(data);
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
