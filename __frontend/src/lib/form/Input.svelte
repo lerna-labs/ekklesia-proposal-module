@@ -29,7 +29,7 @@
   <div class="flex items-center gap-1">
     <Field.Label
       for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm flex-shrink-0 w-fit"
+      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
     >
       {label}
       {#if schemaRequired}

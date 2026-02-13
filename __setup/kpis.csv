@@ -1,0 +1,38 @@
+Focus Area,Associated KPIs
+Pillar 1: Infrastructure,
+L1 protocol improvements,"Monthly transactions, Monthly (6 epochs) UpTime, Throughput capacity per day"
+L2 integration,"Total Value Locked (TVL), Monthly transactions, Annual Protocol Revenue, Throughput capacity per day"
+Cross-chain interoperability,"Total Value Locked (TVL), Monthly transactions"
+Core ZK capabilities,"Monthly transactions, Throughput capacity per day"
+Post-quantum readiness,Monthly (6 epochs) UpTime
+Client diversity,"Monthly (6 epochs) UpTime, Alternative full node clients"
+Threat detection & recovery,Monthly (6 epochs) UpTime
+Pillar 2: Adoption,
+DeFi,"Total Value Locked (TVL), Monthly transactions, Annual Protocol Revenue"
+RWA,"Total Value Locked (TVL), Monthly transactions, Annual Protocol Revenue"
+Supply chain / provenance,Monthly transactions
+Payments,"Monthly transactions, Monthly Active Users (MAU), Annual Protocol Revenue"
+Invisible technology,"Monthly transactions, Monthly Active Users (MAU)"
+Decentralized identity (SSI),Monthly Active Users (MAU)
+Enterprise security,Total Value Locked (TVL)
+Open-source incentives,Monthly Active Users (MAU)
+Education & migration,Monthly Active Users (MAU)
+Compatibility,"Total Value Locked (TVL), Monthly transactions"
+Pillar 3: Governance,
+Role-based incentives,"Voting Power distribution, DRep participation rate"
+Governance accessibility,DRep participation rate
+Adaptive / turnout-aware,"Voting Power distribution, DRep participation rate"
+Delegator override,Voting Power distribution
+Seasonal proposal windows,DRep participation rate
+Pillar 4: Growth,
+Youth Engagement,Monthly Active Users (MAU)
+Hands-on Experience,Monthly Active Users (MAU)
+Structured funding routes,Total Value Locked (TVL)
+Proactively Demonstrate Value,"Total Value Locked (TVL), Monthly Active Users (MAU)"
+Localized adoption,"Monthly transactions, Monthly Active Users (MAU)"
+Pillar 5: Sustainability,
+Multi-Asset Treasury,"Total Value Locked (TVL), Annual Protocol Revenue"
+Managed treasury,Annual Protocol Revenue
+L2 → L1 value retention,Annual Protocol Revenue
+Diversified SPO roles,"Monthly (6 epochs) UpTime, Voting Power distribution"
+Decentralization target,"Monthly (6 epochs) UpTime, Voting Power distribution"

@@ -53,8 +53,6 @@ router.get("/", async (req, res) => {
     return `${days}d ${hours}h ${minutes}m ${secs}s`;
   };
 
-  // Check Hydra Status
-  let hydraStatus = await hydraGetStatus();
 
   return res.json({
     status: "operational",

@@ -270,58 +270,54 @@ proposalSchema.index({ budgetId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 })
 
-// Pre-save middleware to validate the proposal
-proposalSchema.pre("validate", function (next) {
-    if (this.status === "live") {
-        if (!this.metaData?.legalDeclarations) {
-            return next(new Error("legalDeclarations is required when status is live"));
-        }
-        // optional: validate that required sub-fields (e.g. dataProtection) are present and true
-        if (!this.metaData?.legalDeclarations?.dataProtection) {
-            return next(new Error("dataProtection is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.authorizationEntity) {
-            return next(new Error("authorizationEntity is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.authorizationAttestation) {
-            return next(new Error("authorizationAttestation is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.antiBribery) {
-            return next(new Error("antiBribery is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.authenticity) {
-            return next(new Error("authenticity is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.ipOwnership) {
-            return next(new Error("ipOwnership is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.conflicts) {
-            return next(new Error("conflicts is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.compliance) {
-            return next(new Error("compliance is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.sanctions) {
-            return next(new Error("sanctions is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.noContract) {
-            return next(new Error("noContract is required when status is live"));
-        }
-        if (!this.metaData?.legalDeclarations?.noGuarantee) {
-            return next(new Error("noGuarantee is required when status is live"));
-        }
+// Pre-validate middleware: throw so Mongoose handles the error (works with Mongoose 9 async hooks)
+proposalSchema.pre("validate", function () {
+    if (this.status !== "live") return;
+    if (!this.metaData?.legalDeclarations) {
+        throw new Error("legalDeclarations is required when status is live");
     }
-    next();
+    if (!this.metaData?.legalDeclarations?.dataProtection) {
+        throw new Error("dataProtection is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.authorizationEntity) {
+        throw new Error("authorizationEntity is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.authorizationAttestation) {
+        throw new Error("authorizationAttestation is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.antiBribery) {
+        throw new Error("antiBribery is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.authenticity) {
+        throw new Error("authenticity is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.ipOwnership) {
+        throw new Error("ipOwnership is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.conflicts) {
+        throw new Error("conflicts is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.compliance) {
+        throw new Error("compliance is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.sanctions) {
+        throw new Error("sanctions is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.noContract) {
+        throw new Error("noContract is required when status is live");
+    }
+    if (!this.metaData?.legalDeclarations?.noGuarantee) {
+        throw new Error("noGuarantee is required when status is live");
+    }
 });
 
-// Pre-save middleware to increment the version
-proposalSchema.pre("save", function (next) {
+// Pre-save middleware to set version (no callback — Mongoose 9 compatible)
+proposalSchema.pre("save", function () {
     if (this.isNew) {
         this.version = 1;
     } else {
-        this.version++;
+        this.version = (this.version ?? 0) + 1;
     }
-    next();
 });
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
