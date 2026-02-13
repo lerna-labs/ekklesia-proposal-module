@@ -23,38 +23,40 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1">
-    <Field.Label
-      for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
-    >
-      {label}
-      {#if schemaRequired}
-        <span>*</span>
-      {/if}
-    </Field.Label>
-    <div class="flex items-center gap-1 justify-between w-full">
-      {#if schemaMeta?.description}
-        <ToolTip content={schemaMeta.description} />
-      {/if}
-    </div>
-  </div>
-  <RadioGroup.Root
-    {id}
-    bind:value
+  <div
+    class="rounded-md border p-3 transition-[border-color,box-shadow] {schemaError
+      ? 'border-destructive ring-[3px] ring-destructive/20'
+      : 'border-transparent'}"
     aria-invalid={schemaError ? true : false}
-    class="grid gap-3 aria-invalid:**:data-[slot=radio-group-item]:border-destructive aria-invalid:**:data-[slot=radio-group-item]:ring-destructive/20 aria-invalid:**:data-[slot=radio-group-item]:ring-[3px]"
   >
-    {#each options as option (option.value)}
-      {@const itemId = `${id}-${option.value}`}
-      <div class="flex items-center gap-2">
-        <RadioGroup.Item value={option.value} id={itemId} />
-        <label for={itemId} class="text-sm font-normal cursor-pointer">
-          {option.label}
-        </label>
+    <div class="flex items-center gap-1 mb-2">
+      <Field.Label
+        for={id}
+        class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
+      >
+        {label}
+        {#if schemaRequired}
+          <span>*</span>
+        {/if}
+      </Field.Label>
+      <div class="flex items-center gap-1 justify-between w-full">
+        {#if schemaMeta?.description}
+          <ToolTip content={schemaMeta.description} />
+        {/if}
       </div>
-    {/each}
-  </RadioGroup.Root>
+    </div>
+    <RadioGroup.Root {id} bind:value class="grid gap-3">
+      {#each options as option (option.value)}
+        {@const itemId = `${id}-${option.value}`}
+        <div class="flex items-center gap-2">
+          <RadioGroup.Item value={option.value} id={itemId} />
+          <label for={itemId} class="text-sm font-normal cursor-pointer">
+            {option.label}
+          </label>
+        </div>
+      {/each}
+    </RadioGroup.Root>
+  </div>
   {#if description}
     <Field.Description>{description}</Field.Description>
   {/if}

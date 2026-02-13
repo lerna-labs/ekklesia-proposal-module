@@ -22,29 +22,34 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1">
-    <Field.Label
-      for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit cursor-pointer"
-    >
-      {label}
-      {#if schemaRequired}
-        <span>*</span>
-      {/if}
-    </Field.Label>
-    <div class="flex items-center gap-1 justify-between w-full">
-      {#if schemaMeta?.description}
-        <ToolTip content={schemaMeta.description} />
-      {/if}
-    </div>
-  </div>
-  <div class="flex items-center gap-2">
+  <div
+    class="flex items-start gap-2 rounded-md border p-3 transition-[border-color,box-shadow] {schemaError
+      ? 'border-destructive ring-[3px] ring-destructive/20'
+      : 'border-transparent'}"
+    aria-invalid={schemaError ? true : false}
+  >
     <Checkbox
       id={id}
       bind:checked={value}
       aria-invalid={schemaError ? true : false}
-      class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+      class="shrink-0 mt-0.5"
     />
+    <div class="min-w-0 flex-1 space-y-1">
+      <div class="flex items-center gap-1 flex-wrap">
+        <Field.Label
+          for={id}
+          class="flex gap-0 mb-0 pb-0 text-sm cursor-pointer"
+        >
+          {label}
+          {#if schemaRequired}
+            <span>*</span>
+          {/if}
+        </Field.Label>
+        {#if schemaMeta?.description}
+          <ToolTip content={schemaMeta.description} />
+        {/if}
+      </div>
+    </div>
   </div>
   {#if description}
     <Field.Description>{description}</Field.Description>

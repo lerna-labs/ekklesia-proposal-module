@@ -2,20 +2,13 @@
   import { untrack } from "svelte";
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
-  import {
-    Button,
-    buttonVariants,
-  } from "$lib/components/ui/button/index.js";
+  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import CategorySelector from "./FormFocusArea.svelte";
   import KPISelector from "./FormKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
-  import {
-    formSchema,
-    mainFormSchema,
-    declarationsSchema,
-  } from "./Schema.js";
+  import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
   import { z } from "zod";
   let { budget, categories } = $props();
 
@@ -43,7 +36,7 @@
   });
 
   let validationErrors = $state(null);
-  let declarationsDialogOpen = $state(false);
+  let declarationsDialogOpen = $state(true);
   let declarationValidationErrors = $state(null);
 
   function handleSubmit(e) {
@@ -78,7 +71,7 @@
       category: formData.category,
       kpis: formData.kpis,
       timeline: formData.timeline,
-    })
+    }),
   );
 
   // When validation has failed and the user changes form data, revalidate main form only
