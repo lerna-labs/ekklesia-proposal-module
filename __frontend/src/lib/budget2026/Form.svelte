@@ -2,13 +2,32 @@
   import { untrack } from "svelte";
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import {
+    Button,
+    buttonVariants,
+  } from "$lib/components/ui/button/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import CategorySelector from "./FormFocusArea.svelte";
   import KPISelector from "./FormKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
-  import { formSchema } from "./Schema.js";
+  import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
+  import {
+    formSchema,
+    mainFormSchema,
+    declarationsSchema,
+  } from "./Schema.js";
   import { z } from "zod";
   let { budget, categories } = $props();
+
+  const initialLegalDeclarations = () => ({
+    dataProcessingConsent: false,
+    publicVisibilityConsent: false,
+    authorizedToSubmit: false,
+    authorizedToAttest: false,
+    submitterName: "",
+    submitterRole: "",
+    submitterEmail: "",
+  });
 
   let formData = $state({
     title: "",
@@ -20,29 +39,53 @@
       startDate: undefined,
       endDate: undefined,
     },
+    legalDeclarations: initialLegalDeclarations(),
   });
 
   let validationErrors = $state(null);
+  let declarationsDialogOpen = $state(false);
+  let declarationValidationErrors = $state(null);
 
   function handleSubmit(e) {
     e.preventDefault();
-    const result = formSchema.safeParse(formData);
+    const result = mainFormSchema.safeParse(formData);
     if (result.success) {
       validationErrors = null;
-      // TODO: submit to API
+      declarationsDialogOpen = true;
+      declarationValidationErrors = null;
     } else {
       validationErrors = z.treeifyError(result.error);
     }
   }
 
-  // Snapshot so the effect re-runs when any part of formData changes
-  const formDataSnapshot = $derived(JSON.stringify(formData));
+  function confirmDeclarations() {
+    const result = declarationsSchema.safeParse(formData.legalDeclarations);
+    if (!result.success) {
+      declarationValidationErrors = z.treeifyError(result.error);
+      return;
+    }
+    declarationValidationErrors = null;
+    declarationsDialogOpen = false;
+    // TODO: submit to API with full formData (including legalDeclarations)
+  }
 
-  // When validation has failed and the user changes form data, revalidate
+  // Snapshot so the effect re-runs when any part of formData changes (main fields only for revalidation)
+  const formDataSnapshot = $derived(
+    JSON.stringify({
+      title: formData.title,
+      summary: formData.summary,
+      trackRecord: formData.trackRecord,
+      category: formData.category,
+      kpis: formData.kpis,
+      timeline: formData.timeline,
+    })
+  );
+
+  // When validation has failed and the user changes form data, revalidate main form only
   $effect(() => {
     formDataSnapshot;
     if (untrack(() => !validationErrors)) return;
-    const result = formSchema.safeParse(formData);
+    const result = mainFormSchema.safeParse(formData);
     if (result.success) {
       validationErrors = null;
     } else {
@@ -142,6 +185,9 @@
       <h2 class="text-2xl font-medium">
         5. Proposal Submission Legal Declarations
       </h2>
+      <p class="text-sm text-muted-foreground mt-2">
+        You will be asked to confirm legal declarations when you submit.
+      </p>
     </div>
   </section>
 
@@ -153,4 +199,31 @@
       <Button type="submit" class="cursor-pointer">Save Draft</Button>
     </div>
   </section>
+
+  <Dialog.Root bind:open={declarationsDialogOpen}>
+    <Dialog.Content class="sm:max-w-2xl max-h-[90vh] flex flex-col">
+      <Dialog.Header>
+        <Dialog.Title>Proposal Submission Legal Declarations</Dialog.Title>
+      </Dialog.Header>
+      <FormLegalDeclarations
+        bind:value={formData.legalDeclarations}
+        formSchema={declarationsSchema}
+        validationErrors={declarationValidationErrors}
+      />
+      <Dialog.Footer class="flex gap-2 shrink-0">
+        <Dialog.Close
+          class={buttonVariants({ variant: "outline" }) + " cursor-pointer"}
+        >
+          Cancel
+        </Dialog.Close>
+        <Button
+          type="button"
+          class="cursor-pointer"
+          onclick={confirmDeclarations}
+        >
+          Confirm and submit
+        </Button>
+      </Dialog.Footer>
+    </Dialog.Content>
+  </Dialog.Root>
 </form>

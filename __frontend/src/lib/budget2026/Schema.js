@@ -1,5 +1,69 @@
 import { z } from "zod";
 
+/** Flat schema for the legal declarations dialog (formSchema.shape[id] works with field ids). */
+export const declarationsSchema = z.object({
+  dataProcessingConsent: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must acknowledge and consent." })
+    .meta({
+      label:
+        "I acknowledge and consent to the above data processing and sharing.",
+      required: true,
+    }),
+  publicVisibilityConsent: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must acknowledge and agree." })
+    .meta({
+      label:
+        "By submitting this form, you acknowledge and agree that the legal entity name, personal name, and X (Twitter) handle entered will be publicly visible in connection with this budget request.",
+      required: true,
+    }),
+  authorizedToSubmit: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must confirm authorization." })
+    .meta({
+      label:
+        "I confirm that I am authorized to submit this proposal on behalf of the vendor entity. I acknowledge that submission does not constitute authority to bind the entity contractually.",
+      required: true,
+    }),
+  authorizedToAttest: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must confirm authorization." })
+    .meta({
+      label:
+        "I confirm that I am authorized to submit and attest to all legal declarations above on behalf of the vendor.",
+      required: true,
+    }),
+  submitterName: z
+    .string()
+    .min(1, "Name is required")
+    .max(100)
+    .meta({
+      label: "Name",
+      placeholder: "Enter Full Name",
+      required: true,
+    }),
+  submitterRole: z
+    .string()
+    .min(1, "Role is required")
+    .max(100)
+    .meta({
+      label: "Role",
+      placeholder: "Enter Role",
+      required: true,
+    }),
+  submitterEmail: z
+    .string()
+    .min(1, "Email is required")
+    .max(100)
+    .email("Enter a valid email")
+    .meta({
+      label: "Email",
+      placeholder: "Enter Email",
+      required: true,
+    }),
+});
+
 export const formSchema = z.object({
   title: z.string().min(2).max(255).meta({
     label: "Proposal Title",
@@ -45,6 +109,10 @@ export const formSchema = z.object({
     description: "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
     required: true,
   }),
+  legalDeclarations: declarationsSchema.optional(),
 });
+
+/** Schema for main form only (excludes legal declarations, validated before opening dialog). */
+export const mainFormSchema = formSchema.omit({ legalDeclarations: true });
 
 export default formSchema;
