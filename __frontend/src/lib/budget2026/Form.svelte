@@ -4,13 +4,14 @@
   import Textarea from "$lib/form/Textarea.svelte";
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import CategorySelector from "./FormFocusArea.svelte";
-  import KPISelector from "./FormFocusAreaKPI.svelte";
+  import FormFocusArea from "./FormFocusArea.svelte";
+  import FormFocusAreaKPI from "./FormFocusAreaKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import FormAdministrative from "./FormAdministrative.svelte";
   import FormWorkPackages from "./FormWorkPackages.svelte";
   import FormFinancialSummary from "./FormFinancialSummary.svelte";
+  import * as Card from "$lib/components/ui/card/index.js";
   import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
   import { z } from "zod";
   let { budget, categories } = $props();
@@ -158,113 +159,149 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <section class="w-full bg-muted-foreground/10 py-10" id="project-definition">
+  <section class="w-full bg-muted-foreground/5 py-10" id="project-definition">
     <div class="max-w-4xl mx-auto space-y-4">
-      <h2 class="text-2xl font-medium mb-4">1. Project Definition</h2>
-
-      <Input
-        id="title"
-        bind:value={formData.title}
-        {formSchema}
-        {validationErrors}
-      />
-
-      <Textarea
-        id="summary"
-        bind:value={formData.summary}
-        {formSchema}
-        {validationErrors}
-      />
-
-      <Textarea
-        id="trackRecord"
-        bind:value={formData.trackRecord}
-        {formSchema}
-        {validationErrors}
-      />
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="text-2xl font-medium">
+            1. Project Definition
+          </Card.Title>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <Input
+            id="title"
+            bind:value={formData.title}
+            {formSchema}
+            {validationErrors}
+          />
+          <Textarea
+            id="summary"
+            bind:value={formData.summary}
+            {formSchema}
+            {validationErrors}
+          />
+          <Textarea
+            id="trackRecord"
+            bind:value={formData.trackRecord}
+            {formSchema}
+            {validationErrors}
+          />
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15 py-10"
+    class="w-full bg-muted-foreground/10 py-10"
     id="strategic-roadmap-alignment"
   >
     <div class="max-w-4xl mx-auto space-y-4">
-      <h2 class="text-2xl font-medium">2. Strategic Roadmap Alignment</h2>
-
-      <CategorySelector
-        id="category"
-        {categories}
-        {formSchema}
-        {validationErrors}
-        bind:value={formData.category}
-        onUpdate={(category) => {
-          // reset kpis
-          formData.kpis = [];
-        }}
-      />
-
-      {#if formData.category}
-        <KPISelector
-          id="kpis"
-          {categories}
-          {formSchema}
-          {validationErrors}
-          category={formData.category}
-          class="mt-4"
-          onUpdate={(kpis) => {
-            formData.kpis = kpis;
-          }}
-        />
-      {/if}
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="text-2xl font-medium">
+            2. Strategic Roadmap Alignment
+          </Card.Title>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <FormFocusArea
+            id="category"
+            {categories}
+            {formSchema}
+            {validationErrors}
+            bind:value={formData.category}
+            hasKpis={(formData.kpis?.length ?? 0) > 0}
+            onUpdate={(newCategory) => {
+              formData.category = newCategory;
+              formData.kpis = [];
+            }}
+          />
+          {#if formData.category}
+            {#key formData.category}
+              <FormFocusAreaKPI
+                id="kpis"
+                {categories}
+                {formSchema}
+                {validationErrors}
+                category={formData.category}
+                bind:value={formData.kpis}
+                class="mt-4"
+                onUpdate={(kpis) => {
+                  formData.kpis = kpis;
+                }}
+              />
+            {/key}
+          {/if}
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
-  <section class="w-full bg-muted-foreground/5 py-10" id="execution-roadmap">
+  <section class="w-full bg-muted-foreground/15 py-10" id="execution-roadmap">
     <div class="max-w-4xl mx-auto space-y-4">
-      <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="text-2xl font-medium">
+            3. Execution Roadmap
+          </Card.Title>
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <FormTimeline
+            {formSchema}
+            {validationErrors}
+            bind:value={formData.timeline}
+          />
 
-      <FormTimeline
-        {formSchema}
-        {validationErrors}
-        bind:value={formData.timeline}
-      />
+          <FormWorkPackages
+            {formSchema}
+            {validationErrors}
+            bind:value={formData.workPackages}
+          />
 
-      <FormWorkPackages
-        {formSchema}
-        {validationErrors}
-        bind:value={formData.workPackages}
-      />
-
-      <FormFinancialSummary {formSchema} {validationErrors} {formData} />
+          <FormFinancialSummary {formSchema} {validationErrors} {formData} />
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15 py-10"
+    class="w-full bg-muted-foreground/20 py-10"
     id="administrative-verification"
   >
-    <div class="max-w-4xl mx-auto">
-      <h2 class="text-2xl font-medium">4. Administrative & Verification</h2>
-      <FormAdministrative
-        formSchema={formSchema.shape.administrative}
-        validationErrors={validationErrors?.properties?.administrative}
-        bind:value={formData.administrative}
-      />
+    <div class="max-w-4xl mx-auto space-y-4">
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="text-2xl font-medium">
+            4. Administrative & Verification
+          </Card.Title>
+        </Card.Header>
+        <Card.Content>
+          <FormAdministrative
+            formSchema={formSchema.shape.administrative}
+            validationErrors={validationErrors?.properties?.administrative}
+            bind:value={formData.administrative}
+          />
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
   <section
-    class="w-full bg-muted-foreground/30 py-10"
+    class="w-full bg-muted-foreground/25 py-10"
     id="proposal-submission-legal-declarations"
   >
-    <div class="max-w-4xl mx-auto">
-      <h2 class="text-2xl font-medium">
-        5. Proposal Submission Legal Declarations
-      </h2>
-      <p class="text-sm text-muted-foreground mt-2">
-        You will be asked to confirm legal declarations when you submit.
-      </p>
+    <div class="max-w-4xl mx-auto space-y-4">
+      <Card.Root>
+        <Card.Header>
+          <Card.Title class="text-2xl font-medium">
+            5. Proposal Submission Legal Declarations
+          </Card.Title>
+        </Card.Header>
+        <Card.Content>
+          <p class="text-sm text-muted-foreground mt-2">
+            You will be asked to confirm legal declarations when you submit.
+          </p>
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
@@ -276,31 +313,4 @@
       <Button type="submit" class="cursor-pointer">Save Draft</Button>
     </div>
   </section>
-
-  <Dialog.Root bind:open={declarationsDialogOpen}>
-    <Dialog.Content class="sm:max-w-2xl max-h-[90vh] flex flex-col">
-      <Dialog.Header>
-        <Dialog.Title>Proposal Submission Legal Declarations</Dialog.Title>
-      </Dialog.Header>
-      <FormLegalDeclarations
-        bind:value={formData.legalDeclarations}
-        formSchema={declarationsSchema}
-        validationErrors={declarationValidationErrors}
-      />
-      <Dialog.Footer class="flex gap-2 shrink-0">
-        <Dialog.Close
-          class={buttonVariants({ variant: "outline" }) + " cursor-pointer"}
-        >
-          Cancel
-        </Dialog.Close>
-        <Button
-          type="button"
-          class="cursor-pointer"
-          onclick={confirmDeclarations}
-        >
-          Confirm and submit
-        </Button>
-      </Dialog.Footer>
-    </Dialog.Content>
-  </Dialog.Root>
 </form>
