@@ -5,11 +5,12 @@
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import CategorySelector from "./FormFocusArea.svelte";
-  import KPISelector from "./FormKPI.svelte";
+  import KPISelector from "./FormFocusAreaKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import FormAdministrative from "./FormAdministrative.svelte";
   import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
+  import { Separator } from "$lib/components/ui/separator/index.js";
   import { z } from "zod";
   let { budget, categories } = $props();
 
@@ -148,7 +149,7 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15 hidden"
+    class="w-full bg-muted-foreground/15"
     id="strategic-roadmap-alignment"
   >
     <div class="max-w-4xl mx-auto mt-4 mb-4">
@@ -166,6 +167,8 @@
         }}
       />
 
+      <Separator class="w-full md:w-1/2" />
+
       {#if formData.category}
         <KPISelector
           id="kpis"
@@ -173,6 +176,7 @@
           {formSchema}
           {validationErrors}
           category={formData.category}
+          class="mt-4"
           onUpdate={(kpis) => {
             formData.kpis = kpis;
           }}
@@ -181,7 +185,7 @@
     </div>
   </section>
 
-  <section class="w-full bg-muted-foreground/20 hidden" id="execution-roadmap">
+  <section class="w-full bg-muted-foreground/5" id="execution-roadmap">
     <div class="max-w-4xl mx-auto mt-4 mb-4">
       <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
 
@@ -194,7 +198,7 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/5"
+    class="w-full bg-muted-foreground/15"
     id="administrative-verification"
   >
     <div class="max-w-4xl mx-auto mt-4 mb-4">

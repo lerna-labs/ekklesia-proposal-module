@@ -92,12 +92,12 @@ export const formSchema = z.object({
   }),
   category: z
     .string()
-    .length(24, "Please select a focus area")
+    .length(24, "Please choose a strategic focus area")
     .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
     .meta({
-      label: "Focus Area",
+      label: "Strategic Focus Area",
       description: "The primary Cardano strategic pillar your project addresses (e.g., L1 Improvements, DeFi, RWA).",
-      placeholder: "Select a focus area...",
+      placeholder: "Choose a strategic focus area...",
       required: true,
     }),
   kpis: z.array(z.object({

@@ -24,8 +24,6 @@
 </script>
 
 <Field.Set class={className}>
-  <Field.Legend>Administrative & Verification</Field.Legend>
-
   <!-- 1. Intersect Administrator? (only this at first) -->
   <Switch
     id="intersectAdministrator"

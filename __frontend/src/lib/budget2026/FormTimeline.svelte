@@ -18,7 +18,7 @@
       content="Project duration. How long do you realistically think the project will take? Consider including some contingency here."
     />
   </Field.Legend>
-  <Field.Group class="flex flex-row flex-wrap items-end gap-4">
+  <Field.Group class="flex flex-row flex-wrap items-end gap-1 w-full md:w-1/2">
     <DatePicker
       id="startDate"
       label="Start Date"
