@@ -191,7 +191,7 @@
         {/if}
       </Dialog.Title>
     </Dialog.Header>
-    <Editor quote={replyTo} />
+    <Editor quote={!!replyTo} initialQuotedContent={replyTo} />
     <Dialog.Footer>
       <Dialog.Close
         class={buttonVariants({
