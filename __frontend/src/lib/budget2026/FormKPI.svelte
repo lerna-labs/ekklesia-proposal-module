@@ -106,7 +106,7 @@
 <Field.Set>
   <Field.Group class="gap-4">
     <Field.Field class={className}>
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 w-full">
         <Field.Label
           for={id}
           class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
@@ -116,11 +116,10 @@
             <span>*</span>
           {/if}
         </Field.Label>
-        <div class="flex items-center gap-1 justify-between w-full">
-          {#if schemaMeta?.description}
-            <ToolTip content={schemaMeta.description} />
-          {/if}
-        </div>
+        {#if schemaMeta?.description}
+          <ToolTip content={schemaMeta.description} />
+        {/if}
+        <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>
 
       <div class="flex flex-wrap gap-2">
@@ -159,16 +158,15 @@
       {/if}
     </Field.Field>
     <Field.Field>
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 w-full">
         <Field.Label
           for="custom-kpi"
           class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
         >
           Add Custom KPI
         </Field.Label>
-        <div class="flex items-center gap-1 justify-between w-full">
-          <ToolTip content="Add additional custom KPIs you intend to impact." />
-        </div>
+        <ToolTip content="Add additional custom KPIs you intend to impact." />
+        <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>
       <div class="flex items-center gap-1">
         <Input
@@ -208,7 +206,7 @@
           </Card.Header>
           <Card.Content>
             <Field.Field class="gap-2">
-              <div class="flex items-center gap-1">
+              <div class="flex items-center gap-1 w-full">
                 <Field.Label
                   for={`contributionStrategy-${index}`}
                   class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
@@ -216,11 +214,10 @@
                   Contribution Strategy
                   <span>*</span>
                 </Field.Label>
-                <div class="flex items-center gap-1 justify-between w-full">
-                  <ToolTip
-                    content="Specific actions and methodologies you will employ to hit the selected KPI targets."
-                  />
-                </div>
+                <ToolTip
+                  content="Specific actions and methodologies you will employ to hit the selected KPI targets."
+                />
+                <span class="flex-1 min-w-0" aria-hidden="true"></span>
               </div>
               <Editor
                 id={`contributionStrategy-${index}`}

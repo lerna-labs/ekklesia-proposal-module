@@ -76,18 +76,17 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1">
+  <div class="flex items-center gap-1 w-full">
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
       {#if schemaRequired}
         <span>*</span>
       {/if}
     </Field.Label>
-    <div class="flex items-center gap-1 justify-between w-full">
-      {#if schemaMeta?.description}
-        <ToolTip content={schemaMeta.description} />
-      {/if}
-    </div>
+    {#if schemaMeta?.description}
+      <ToolTip content={schemaMeta.description} />
+    {/if}
+    <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
   <div
     class="rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
