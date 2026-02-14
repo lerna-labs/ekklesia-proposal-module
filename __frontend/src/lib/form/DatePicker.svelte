@@ -4,6 +4,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
   import { getLocalTimeZone, today } from "@internationalized/date";
 
   let {
@@ -16,6 +17,7 @@
     maxValue,
     validationErrors,
     errorPath,
+    notPublic = false,
   } = $props();
 
   let open = $state(false);
@@ -32,12 +34,18 @@
 
 <Field.Field class="w-fit gap-1">
   <div class="flex flex-col items-start w-fit gap-1">
-    <Field.Label for={id}>
-      {label}
-      {#if required}
-        <span>*</span>
+    <div class="flex items-center gap-1 w-full">
+      <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+        {label}
+        {#if required}
+          <span>*</span>
+        {/if}
+      </Field.Label>
+      {#if notPublic}
+        <PrivateFieldIndicator />
       {/if}
-    </Field.Label>
+      <span class="flex-1 min-w-0" aria-hidden="true"></span>
+    </div>
     <Field.Content>
       <Popover.Root bind:open class="border border-black w-48">
         <Popover.Trigger {id}>

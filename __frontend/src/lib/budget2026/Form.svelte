@@ -8,6 +8,7 @@
   import KPISelector from "./FormKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
+  import FormAdministrative from "./FormAdministrative.svelte";
   import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
   import { z } from "zod";
   let { budget, categories } = $props();
@@ -32,11 +33,41 @@
       startDate: undefined,
       endDate: undefined,
     },
+    administrative: {
+      intersectAdministrator: true,
+      otherAdministrators: "",
+      contractingParty: "",
+      legalEntityName: "",
+      registrationNumber: "",
+      countryOfIncorporation: "",
+      registeredAddress: "",
+      countryOfResidence: "",
+      govtIssuedIdNumber: "",
+      fullResidentialAddress: "",
+      primaryContactFullName: "",
+      primaryContactEmail: "",
+      xHandle: "",
+      signatoryName: "",
+      signatoryTitle: "",
+      signatoryEmail: "",
+      signatoryAuthorization: false,
+      totalProposalsSubmitted: "",
+      kycKybSubmitted: undefined,
+      kycContactEmail: "",
+      treasuryRepayment: undefined,
+      repaymentCircumstances: "",
+      initiativeType: "",
+      typeOfProposal: "",
+      priorFunding: "",
+      treasuryDonationVerificationHash: "",
+      thirdPartyAssurers: "",
+      supportingInfoLinks: [],
+    },
     legalDeclarations: initialLegalDeclarations(),
   });
 
   let validationErrors = $state(null);
-  let declarationsDialogOpen = $state(true);
+  let declarationsDialogOpen = $state(false);
   let declarationValidationErrors = $state(null);
 
   function handleSubmit(e) {
@@ -71,6 +102,7 @@
       category: formData.category,
       kpis: formData.kpis,
       timeline: formData.timeline,
+      administrative: formData.administrative,
     }),
   );
 
@@ -88,7 +120,7 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <section class="w-full bg-muted-foreground/10" id="project-definition">
+  <section class="w-full bg-muted-foreground/10 hidden" id="project-definition">
     <div class="max-w-4xl mx-auto mt-4 mb-4">
       <h2 class="text-2xl font-medium">1. Project Definition</h2>
 
@@ -116,7 +148,7 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15"
+    class="w-full bg-muted-foreground/15 hidden"
     id="strategic-roadmap-alignment"
   >
     <div class="max-w-4xl mx-auto mt-4 mb-4">
@@ -149,7 +181,7 @@
     </div>
   </section>
 
-  <section class="w-full bg-muted-foreground/20" id="execution-roadmap">
+  <section class="w-full bg-muted-foreground/20 hidden" id="execution-roadmap">
     <div class="max-w-4xl mx-auto mt-4 mb-4">
       <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
 
@@ -162,11 +194,16 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/25"
+    class="w-full bg-muted-foreground/5"
     id="administrative-verification"
   >
     <div class="max-w-4xl mx-auto mt-4 mb-4">
       <h2 class="text-2xl font-medium">4. Administrative & Verification</h2>
+      <FormAdministrative
+        formSchema={formSchema.shape.administrative}
+        validationErrors={validationErrors?.properties?.administrative}
+        bind:value={formData.administrative}
+      />
     </div>
   </section>
 
