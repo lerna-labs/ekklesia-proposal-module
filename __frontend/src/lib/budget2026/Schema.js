@@ -233,12 +233,17 @@ export const formSchema = z.object({
     placeholder: "Enter Summary Here",
     required: true,
   }),
-  trackRecord: z.string().min(2).max(650).meta({
-    label: "Track Record",
-    description: "Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience.",
-    placeholder: "Enter Track Record Here",
-    required: false,
-  }),
+  trackRecord: z
+    .union([
+      z.literal(""),
+      z.string().min(2, "Track record must be at least 2 characters").max(650),
+    ])
+    .meta({
+      label: "Track Record",
+      description: "Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience.",
+      placeholder: "Enter Track Record Here",
+      required: false,
+    }),
   category: z
     .string()
     .length(24, "Please choose a strategic focus area")
