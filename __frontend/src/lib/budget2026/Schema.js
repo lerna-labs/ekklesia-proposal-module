@@ -150,7 +150,6 @@ export const formSchema = z.object({
         label: "Contracting Party Details",
         description: "Are you contracting as a registered company or an individual?",
         required: true,
-        notPublic: true,
         options: [
           { value: "company", label: "A Company" },
           { value: "individual", label: "An Individual" },
@@ -162,6 +161,7 @@ export const formSchema = z.object({
       description: "The official registered name of the organization receiving funds. Must match bank/KYC records.",
       placeholder: "Registered Company Name",
       required: true,
+      notPublic: false,
     }),
     registrationNumber: z.string().max(100).optional().meta({
       label: "Registration Number",
@@ -220,7 +220,6 @@ export const formSchema = z.object({
       description: "The main person responsible for day-to-day communication regarding this proposal.",
       placeholder: "Enter Name",
       required: true,
-      notPublic: true,
     }),
     primaryContactEmail: z
       .string()
