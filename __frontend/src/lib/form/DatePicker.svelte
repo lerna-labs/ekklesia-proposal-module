@@ -38,7 +38,7 @@
       <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
         {label}
         {#if required}
-          <span>*</span>
+          <span class="text-(--mbo-electric-blue)">*</span>
         {/if}
       </Field.Label>
       {#if notPublic}

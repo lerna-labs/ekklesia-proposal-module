@@ -134,6 +134,20 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/** Shared style for "Add work package", "Add milestone", "Add budget position" buttons. */
+.add-item-btn {
+  width: fit-content !important;
+  max-width: 100%;
+  background: var(--mbo-electric-blue) !important;
+  color: var(--mbo-white) !important;
+  border-color: var(--mbo-electric-blue) !important;
+}
+.add-item-btn:hover {
+  background: var(--mbo-cardano-blue) !important;
+  color: var(--mbo-white) !important;
+  border-color: var(--mbo-cardano-blue) !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -9,7 +9,9 @@
 
 <Popover.Root>
   <Popover.Trigger
-    class="shrink-0 p-0 cursor-pointer text-muted-foreground hover:text-foreground {className ?? ''}"
+    openOnHover
+    class="shrink-0 p-0 cursor-pointer text-muted-foreground hover:text-foreground {className ??
+      ''}"
     type="button"
     aria-label={notPublicMessage}
   >

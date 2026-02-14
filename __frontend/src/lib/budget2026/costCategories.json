@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Resources (Labor)",
+    "description": "high level assumptions on how costs have been calculated"
+  },
+  {
+    "name": "Development",
+    "description": "Describe technical scope e.g tools"
+  },
+  {
+    "name": "Infrastructure",
+    "description": "Hardware, software costs"
+  },
+  {
+    "name": "Security & Audits",
+    "description": "Critical for risk mitigation; include depth and frequency of audits."
+  },
+  {
+    "name": "Legal & Compliance",
+    "description": "Specify jurisdictions and required compliance standards (e.g., SEC, MAS)."
+  },
+  {
+    "name": "Engagement & Ecosystem support",
+    "description": "Marketing costs, events, promotional, community-driven initiatives"
+  },
+  {
+    "name": "Research",
+    "description": "Costs for preparing research data and publishing in recognized repositories."
+  },
+  {
+    "name": "Operations",
+    "description": "Necessary overhead that supports project delivery but isn't a direct technical cost."
+  },
+  {
+    "name": "Governance",
+    "description": ""
+  }
+]

@@ -5,10 +5,12 @@
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import CategorySelector from "./FormFocusArea.svelte";
-  import KPISelector from "./FormKPI.svelte";
+  import KPISelector from "./FormFocusAreaKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import FormAdministrative from "./FormAdministrative.svelte";
+  import FormWorkPackages from "./FormWorkPackages.svelte";
+  import FormFinancialSummary from "./FormFinancialSummary.svelte";
   import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
   import { z } from "zod";
   let { budget, categories } = $props();
@@ -33,6 +35,35 @@
       startDate: undefined,
       endDate: undefined,
     },
+    adaUsdConversionRate: 0,
+    workPackages: [
+      {
+        name: "WP1 Example Work Package",
+        scopeOfWork:
+          "Example scope: key activities and deliverables for testing the form.",
+        supportingDocumentationLinks: [],
+        coreObjectives: ["Validate work package UI and budget flow"],
+        expectedValueRoi: "Faster testing and demo of the budget module.",
+        metric: "Time to complete a full work package entry.",
+        milestones: [
+          {
+            milestoneName: "Milestone 1 – Design",
+            deliverables: "Design doc and mockups",
+            acceptanceCriteria: "Approved by stakeholder",
+            duration: "2 weeks",
+          },
+        ],
+        budgetRows: [
+          {
+            costCategory: "Development",
+            itemDescription: "Backend API development",
+            qty: 1,
+            unitCostAda: 10000,
+            totalAda: 10000,
+          },
+        ],
+      },
+    ],
     administrative: {
       intersectAdministrator: true,
       otherAdministrators: "",
@@ -102,6 +133,8 @@
       category: formData.category,
       kpis: formData.kpis,
       timeline: formData.timeline,
+      workPackages: formData.workPackages,
+      adaUsdConversionRate: formData.adaUsdConversionRate,
       administrative: formData.administrative,
     }),
   );
@@ -120,9 +153,9 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <section class="w-full bg-muted-foreground/10 hidden" id="project-definition">
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
-      <h2 class="text-2xl font-medium">1. Project Definition</h2>
+  <section class="w-full bg-muted-foreground/10 py-10" id="project-definition">
+    <div class="max-w-4xl mx-auto space-y-4">
+      <h2 class="text-2xl font-medium mb-4">1. Project Definition</h2>
 
       <Input
         id="title"
@@ -148,10 +181,10 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15 hidden"
+    class="w-full bg-muted-foreground/15 py-10"
     id="strategic-roadmap-alignment"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto space-y-4">
       <h2 class="text-2xl font-medium">2. Strategic Roadmap Alignment</h2>
 
       <CategorySelector
@@ -173,6 +206,7 @@
           {formSchema}
           {validationErrors}
           category={formData.category}
+          class="mt-4"
           onUpdate={(kpis) => {
             formData.kpis = kpis;
           }}
@@ -181,8 +215,8 @@
     </div>
   </section>
 
-  <section class="w-full bg-muted-foreground/20 hidden" id="execution-roadmap">
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+  <section class="w-full bg-muted-foreground/5 py-10" id="execution-roadmap">
+    <div class="max-w-4xl mx-auto space-y-4">
       <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
 
       <FormTimeline
@@ -190,14 +224,22 @@
         {validationErrors}
         bind:value={formData.timeline}
       />
+
+      <FormWorkPackages
+        {formSchema}
+        {validationErrors}
+        bind:value={formData.workPackages}
+      />
+
+      <FormFinancialSummary {formSchema} {validationErrors} {formData} />
     </div>
   </section>
 
   <section
-    class="w-full bg-muted-foreground/5"
+    class="w-full bg-muted-foreground/15 py-10"
     id="administrative-verification"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <h2 class="text-2xl font-medium">4. Administrative & Verification</h2>
       <FormAdministrative
         formSchema={formSchema.shape.administrative}
@@ -208,10 +250,10 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/30"
+    class="w-full bg-muted-foreground/30 py-10"
     id="proposal-submission-legal-declarations"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <h2 class="text-2xl font-medium">
         5. Proposal Submission Legal Declarations
       </h2>
@@ -222,10 +264,10 @@
   </section>
 
   <section
-    class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50"
+    class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <Button type="submit" class="cursor-pointer">Save Draft</Button>
     </div>
   </section>

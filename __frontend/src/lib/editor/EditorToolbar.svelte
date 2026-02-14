@@ -12,6 +12,8 @@
     formatQuote,
     formatParagraph,
   } from "svelte-lexical";
+
+  let { quote = false } = $props();
 </script>
 
 <Toolbar>
@@ -43,24 +45,26 @@
     >
       <i class="icon numbered-list"></i>
     </button>
-    <Divider />
-    <button
-      type="button"
-      onclick={() => {
-        if (blockType === "quote") {
-          formatParagraph(activeEditor);
-        } else {
-          formatQuote(activeEditor, blockType);
-        }
-      }}
-      class="toolbar-item spaced"
-      class:active={blockType === "quote"}
-      title={blockType === "quote" ? "Unquote" : "Quote"}
-      aria-label={blockType === "quote"
-        ? "Remove quote formatting"
-        : "Format as quote"}
-    >
-      <i class="icon quote"></i>
-    </button>
+    {#if quote}
+      <Divider />
+      <button
+        type="button"
+        onclick={() => {
+          if (blockType === "quote") {
+            formatParagraph(activeEditor);
+          } else {
+            formatQuote(activeEditor, blockType);
+          }
+        }}
+        class="toolbar-item spaced"
+        class:active={blockType === "quote"}
+        title={blockType === "quote" ? "Unquote" : "Quote"}
+        aria-label={blockType === "quote"
+          ? "Remove quote formatting"
+          : "Format as quote"}
+      >
+        <i class="icon quote"></i>
+      </button>
+    {/if}
   {/snippet}
 </Toolbar>

@@ -13,12 +13,14 @@
 
 <Field.Set>
   <Field.Legend class="flex items-center gap-1">
-    Timeline*
+    <div class="flex items-center gap-0">
+      Timeline <span class="text-(--mbo-electric-blue)">*</span>
+    </div>
     <ToolTip
       content="Project duration. How long do you realistically think the project will take? Consider including some contingency here."
     />
   </Field.Legend>
-  <Field.Group class="flex flex-row flex-wrap items-end gap-4">
+  <Field.Group class="flex flex-row flex-wrap items-end gap-1 w-full md:w-1/2">
     <DatePicker
       id="startDate"
       label="Start Date"

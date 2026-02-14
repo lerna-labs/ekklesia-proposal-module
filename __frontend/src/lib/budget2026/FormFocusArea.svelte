@@ -20,9 +20,7 @@
   let schemaRequired = $derived(
     formSchema.shape[id]?.meta()?.required ? true : false,
   );
-  let schemaError = $derived(
-    validationErrors?.properties?.[id]?.errors?.[0],
-  );
+  let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
   let items = $derived(
     categories.map((category) => ({
@@ -80,7 +78,7 @@
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
       {#if schemaRequired}
-        <span>*</span>
+        <span class="text-(--mbo-electric-blue)">*</span>
       {/if}
     </Field.Label>
     {#if schemaMeta?.description}
@@ -95,7 +93,7 @@
     {#snippet triggerChild({ props })}
       <div
         {...props}
-        class="flex h-9 w-full items-center gap-2 rounded-md border-0 bg-transparent px-3 py-1 text-base shadow-none outline-none focus-within:ring-[3px] focus-within:ring-ring/50 md:text-sm"
+        class="flex h-9 w-full items-center gap-2 rounded-md border-0 bg-white px-3 py-1 text-base shadow-none outline-none focus-within:ring-[3px] focus-within:ring-ring/50 md:text-sm"
       >
         <input
           type="text"
@@ -119,7 +117,7 @@
       />
       <Select.Content
         id="category-list"
-        class="max-h-60"
+        class="max-h-60 bg-white"
         onOpenAutoFocus={(e) => e?.preventDefault?.()}
       >
         {#each filteredPillars as pillar (pillar)}

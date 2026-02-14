@@ -71,6 +71,155 @@ export const supportingInfoLinkSchema = z.object({
   url: z.string().url("Enter a valid URL"),
 });
 
+/** Cost category options for work package budget rows (from costCategories.json). */
+import costCategoriesList from "./costCategories.json";
+
+/** Ordered list of category names (for z.enum and ordering). */
+export const COST_CATEGORIES = costCategoriesList.map((c) => c.name);
+
+/** Full list with name + description for selects and UI. */
+export const COST_CATEGORIES_LIST = costCategoriesList;
+
+/** Single budget row input schema (object only; form fields use .shape from this). */
+export const budgetRowInputSchema = z.object({
+  costCategory: z
+    .enum(COST_CATEGORIES, {
+      errorMap: () => ({ message: "Cost category is required" }),
+    })
+    .meta({
+      label: "Cost Category",
+      required: true,
+    }),
+  itemDescription: z
+    .string()
+    .min(1, "Item description is required")
+    .max(600)
+    .meta({
+      label: "Item Description",
+      required: true,
+    }),
+  qty: z.coerce
+    .number({ invalid_type_error: "Quantity must be a number" })
+    .min(0.001, "Quantity is required and must be greater than 0")
+    .meta({
+      label: "Quantity",
+      required: true,
+    }),
+  unitCostAda: z.coerce
+    .number({ invalid_type_error: "Unit cost must be a number" })
+    .min(0, "Unit cost in ADA is required and must be 0 or greater")
+    .meta({
+      label: "Unit Cost (ADA)",
+      required: true,
+    }),
+});
+
+/** Single budget row schema (repeatable per work package); adds totalAda via transform. */
+export const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
+  ...row,
+  totalAda: Math.round(row.qty * row.unitCostAda * 1000) / 1000,
+}));
+
+/** Single milestone schema (repeatable per work package). */
+export const milestoneSchema = z.object({
+  milestoneName: z
+    .string()
+    .min(1, "Milestone name is required")
+    .max(100)
+    .meta({
+      label: "Milestone (and reference name)",
+      description:
+        'You may use labels like "Milestone 1," but please include a descriptive name afterward (e.g., "Milestone 1 – Design Approval").',
+      placeholder: "e.g. Milestone 1 – Design Approval",
+      required: true,
+    }),
+  deliverables: z
+    .string()
+    .min(1, "Deliverables are required")
+    .max(600)
+    .meta({
+      label: "Deliverables",
+      description:
+        "What is produced? Concrete outputs (reports, code, documentation, audits, etc.).",
+      placeholder: "e.g. Senior Dev",
+      required: true,
+    }),
+  acceptanceCriteria: z
+    .string()
+    .min(1, "Acceptance criteria are required")
+    .max(600)
+    .meta({
+      label: "Acceptance Criteria",
+      description:
+        'How do you know it\'s "done"? Objective conditions for approval and payment.',
+      placeholder: "Enter Description",
+      required: true,
+    }),
+  duration: z
+    .string()
+    .min(1, "Duration is required")
+    .max(200)
+    .meta({
+      label: "Duration",
+      description: "How long do you expect it to take for this milestone to be finished?",
+      placeholder: "e.g. 2 weeks",
+      required: true,
+    }),
+});
+
+/** Single work package schema (Section 3 of CBC proposal template). */
+export const workPackageSchema = z.object({
+  name: z.string().min(1, "Work Package name is required").max(100).meta({
+    label: "Work Package",
+    description: "A descriptive name for this specific work package.",
+    placeholder: "e.g. WP1 Node Performance Improvements",
+    required: true,
+  }),
+  scopeOfWork: z.string().min(1, "Scope of Work is required").max(2000).meta({
+    label: "Scope of Work",
+    description:
+      "Provide a high-level description of the work involved. This may include activities, approaches, or key outputs, but does not need to be a detailed delivery plan. The goal is to give reviewers enough context to understand how the stated objectives will be achieved.",
+    placeholder:
+      "Describe the main activities and, where applicable, the key outputs or deliverables associated with this work package",
+    required: true,
+  }),
+  supportingDocumentationLinks: z.array(supportingInfoLinkSchema).optional().default([]).meta({
+    label: "Supporting Documentation Link",
+    description:
+      "Link any relevant diagrams, technical specs, or planning documents (PDF, PNG, JPG).",
+    required: false,
+  }),
+  coreObjectives: z
+    .array(z.string().min(1, "At least one Core Objective is required").max(400))
+    .meta({
+      label: "Core Objectives",
+      description:
+        "What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities.",
+      placeholder: "e.g. Improve node synchronization reliability across the network",
+      required: true,
+    }),
+  expectedValueRoi: z.string().min(1, "Expected Value (ROI) is required").max(600).meta({
+    label: "Expected Value (ROI)",
+    description:
+      "Why does this work matter? Describe what will change or improve as a result of this Work Package. This may be qualitative or quantitative and does not need to be financial.",
+    placeholder: "e.g. Faster onboarding for developers integrating with Cardano",
+    required: true,
+  }),
+  metric: z.string().min(1, "Metric is required").max(600).meta({
+    label: "Metric",
+    description:
+      "How will success be measured? Provide one or more metrics that demonstrate whether the expected value has been achieved.",
+    placeholder: "e.g. Average time to first successful deployment reduced by 30%",
+    required: true,
+  }),
+  milestones: z.array(milestoneSchema).optional().default([]).meta({
+    label: "Milestones",
+    description: "How do you plan to deliver this package? Copy this table for each milestone.",
+    required: false,
+  }),
+  budgetRows: z.array(budgetRowSchema).optional().default([]),
+});
+
 export const formSchema = z.object({
   title: z.string().min(2).max(255).meta({
     label: "Proposal Title",
@@ -92,12 +241,12 @@ export const formSchema = z.object({
   }),
   category: z
     .string()
-    .length(24, "Please select a focus area")
+    .length(24, "Please choose a strategic focus area")
     .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
     .meta({
-      label: "Focus Area",
+      label: "Strategic Focus Area",
       description: "The primary Cardano strategic pillar your project addresses (e.g., L1 Improvements, DeFi, RWA).",
-      placeholder: "Select a focus area...",
+      placeholder: "Choose a strategic focus area...",
       required: true,
     }),
   kpis: z.array(z.object({
@@ -116,6 +265,25 @@ export const formSchema = z.object({
     description: "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
     required: true,
   }),
+  workPackages: z
+    .array(workPackageSchema)
+    .optional()
+    .default([])
+    .meta({
+      label: "Work Package Breakdown",
+      description: "Add work packages. Copy the table for each work package.",
+      required: false,
+    }),
+  adaUsdConversionRate: z.coerce
+    .number({ invalid_type_error: "Enter a valid number" })
+    .min(0, "Conversion rate must be 0 or greater")
+    .refine((v) => v > 0, { message: "Conversion rate is required" })
+    .meta({
+      label: "ADA/USD conversion rate",
+      description: "Specify the rate used for all USD estimations in this proposal.",
+      placeholder: "0.25",
+      required: true,
+    }),
   administrative: z.object({
     intersectAdministrator: z
       .boolean({
@@ -150,7 +318,6 @@ export const formSchema = z.object({
         label: "Contracting Party Details",
         description: "Are you contracting as a registered company or an individual?",
         required: true,
-        notPublic: true,
         options: [
           { value: "company", label: "A Company" },
           { value: "individual", label: "An Individual" },
@@ -158,49 +325,58 @@ export const formSchema = z.object({
       }),
     // Company-only
     legalEntityName: z.string().max(100).optional().meta({
-      label: "Legal Entity Name (Company)",
+      label: "Legal Entity Name",
       description: "The official registered name of the organization receiving funds. Must match bank/KYC records.",
       placeholder: "Registered Company Name",
       required: true,
+      notPublic: false,
     }),
     registrationNumber: z.string().max(100).optional().meta({
-      label: "Registration Number (Company)",
+      label: "Registration Number",
       description: "Tax ID, UEN, or Company Registration Number in your jurisdiction.",
       placeholder: "Tax ID / UEN",
       required: true,
       notPublic: true,
     }),
-    countryOfIncorporation: z.string().max(100).optional().meta({
-      label: "Country of Incorporation (Company)",
-      description: "The legal jurisdiction where your entity is registered.",
-      placeholder: "Jurisdiction",
-      required: true,
-      notPublic: true,
-    }),
+    countryOfIncorporation: z
+      .string()
+      .length(2, "Select a country")
+      .optional()
+      .meta({
+        label: "Country of Incorporation",
+        description: "The legal jurisdiction where your entity is registered.",
+        placeholder: "Select country...",
+        required: true,
+        notPublic: true,
+      }),
     registeredAddress: z.string().max(100).optional().meta({
-      label: "Registered Address (Company)",
+      label: "Registered Address",
       description: "Registered office address for legal correspondence.",
       placeholder: "Full Registered Address",
       required: true,
       notPublic: true,
     }),
     // Individual-only
-    countryOfResidence: z.string().max(100).optional().meta({
-      label: "Country of Residence (Individual)",
-      description: "Country of residence for the individual.",
-      placeholder: "Country",
-      required: true,
-      notPublic: true,
-    }),
+    countryOfResidence: z
+      .string()
+      .length(2, "Select a country")
+      .optional()
+      .meta({
+        label: "Country of Residence",
+        description: "Country of residence for the individual.",
+        placeholder: "Select country...",
+        required: true,
+        notPublic: true,
+      }),
     govtIssuedIdNumber: z.string().max(100).optional().meta({
-      label: "Govt Issued ID Number (Individual)",
+      label: "Govt Issued ID Number",
       description: "Government issued ID number.",
       placeholder: "ID / Passport #",
       required: true,
       notPublic: true,
     }),
     fullResidentialAddress: z.string().max(100).optional().meta({
-      label: "Full Residential Address (Individual)",
+      label: "Full Residential Address",
       description: "Full residential address for legal correspondence.",
       placeholder: "Full Home Address",
       required: true,
@@ -212,7 +388,6 @@ export const formSchema = z.object({
       description: "The main person responsible for day-to-day communication regarding this proposal.",
       placeholder: "Enter Name",
       required: true,
-      notPublic: true,
     }),
     primaryContactEmail: z
       .string()
