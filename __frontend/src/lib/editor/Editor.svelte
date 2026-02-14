@@ -16,7 +16,8 @@
   import { theme } from "svelte-lexical/dist/themes/default";
   import EditorToolbar from "./EditorToolbar.svelte";
   import "./editor.css";
-  let { quote, value = $bindable("") } = $props();
+  /** When true, the quote formatting option is shown in the toolbar. Default false. */
+  let { quote = false, initialQuotedContent, value = $bindable("") } = $props();
 
   const initialConfig = {
     theme: theme,
@@ -28,9 +29,9 @@
       if (value != null && value !== "") {
         return convertFromMarkdownString(value, ALL_TRANSFORMERS);
       }
-      if (quote) {
-        // Wrap content in markdown blockquote syntax
-        const quotedContent = quote.content
+      if (initialQuotedContent?.content) {
+        // Wrap content in markdown blockquote syntax (e.g. when replying to a comment)
+        const quotedContent = initialQuotedContent.content
           .split("\n")
           .map((line) => `> ${line}`)
           .join("\n");
@@ -75,7 +76,7 @@
 
 <Composer {initialConfig} bind:this={composer}>
   <div class="editor-shell svelte-lexical">
-    <EditorToolbar />
+    <EditorToolbar {quote} />
     <div class="editor-container">
       <div class="editor-scroller">
         <div class="editor">
