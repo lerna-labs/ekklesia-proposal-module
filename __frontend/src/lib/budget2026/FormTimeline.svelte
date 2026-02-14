@@ -9,16 +9,21 @@
     validationErrors,
     value = $bindable({ startDate: undefined, endDate: undefined }),
   } = $props();
+
+  const schemaMeta = $derived(formSchema?.shape?.timeline?.meta?.());
+  const label = $derived(schemaMeta?.label ?? "Timeline");
+  const description = $derived(
+    schemaMeta?.description ??
+      "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
+  );
 </script>
 
 <Field.Set>
   <Field.Legend class="flex items-center gap-1">
     <div class="flex items-center gap-0">
-      Timeline <span class="text-(--mbo-electric-blue)">*</span>
+      {label} <span class="text-(--mbo-electric-blue)">*</span>
     </div>
-    <ToolTip
-      content="Project duration. How long do you realistically think the project will take? Consider including some contingency here."
-    />
+    <ToolTip content={description} />
   </Field.Legend>
   <Field.Group class="flex flex-row flex-wrap items-end gap-1 w-full md:w-1/2">
     <DatePicker

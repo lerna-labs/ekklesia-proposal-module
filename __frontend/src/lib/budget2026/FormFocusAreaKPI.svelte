@@ -63,10 +63,10 @@
     },
   ];
 
-  let label = $derived(formSchema.shape[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema.shape[id]?.meta());
+  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
+  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
   let schemaRequired = $derived(
-    formSchema.shape[id]?.meta()?.required ? true : false,
+    formSchema?.shape?.[id]?.meta()?.required ? true : false,
   );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   function getContributionError(index) {

@@ -19,6 +19,7 @@
   import ToolTip from "$lib/form/ToolTip.svelte";
   import { tick } from "svelte";
   import { workPackageSchema } from "./Schema.js";
+  import { formatAda } from "$lib/utils.js";
   import { z } from "zod";
 
   /** Schema shape FormLinks expects: formSchema.shape.supportingInfoLinks */
@@ -199,15 +200,6 @@
         ? { ...p, budgetRows: Array.isArray(budgetRows) ? budgetRows : [] }
         : p,
     );
-  }
-
-  function formatAda(n) {
-    return n != null && Number.isFinite(n)
-      ? n.toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        })
-      : "0";
   }
 
   /** Total ADA for a work package (sum of budget rows). */

@@ -16,10 +16,10 @@
   } = $props();
 
   function opts(id) {
-    return formSchema.shape[id]?.meta()?.options ?? [];
+    return formSchema?.shape?.[id]?.meta()?.options ?? [];
   }
   function isNotPublic(id) {
-    return formSchema.shape[id]?.meta()?.notPublic === true;
+    return formSchema?.shape?.[id]?.meta()?.notPublic === true;
   }
 </script>
 
