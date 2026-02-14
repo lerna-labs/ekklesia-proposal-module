@@ -17,7 +17,9 @@
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ToolTip from "$lib/form/ToolTip.svelte";
+  import { tick } from "svelte";
   import { workPackageSchema } from "./Schema.js";
+  import { formatAda } from "$lib/utils.js";
   import { z } from "zod";
 
   /** Schema shape FormLinks expects: formSchema.shape.supportingInfoLinks */
@@ -129,6 +131,9 @@
     const result = workPackageSchema.safeParse(toValidate);
     if (!result.success) {
       draftErrors = z.treeifyError(result.error);
+      tick().then(() => {
+        scrollToFirstError(document.getElementById("work-package-dialog-body"));
+      });
       return;
     }
     const data = result.data;
@@ -141,6 +146,9 @@
           },
         },
       };
+      tick().then(() => {
+        scrollToFirstError(document.getElementById("work-package-dialog-body"));
+      });
       return;
     }
     const final = {
@@ -180,20 +188,18 @@
 
   function updatePackageMilestones(index, milestones) {
     value = packages.map((p, i) =>
-      i === index ? { ...p, milestones: Array.isArray(milestones) ? milestones : [] } : p,
+      i === index
+        ? { ...p, milestones: Array.isArray(milestones) ? milestones : [] }
+        : p,
     );
   }
 
   function updatePackageBudgetRows(index, budgetRows) {
     value = packages.map((p, i) =>
-      i === index ? { ...p, budgetRows: Array.isArray(budgetRows) ? budgetRows : [] } : p,
+      i === index
+        ? { ...p, budgetRows: Array.isArray(budgetRows) ? budgetRows : [] }
+        : p,
     );
-  }
-
-  function formatAda(n) {
-    return n != null && Number.isFinite(n)
-      ? n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
-      : "0";
   }
 
   /** Total ADA for a work package (sum of budget rows). */
@@ -202,16 +208,9 @@
     return rows.reduce((sum, row) => sum + (Number(row?.totalAda) || 0), 0);
   }
 
-  /** Per-field error from draftErrors (supports nested paths for arrays). */
-  function getDraftError(path) {
-    if (!draftErrors?.properties) return "";
-    const parts = path.split(".");
-    let cur = draftErrors.properties;
-    for (const p of parts) {
-      cur = cur?.[p];
-      if (!cur) return "";
-    }
-    return cur?.errors?.[0] ?? "";
+  function scrollToFirstError(containerEl) {
+    const firstInvalid = containerEl?.querySelector?.("[aria-invalid='true']");
+    firstInvalid?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
   }
 </script>
 
@@ -229,9 +228,15 @@
   {#if packages.length > 0}
     <ul class="space-y-4 list-none p-0 m-0">
       {#each packages as pkg, index (index)}
-        {@const objectives = (Array.isArray(pkg.coreObjectives) ? pkg.coreObjectives : []).filter((o) => (o ?? "").trim() !== "")}
-        {@const links = Array.isArray(pkg.supportingDocumentationLinks) ? pkg.supportingDocumentationLinks : []}
-        {@const hasLinks = links.some((l) => (l?.title ?? "").trim() || (l?.url ?? "").trim())}
+        {@const objectives = (
+          Array.isArray(pkg.coreObjectives) ? pkg.coreObjectives : []
+        ).filter((o) => (o ?? "").trim() !== "")}
+        {@const links = Array.isArray(pkg.supportingDocumentationLinks)
+          ? pkg.supportingDocumentationLinks
+          : []}
+        {@const hasLinks = links.some(
+          (l) => (l?.title ?? "").trim() || (l?.url ?? "").trim(),
+        )}
         {@const totalAda = packageTotalAda(pkg)}
         <li>
           <Card.Root class="gap-4 py-4">
@@ -245,7 +250,9 @@
                 id="wp-header-{index}"
               >
                 <ChevronDownIcon
-                  class="size-5 shrink-0 text-muted-foreground transition-transform duration-200 {expandedPackages.has(index)
+                  class="size-5 shrink-0 text-muted-foreground transition-transform duration-200 {expandedPackages.has(
+                    index,
+                  )
                     ? 'rotate-0'
                     : '-rotate-90'}"
                   aria-hidden="true"
@@ -253,7 +260,10 @@
                 <Card.Title class="text-lg font-semibold truncate">
                   {pkg.name ?? "Unnamed work package"}
                 </Card.Title>
-                <Badge variant="secondary" class="shrink-0 tabular-nums font-normal bg-black text-white border-black">
+                <Badge
+                  variant="secondary"
+                  class="shrink-0 font-normal bg-black text-white border-(--mbo-tangy-blue)"
+                >
                   {formatAda(totalAda)} ADA
                 </Badge>
               </button>
@@ -287,66 +297,80 @@
                 aria-labelledby="wp-header-{index}"
                 class="flex flex-col gap-4 text-sm"
               >
-              {#if pkg.scopeOfWork}
-                <div>
-                  <span class="font-medium text-muted-foreground block mb-1">Scope of Work</span>
-                  <Markdown content={pkg.scopeOfWork} />
-                </div>
-              {/if}
-              {#if objectives.length > 0}
-                <div>
-                  <span class="font-medium text-muted-foreground block mb-1">Core Objectives</span>
-                  <ul class="list-disc pl-4 space-y-1">
-                    {#each objectives as obj}
-                      <li>{obj}</li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
-              {#if pkg.expectedValueRoi}
-                <div>
-                  <span class="font-medium text-muted-foreground block mb-1">Expected Value (ROI)</span>
-                  <Markdown content={pkg.expectedValueRoi} />
-                </div>
-              {/if}
-              {#if pkg.metric}
-                <div>
-                  <span class="font-medium text-muted-foreground block mb-1">Metric</span>
-                  <Markdown content={pkg.metric} />
-                </div>
-              {/if}
-              <FormWorkPackagesMilestones
-                value={pkg.milestones ?? []}
-                onvaluechange={(milestones) => updatePackageMilestones(index, milestones)}
-                formSchema={workPackageSchema}
-              />
-              <FormWorkPackagesBudget
-                value={pkg.budgetRows ?? []}
-                onvaluechange={(budgetRows) => updatePackageBudgetRows(index, budgetRows)}
-                formSchema={workPackageSchema}
-              />
-              {#if hasLinks}
-                <div>
-                  <span class="font-medium text-muted-foreground block mb-1">Supporting documentation</span>
-                  <ul class="list-none space-y-1">
-                    {#each links as link}
-                      {@const hasLink = (link?.title ?? "").trim() || (link?.url ?? "").trim()}
-                      {#if hasLink}
-                        <li>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="text-(--mbo-electric-blue) underline hover:no-underline"
-                          >
-                            {(link.title ?? "").trim() || link.url || "Link"}
-                          </a>
-                        </li>
-                      {/if}
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
+                {#if pkg.scopeOfWork}
+                  <div>
+                    <span class="font-medium text-muted-foreground block mb-1">
+                      Scope of Work
+                    </span>
+                    <Markdown content={pkg.scopeOfWork} />
+                  </div>
+                {/if}
+                {#if objectives.length > 0}
+                  <div>
+                    <span class="font-medium text-muted-foreground block mb-1">
+                      Core Objectives
+                    </span>
+                    <ul class="list-disc pl-4 space-y-1">
+                      {#each objectives as obj}
+                        <li>{obj}</li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
+                {#if pkg.expectedValueRoi}
+                  <div>
+                    <span class="font-medium text-muted-foreground block mb-1">
+                      Expected Value (ROI)
+                    </span>
+                    <Markdown content={pkg.expectedValueRoi} />
+                  </div>
+                {/if}
+                {#if pkg.metric}
+                  <div>
+                    <span class="font-medium text-muted-foreground block mb-1">
+                      Metric
+                    </span>
+                    <Markdown content={pkg.metric} />
+                  </div>
+                {/if}
+                <FormWorkPackagesMilestones
+                  value={pkg.milestones ?? []}
+                  onvaluechange={(milestones) =>
+                    updatePackageMilestones(index, milestones)}
+                  formSchema={workPackageSchema}
+                />
+                <FormWorkPackagesBudget
+                  value={pkg.budgetRows ?? []}
+                  onvaluechange={(budgetRows) =>
+                    updatePackageBudgetRows(index, budgetRows)}
+                  formSchema={workPackageSchema}
+                />
+                {#if hasLinks}
+                  <div>
+                    <span class="font-medium text-muted-foreground block mb-1">
+                      Supporting documentation
+                    </span>
+                    <ul class="list-none space-y-1">
+                      {#each links as link}
+                        {@const hasLink =
+                          (link?.title ?? "").trim() ||
+                          (link?.url ?? "").trim()}
+                        {#if hasLink}
+                          <li>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="text-(--mbo-electric-blue) underline hover:no-underline"
+                            >
+                              {(link.title ?? "").trim() || link.url || "Link"}
+                            </a>
+                          </li>
+                        {/if}
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
               </Card.Content>
             {/if}
           </Card.Root>
@@ -362,7 +386,7 @@
       onclick={openAddDialog}
     >
       <PlusIcon class="size-4" />
-      Add work package
+      Add Work Package
     </Button>
   </div>
 
@@ -373,7 +397,9 @@
 
 <!-- Add/Edit work package dialog -->
 <Dialog.Root bind:open={addDialogOpen}>
-  <Dialog.Content class="sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+  <Dialog.Content
+    class="sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col"
+  >
     <Dialog.Header>
       <Dialog.Title>
         {editingIndex != null ? "Edit Work Package" : "Add Work Package"}
@@ -384,7 +410,7 @@
           : "Fill in the work package details. All fields marked with * are required."}
       </Dialog.Description>
     </Dialog.Header>
-    <div class="grid gap-4 py-4">
+    <div id="work-package-dialog-body" class="grid gap-4 py-4">
       <FormInput
         id="name"
         bind:value={draft.name}
@@ -435,8 +461,12 @@
       >
         Cancel
       </Button>
-      <Button type="button" class="cursor-pointer" onclick={saveWorkPackage}>
-        {editingIndex != null ? "Save changes" : "Save"}
+      <Button
+        type="button"
+        class="cursor-pointer bg-(--mbo-electric-blue)"
+        onclick={saveWorkPackage}
+      >
+        {editingIndex != null ? "Save Work Package" : "Save Work Package"}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

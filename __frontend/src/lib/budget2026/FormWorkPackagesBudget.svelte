@@ -19,6 +19,7 @@
     budgetRowInputSchema,
     COST_CATEGORIES_LIST,
   } from "./Schema.js";
+  import { formatAda } from "$lib/utils.js";
   import { z } from "zod";
   import Markdown from "$lib/base/Markdown.svelte";
 
@@ -113,14 +114,6 @@
     else value = next;
   }
 
-  function formatAda(n) {
-    return n != null && Number.isFinite(n)
-      ? n.toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        })
-      : "—";
-  }
 </script>
 
 <Field.Field class="gap-2 {className}">
@@ -333,7 +326,7 @@
         role="presentation"
       >
         <div
-          class="flex items-center h-9 rounded-md px-3 text-sm text-white font-medium bg-(--mbo-electric-blue)"
+          class="flex items-center h-9 rounded-md px-3 text-sm text-white font-medium bg-black"
           aria-live="polite"
         >
           Total Budget Position{draftTotalAda != null
@@ -349,7 +342,11 @@
           >
             Cancel
           </Button>
-          <Button type="button" class="cursor-pointer" onclick={submitRow}>
+          <Button
+            type="button"
+            class="cursor-pointer bg-(--mbo-electric-blue)"
+            onclick={submitRow}
+          >
             {editingIndex != null ? "Save changes" : "Save"}
           </Button>
         </div>

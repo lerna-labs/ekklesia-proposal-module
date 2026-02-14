@@ -4,6 +4,7 @@
   import AmountInput from "$lib/form/AmountInput.svelte";
   import ToolTip from "$lib/form/ToolTip.svelte";
   import { COST_CATEGORIES, COST_CATEGORIES_LIST } from "./Schema.js";
+  import { formatAda, formatUsd } from "$lib/utils.js";
 
   const id = "adaUsdConversionRate";
   let { formSchema, validationErrors, formData } = $props();
@@ -60,23 +61,6 @@
     return map;
   });
 
-  function formatAda(n) {
-    return n != null && Number.isFinite(n)
-      ? n.toLocaleString(undefined, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        })
-      : "—";
-  }
-
-  function formatUsd(n) {
-    return n != null && Number.isFinite(n)
-      ? n.toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })
-      : "—";
-  }
 </script>
 
 <Card.Root>

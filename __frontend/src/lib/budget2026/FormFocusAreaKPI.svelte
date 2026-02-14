@@ -11,6 +11,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
+  import target from "./targets.json";
 
   let {
     id,
@@ -24,49 +25,10 @@
     class: className,
   } = $props();
 
-  const target = [
-    {
-      title: "Total Value Locked (TVL)",
-      description: "2030 Target: $3B",
-    },
-    {
-      title: "Monthly transactions",
-      description: "2030 Target: ≥ 27M tx/month",
-    },
-    {
-      title: "Monthly Active Users (MAU)",
-      description: "2030 Target: 1M unique wallets",
-    },
-    {
-      title: "Monthly (6 epochs) UpTime",
-      description: "2030 Target: 99.98% Uptime",
-    },
-    {
-      title: "Voting Power distribution",
-      description: "2030 Target: 50%+1 power controlled by > 22 DReps",
-    },
-    {
-      title: "Alternative full node clients",
-      description: "2030 Target: ≥ 2 live clients",
-    },
-    {
-      title: "Annual Protocol Revenue",
-      description: "2030 Target: ≥ 16M ADA",
-    },
-    {
-      title: "DRep participation rate",
-      description: "2030 Target: > 70% active vote rate",
-    },
-    {
-      title: "Throughput capacity per day",
-      description: "2030 Target: 3x current capacity",
-    },
-  ];
-
-  let label = $derived(formSchema.shape[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema.shape[id]?.meta());
+  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
+  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
   let schemaRequired = $derived(
-    formSchema.shape[id]?.meta()?.required ? true : false,
+    formSchema?.shape?.[id]?.meta()?.required ? true : false,
   );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   function getContributionError(index) {

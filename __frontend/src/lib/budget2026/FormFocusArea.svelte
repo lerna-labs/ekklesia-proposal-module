@@ -1,7 +1,9 @@
 <script>
+  import { tick } from "svelte";
   import * as Field from "$lib/components/ui/field/index.js";
   import ToolTip from "$lib/form/ToolTip.svelte";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import PillarInfo from "$lib/PillarInfo.svelte";
   let {
@@ -13,12 +15,46 @@
     class: className,
     categories,
     onUpdate,
+    /** When true, show a confirmation dialog before changing focus area (KPIs will be cleared). */
+    hasKpis = false,
   } = $props();
 
-  let label = $derived(formSchema.shape[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema.shape[id]?.meta());
+  let confirmChangeOpen = $state(false);
+  let pendingCategory = $state(null);
+  /** Prevents trigger onfocus from reopening the select after confirm dialog closes. */
+  let justClosedConfirm = $state(false);
+
+  function handleValueChange(newValue) {
+    if (newValue === value) return;
+    open = false;
+    if (hasKpis) {
+      pendingCategory = newValue;
+      confirmChangeOpen = true;
+    } else {
+      onUpdate?.(newValue);
+    }
+  }
+
+  async function confirmChangeFocusArea() {
+    if (pendingCategory != null) {
+      onUpdate?.(pendingCategory);
+      pendingCategory = null;
+    }
+    confirmChangeOpen = false;
+    justClosedConfirm = true;
+    await tick();
+    open = false;
+  }
+
+  function cancelChangeFocusArea() {
+    pendingCategory = null;
+    confirmChangeOpen = false;
+  }
+
+  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
+  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
   let schemaRequired = $derived(
-    formSchema.shape[id]?.meta()?.required ? true : false,
+    formSchema?.shape?.[id]?.meta()?.required ? true : false,
   );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
@@ -69,7 +105,6 @@
 
   $effect(() => {
     if (!open) searchQuery = "";
-    onUpdate(value);
   });
 </script>
 
@@ -104,13 +139,21 @@
           {placeholder}
           value={displayValue}
           oninput={(e) => (searchQuery = e.currentTarget.value)}
-          onfocus={() => (open = true)}
+          onfocus={() => {
+          if (justClosedConfirm) justClosedConfirm = false;
+          else open = true;
+        }}
           class="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 font-medium"
         />
         <ChevronDownIcon class="size-4 shrink-0 opacity-50" />
       </div>
     {/snippet}
-    <Select.Root type="single" bind:value bind:open>
+    <Select.Root
+      type="single"
+      value={value}
+      onValueChange={handleValueChange}
+      bind:open
+    >
       <Select.Trigger
         class="w-full justify-between data-placeholder:text-muted-foreground"
         child={triggerChild}
@@ -149,6 +192,29 @@
     <Field.Error class="text-xs">{schemaError}</Field.Error>
   {/if}
 </Field.Field>
+
+<AlertDialog.Root bind:open={confirmChangeOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Change focus area?</AlertDialog.Title>
+      <AlertDialog.Description>
+        You have already added KPIs for the current focus area. Changing the
+        focus area will clear your KPI selections. Do you want to continue?
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer class="flex gap-2">
+      <AlertDialog.Cancel class="cursor-pointer" onclick={cancelChangeFocusArea}>
+        Cancel
+      </AlertDialog.Cancel>
+      <AlertDialog.Action
+        class="cursor-pointer"
+        onclick={confirmChangeFocusArea}
+      >
+        Change focus area
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- preview -->
 {#if value}

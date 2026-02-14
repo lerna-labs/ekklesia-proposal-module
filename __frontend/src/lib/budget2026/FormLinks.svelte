@@ -6,6 +6,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
+  import PlusIcon from "@lucide/svelte/icons/plus";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import ToolTip from "$lib/form/ToolTip.svelte";
   import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
@@ -160,7 +161,13 @@
   {/if}
 
   <div class="flex justify-start">
-    <Button variant="outline" class="w-fit" onclick={openAddDialog}>
+    <Button
+      type="button"
+      variant="outline"
+      class="add-item-btn w-fit cursor-pointer gap-2"
+      onclick={openAddDialog}
+    >
+      <PlusIcon class="size-4" />
       Add Link
     </Button>
   </div>
