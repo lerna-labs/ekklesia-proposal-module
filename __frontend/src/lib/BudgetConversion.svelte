@@ -1,6 +1,7 @@
 <script>
   import * as Popover from "$lib/components/ui/popover";
   import * as Button from "$lib/components/ui/button";
+  import { formatAda, formatUsd } from "$lib/utils.js";
 
   /** Default when proposal has no conversionRate. */
   const DEFAULT_ADA_USD = 0.5;
@@ -13,10 +14,6 @@
   const adaAmount = $derived(totalBudget ?? 0);
   const usdAmount = $derived(adaAmount * rate);
 
-  const formatAda = (n) =>
-    n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const formatUsd = (n) =>
-    n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const formatRate = (r) =>
     r.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 </script>
