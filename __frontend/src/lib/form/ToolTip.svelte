@@ -5,7 +5,7 @@
 </script>
 
 <Popover.Root>
-  <Popover.Trigger class="ml-0 p-0 cursor-pointer {className}">
+  <Popover.Trigger openOnHover class="ml-0 p-0 cursor-pointer {className}">
     <CircleQuestionMarkIcon
       class="size-4 text-muted-foreground ml-0 p-0"
       strokeWidth={2}
