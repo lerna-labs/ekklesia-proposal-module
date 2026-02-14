@@ -158,49 +158,57 @@ export const formSchema = z.object({
       }),
     // Company-only
     legalEntityName: z.string().max(100).optional().meta({
-      label: "Legal Entity Name (Company)",
+      label: "Legal Entity Name",
       description: "The official registered name of the organization receiving funds. Must match bank/KYC records.",
       placeholder: "Registered Company Name",
       required: true,
     }),
     registrationNumber: z.string().max(100).optional().meta({
-      label: "Registration Number (Company)",
+      label: "Registration Number",
       description: "Tax ID, UEN, or Company Registration Number in your jurisdiction.",
       placeholder: "Tax ID / UEN",
       required: true,
       notPublic: true,
     }),
-    countryOfIncorporation: z.string().max(100).optional().meta({
-      label: "Country of Incorporation (Company)",
-      description: "The legal jurisdiction where your entity is registered.",
-      placeholder: "Jurisdiction",
-      required: true,
-      notPublic: true,
-    }),
+    countryOfIncorporation: z
+      .string()
+      .length(2, "Select a country")
+      .optional()
+      .meta({
+        label: "Country of Incorporation",
+        description: "The legal jurisdiction where your entity is registered.",
+        placeholder: "Select country...",
+        required: true,
+        notPublic: true,
+      }),
     registeredAddress: z.string().max(100).optional().meta({
-      label: "Registered Address (Company)",
+      label: "Registered Address",
       description: "Registered office address for legal correspondence.",
       placeholder: "Full Registered Address",
       required: true,
       notPublic: true,
     }),
     // Individual-only
-    countryOfResidence: z.string().max(100).optional().meta({
-      label: "Country of Residence (Individual)",
-      description: "Country of residence for the individual.",
-      placeholder: "Country",
-      required: true,
-      notPublic: true,
-    }),
+    countryOfResidence: z
+      .string()
+      .length(2, "Select a country")
+      .optional()
+      .meta({
+        label: "Country of Residence",
+        description: "Country of residence for the individual.",
+        placeholder: "Select country...",
+        required: true,
+        notPublic: true,
+      }),
     govtIssuedIdNumber: z.string().max(100).optional().meta({
-      label: "Govt Issued ID Number (Individual)",
+      label: "Govt Issued ID Number",
       description: "Government issued ID number.",
       placeholder: "ID / Passport #",
       required: true,
       notPublic: true,
     }),
     fullResidentialAddress: z.string().max(100).optional().meta({
-      label: "Full Residential Address (Individual)",
+      label: "Full Residential Address",
       description: "Full residential address for legal correspondence.",
       placeholder: "Full Home Address",
       required: true,

@@ -5,7 +5,9 @@
   import Checkbox from "$lib/form/Checkbox.svelte";
   import RadioGroup from "$lib/form/RadioGroup.svelte";
   import Switch from "$lib/form/Switch.svelte";
+  import FormCountrySelect from "$lib/form/FormCountrySelect.svelte";
   import FormLinks from "$lib/budget2026/FormLinks.svelte";
+  import * as Card from "$lib/components/ui/card/index.js";
   let {
     value = $bindable(),
     formSchema,
@@ -46,156 +48,183 @@
     {/if}
 
     <!-- 3. Contracting Party Details (both branches) -->
-    {#if value.intersectAdministrator}
-      <RadioGroup
-        id="contractingParty"
-        bind:value={value.contractingParty}
-        options={opts("contractingParty")}
-        notPublic={isNotPublic("contractingParty")}
-        {formSchema}
-        {validationErrors}
-      />
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Contracting Party</Card.Title>
+      </Card.Header>
+      <Card.Content class="flex flex-col gap-3">
+        <RadioGroup
+          id="contractingParty"
+          bind:value={value.contractingParty}
+          options={opts("contractingParty")}
+          notPublic={isNotPublic("contractingParty")}
+          {formSchema}
+          {validationErrors}
+        />
 
-      <!-- 4a. Company-only fields -->
-      {#if value.contractingParty === "company"}
-        <Input
-          id="legalEntityName"
-          bind:value={value.legalEntityName}
-          notPublic={isNotPublic("legalEntityName")}
-          {formSchema}
-          {validationErrors}
-        />
-        <Input
-          id="registeredAddress"
-          bind:value={value.registeredAddress}
-          notPublic={isNotPublic("registeredAddress")}
-          {formSchema}
-          {validationErrors}
-        />
+        <!-- 4a. Company-only fields -->
+        {#if value.contractingParty === "company"}
+          <Input
+            id="legalEntityName"
+            bind:value={value.legalEntityName}
+            notPublic={isNotPublic("legalEntityName")}
+            {formSchema}
+            {validationErrors}
+          />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              id="registeredAddress"
+              bind:value={value.registeredAddress}
+              notPublic={isNotPublic("registeredAddress")}
+              {formSchema}
+              {validationErrors}
+            />
+            <FormCountrySelect
+              id="countryOfIncorporation"
+              bind:value={value.countryOfIncorporation}
+              notPublic={isNotPublic("countryOfIncorporation")}
+              {formSchema}
+              {validationErrors}
+            />
+          </div>
+          <div class="w-full md:w-1/2">
+            <Input
+              id="registrationNumber"
+              bind:value={value.registrationNumber}
+              notPublic={isNotPublic("registrationNumber")}
+              {formSchema}
+              {validationErrors}
+            />
+          </div>
+        {/if}
+
+        <!-- 4b. Individual-only fields -->
+        {#if value.contractingParty === "individual"}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              id="fullResidentialAddress"
+              bind:value={value.fullResidentialAddress}
+              notPublic={isNotPublic("fullResidentialAddress")}
+              {formSchema}
+              {validationErrors}
+            />
+            <FormCountrySelect
+              id="countryOfResidence"
+              bind:value={value.countryOfResidence}
+              notPublic={isNotPublic("countryOfResidence")}
+              {formSchema}
+              {validationErrors}
+            />
+          </div>
+          <div class="w-full md:w-1/2">
+            <Input
+              id="govtIssuedIdNumber"
+              bind:value={value.govtIssuedIdNumber}
+              notPublic={isNotPublic("govtIssuedIdNumber")}
+              {formSchema}
+              {validationErrors}
+            />
+          </div>
+        {/if}
+
+        <!-- 5. Shared: Primary Contact, X Handle, Signatory, etc. -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Input
-            id="registrationNumber"
-            bind:value={value.registrationNumber}
-            notPublic={isNotPublic("registrationNumber")}
+            id="primaryContactFullName"
+            bind:value={value.primaryContactFullName}
+            notPublic={isNotPublic("primaryContactFullName")}
             {formSchema}
             {validationErrors}
           />
           <Input
-            id="countryOfIncorporation"
-            bind:value={value.countryOfIncorporation}
-            notPublic={isNotPublic("countryOfIncorporation")}
+            id="primaryContactEmail"
+            bind:value={value.primaryContactEmail}
+            notPublic={isNotPublic("primaryContactEmail")}
             {formSchema}
             {validationErrors}
           />
         </div>
-      {/if}
+        <div class="w-full md:w-1/2">
+          <Input
+            id="xHandle"
+            bind:value={value.xHandle}
+            notPublic={isNotPublic("xHandle")}
+            {formSchema}
+            {validationErrors}
+          />
+        </div>
 
-      <!-- 4b. Individual-only fields -->
-      {#if value.contractingParty === "individual"}
-        <Input
-          id="countryOfResidence"
-          bind:value={value.countryOfResidence}
-          notPublic={isNotPublic("countryOfResidence")}
-          {formSchema}
-          {validationErrors}
-        />
-        <Input
-          id="govtIssuedIdNumber"
-          bind:value={value.govtIssuedIdNumber}
-          notPublic={isNotPublic("govtIssuedIdNumber")}
-          {formSchema}
-          {validationErrors}
-        />
-        <Input
-          id="fullResidentialAddress"
-          bind:value={value.fullResidentialAddress}
-          notPublic={isNotPublic("fullResidentialAddress")}
-          {formSchema}
-          {validationErrors}
-        />
-      {/if}
+        <Card.Root class="mt-4">
+          <Card.Header>
+            <Card.Title>Signatory</Card.Title>
+          </Card.Header>
+          <Card.Content class="flex flex-col gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                id="signatoryTitle"
+                bind:value={value.signatoryTitle}
+                notPublic={isNotPublic("signatoryTitle")}
+                {formSchema}
+                {validationErrors}
+              />
+              <Input
+                id="signatoryName"
+                bind:value={value.signatoryName}
+                notPublic={isNotPublic("signatoryName")}
+                {formSchema}
+                {validationErrors}
+              />
+            </div>
+            <div class="w-full md:w-1/2">
+              <Input
+                id="signatoryEmail"
+                bind:value={value.signatoryEmail}
+                notPublic={isNotPublic("signatoryEmail")}
+                {formSchema}
+                {validationErrors}
+              />
+            </div>
+            <div class="w-full md:w-1/2 mt-2">
+              <p class="text-sm text-muted-foreground mb-2 italic">
+                The above individual is authorized to execute a binding
+                agreement on behalf of the vendor entity, subject to selection
+                and contract execution.
+              </p>
+              <Checkbox
+                id="signatoryAuthorization"
+                bind:value={value.signatoryAuthorization}
+                notPublic={isNotPublic("signatoryAuthorization")}
+                {formSchema}
+                {validationErrors}
+              />
+            </div>
+          </Card.Content>
+        </Card.Root>
+      </Card.Content>
+    </Card.Root>
 
-      <!-- 5. Shared: Primary Contact, X Handle, Signatory, etc. -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input
-          id="primaryContactFullName"
-          bind:value={value.primaryContactFullName}
-          notPublic={isNotPublic("primaryContactFullName")}
-          {formSchema}
-          {validationErrors}
-        />
-        <Input
-          id="primaryContactEmail"
-          bind:value={value.primaryContactEmail}
-          notPublic={isNotPublic("primaryContactEmail")}
-          {formSchema}
-          {validationErrors}
-        />
-      </div>
-      <div class="w-full md:w-1/2">
-        <Input
-          id="xHandle"
-          bind:value={value.xHandle}
-          notPublic={isNotPublic("xHandle")}
-          {formSchema}
-          {validationErrors}
-        />
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <Input
-          id="signatoryTitle"
-          bind:value={value.signatoryTitle}
-          notPublic={isNotPublic("signatoryTitle")}
-          {formSchema}
-          {validationErrors}
-        />
-        <Input
-          id="signatoryName"
-          bind:value={value.signatoryName}
-          notPublic={isNotPublic("signatoryName")}
-          {formSchema}
-          {validationErrors}
-        />
-      </div>
-      <div class="w-full md:w-1/2">
-        <Input
-          id="signatoryEmail"
-          bind:value={value.signatoryEmail}
-          notPublic={isNotPublic("signatoryEmail")}
-          {formSchema}
-          {validationErrors}
-        />
-      </div>
-      <Checkbox
-        id="signatoryAuthorization"
-        bind:value={value.signatoryAuthorization}
-        notPublic={isNotPublic("signatoryAuthorization")}
-        {formSchema}
-        {validationErrors}
-      />
+    <Input
+      id="totalProposalsSubmitted"
+      bind:value={value.totalProposalsSubmitted}
+      notPublic={isNotPublic("totalProposalsSubmitted")}
+      {formSchema}
+      {validationErrors}
+    />
+    <Switch
+      id="kycKybSubmitted"
+      bind:value={value.kycKybSubmitted}
+      notPublic={isNotPublic("kycKybSubmitted")}
+      {formSchema}
+      {validationErrors}
+    />
+    {#if value.kycKybSubmitted === false || value.kycKybSubmitted == null}
       <Input
-        id="totalProposalsSubmitted"
-        bind:value={value.totalProposalsSubmitted}
-        notPublic={isNotPublic("totalProposalsSubmitted")}
+        id="kycContactEmail"
+        bind:value={value.kycContactEmail}
+        notPublic={isNotPublic("kycContactEmail")}
         {formSchema}
         {validationErrors}
       />
-      <Switch
-        id="kycKybSubmitted"
-        bind:value={value.kycKybSubmitted}
-        notPublic={isNotPublic("kycKybSubmitted")}
-        {formSchema}
-        {validationErrors}
-      />
-      {#if value.kycKybSubmitted === false || value.kycKybSubmitted == null}
-        <Input
-          id="kycContactEmail"
-          bind:value={value.kycContactEmail}
-          notPublic={isNotPublic("kycContactEmail")}
-          {formSchema}
-          {validationErrors}
-        />
-      {/if}
     {/if}
 
     <!-- 6. Other fields (not related to choosing Admin) -->
