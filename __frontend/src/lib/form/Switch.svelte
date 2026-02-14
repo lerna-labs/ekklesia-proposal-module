@@ -46,7 +46,7 @@
         >
           {label}
           {#if schemaRequired}
-            <span>*</span>
+            <span class="text-(--mbo-electric-blue)">*</span>
           {/if}
         </Field.Label>
         {#if showNotPublic}
