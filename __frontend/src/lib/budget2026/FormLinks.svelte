@@ -120,7 +120,7 @@
   {#if links.length > 0}
     <ul class="space-y-2 rounded-md border border-input divide-y divide-input">
       {#each links as link, index (index)}
-        <li class="flex items-center gap-0 p-2 text-sm">
+        <li class="flex items-center gap-0 p-2 text-sm bg-(--mbo-sky-blue)/50">
           <span class="min-w-0 flex-1 font-medium truncate" title={link.title}>
             {link.title}
           </span>

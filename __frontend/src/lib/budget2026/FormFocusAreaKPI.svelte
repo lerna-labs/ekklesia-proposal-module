@@ -134,7 +134,7 @@
         >
           {label}
           {#if schemaRequired}
-            <span>*</span>
+            <span class="text-(--mbo-electric-blue)">*</span>
           {/if}
         </Field.Label>
         {#if schemaMeta?.description}
@@ -230,7 +230,7 @@
                   class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
                 >
                   Contribution Strategy
-                  <span>*</span>
+                  <span class="text-(--mbo-electric-blue)">*</span>
                 </Field.Label>
                 <ToolTip
                   content="Specific actions and methodologies you will employ to hit the selected KPI targets."

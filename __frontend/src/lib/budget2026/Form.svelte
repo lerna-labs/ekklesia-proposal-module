@@ -9,8 +9,9 @@
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import FormAdministrative from "./FormAdministrative.svelte";
+  import FormWorkPackages from "./FormWorkPackages.svelte";
+  import FormFinancialSummary from "./FormFinancialSummary.svelte";
   import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
-  import { Separator } from "$lib/components/ui/separator/index.js";
   import { z } from "zod";
   let { budget, categories } = $props();
 
@@ -34,6 +35,35 @@
       startDate: undefined,
       endDate: undefined,
     },
+    adaUsdConversionRate: 0,
+    workPackages: [
+      {
+        name: "WP1 Example Work Package",
+        scopeOfWork:
+          "Example scope: key activities and deliverables for testing the form.",
+        supportingDocumentationLinks: [],
+        coreObjectives: ["Validate work package UI and budget flow"],
+        expectedValueRoi: "Faster testing and demo of the budget module.",
+        metric: "Time to complete a full work package entry.",
+        milestones: [
+          {
+            milestoneName: "Milestone 1 – Design",
+            deliverables: "Design doc and mockups",
+            acceptanceCriteria: "Approved by stakeholder",
+            duration: "2 weeks",
+          },
+        ],
+        budgetRows: [
+          {
+            costCategory: "Development",
+            itemDescription: "Backend API development",
+            qty: 1,
+            unitCostAda: 10000,
+            totalAda: 10000,
+          },
+        ],
+      },
+    ],
     administrative: {
       intersectAdministrator: true,
       otherAdministrators: "",
@@ -103,6 +133,8 @@
       category: formData.category,
       kpis: formData.kpis,
       timeline: formData.timeline,
+      workPackages: formData.workPackages,
+      adaUsdConversionRate: formData.adaUsdConversionRate,
       administrative: formData.administrative,
     }),
   );
@@ -121,9 +153,9 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <section class="w-full bg-muted-foreground/10 hidden" id="project-definition">
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
-      <h2 class="text-2xl font-medium">1. Project Definition</h2>
+  <section class="w-full bg-muted-foreground/10" id="project-definition">
+    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
+      <h2 class="text-2xl font-medium mb-4">1. Project Definition</h2>
 
       <Input
         id="title"
@@ -152,7 +184,7 @@
     class="w-full bg-muted-foreground/15"
     id="strategic-roadmap-alignment"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
       <h2 class="text-2xl font-medium">2. Strategic Roadmap Alignment</h2>
 
       <CategorySelector
@@ -166,8 +198,6 @@
           formData.kpis = [];
         }}
       />
-
-      <Separator class="w-full md:w-1/2" />
 
       {#if formData.category}
         <KPISelector
@@ -186,7 +216,7 @@
   </section>
 
   <section class="w-full bg-muted-foreground/5" id="execution-roadmap">
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
       <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
 
       <FormTimeline
@@ -194,6 +224,14 @@
         {validationErrors}
         bind:value={formData.timeline}
       />
+
+      <FormWorkPackages
+        {formSchema}
+        {validationErrors}
+        bind:value={formData.workPackages}
+      />
+
+      <FormFinancialSummary {formSchema} {validationErrors} {formData} />
     </div>
   </section>
 

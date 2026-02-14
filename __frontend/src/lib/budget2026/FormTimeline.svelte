@@ -13,7 +13,9 @@
 
 <Field.Set>
   <Field.Legend class="flex items-center gap-1">
-    Timeline*
+    <div class="flex items-center gap-0">
+      Timeline <span class="text-(--mbo-electric-blue)">*</span>
+    </div>
     <ToolTip
       content="Project duration. How long do you realistically think the project will take? Consider including some contingency here."
     />
