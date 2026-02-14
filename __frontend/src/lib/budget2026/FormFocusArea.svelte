@@ -69,7 +69,10 @@
 
   $effect(() => {
     if (!open) searchQuery = "";
-    onUpdate(value);
+  });
+  $effect(() => {
+    value;
+    onUpdate?.(value);
   });
 </script>
 

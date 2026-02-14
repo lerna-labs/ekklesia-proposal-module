@@ -150,6 +150,11 @@
       validationErrors = z.treeifyError(result.error);
     }
   });
+
+  // Clear declaration errors when the dialog closes (e.g. Cancel) so they don't persist on reopen
+  $effect(() => {
+    if (!declarationsDialogOpen) declarationValidationErrors = null;
+  });
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">

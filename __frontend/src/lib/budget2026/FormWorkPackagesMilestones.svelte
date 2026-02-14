@@ -120,13 +120,19 @@
             {/if}
             {#if m.deliverables}
               <div class="mt-1 text-muted-foreground text-sm">
-                <Markdown content={m.deliverables} class="prose-p:my-0 prose-ul:my-1 prose-li:my-0" />
+                <Markdown
+                  content={m.deliverables}
+                  class="prose-p:my-0 prose-ul:my-1 prose-li:my-0"
+                />
               </div>
             {/if}
             {#if m.acceptanceCriteria}
               <div class="mt-1 text-muted-foreground text-xs">
-                <span class="font-medium">Acceptance: </span>
-                <Markdown content={m.acceptanceCriteria} class="prose-p:my-0 prose-ul:my-1 prose-li:my-0" />
+                <span class="font-medium">Acceptance:</span>
+                <Markdown
+                  content={m.acceptanceCriteria}
+                  class="prose-p:my-0 prose-ul:my-1 prose-li:my-0"
+                />
               </div>
             {/if}
           </div>
@@ -218,7 +224,7 @@
         Cancel
       </Button>
       <Button type="button" class="cursor-pointer" onclick={submitMilestone}>
-        {editingIndex != null ? "Save changes" : "Add"}
+        {editingIndex != null ? "Save Milestone" : "Add Milestone"}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
