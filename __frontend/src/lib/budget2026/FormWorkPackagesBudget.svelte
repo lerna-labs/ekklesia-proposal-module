@@ -204,10 +204,10 @@
   <Button
     type="button"
     variant="outline"
-    class="w-fit cursor-pointer"
+    class="add-item-btn w-fit cursor-pointer gap-2"
     onclick={() => openDialog()}
   >
-    <PlusIcon class="size-4 mr-1" />
+    <PlusIcon class="size-4" />
     Add Budget Position
   </Button>
 </Field.Field>

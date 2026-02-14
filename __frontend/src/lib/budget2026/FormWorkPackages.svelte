@@ -9,10 +9,13 @@
   import FormWorkPackagesBudget from "$lib/budget2026/FormWorkPackagesBudget.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import * as Card from "$lib/components/ui/card/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
+  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+  import PlusIcon from "@lucide/svelte/icons/plus";
   import ToolTip from "$lib/form/ToolTip.svelte";
   import { workPackageSchema } from "./Schema.js";
   import { z } from "zod";
@@ -40,6 +43,15 @@
   let deleteDialogOpen = $state(false);
   let indexToDelete = $state(null);
   let editingIndex = $state(null);
+  /** Set of work package indices that are expanded (collapsed by default). */
+  let expandedPackages = $state(new Set());
+
+  function togglePackage(index) {
+    const next = new Set(expandedPackages);
+    if (next.has(index)) next.delete(index);
+    else next.add(index);
+    expandedPackages = next;
+  }
 
   function getDefaultDraft() {
     return {
@@ -152,7 +164,15 @@
 
   function confirmDelete() {
     if (indexToDelete != null) {
-      value = packages.filter((_, i) => i !== indexToDelete);
+      const removed = indexToDelete;
+      value = packages.filter((_, i) => i !== removed);
+      // Keep expanded state in sync: remove deleted index, shift down indices above it
+      const next = new Set();
+      expandedPackages.forEach((i) => {
+        if (i < removed) next.add(i);
+        else if (i > removed) next.add(i - 1);
+      });
+      expandedPackages = next;
       indexToDelete = null;
     }
     deleteDialogOpen = false;
@@ -168,6 +188,18 @@
     value = packages.map((p, i) =>
       i === index ? { ...p, budgetRows: Array.isArray(budgetRows) ? budgetRows : [] } : p,
     );
+  }
+
+  function formatAda(n) {
+    return n != null && Number.isFinite(n)
+      ? n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+      : "0";
+  }
+
+  /** Total ADA for a work package (sum of budget rows). */
+  function packageTotalAda(pkg) {
+    const rows = Array.isArray(pkg?.budgetRows) ? pkg.budgetRows : [];
+    return rows.reduce((sum, row) => sum + (Number(row?.totalAda) || 0), 0);
   }
 
   /** Per-field error from draftErrors (supports nested paths for arrays). */
@@ -200,11 +232,32 @@
         {@const objectives = (Array.isArray(pkg.coreObjectives) ? pkg.coreObjectives : []).filter((o) => (o ?? "").trim() !== "")}
         {@const links = Array.isArray(pkg.supportingDocumentationLinks) ? pkg.supportingDocumentationLinks : []}
         {@const hasLinks = links.some((l) => (l?.title ?? "").trim() || (l?.url ?? "").trim())}
+        {@const totalAda = packageTotalAda(pkg)}
         <li>
           <Card.Root class="gap-4 py-4">
-            <Card.Header class="border-b pb-4">
-              <Card.Title class="text-lg font-semibold">{pkg.name ?? "Unnamed work package"}</Card.Title>
-              <Card.Action class="flex gap-1">
+            <Card.Header class="flex flex-row items-center gap-2">
+              <button
+                type="button"
+                class="flex flex-1 min-w-0 items-center gap-2 text-left cursor-pointer rounded-md hover:bg-muted/50 -m-1 p-1 transition-colors"
+                onclick={() => togglePackage(index)}
+                aria-expanded={expandedPackages.has(index)}
+                aria-controls="wp-content-{index}"
+                id="wp-header-{index}"
+              >
+                <ChevronDownIcon
+                  class="size-5 shrink-0 text-muted-foreground transition-transform duration-200 {expandedPackages.has(index)
+                    ? 'rotate-0'
+                    : '-rotate-90'}"
+                  aria-hidden="true"
+                />
+                <Card.Title class="text-lg font-semibold truncate">
+                  {pkg.name ?? "Unnamed work package"}
+                </Card.Title>
+                <Badge variant="secondary" class="shrink-0 tabular-nums font-normal bg-black text-white border-black">
+                  {formatAda(totalAda)} ADA
+                </Badge>
+              </button>
+              <Card.Action class="flex gap-1 shrink-0">
                 <Button
                   type="button"
                   variant="ghost"
@@ -227,7 +280,13 @@
                 </Button>
               </Card.Action>
             </Card.Header>
-            <Card.Content class="flex flex-col gap-4 text-sm">
+            {#if expandedPackages.has(index)}
+              <Card.Content
+                id="wp-content-{index}"
+                role="region"
+                aria-labelledby="wp-header-{index}"
+                class="flex flex-col gap-4 text-sm"
+              >
               {#if pkg.scopeOfWork}
                 <div>
                   <span class="font-medium text-muted-foreground block mb-1">Scope of Work</span>
@@ -288,7 +347,8 @@
                   </ul>
                 </div>
               {/if}
-            </Card.Content>
+              </Card.Content>
+            {/if}
           </Card.Root>
         </li>
       {/each}
@@ -298,9 +358,10 @@
   <div class="flex justify-start">
     <Button
       variant="outline"
-      class="w-fit cursor-pointer"
+      class="add-item-btn w-fit cursor-pointer gap-2"
       onclick={openAddDialog}
     >
+      <PlusIcon class="size-4" />
       Add work package
     </Button>
   </div>

@@ -153,8 +153,8 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <section class="w-full bg-muted-foreground/10" id="project-definition">
-    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
+  <section class="w-full bg-muted-foreground/10 py-10" id="project-definition">
+    <div class="max-w-4xl mx-auto space-y-4">
       <h2 class="text-2xl font-medium mb-4">1. Project Definition</h2>
 
       <Input
@@ -181,10 +181,10 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15"
+    class="w-full bg-muted-foreground/15 py-10"
     id="strategic-roadmap-alignment"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
+    <div class="max-w-4xl mx-auto space-y-4">
       <h2 class="text-2xl font-medium">2. Strategic Roadmap Alignment</h2>
 
       <CategorySelector
@@ -215,8 +215,8 @@
     </div>
   </section>
 
-  <section class="w-full bg-muted-foreground/5" id="execution-roadmap">
-    <div class="max-w-4xl mx-auto mt-4 mb-4 space-y-4">
+  <section class="w-full bg-muted-foreground/5 py-10" id="execution-roadmap">
+    <div class="max-w-4xl mx-auto space-y-4">
       <h2 class="text-2xl font-medium">3. Execution Roadmap</h2>
 
       <FormTimeline
@@ -236,10 +236,10 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/15"
+    class="w-full bg-muted-foreground/15 py-10"
     id="administrative-verification"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <h2 class="text-2xl font-medium">4. Administrative & Verification</h2>
       <FormAdministrative
         formSchema={formSchema.shape.administrative}
@@ -250,10 +250,10 @@
   </section>
 
   <section
-    class="w-full bg-muted-foreground/30"
+    class="w-full bg-muted-foreground/30 py-10"
     id="proposal-submission-legal-declarations"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <h2 class="text-2xl font-medium">
         5. Proposal Submission Legal Declarations
       </h2>
@@ -264,10 +264,10 @@
   </section>
 
   <section
-    class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50"
+    class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto mt-4 mb-4">
+    <div class="max-w-4xl mx-auto">
       <Button type="submit" class="cursor-pointer">Save Draft</Button>
     </div>
   </section>
