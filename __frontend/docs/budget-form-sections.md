@@ -29,27 +29,29 @@ This document describes the structure of the budget proposal form (`Form.svelte`
 
 ## Section 2: Strategic Roadmap Alignment
 
-**Components:** `FormFocusArea.svelte` (CategorySelector), `FormFocusAreaKPI.svelte` (KPISelector)  
+**Components:** `FormFocusArea.svelte`, `FormFocusAreaKPI.svelte`  
 **Section id:** `strategic-roadmap-alignment`
 
 ### 2.1 Strategic Focus Area
 
 | Field id  | Label                 | Component     | Required | Constraints | Notes |
 |-----------|-----------------------|---------------|----------|-------------|--------|
-| `category`| Strategic Focus Area  | CategorySelector (Select) | Yes | Length 24, MongoDB ObjectId regex | Primary Cardano strategic pillar (e.g. L1, DeFi, RWA). Options come from `categories` prop. |
+| `category`| Strategic Focus Area  | FormFocusArea (Select) | Yes | Length 24, MongoDB ObjectId regex | Primary Cardano strategic pillar (e.g. L1, DeFi, RWA). Options come from `categories` prop. |
 
-Choosing a category resets `kpis`. KPIs are only shown when a category is selected.
+Choosing a focus area resets `kpis` (via parent `onUpdate`). If the user has already added KPIs and selects a different focus area, an alert dialog asks for confirmation before applying the change and clearing KPIs. KPIs are only shown when a category is selected. FormFocusArea receives `bind:value={formData.category}` and `hasKpis` so it can show the confirmation when needed.
 
 ### 2.2 Key Performance Indicators (KPIs)
 
 | Field id | Label   | Component | Required | Constraints | Notes |
 |----------|---------|-----------|----------|-------------|--------|
-| `kpis`   | Key Performance Indicators | KPISelector | Yes (at least one) | Array of `{ title, contributionStrategy }` | KPI list is driven by selected category’s `metaData.kpis`. |
+| `kpis`   | Key Performance Indicators | FormFocusAreaKPI | Yes (at least one) | Array of `{ title, contributionStrategy }` | KPI list is driven by selected category’s `metaData.kpis`. Bound via `bind:value={formData.kpis}`. |
 
 **Per KPI item (schema):**
 
-- `title`: 3–255 characters (from category KPI list; user selects and adds).
+- `title`: 3–255 characters (from category KPI list; user selects and adds). Optional custom KPIs can be added.
 - `contributionStrategy`: 100–1000 characters, required for each selected KPI.
+
+**KPI target descriptions:** `FormFocusAreaKPI` shows 2030 target badges for known KPIs; titles and descriptions are loaded from `targets.json` (array of `{ title, description }`).
 
 ---
 
@@ -238,14 +240,15 @@ Displayed in a dialog after main form validation. Contains explanatory text and 
 ## Controls section
 
 **Section id:** `controls`  
-Sticky bottom bar with **Save Draft** (submit). Triggers main form validation and, on success, opens the Legal Declarations dialog.
+Sticky bottom bar (orange background, `bg-(--mbo-orange)`), with **Save Draft** (submit). Triggers main form validation and, on success, opens the Legal Declarations dialog.
 
 ---
 
-## Shared / reusable schemas
+## Shared / reusable schemas and data
 
 - **supportingInfoLinkSchema:** `title` 1–255, `url` valid URL. Used for work package supporting links and administrative “Other Supporting Info”.
 - **Cost categories:** Defined in `costCategories.json`; each entry has `name` and `description`. Used for budget row cost category dropdown and financial summary description column.
+- **KPI targets:** Defined in `targets.json`; each entry has `title` and `description` (e.g. “2030 Target: …”). Used by FormFocusAreaKPI to show target badges for known KPIs.
 
 ---
 

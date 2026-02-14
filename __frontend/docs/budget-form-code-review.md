@@ -2,6 +2,8 @@
 
 Review of `Form.svelte` and all budget form subcomponents: structure, correctness, maintainability, and suggested improvements. Schema and validation live in `Schema.js`; UI in `src/lib/budget2026/*` and `src/lib/form/*`.
 
+**Recent context:** Form uses `FormFocusArea` and `FormFocusAreaKPI` (renamed from CategorySelector/KPISelector). Focus area change with existing KPIs shows an alert dialog; KPIs are cleared via `onUpdate` and `formData.kpis` is bound to FormFocusAreaKPI. KPI targets live in `targets.json`. Save Draft controls section is sticky with orange background.
+
 ---
 
 ## 1. Critical issues
@@ -87,8 +89,8 @@ Review of `Form.svelte` and all budget form subcomponents: structure, correctnes
 
 ### 6.1 No defensive checks for `categories` in Form
 
-**Location:** `Form.svelte` – `CategorySelector` and `KPISelector`  
-**Issue:** If `categories` is undefined or null (e.g. API failure or wrong parent), `CategorySelector` and `KPISelector` may throw when they call `categories.map(...)` or `categories.find(...)`.  
+**Location:** `Form.svelte` – `FormFocusArea` and `FormFocusAreaKPI`  
+**Issue:** If `categories` is undefined or null (e.g. API failure or wrong parent), `FormFocusArea` and `FormFocusAreaKPI` may throw when they call `categories.map(...)` or `categories.find(...)`.  
 **Recommendation:** In Form.svelte, derive a safe list (e.g. `const categoryList = $derived(Array.isArray(categories) ? categories : []);`) and pass that to the children, or add guards inside the child components so they tolerate missing `categories`.
 
 ### 6.2 DatePicker and `value.startDate` / `value.endDate`
