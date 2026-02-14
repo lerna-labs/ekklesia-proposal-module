@@ -20,9 +20,7 @@
   let schemaRequired = $derived(
     formSchema.shape[id]?.meta()?.required ? true : false,
   );
-  let schemaError = $derived(
-    validationErrors?.properties?.[id]?.errors?.[0],
-  );
+  let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   let showNotPublic = $derived(
     notPublic ?? formSchema?.shape?.[id]?.meta()?.notPublic ?? false,
   );
@@ -40,10 +38,7 @@
 
 <Field.Field class="gap-2 {className}">
   <div class="flex items-center gap-1 w-full">
-    <Field.Label
-      for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
-    >
+    <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
       {#if schemaRequired}
         <span>*</span>
@@ -68,7 +63,7 @@
     placeholder={schemaMeta?.placeholder}
     maxlength={maxLength}
     aria-invalid={schemaError ? true : false}
-    class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
   />
   {#if description}
     <Field.Description>{description}</Field.Description>
