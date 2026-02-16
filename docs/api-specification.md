@@ -1247,13 +1247,16 @@ Each element is an object with:
 | Field                        | Type    | Required | Description                    |
 |------------------------------|---------|----------|--------------------------------|
 | `conversionRate`             | number  | No       | Currency conversion rate       |
+| `intersectAdministrator`     | boolean | No       | Whether Intersect is chosen as administrator |
+| `otherAdministrators`        | string  | No       | Administrator name/details when not Intersect |
 | `initiativeType`             | string  | Yes      | `"New Initiative"` or `"Maintenance"` |
 | `priorFunding`               | string  | No       | Information about prior funding|
 | `treasuryRepayment`          | boolean | No       | Whether treasury repayment applies |
 | `treasuryRepaymentCondition` | string  | No       | Repayment conditions           |
 | `treasuryDonationHash`       | string  | No       | Treasury donation transaction hash |
-| `administrator`               | string  | No       | Administrator information      |
-| `supportingDocuments`         | array   | No       | Array of document URLs/IDs     |
+| `administrator`              | string  | No       | Administrator information (legacy) |
+| `thirdPartyAssurers`        | string  | No       | Third party assurer vendor/person/organization and cost |
+| `supportingDocuments`        | array   | No       | Array of `{ title, url }` for “Other Supporting Info” links |
 
 **`legalDeclarations` Object (Required when `status` is `"live"`):**
 
