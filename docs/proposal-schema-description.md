@@ -156,28 +156,23 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 
 ## 5. Legal Declarations (metaData.legalDeclarations)
 
-All declaration fields below must be `true` when submitting with `status: "live"`. Required when status is live; optional for draft.
+The PDF (CBC Proposal Template FORM Final DRAFT) has **four checkboxes** only: two under §1 Data Protection, two under §8 Declaration of Submitter. Sections 2–7 are **text only** (no checkboxes). All four checkbox fields must be `true` when submitting with `status: "live"`. Required when status is live; optional for draft.
 
 | PDF § | PDF field | Schema path | Required (when live) | Type | Validation / notes |
 |-------|-----------|-------------|------------------------|------|---------------------|
-| 1 | Data Protection (consent) | `legalDeclarations.dataProtection` | Yes | Boolean | PDF has two checkboxes; schema currently single boolean. |
-| 1 | (public visibility consent) | (e.g. `publicVisibilityConsent`) | Yes | Boolean | PDF: second checkbox; not yet split in schema. |
-| 2 | Anti-Bribery and Anti-Corruption | `legalDeclarations.antiBribery` | Yes | Boolean | Must be true. |
-| 3 | Proposal Authenticity and IP | `legalDeclarations.authenticity`, `legalDeclarations.ipOwnership` | Yes | Boolean each | Both must be true. |
-| 4 | Conflicts with Existing Obligations | `legalDeclarations.conflicts` | Yes | Boolean | Must be true. |
-| 5 | Compliance with Laws and Regulations | `legalDeclarations.compliance` | Yes | Boolean | Must be true. |
-| 6 | Sanctions / Restricted Parties | `legalDeclarations.sanctions` | Yes | Boolean | Must be true. |
-| 7 | No Contract Formation / Limitation of Liability | `legalDeclarations.noContract`, `legalDeclarations.noGuarantee` | Yes | Boolean each | Both must be true. |
-| 8 | Authorized to submit (entity) | `legalDeclarations.authorizationEntity` | Yes | Boolean | Must be true. |
-| 8 | Authorized to attest | `legalDeclarations.authorizationAttestation` | Yes | Boolean | Must be true. |
+| 1 | Data Protection (consent) | `legalDeclarations.dataProtection` | Yes | Boolean | First checkbox under §1. |
+| 1 | Public visibility consent | `legalDeclarations.publicVisibilityConsent` | Yes | Boolean | Second checkbox under §1. |
+| 2–7 | (sections 2–7) | — | — | — | Text only in PDF; no checkboxes. |
+| 8 | Authorized to submit (entity) | `legalDeclarations.authorizationEntity` | Yes | Boolean | First checkbox under §8. |
+| 8 | Authorized to attest | `legalDeclarations.authorizationAttestation` | Yes | Boolean | Second checkbox under §8. |
 
-### Declaration of Submitter (PDF §8 – not yet in schema)
+### Declaration of Submitter (PDF §8)
 
 | PDF field | Schema path | Required | Max length / type | Validation / notes |
 |-----------|-------------|----------|-------------------|---------------------|
-| Name | (e.g. `submitterName`) | Yes | 100 chars | Text input. |
-| Role | (e.g. `submitterRole`) | Yes | 100 chars | Text input. |
-| Email | (e.g. `submitterEmail`) | Yes | 100 chars, email | Text input. |
+| Name | `legalDeclarations.submitterName` | Yes (when live) | 100 chars | Text input. |
+| Role | `legalDeclarations.submitterRole` | Yes (when live) | 100 chars | Text input. |
+| Email | `legalDeclarations.submitterEmail` | Yes (when live) | 100 chars, email | Text input. |
 
 ---
 

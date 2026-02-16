@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|----------------------------------------------------------------------- |
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.0                                                                  |
+| **Version**        | 0.2.1                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 4, 2026                                                       |
+| **Last Revised**   | February 16, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan                                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -1260,21 +1260,17 @@ Each element is an object with:
 
 **`legalDeclarations` Object (Required when `status` is `"live"`):**
 
-All fields must be `true` to submit a proposal as `"live"`:
+Matches the CBC Proposal Template FORM Final DRAFT PDF: four checkboxes (two under §1 Data Protection, two under §8 Declaration of Submitter) plus submitter text fields. All four boolean fields must be `true` to submit a proposal as `"live"`.
 
-| Field                    | Type    | Required | Description                    |
-|--------------------------|---------|----------|--------------------------------|
-| `dataProtection`         | boolean | Yes*      | Data protection acceptance     |
-| `authorizationEntity`     | boolean | Yes*      | Entity authorization           |
-| `authorizationAttestation`| boolean | Yes*      | Attestation authorization      |
-| `antiBribery`            | boolean | Yes*      | Anti-bribery declaration       |
-| `authenticity`           | boolean | Yes*      | Authenticity declaration       |
-| `ipOwnership`            | boolean | Yes*      | IP ownership declaration       |
-| `conflicts`              | boolean | Yes*      | Conflicts of interest          |
-| `compliance`              | boolean | Yes*      | Compliance declaration         |
-| `sanctions`               | boolean | Yes*      | Sanctions compliance           |
-| `noContract`              | boolean | Yes*      | No contract guarantee          |
-| `noGuarantee`             | boolean | Yes*      | No guarantee declaration       |
+| Field                      | Type    | Required | Description                                                                 |
+|----------------------------|---------|----------|-----------------------------------------------------------------------------|
+| `dataProtection`           | boolean | Yes*     | Data protection consent (PDF §1, first checkbox).                           |
+| `publicVisibilityConsent`  | boolean | Yes*     | Public visibility consent (PDF §1, second checkbox).                        |
+| `authorizationEntity`      | boolean | Yes*     | Authorized to submit on behalf of vendor entity (PDF §8, first checkbox).   |
+| `authorizationAttestation` | boolean | Yes*     | Authorized to attest to all legal declarations (PDF §8, second checkbox).   |
+| `submitterName`            | string  | No       | Declaration of submitter – name (PDF §8). Max 100 chars.                    |
+| `submitterRole`            | string  | No       | Declaration of submitter – role (PDF §8). Max 100 chars.                   |
+| `submitterEmail`           | string  | No       | Declaration of submitter – email (PDF §8). Max 100 chars, valid email.     |
 
 \* Required when `status` is `"live"`, optional for `"draft"` proposals.
 
@@ -2099,6 +2095,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version    | Date       | Description |
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
+| 0.2.1      | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`. |
 | 0.2.0      | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history. |
 | 0.1.0      | 2026-02-03 | Initial specification: public endpoints (§3), authentication (§4), authenticated write endpoints (§5). |
 
