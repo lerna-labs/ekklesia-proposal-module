@@ -258,11 +258,12 @@ async function createDummyData() {
             proposerId,
             budgetId: budget._id,
             title: "Community Website and Documentation Hub",
-            description: "A single proposal to build a community website and documentation hub.",
+            summary: "A single proposal to build a community website and documentation hub.",
             status: "live",
             submittedAt: now,
             totalBudget: 150000,
             metaData: {
+                trackRecord: "Previous community projects delivered on time.",
                 contractingParty: {
                     legalEntityName: "Test Community Ltd",
                     legalEntityType: "company",
@@ -274,7 +275,7 @@ async function createDummyData() {
                     name: "Test Proposer",
                     title: "Lead",
                     email: "test@example.com",
-                    socialMedia: "",
+                    socialMedia: "@testproposer",
                 },
                 signatoryContact: {
                     name: "Test Proposer",
@@ -286,13 +287,45 @@ async function createDummyData() {
                 kycInfo: { submitted: true, email: "test@example.com" },
                 strategicFocusArea: categoryId,
                 keyPerformanceIndicators: [
-                    { kpi: "Documentation pages", constributionStrategy: "Monthly updates" },
+                    { kpi: "Documentation pages", contributionStrategy: "Monthly updates" },
                 ],
+                executionRoadmap: {
+                    projectStartDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+                    projectEndDate: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
+                    workPackages: [
+                        {
+                            title: "WP1 Website and Docs",
+                            scope: "Build community site and documentation.",
+                            supportingDocuments: [{ title: "Design doc", url: "https://example.com/design.pdf" }],
+                            estimatedDuration: "3 months",
+                            coreObjectives: ["Launch community site", "Publish initial docs"],
+                            expectedValue: "Central hub for community and developers.",
+                            metric: "Site live, 50+ doc pages.",
+                            milestones: [
+                                {
+                                    milestoneName: "M1 – Design approval",
+                                    deliverables: "Design doc and mockups",
+                                    acceptanceCriteria: "Approved by stakeholder",
+                                    duration: "2 weeks",
+                                },
+                            ],
+                            budgetBreakdown: [
+                                { costCategory: "Development", description: "Backend and frontend", quantity: 1, unitPrice: 50000, total: 50000 },
+                            ],
+                        },
+                    ],
+                },
                 financialAndAdministrative: {
                     conversionRate: 0.4,
+                    intersectAdministrator: true,
+                    otherAdministrators: "",
                     initiativeType: "New Initiative",
                     priorFunding: "None",
                     treasuryRepayment: false,
+                    treasuryRepaymentCondition: "",
+                    treasuryDonationHash: "abc123def456",
+                    thirdPartyAssurers: "",
+                    supportingDocuments: [{ title: "Project plan", url: "https://example.com/plan.pdf" }],
                 },
                 legalDeclarations: LEGAL_TRUE,
             },
