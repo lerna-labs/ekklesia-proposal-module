@@ -64,7 +64,7 @@ const proposalSchema = new Schema(
             },
             proposalType: {
                 type: String,
-                enum: ["technical", "non-technical"],
+                enum: ["Technical (software/IT)", "Non-technical"],
                 required: true,
             },
             kycInfo: {
@@ -126,7 +126,7 @@ const proposalSchema = new Schema(
                 otherAdministrators: String,
                 initiativeType: {
                     type: String,
-                    enum: ["new", "maintenance"],
+                    enum: ["New Initiative", "Maintenance"],
                     required: true,
                 },
                 priorFunding: String,
