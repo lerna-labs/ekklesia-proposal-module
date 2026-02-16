@@ -1,8 +1,13 @@
 import { z } from "zod";
 
-/** Flat schema for the legal declarations dialog (formSchema.shape[id] works with field ids). */
+/**
+ * Legal declarations schema matching the PDF (CBC Proposal Template FORM Final DRAFT).
+ * The PDF has only 4 checkboxes: 2 under "1. Data Protection", 2 under "8. Declaration of Submitter".
+ * Sections 2–7 are text-only (no checkboxes). When building API payload, set other backend
+ * declaration booleans (antiBribery, authenticity, etc.) to true if required by the API.
+ */
 export const declarationsSchema = z.object({
-  dataProcessingConsent: z
+  dataProtection: z
     .boolean()
     .refine((v) => v === true, { message: "You must acknowledge and consent." })
     .meta({
@@ -18,7 +23,7 @@ export const declarationsSchema = z.object({
         "By submitting this form, you acknowledge and agree that the legal entity name, personal name, and X (Twitter) handle entered will be publicly visible in connection with this budget request.",
       required: true,
     }),
-  authorizedToSubmit: z
+  authorizationEntity: z
     .boolean()
     .refine((v) => v === true, { message: "You must confirm authorization." })
     .meta({
@@ -26,7 +31,7 @@ export const declarationsSchema = z.object({
         "I confirm that I am authorized to submit this proposal on behalf of the vendor entity. I acknowledge that submission does not constitute authority to bind the entity contractually.",
       required: true,
     }),
-  authorizedToAttest: z
+  authorizationAttestation: z
     .boolean()
     .refine((v) => v === true, { message: "You must confirm authorization." })
     .meta({
@@ -80,7 +85,7 @@ export const COST_CATEGORIES = costCategoriesList.map((c) => c.name);
 /** Full list with name + description for selects and UI. */
 export const COST_CATEGORIES_LIST = costCategoriesList;
 
-/** Single budget row input schema (object only; form fields use .shape from this). */
+/** Single budget row input schema (object only; form fields use .shape from this). Matches workPackages[].budgetBreakdown[]. */
 export const budgetRowInputSchema = z.object({
   costCategory: z
     .enum(COST_CATEGORIES, {
@@ -90,7 +95,7 @@ export const budgetRowInputSchema = z.object({
       label: "Cost Category",
       required: true,
     }),
-  itemDescription: z
+  description: z
     .string()
     .min(1, "Item description is required")
     .max(600)
@@ -98,14 +103,14 @@ export const budgetRowInputSchema = z.object({
       label: "Item Description",
       required: true,
     }),
-  qty: z.coerce
+  quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .min(0.001, "Quantity is required and must be greater than 0")
     .meta({
       label: "Quantity",
       required: true,
     }),
-  unitCostAda: z.coerce
+  unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0, "Unit cost in ADA is required and must be 0 or greater")
     .meta({
@@ -114,10 +119,10 @@ export const budgetRowInputSchema = z.object({
     }),
 });
 
-/** Single budget row schema (repeatable per work package); adds totalAda via transform. */
+/** Single budget row schema (repeatable per work package); adds total via transform. */
 export const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
   ...row,
-  totalAda: Math.round(row.qty * row.unitCostAda * 1000) / 1000,
+  total: Math.round(row.quantity * row.unitPrice * 1000) / 1000,
 }));
 
 /** Single milestone schema (repeatable per work package). */
@@ -167,15 +172,15 @@ export const milestoneSchema = z.object({
     }),
 });
 
-/** Single work package schema (Section 3 of CBC proposal template). */
+/** Single work package schema (Section 3 – Execution Roadmap). Matches metaData.executionRoadmap.workPackages[]. */
 export const workPackageSchema = z.object({
-  name: z.string().min(1, "Work Package name is required").max(100).meta({
+  title: z.string().min(1, "Work Package name is required").max(100).meta({
     label: "Work Package",
     description: "A descriptive name for this specific work package.",
     placeholder: "e.g. WP1 Node Performance Improvements",
     required: true,
   }),
-  scopeOfWork: z.string().min(1, "Scope of Work is required").max(2000).meta({
+  scope: z.string().min(1, "Scope of Work is required").max(2000).meta({
     label: "Scope of Work",
     description:
       "Provide a high-level description of the work involved. This may include activities, approaches, or key outputs, but does not need to be a detailed delivery plan. The goal is to give reviewers enough context to understand how the stated objectives will be achieved.",
@@ -183,10 +188,15 @@ export const workPackageSchema = z.object({
       "Describe the main activities and, where applicable, the key outputs or deliverables associated with this work package",
     required: true,
   }),
-  supportingDocumentationLinks: z.array(supportingInfoLinkSchema).optional().default([]).meta({
+  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]).meta({
     label: "Supporting Documentation Link",
     description:
       "Link any relevant diagrams, technical specs, or planning documents (PDF, PNG, JPG).",
+    required: false,
+  }),
+  estimatedDuration: z.string().max(200).optional().meta({
+    label: "Estimated Duration",
+    placeholder: "e.g. 3 months",
     required: false,
   }),
   coreObjectives: z
@@ -198,7 +208,7 @@ export const workPackageSchema = z.object({
       placeholder: "e.g. Improve node synchronization reliability across the network",
       required: true,
     }),
-  expectedValueRoi: z.string().min(1, "Expected Value (ROI) is required").max(600).meta({
+  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600).meta({
     label: "Expected Value (ROI)",
     description:
       "Why does this work matter? Describe what will change or improve as a result of this Work Package. This may be qualitative or quantitative and does not need to be financial.",
@@ -217,11 +227,11 @@ export const workPackageSchema = z.object({
     description: "How do you plan to deliver this package? Copy this table for each milestone.",
     required: false,
   }),
-  budgetRows: z.array(budgetRowSchema).optional().default([]),
+  budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
 });
 
 export const formSchema = z.object({
-  title: z.string().min(2).max(255).meta({
+  title: z.string().min(2).max(100).meta({
     label: "Proposal Title",
     description: "The official name of your project as it will appear in governance voting.",
     placeholder: "Enter Title Here",
@@ -255,8 +265,8 @@ export const formSchema = z.object({
       required: true,
     }),
   kpis: z.array(z.object({
-    title: z.string().min(3).max(255),
-    contributionStrategy: z.string().min(100).max(1000),
+    kpi: z.string().min(1, "KPI is required").max(400),
+    contributionStrategy: z.string().min(1, "Contribution strategy is required").max(800),
   })).min(1, "At least one KPI is required").meta({
     label: "Key Performance Indicators",
     description: "Select specific KPIs you intend to impact (e.g., TVL, Monthly Transactions, Active Users).",
@@ -312,8 +322,8 @@ export const formSchema = z.object({
       required: false,
       notPublic: true,
     }),
-    // Contracting Party (both branches)
-    contractingParty: z
+    // Contracting Party (both branches) – metaData.contractingParty.legalEntityType
+    legalEntityType: z
       .enum(["company", "individual"], {
         required_error: "Please select Company or Individual",
         invalid_type_error: "Please select Company or Individual",
@@ -336,14 +346,14 @@ export const formSchema = z.object({
       required: true,
       notPublic: false,
     }),
-    registrationNumber: z.string().max(100).optional().meta({
+    legalEntityRegistrationNumber: z.string().max(100).optional().meta({
       label: "Registration Number",
       description: "Tax ID, UEN, or Company Registration Number in your jurisdiction.",
       placeholder: "Tax ID / UEN",
       required: true,
       notPublic: true,
     }),
-    countryOfIncorporation: z
+    legalEntityCountry: z
       .string()
       .length(2, "Select a country")
       .optional()
@@ -354,7 +364,7 @@ export const formSchema = z.object({
         required: true,
         notPublic: true,
       }),
-    registeredAddress: z.string().max(100).optional().meta({
+    legalEntityAddress: z.string().max(100).optional().meta({
       label: "Registered Address",
       description: "Registered office address for legal correspondence.",
       placeholder: "Full Registered Address",
@@ -498,14 +508,14 @@ export const formSchema = z.object({
           { value: false, label: "No" },
         ],
       }),
-    repaymentCircumstances: z.string().max(800).optional().meta({
+    treasuryRepaymentCondition: z.string().max(800).optional().meta({
       label: "Repayment Circumstances",
       description: "The specific conditions or triggers that would cause a repayment to occur.",
       placeholder: "Enter Explanation",
       required: false,
     }),
     initiativeType: z
-      .enum(["new", "maintenance"], {
+      .enum(["New Initiative", "Maintenance"], {
         required_error: "Please select one",
         invalid_type_error: "Please select one",
       })
@@ -515,12 +525,12 @@ export const formSchema = z.object({
         description: "Is this a brand new project or the continuation/maintenance of an existing one?",
         required: true,
         options: [
-          { value: "new", label: "New Initiative" },
-          { value: "maintenance", label: "Maintenance" },
+          { value: "New Initiative", label: "New Initiative" },
+          { value: "Maintenance", label: "Maintenance" },
         ],
       }),
-    typeOfProposal: z
-      .enum(["technical", "non-technical"], {
+    proposalType: z
+      .enum(["Technical (software/IT)", "Non-technical"], {
         required_error: "Please select one",
         invalid_type_error: "Please select one",
       })
@@ -530,8 +540,8 @@ export const formSchema = z.object({
         description: "Classification of the proposal type.",
         required: true,
         options: [
-          { value: "technical", label: "Technical (software/IT)" },
-          { value: "non-technical", label: "Non-technical" },
+          { value: "Technical (software/IT)", label: "Technical (software/IT)" },
+          { value: "Non-technical", label: "Non-technical" },
         ],
       }),
     priorFunding: z.string().max(800).optional().meta({
@@ -540,7 +550,7 @@ export const formSchema = z.object({
       placeholder: "Enter Details or N/A",
       required: true,
     }),
-    treasuryDonationVerificationHash: z.string().max(64).optional().meta({
+    treasuryDonationHash: z.string().min(1, "Treasury donation hash is required").max(255).optional().meta({
       label: "Treasury Donation Verification Hash",
       description: "The transaction hash confirming the required 1000 ada donation to the Cardano Treasury. This serves as proof of wallet control and commitment.",
       placeholder: "Transaction hash",
