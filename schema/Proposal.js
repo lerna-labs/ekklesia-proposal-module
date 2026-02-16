@@ -19,7 +19,7 @@ const proposalSchema = new Schema(
             type: String,
             required: true,
         },
-        description: { // executive summary here
+        summary: { // executive summary here
             type: String,
             required: false,
         },
@@ -64,7 +64,7 @@ const proposalSchema = new Schema(
             },
             proposalType: {
                 type: String,
-                enum: ["Technical (software/IT)", "Non-technical"],
+                enum: ["technical", "non-technical"],
                 required: true,
             },
             kycInfo: {
@@ -84,7 +84,7 @@ const proposalSchema = new Schema(
                 type: [
                     {
                         kpi: String,
-                        constributionStrategy: String,
+                        contributionStrategy: String,
                     }
                 ],
                 required: true,
@@ -96,10 +96,20 @@ const proposalSchema = new Schema(
                     {
                         title: String,
                         scope: String,
+                        supportingDocuments: [{
+                            title: String,
+                            url: String,
+                        }],
                         estimatedDuration: String,
                         coreObjectives: [String],
                         expectedValue: String,
                         metric: String,
+                        milestones: [{
+                            milestoneName: String,
+                            deliverables: String,
+                            acceptanceCriteria: String,
+                            duration: String,
+                        }],
                         budgetBreakdown: [{
                             costCategory: String,
                             description: String,
@@ -112,9 +122,11 @@ const proposalSchema = new Schema(
             },
             financialAndAdministrative: {
                 conversionRate: Number,
+                intersectAdministrator: Boolean,
+                otherAdministrators: String,
                 initiativeType: {
                     type: String,
-                    enum: ["New Initiative", "Maintenance"],
+                    enum: ["new", "maintenance"],
                     required: true,
                 },
                 priorFunding: String,
@@ -122,7 +134,11 @@ const proposalSchema = new Schema(
                 treasuryRepaymentCondition: String,
                 treasuryDonationHash: String,
                 administrator: String,
-                supportingDocuments: [String],
+                thirdPartyAssurers: String,
+                supportingDocuments: [{
+                    title: String,
+                    url: String,
+                }],
             },
             legalDeclarations: {
                 type: Object,
@@ -227,7 +243,10 @@ const proposalSchema = new Schema(
         },
         withdrawalDetails: {
             type: {
-                category: ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
+                category: {
+                    type: String,
+                    enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
+                },
                 userId: String,
                 comment: String,
                 date: Date,
@@ -258,6 +277,10 @@ const proposalSchema = new Schema(
             type: Number,
             required: false,
         },
+        version: {
+            type: Number,
+            default: 1,
+        },
     },
     {
         timestamps: true,
@@ -265,7 +288,7 @@ const proposalSchema = new Schema(
     }
 );
 
-proposalSchema.index({ userId: 1, proposalId: 1 });
+proposalSchema.index({ proposerId: 1, budgetId: 1 });
 proposalSchema.index({ budgetId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 })
