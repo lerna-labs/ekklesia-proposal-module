@@ -282,15 +282,15 @@ async function createDummyData() {
                     email: "test@example.com",
                     authorization: true,
                 },
-                proposalType: "Technical (software/IT)",
+                proposalType: "technical",
                 kycInfo: { submitted: true, email: "test@example.com" },
                 strategicFocusArea: categoryId,
                 keyPerformanceIndicators: [
-                    { kpi: "Documentation pages", constributionStrategy: "Monthly updates" },
+                    { kpi: "Documentation pages", contributionStrategy: "Monthly updates" },
                 ],
                 financialAndAdministrative: {
                     conversionRate: 0.4,
-                    initiativeType: "New Initiative",
+                    initiativeType: "new",
                     priorFunding: "None",
                     treasuryRepayment: false,
                 },
