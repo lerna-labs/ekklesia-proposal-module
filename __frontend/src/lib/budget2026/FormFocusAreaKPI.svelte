@@ -32,7 +32,7 @@
   );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   function getContributionError(index) {
-    return validationErrors?.properties?.kpis?.items?.[index]?.properties
+    return validationErrors?.properties?.[id]?.items?.[index]?.properties
       ?.contributionStrategy?.errors?.[0];
   }
   const categoryData = $derived(categories.find((c) => c._id === category));

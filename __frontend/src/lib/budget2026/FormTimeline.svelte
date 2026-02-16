@@ -7,10 +7,10 @@
   let {
     formSchema,
     validationErrors,
-    value = $bindable({ startDate: undefined, endDate: undefined }),
+    value = $bindable({ projectStartDate: undefined, projectEndDate: undefined }),
   } = $props();
 
-  const schemaMeta = $derived(formSchema?.shape?.timeline?.meta?.());
+  const schemaMeta = $derived(formSchema?.shape?.executionRoadmap?.meta?.());
   const label = $derived(schemaMeta?.label ?? "Timeline");
   const description = $derived(
     schemaMeta?.description ??
@@ -27,22 +27,22 @@
   </Field.Legend>
   <Field.Group class="flex flex-row flex-wrap items-end gap-1 w-full md:w-1/2">
     <DatePicker
-      id="startDate"
+      id="projectStartDate"
       label="Start Date"
       required
       minValue={today(getLocalTimeZone())}
-      bind:value={value.startDate}
+      bind:value={value.projectStartDate}
       {validationErrors}
-      errorPath={["timeline", "startDate"]}
+      errorPath={["executionRoadmap", "projectStartDate"]}
     />
     <DatePicker
-      id="endDate"
+      id="projectEndDate"
       label="End Date"
       required
-      minValue={value.startDate}
-      bind:value={value.endDate}
+      minValue={value.projectStartDate}
+      bind:value={value.projectEndDate}
       {validationErrors}
-      errorPath={["timeline", "endDate"]}
+      errorPath={["executionRoadmap", "projectEndDate"]}
     />
   </Field.Group>
 </Field.Set>
