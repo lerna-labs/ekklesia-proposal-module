@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|----------------------------------------------------------------------- |
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.1                                                                  |
+| **Version**        | 0.2.2                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | February 16, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan                                              |
@@ -423,7 +423,7 @@ Returns a paginated list of proposals. Visibility depends on whether the request
 | `category`  | string  | —       | Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where `metaData.strategicFocusArea` matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema. |
 | `proposer`  | string  | —       | Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. |
 | `status`    | string  | `live`  | Filter by proposal status. Valid values: `live` or `withdrawn` (includes both `withdrawnByProposer` and `withdrawnByAdmin`). |
-| `search`    | string  | —       | Search term to match against proposal `_id` (exact match), `title`, `description`, or `metaData.contractingParty.legalEntityName` (partial, case-insensitive). |
+| `search`    | string  | —       | Search term to match against proposal `_id` (exact match), `title`, `summary`, or `metaData.contractingParty.legalEntityName` (partial, case-insensitive). |
 | `sort`      | string  | `date`  | Sort field: `title`, `status`, `date` (submittedAt), or `amount` (totalBudget). |
 | `direction` | string  | `desc`  | Sort direction: `asc` or `desc`.                                            |
 
@@ -1170,93 +1170,42 @@ Creates a new proposal. The authenticated user's `userId` is automatically set a
 |--------------------------|---------|----------|-----------------------------------------------------------------------------|
 | `budgetId`               | string  | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string)      |
 | `title`                  | string  | Yes      | Title of the proposal                                                       |
-| `description`            | string  | No       | Executive summary/description of the proposal                               |
+| `summary`                | string  | Yes*     | Executive summary. Max 2000 chars. Required when `status` is `"live"`; optional for draft. |
 | `metaData`               | object  | Yes      | Proposal metadata (see structure below)                                    |
 | `status`                 | string  | No       | Proposal status. Defaults to `"draft"`. Valid values: `"draft"`, `"live"`. To submit as `"live"`, all legal declarations must be accepted. Once set to `"live"`, status cannot be changed (see §5.2). |
 
+**Request body shape** is defined by [proposal-schema-description.md](proposal-schema-description.md). For draft, only `budgetId`, `title`, and `status` are required; full validation applies when `status` is `"live"`. **Server-set fields (not in request body):** Responses include `_id`, `proposerId` (from JWT), `createdAt`, `updatedAt`, `version`, `versions`, `submittedAt`, `totalBudget`, `signature`, `withdrawalDetails` (when withdrawn). See [schema/Proposal.js](../schema/Proposal.js) for internal tracking and versioning.
+
 **`metaData` Object Structure:**
 
-| Field                         | Type    | Required | Description                                                                 |
-|-------------------------------|---------|----------|-----------------------------------------------------------------------------|
-| `contractingParty`            | object  | Yes      | Legal entity information (see structure below)                              |
-| `primaryContact`              | object  | Yes      | Primary contact information (see structure below)                          |
-| `signatoryContact`           | object  | Yes      | Signatory contact information (see structure below)                        |
-| `proposalType`               | string  | Yes      | Type of proposal: `"Technical (software/IT)"` or `"Non-technical"`         |
-| `kycInfo`                    | object  | Yes      | KYC information (see structure below)                                      |
-| `strategicFocusArea`          | string  | Yes      | Category ObjectId (must be a valid Category from the proposal's budget)     |
-| `keyPerformanceIndicators`   | array   | Yes      | Array of KPI objects (see structure below)                                 |
-| `executionRoadmap`           | object  | No       | Project execution roadmap (see structure below)                             |
-| `financialAndAdministrative` | object  | No       | Financial and administrative details (see structure below)                 |
-| `legalDeclarations`          | object  | No       | Legal declarations (required when `status` is `"live"`, see structure below)|
-| `trackRecord`               | string  | No       | Track record information                                                    |
+| Field                         | Type   | Required (when live) | Description                                                                 |
+|-------------------------------|--------|----------------------|-----------------------------------------------------------------------------|
+| `trackRecord`                 | string | No                   | Max 650 chars.                                                              |
+| `strategicFocusArea`          | string | Yes                  | Category ObjectId (24 hex). Must be a Category from the proposal's budget. |
+| `keyPerformanceIndicators`   | array  | Yes (min 1)          | Each: `{ kpi ` (max 400), `contributionStrategy` (max 800) }.                |
+| `executionRoadmap`            | object | Yes                  | `projectStartDate`, `projectEndDate` (ISO 8601), `workPackages` (array).     |
+| `financialAndAdministrative`  | object | Yes                  | See below.                                                                  |
+| `contractingParty`            | object | Yes                  | See below.                                                                  |
+| `primaryContact`              | object | Yes                  | See below.                                                                  |
+| `signatoryContact`            | object | Yes                  | See below.                                                                  |
+| `proposalType`                | string | Yes                  | `"Technical (software/IT)"` \| `"Non-technical"`.                           |
+| `kycInfo`                     | object | Yes                  | See below.                                                                  |
+| `legalDeclarations`           | object | Yes when live        | See below.                                                                  |
 
-**`contractingParty` Object:**
+**`contractingParty`:** `legalEntityType` (required): `"company"` or `"individual"`. Company: `legalEntityName`, `legalEntityRegistrationNumber`, `legalEntityCountry`, `legalEntityAddress` (each max 100). Individual: `countryOfResidence`, `govtIssuedIdNumber`, `fullResidentialAddress` (each max 100). See [proposal-schema-description.md](proposal-schema-description.md).
 
-| Field                            | Type   | Required | Description                    |
-|----------------------------------|--------|----------|--------------------------------|
-| `legalEntityName`                | string | Yes      | Legal name of the entity       |
-| `legalEntityType`                | string | Yes      | `"company"` or `"individual"`  |
-| `legalEntityRegistrationNumber`  | string | No       | Registration number            |
-| `legalEntityCountry`            | string | No       | Country of registration        |
-| `legalEntityAddress`             | string | No       | Legal address                  |
+**`primaryContact`:** `name`, `email` (required, max 100); `title`, `socialMedia` (optional, max 100).
 
-**`primaryContact` Object:**
+**`signatoryContact`:** `name`, `title`, `email` (required, max 100), `authorization` (required, boolean, must be true).
 
-| Field          | Type   | Required | Description           |
-|----------------|--------|----------|-----------------------|
-| `name`         | string | Yes      | Contact name          |
-| `title`        | string | Yes      | Job title             |
-| `email`        | string | Yes      | Email address         |
-| `socialMedia`  | string | Yes      | Social media handle   |
+**`kycInfo`:** `submitted` (boolean, required), `email` (required when `submitted` is false, max 100, valid email).
 
-**`signatoryContact` Object:**
+**`keyPerformanceIndicators`:** Each element: `kpi` (max 400), `contributionStrategy` (max 800).
 
-| Field           | Type    | Required | Description                                    |
-|-----------------|---------|----------|------------------------------------------------|
-| `name`          | string  | Yes      | Signatory name                                  |
-| `title`         | string  | Yes      | Job title                                       |
-| `email`         | string  | Yes      | Email address                                   |
-| `authorization` | boolean | Yes      | Confirmation of authorization to sign          |
+**`executionRoadmap`:** `projectStartDate`, `projectEndDate` (ISO 8601; required when live), `workPackages` (array). Per-work-package structure: see [proposal-schema-description.md](proposal-schema-description.md) §3.
 
-**`kycInfo` Object:**
+**`financialAndAdministrative`:** `conversionRate` (number), `intersectAdministrator` (boolean), `otherAdministrators` (max 400), `initiativeType`: `"New Initiative"` or `"Maintenance"`, `priorFunding` (max 800), `treasuryRepayment` (boolean), `treasuryRepaymentCondition` (max 800), `treasuryDonationHash` (required when live), `thirdPartyAssurers` (max 600), `supportingDocuments`: array of `{ title` (max 255), `url }`. `administrator` (optional, legacy). Full field list: [proposal-schema-description.md](proposal-schema-description.md) §4.
 
-| Field       | Type    | Required | Description                    |
-|-------------|---------|----------|--------------------------------|
-| `submitted` | boolean | Yes      | Whether KYC has been submitted |
-| `email`     | string  | Yes      | KYC contact email              |
-
-**`keyPerformanceIndicators` Array:**
-
-Each element is an object with:
-
-| Field                  | Type   | Required | Description                    |
-|------------------------|--------|----------|--------------------------------|
-| `kpi`                  | string | Yes      | Key performance indicator      |
-| `contributionStrategy`| string | Yes      | Contribution strategy          |
-
-**`executionRoadmap` Object (Optional):**
-
-| Field              | Type   | Required | Description                    |
-|--------------------|--------|----------|--------------------------------|
-| `projectStartDate` | string | No       | ISO 8601 date string           |
-| `projectEndDate`   | string | No       | ISO 8601 date string           |
-| `workPackages`     | array  | No       | Array of work package objects  |
-
-**`financialAndAdministrative` Object (Optional):**
-
-| Field                        | Type    | Required | Description                    |
-|------------------------------|---------|----------|--------------------------------|
-| `conversionRate`             | number  | No       | Currency conversion rate       |
-| `intersectAdministrator`     | boolean | No       | Whether Intersect is chosen as administrator |
-| `otherAdministrators`        | string  | No       | Administrator name/details when not Intersect |
-| `initiativeType`             | string  | Yes      | `"New Initiative"` or `"Maintenance"` |
-| `priorFunding`               | string  | No       | Information about prior funding|
-| `treasuryRepayment`          | boolean | No       | Whether treasury repayment applies |
-| `treasuryRepaymentCondition` | string  | No       | Repayment conditions           |
-| `treasuryDonationHash`       | string  | No       | Treasury donation transaction hash |
-| `administrator`              | string  | No       | Administrator information (legacy) |
-| `thirdPartyAssurers`        | string  | No       | Third party assurer vendor/person/organization and cost |
-| `supportingDocuments`        | array   | No       | Array of `{ title, url }` for “Other Supporting Info” links |
 
 **`legalDeclarations` Object (Required when `status` is `"live"`):**
 
@@ -1284,8 +1233,9 @@ Returns the created proposal document with all fields:
   "proposerId": "stake1ux9...xyz",
   "budgetId": "a1b2c3d4e5f67890abcdef12",
   "title": "Cardano Node Performance Optimization",
-  "description": "Improving node synchronization and transaction processing efficiency",
+  "summary": "Improving node synchronization and transaction processing efficiency",
   "status": "draft",
+  "version": 1,
   "metaData": {
     "contractingParty": {
       "legalEntityName": "Example Corp",
@@ -1435,9 +1385,10 @@ Returns the updated proposal document (the one at `proposalId`). If the proposal
   "proposerId": "stake1ux9...xyz",
   "budgetId": "a1b2c3d4e5f67890abcdef12",
   "title": "Cardano Node Performance Optimization (Revised)",
-  "description": "Updated scope and timeline.",
+  "summary": "Updated scope and timeline.",
   "status": "live",
   "metaData": { },
+  "version": 2,
   "versions": [
     {
       "_id": "c2d3e4f5a67890bcdef1234",
@@ -2095,6 +2046,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version    | Date       | Description |
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
+| 0.2.2      | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking. |
 | 0.2.1      | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`. |
 | 0.2.0      | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history. |
 | 0.1.0      | 2026-02-03 | Initial specification: public endpoints (§3), authentication (§4), authenticated write endpoints (§5). |
