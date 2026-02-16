@@ -44,10 +44,10 @@
     const hasContent =
       (kpi.contributionStrategy ?? "").toString().trim().length > 0;
     if (hasContent) {
-      kpiToRemove = kpi.title;
+      kpiToRemove = kpi.kpi;
       removeKpiDialogOpen = true;
     } else {
-      toggleKpi(kpi.title);
+      toggleKpi(kpi.kpi);
     }
   }
   function confirmRemoveKpi() {
@@ -55,18 +55,18 @@
     kpiToRemove = null;
     removeKpiDialogOpen = false;
   }
-  function toggleKpi(kpiTitle) {
+  function toggleKpi(kpiName) {
     const list = Array.isArray(value) ? [...value] : [];
-    const i = list.findIndex((item) => item?.title === kpiTitle);
-    if (i === -1) list.push({ title: kpiTitle, contributionStrategy: "" });
+    const i = list.findIndex((item) => item?.kpi === kpiName);
+    if (i === -1) list.push({ kpi: kpiName, contributionStrategy: "" });
     else list.splice(i, 1);
     value = list;
     onUpdate(value);
   }
 
-  function isSelected(kpiTitle) {
+  function isSelected(kpiName) {
     return (
-      Array.isArray(value) && value.some((item) => item?.title === kpiTitle)
+      Array.isArray(value) && value.some((item) => item?.kpi === kpiName)
     );
   }
 
@@ -77,8 +77,8 @@
     const trimmed = customKpi.trim();
     if (!trimmed) return;
     const list = Array.isArray(value) ? [...value] : [];
-    if (list.some((item) => item?.title === trimmed)) return;
-    list.push({ title: trimmed, contributionStrategy: "" });
+    if (list.some((item) => item?.kpi === trimmed)) return;
+    list.push({ kpi: trimmed, contributionStrategy: "" });
     value = list;
     onUpdate(value);
     customKpi = "";
@@ -117,8 +117,8 @@
             onclick={() =>
               selected
                 ? requestRemoveKpi(
-                    value.find((x) => x?.title === kpi) ?? {
-                      title: kpi,
+                    value.find((x) => x?.kpi === kpi) ?? {
+                      kpi: kpi,
                       contributionStrategy: "",
                     },
                   )
@@ -128,20 +128,20 @@
           </Button>
         {/each}
         <!-- add custom kpis from the value array -->
-        {#each (Array.isArray(value) ? value : []).filter((item) => item?.title && !kpis.includes(item.title)) as kpiItem (kpiItem.title)}
-          {@const selected = isSelected(kpiItem.title)}
+        {#each (Array.isArray(value) ? value : []).filter((item) => item?.kpi && !kpis.includes(item.kpi)) as kpiItem (kpiItem.kpi)}
+          {@const selected = isSelected(kpiItem.kpi)}
           <Button
             type="button"
             title={selected
-              ? `Remove KPI: ${kpiItem.title}`
-              : `Add KPI: ${kpiItem.title}`}
+              ? `Remove KPI: ${kpiItem.kpi}`
+              : `Add KPI: ${kpiItem.kpi}`}
             variant="outline"
             size="sm"
             class="text-xs cursor-pointer no-select {selected ? 'active' : ''}"
             onclick={() =>
-              selected ? requestRemoveKpi(kpiItem) : toggleKpi(kpiItem.title)}
+              selected ? requestRemoveKpi(kpiItem) : toggleKpi(kpiItem.kpi)}
           >
-            {kpiItem.title}
+            {kpiItem.kpi}
           </Button>
         {/each}
         <Button
@@ -174,12 +174,12 @@
         >
           <Card.Header>
             <Card.Title class="flex w-full justify-between items-center gap-2">
-              {kpi.title}
-              {#if target.find((t) => t.title === kpi.title)}
+              {kpi.kpi}
+              {#if target.find((t) => t.title === kpi.kpi)}
                 <Badge
                   class="text-[0.6rem] bg-(--mbo-sky-blue) text-(--mbo-dark-blue) px-2 py-1"
                 >
-                  {target.find((t) => t.title === kpi.title)?.description}
+                  {target.find((t) => t.title === kpi.kpi)?.description}
                 </Badge>
               {/if}
             </Card.Title>
@@ -212,7 +212,7 @@
           </Card.Content>
           <Card.Footer clas="mt-0">
             <Button
-              title="Remove KPI: {kpi.title}"
+              title="Remove KPI: {kpi.kpi}"
               variant="outline"
               size="sm"
               class="text-xs cursor-pointer no-select inline-flex items-center gap-1"

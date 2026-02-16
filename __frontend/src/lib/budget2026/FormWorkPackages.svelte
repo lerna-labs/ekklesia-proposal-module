@@ -22,9 +22,9 @@
   import { formatAda } from "$lib/utils.js";
   import { z } from "zod";
 
-  /** Schema shape FormLinks expects: formSchema.shape.supportingInfoLinks */
+  /** FormLinks expects formSchema.shape.supportingInfoLinks; alias so validation errors map. */
   const dialogSupportingLinksSchema = z.object({
-    supportingInfoLinks: workPackageSchema.shape.supportingDocumentationLinks,
+    supportingInfoLinks: workPackageSchema.shape.supportingDocuments,
   });
 
   let {
@@ -57,14 +57,15 @@
 
   function getDefaultDraft() {
     return {
-      name: "",
-      scopeOfWork: "",
-      supportingDocumentationLinks: [],
+      title: "",
+      scope: "",
+      supportingDocuments: [],
+      estimatedDuration: "",
       coreObjectives: [""],
-      expectedValueRoi: "",
+      expectedValue: "",
       metric: "",
       milestones: [],
-      budgetRows: [],
+      budgetBreakdown: [],
     };
   }
 
@@ -79,8 +80,7 @@
     draftErrors
       ? {
           properties: {
-            supportingInfoLinks:
-              draftErrors.properties?.supportingDocumentationLinks,
+            supportingInfoLinks: draftErrors.properties?.supportingDocuments,
           },
         }
       : null,
@@ -90,21 +90,20 @@
     const pkg = index != null ? packages[index] : null;
     if (pkg) {
       draft = {
-        name: pkg.name ?? "",
-        scopeOfWork: pkg.scopeOfWork ?? "",
-        supportingDocumentationLinks: Array.isArray(
-          pkg.supportingDocumentationLinks,
-        )
-          ? [...pkg.supportingDocumentationLinks]
+        title: pkg.title ?? "",
+        scope: pkg.scope ?? "",
+        supportingDocuments: Array.isArray(pkg.supportingDocuments)
+          ? [...pkg.supportingDocuments]
           : [],
+        estimatedDuration: pkg.estimatedDuration ?? "",
         coreObjectives:
           Array.isArray(pkg.coreObjectives) && pkg.coreObjectives.length > 0
             ? [...pkg.coreObjectives]
             : [""],
-        expectedValueRoi: pkg.expectedValueRoi ?? "",
+        expectedValue: pkg.expectedValue ?? "",
         metric: pkg.metric ?? "",
         milestones: Array.isArray(pkg.milestones) ? [...pkg.milestones] : [],
-        budgetRows: Array.isArray(pkg.budgetRows) ? [...pkg.budgetRows] : [],
+        budgetBreakdown: Array.isArray(pkg.budgetBreakdown) ? [...pkg.budgetBreakdown] : [],
       };
       editingIndex = index;
     } else {
@@ -119,14 +118,14 @@
     const coreObjectivesFiltered = draft.coreObjectives
       .map((s) => s.trim())
       .filter(Boolean);
-    const linksFiltered = (draft.supportingDocumentationLinks ?? []).filter(
+    const linksFiltered = (draft.supportingDocuments ?? []).filter(
       (l) => (l.title ?? "").trim() || (l.url ?? "").trim(),
     );
     const toValidate = {
       ...draft,
       coreObjectives:
         coreObjectivesFiltered.length > 0 ? coreObjectivesFiltered : [""],
-      supportingDocumentationLinks: linksFiltered,
+      supportingDocuments: linksFiltered,
     };
     const result = workPackageSchema.safeParse(toValidate);
     if (!result.success) {
@@ -194,18 +193,18 @@
     );
   }
 
-  function updatePackageBudgetRows(index, budgetRows) {
+  function updatePackageBudgetRows(index, budgetBreakdown) {
     value = packages.map((p, i) =>
       i === index
-        ? { ...p, budgetRows: Array.isArray(budgetRows) ? budgetRows : [] }
+        ? { ...p, budgetBreakdown: Array.isArray(budgetBreakdown) ? budgetBreakdown : [] }
         : p,
     );
   }
 
   /** Total ADA for a work package (sum of budget rows). */
   function packageTotalAda(pkg) {
-    const rows = Array.isArray(pkg?.budgetRows) ? pkg.budgetRows : [];
-    return rows.reduce((sum, row) => sum + (Number(row?.totalAda) || 0), 0);
+    const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
+    return rows.reduce((sum, row) => sum + (Number(row?.total) || 0), 0);
   }
 
   function scrollToFirstError(containerEl) {
@@ -231,8 +230,8 @@
         {@const objectives = (
           Array.isArray(pkg.coreObjectives) ? pkg.coreObjectives : []
         ).filter((o) => (o ?? "").trim() !== "")}
-        {@const links = Array.isArray(pkg.supportingDocumentationLinks)
-          ? pkg.supportingDocumentationLinks
+        {@const links = Array.isArray(pkg.supportingDocuments)
+          ? pkg.supportingDocuments
           : []}
         {@const hasLinks = links.some(
           (l) => (l?.title ?? "").trim() || (l?.url ?? "").trim(),
@@ -258,7 +257,7 @@
                   aria-hidden="true"
                 />
                 <Card.Title class="text-lg font-semibold truncate">
-                  {pkg.name ?? "Unnamed work package"}
+                  {pkg.title ?? "Unnamed work package"}
                 </Card.Title>
                 <Badge
                   variant="secondary"
@@ -297,12 +296,12 @@
                 aria-labelledby="wp-header-{index}"
                 class="flex flex-col gap-4 text-sm"
               >
-                {#if pkg.scopeOfWork}
+                {#if pkg.scope}
                   <div>
                     <span class="font-medium text-muted-foreground block mb-1">
                       Scope of Work
                     </span>
-                    <Markdown content={pkg.scopeOfWork} />
+                    <Markdown content={pkg.scope} />
                   </div>
                 {/if}
                 {#if objectives.length > 0}
@@ -317,12 +316,12 @@
                     </ul>
                   </div>
                 {/if}
-                {#if pkg.expectedValueRoi}
+                {#if pkg.expectedValue}
                   <div>
                     <span class="font-medium text-muted-foreground block mb-1">
                       Expected Value (ROI)
                     </span>
-                    <Markdown content={pkg.expectedValueRoi} />
+                    <Markdown content={pkg.expectedValue} />
                   </div>
                 {/if}
                 {#if pkg.metric}
@@ -340,9 +339,9 @@
                   formSchema={workPackageSchema}
                 />
                 <FormWorkPackagesBudget
-                  value={pkg.budgetRows ?? []}
-                  onvaluechange={(budgetRows) =>
-                    updatePackageBudgetRows(index, budgetRows)}
+                  value={pkg.budgetBreakdown ?? []}
+                  onvaluechange={(budgetBreakdown) =>
+                    updatePackageBudgetRows(index, budgetBreakdown)}
                   formSchema={workPackageSchema}
                 />
                 {#if hasLinks}
@@ -412,15 +411,22 @@
     </Dialog.Header>
     <div id="work-package-dialog-body" class="grid gap-4 py-4">
       <FormInput
-        id="name"
-        bind:value={draft.name}
+        id="title"
+        bind:value={draft.title}
         formSchema={workPackageSchema}
         validationErrors={draftErrors}
       />
 
       <FormTextarea
-        id="scopeOfWork"
-        bind:value={draft.scopeOfWork}
+        id="scope"
+        bind:value={draft.scope}
+        formSchema={workPackageSchema}
+        validationErrors={draftErrors}
+      />
+
+      <FormInput
+        id="estimatedDuration"
+        bind:value={draft.estimatedDuration}
         formSchema={workPackageSchema}
         validationErrors={draftErrors}
       />
@@ -433,8 +439,8 @@
       />
 
       <FormTextarea
-        id="expectedValueRoi"
-        bind:value={draft.expectedValueRoi}
+        id="expectedValue"
+        bind:value={draft.expectedValue}
         formSchema={workPackageSchema}
         validationErrors={draftErrors}
       />
@@ -447,7 +453,7 @@
       />
 
       <FormLinks
-        bind:value={draft.supportingDocumentationLinks}
+        bind:value={draft.supportingDocuments}
         formSchema={dialogSupportingLinksSchema}
         validationErrors={supportingLinksValidationErrors}
       />

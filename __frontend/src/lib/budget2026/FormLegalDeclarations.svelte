@@ -12,7 +12,7 @@
 <div class="max-h-[70vh] overflow-y-auto space-y-6 pr-2 {className ?? ''}">
   <h2 class="text-xl font-semibold">0. Proposal Submission Legal Declarations</h2>
 
-  <!-- 1. Data Protection -->
+  <!-- 1. Data Protection (PDF: 2 checkboxes) -->
   <section class="space-y-3">
     <h3 class="text-base font-medium">1. Data Protection</h3>
     <p class="text-sm text-muted-foreground">
@@ -21,8 +21,8 @@
       voting, contracting, and treasury execution.
     </p>
     <Checkbox
-      id="dataProcessingConsent"
-      bind:value={value.dataProcessingConsent}
+      id="dataProtection"
+      bind:value={value.dataProtection}
       {formSchema}
       {validationErrors}
     />
@@ -34,7 +34,7 @@
     />
   </section>
 
-  <!-- 2. Anti-Bribery and Anti-Corruption -->
+  <!-- 2–7. Text only in PDF (no checkboxes) -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">2. Anti-Bribery and Anti-Corruption</h3>
     <p class="text-sm text-muted-foreground">
@@ -44,7 +44,6 @@
     </p>
   </section>
 
-  <!-- 3. Proposal Authenticity and Intellectual Property -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">
       3. Proposal Authenticity and Intellectual Property
@@ -62,7 +61,6 @@
     </p>
   </section>
 
-  <!-- 4. Conflicts with Existing Obligations -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">4. Conflicts with Existing Obligations</h3>
     <p class="text-sm text-muted-foreground">
@@ -71,7 +69,6 @@
     </p>
   </section>
 
-  <!-- 5. Compliance with Laws and Regulations -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">
       5. Compliance with Laws and Regulations
@@ -82,7 +79,6 @@
     </p>
   </section>
 
-  <!-- 6. Sanctions / Restricted Parties -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">6. Sanctions / Restricted Parties</h3>
     <p class="text-sm text-muted-foreground">
@@ -92,7 +88,6 @@
     </p>
   </section>
 
-  <!-- 7. No Contract Formation / Limitation of Liability -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">
       7. No Contract Formation / Limitation of Liability
@@ -109,7 +104,7 @@
     </p>
   </section>
 
-  <!-- 8. Declaration of Submitter -->
+  <!-- 8. Declaration of Submitter (PDF: 3 text inputs + 2 checkboxes) -->
   <section class="space-y-4">
     <h3 class="text-base font-medium">8. Declaration of Submitter</h3>
     <div class="grid gap-3">
@@ -133,14 +128,14 @@
       />
     </div>
     <Checkbox
-      id="authorizedToSubmit"
-      bind:value={value.authorizedToSubmit}
+      id="authorizationEntity"
+      bind:value={value.authorizationEntity}
       {formSchema}
       {validationErrors}
     />
     <Checkbox
-      id="authorizedToAttest"
-      bind:value={value.authorizedToAttest}
+      id="authorizationAttestation"
+      bind:value={value.authorizationAttestation}
       {formSchema}
       {validationErrors}
     />

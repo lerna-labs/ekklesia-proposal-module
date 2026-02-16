@@ -17,10 +17,10 @@
   let { budget, categories } = $props();
 
   const initialLegalDeclarations = () => ({
-    dataProcessingConsent: false,
+    dataProtection: false,
     publicVisibilityConsent: false,
-    authorizedToSubmit: false,
-    authorizedToAttest: false,
+    authorizationEntity: false,
+    authorizationAttestation: false,
     submitterName: "",
     submitterRole: "",
     submitterEmail: "",
@@ -39,12 +39,13 @@
     adaUsdConversionRate: 0,
     workPackages: [
       {
-        name: "WP1 Example Work Package",
-        scopeOfWork:
+        title: "WP1 Example Work Package",
+        scope:
           "Example scope: key activities and deliverables for testing the form.",
-        supportingDocumentationLinks: [],
+        supportingDocuments: [],
+        estimatedDuration: "",
         coreObjectives: ["Validate work package UI and budget flow"],
-        expectedValueRoi: "Faster testing and demo of the budget module.",
+        expectedValue: "Faster testing and demo of the budget module.",
         metric: "Time to complete a full work package entry.",
         milestones: [
           {
@@ -54,13 +55,13 @@
             duration: "2 weeks",
           },
         ],
-        budgetRows: [
+        budgetBreakdown: [
           {
             costCategory: "Development",
-            itemDescription: "Backend API development",
-            qty: 1,
-            unitCostAda: 10000,
-            totalAda: 10000,
+            description: "Backend API development",
+            quantity: 1,
+            unitPrice: 10000,
+            total: 10000,
           },
         ],
       },
@@ -68,11 +69,11 @@
     administrative: {
       intersectAdministrator: true,
       otherAdministrators: "",
-      contractingParty: "",
+      legalEntityType: "",
       legalEntityName: "",
-      registrationNumber: "",
-      countryOfIncorporation: "",
-      registeredAddress: "",
+      legalEntityRegistrationNumber: "",
+      legalEntityCountry: "",
+      legalEntityAddress: "",
       countryOfResidence: "",
       govtIssuedIdNumber: "",
       fullResidentialAddress: "",
@@ -87,11 +88,11 @@
       kycKybSubmitted: undefined,
       kycContactEmail: "",
       treasuryRepayment: undefined,
-      repaymentCircumstances: "",
+      treasuryRepaymentCondition: "",
       initiativeType: "",
-      typeOfProposal: "",
+      proposalType: "",
       priorFunding: "",
-      treasuryDonationVerificationHash: "",
+      treasuryDonationHash: "",
       thirdPartyAssurers: "",
       supportingInfoLinks: [],
     },

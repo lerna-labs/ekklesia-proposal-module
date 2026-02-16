@@ -52,16 +52,16 @@
       </Card.Header>
       <Card.Content class="flex flex-col gap-3">
         <RadioGroup
-          id="contractingParty"
-          bind:value={value.contractingParty}
-          options={opts("contractingParty")}
-          notPublic={isNotPublic("contractingParty")}
+          id="legalEntityType"
+          bind:value={value.legalEntityType}
+          options={opts("legalEntityType")}
+          notPublic={isNotPublic("legalEntityType")}
           {formSchema}
           {validationErrors}
         />
 
         <!-- 4a. Company-only fields -->
-        {#if value.contractingParty === "company"}
+        {#if value.legalEntityType === "company"}
           <Input
             id="legalEntityName"
             bind:value={value.legalEntityName}
@@ -71,25 +71,25 @@
           />
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Input
-              id="registeredAddress"
-              bind:value={value.registeredAddress}
-              notPublic={isNotPublic("registeredAddress")}
+              id="legalEntityAddress"
+              bind:value={value.legalEntityAddress}
+              notPublic={isNotPublic("legalEntityAddress")}
               {formSchema}
               {validationErrors}
             />
             <FormCountrySelect
-              id="countryOfIncorporation"
-              bind:value={value.countryOfIncorporation}
-              notPublic={isNotPublic("countryOfIncorporation")}
+              id="legalEntityCountry"
+              bind:value={value.legalEntityCountry}
+              notPublic={isNotPublic("legalEntityCountry")}
               {formSchema}
               {validationErrors}
             />
           </div>
           <div class="w-full md:w-1/2">
             <Input
-              id="registrationNumber"
-              bind:value={value.registrationNumber}
-              notPublic={isNotPublic("registrationNumber")}
+              id="legalEntityRegistrationNumber"
+              bind:value={value.legalEntityRegistrationNumber}
+              notPublic={isNotPublic("legalEntityRegistrationNumber")}
               {formSchema}
               {validationErrors}
             />
@@ -97,7 +97,7 @@
         {/if}
 
         <!-- 4b. Individual-only fields -->
-        {#if value.contractingParty === "individual"}
+        {#if value.legalEntityType === "individual"}
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Input
               id="fullResidentialAddress"
@@ -235,9 +235,9 @@
     />
     {#if value.treasuryRepayment === true}
       <Textarea
-        id="repaymentCircumstances"
-        bind:value={value.repaymentCircumstances}
-        notPublic={isNotPublic("repaymentCircumstances")}
+        id="treasuryRepaymentCondition"
+        bind:value={value.treasuryRepaymentCondition}
+        notPublic={isNotPublic("treasuryRepaymentCondition")}
         {formSchema}
         {validationErrors}
       />
@@ -252,10 +252,10 @@
         {validationErrors}
       />
       <RadioGroup
-        id="typeOfProposal"
-        bind:value={value.typeOfProposal}
-        options={opts("typeOfProposal")}
-        notPublic={isNotPublic("typeOfProposal")}
+        id="proposalType"
+        bind:value={value.proposalType}
+        options={opts("proposalType")}
+        notPublic={isNotPublic("proposalType")}
         {formSchema}
         {validationErrors}
       />
@@ -268,9 +268,9 @@
       {validationErrors}
     />
     <Input
-      id="treasuryDonationVerificationHash"
-      bind:value={value.treasuryDonationVerificationHash}
-      notPublic={isNotPublic("treasuryDonationVerificationHash")}
+      id="treasuryDonationHash"
+      bind:value={value.treasuryDonationHash}
+      notPublic={isNotPublic("treasuryDonationHash")}
       {formSchema}
       {validationErrors}
     />
