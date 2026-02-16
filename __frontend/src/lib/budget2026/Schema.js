@@ -61,7 +61,7 @@ export const declarationsSchema = z.object({
     .string()
     .trim()
     .min(1, "Email is required")
-    .max(255)
+    .max(100)
     .email("Enter a valid email")
     .meta({
       label: "Email",
@@ -70,9 +70,9 @@ export const declarationsSchema = z.object({
     }),
 });
 
-/** Single link schema (for add-link dialog validation and supportingInfoLinks array). */
+/** Single link schema (for add-link dialog validation and supportingInfoLinks array). Title mandatory, 255 chars. */
 export const supportingInfoLinkSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255),
+  title: z.string().min(1, "Title is required").max(255).meta({ required: true }),
   url: z.string().url("Enter a valid URL"),
 });
 
@@ -230,6 +230,173 @@ export const workPackageSchema = z.object({
   budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
 });
 
+// --- Nested schemas matching API / proposal-schema-description.md ---
+
+/** metaData.contractingParty */
+export const contractingPartySchema = z.object({
+  legalEntityType: z
+    .enum(["company", "individual"], {
+      required_error: "Please select Company or Individual",
+      invalid_type_error: "Please select Company or Individual",
+    })
+    .optional()
+    .meta({
+      label: "Contracting Party Details",
+      required: true,
+      options: [
+        { value: "company", label: "A Company" },
+        { value: "individual", label: "An Individual" },
+      ],
+    }),
+  legalEntityName: z.string().max(100).optional().meta({ label: "Legal Entity Name", required: true }),
+  legalEntityRegistrationNumber: z.string().max(100).optional().meta({ label: "Registration Number", required: true, notPublic: true }),
+  legalEntityCountry: z.string().length(2).optional().meta({ label: "Country of Incorporation", required: true, notPublic: true }),
+  legalEntityAddress: z.string().max(100).optional().meta({ label: "Registered Address", required: true, notPublic: true }),
+  countryOfResidence: z.string().length(2).optional().meta({ label: "Country of Residence", required: true, notPublic: true }),
+  govtIssuedIdNumber: z.string().max(100).optional().meta({ label: "Govt Issued ID Number", required: true, notPublic: true }),
+  fullResidentialAddress: z.string().max(100).optional().meta({ label: "Full Residential Address", required: true, notPublic: true }),
+});
+
+/** metaData.primaryContact */
+export const primaryContactSchema = z.object({
+  name: z.string().max(100).optional().meta({ label: "Primary Contact Full Name", required: true }),
+  title: z.string().max(100).optional().meta({ label: "Title", required: false }),
+  email: z.string().trim().max(255).email("Enter a valid email").optional().meta({ label: "Primary Contact Email", required: true, notPublic: true }),
+  socialMedia: z.string().max(100).optional().meta({ label: "X Handle", required: false }),
+});
+
+/** metaData.signatoryContact */
+export const signatoryContactSchema = z.object({
+  name: z.string().max(100).optional().meta({ label: "Signatory Name", required: true, notPublic: true }),
+  title: z.string().max(100).optional().meta({ label: "Signatory Title", required: true, notPublic: true }),
+  email: z.string().trim().max(255).email("Enter a valid email").optional().meta({ label: "Signatory Email", required: true, notPublic: true }),
+  authorization: z.boolean().optional().meta({ label: "Signatory Authorization", required: true, notPublic: true }),
+});
+
+/** metaData.kycInfo */
+export const kycInfoSchema = z
+  .object({
+    submitted: z.boolean().optional().meta({
+      label: "KYC/KYB Submitted?",
+      required: true,
+      notPublic: true,
+      options: [
+        { value: true, label: "Yes" },
+        { value: false, label: "No" },
+      ],
+    }),
+    email: z.string().trim().max(100).email("Enter a valid email").optional().meta({
+      label: "KYC Contact Email (If No)",
+      required: false,
+      notPublic: true,
+    }),
+  })
+  .refine(
+    (data) => {
+      if (data.submitted === false) {
+        const email = (data.email ?? "").trim();
+        return email.length > 0 && z.string().email().safeParse(email).success;
+      }
+      return true;
+    },
+    { message: "KYC Contact Email is required when KYC/KYB has not been submitted.", path: ["email"] }
+  );
+
+/** metaData.financialAndAdministrative */
+export const financialAndAdministrativeSchema = z.object({
+  conversionRate: z.coerce
+    .number({ invalid_type_error: "Enter a valid number" })
+    .min(0)
+    .refine((v) => v > 0, { message: "Conversion rate is required" })
+    .meta({ label: "ADA/USD conversion rate", required: true }),
+  intersectAdministrator: z.boolean().optional().meta({
+    label: "Intersect Administrator?",
+    required: true,
+    options: [
+      { value: true, label: "Yes" },
+      { value: false, label: "No" },
+    ],
+  }),
+  otherAdministrators: z.string().max(400).optional().meta({ label: "Other Administrators?", required: false, notPublic: true }),
+  initiativeType: z
+    .enum(["New Initiative", "Maintenance"], { required_error: "Please select one" })
+    .optional()
+    .meta({
+      label: "Initiative Type",
+      required: true,
+      options: [
+        { value: "New Initiative", label: "New Initiative" },
+        { value: "Maintenance", label: "Maintenance" },
+      ],
+    }),
+  priorFunding: z.string().min(1, "Prior funding is required").max(800).meta({ label: "Prior Funding", required: true }),
+  treasuryRepayment: z.boolean().optional().meta({
+    label: "Treasury Repayment?",
+    required: true,
+    options: [
+      { value: true, label: "Yes" },
+      { value: false, label: "No" },
+    ],
+  }),
+  treasuryRepaymentCondition: z.string().max(800).optional().meta({ label: "Repayment Circumstances", required: false }),
+  treasuryDonationHash: z.string().max(255).optional().meta({ label: "Treasury Donation Verification Hash", required: true }),
+  thirdPartyAssurers: z.string().max(600).optional().meta({ label: "Third Party Assurers", required: false }),
+  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]).meta({ label: "Other Supporting Info", required: false }),
+  administrator: z.string().optional().meta({ label: "Administrator (legacy)", required: false }),
+});
+
+/** metaData.executionRoadmap */
+export const executionRoadmapSchema = z.object({
+  projectStartDate: z.date("Start Date is required").optional().meta({ label: "Project Start Date", required: true }),
+  projectEndDate: z.date("End Date is required").optional().meta({ label: "Project End Date", required: true }),
+  workPackages: z.array(workPackageSchema).optional().default([]).meta({ label: "Work Packages", required: false }),
+});
+
+/** metaData object: matches API and proposal-schema-description.md */
+export const metaDataSchema = z.object({
+  trackRecord: z
+    .union([z.literal(""), z.string().min(2).max(650)])
+    .optional()
+    .default("")
+    .meta({ label: "Track Record", required: false }),
+  strategicFocusArea: z
+    .string()
+    .length(24, "Please choose a strategic focus area")
+    .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
+    .optional()
+    .default("")
+    .meta({ label: "Strategic Focus Area", required: true }),
+  keyPerformanceIndicators: z
+    .array(
+      z.object({
+        kpi: z.string().min(1, "KPI is required").max(400),
+        contributionStrategy: z.string().min(1, "Contribution strategy is required").max(800),
+      })
+    )
+    .min(1, "At least one KPI is required")
+    .default([])
+    .meta({ label: "Key Performance Indicators", required: true }),
+  executionRoadmap: executionRoadmapSchema.optional().default({ projectStartDate: undefined, projectEndDate: undefined, workPackages: [] }),
+  financialAndAdministrative: financialAndAdministrativeSchema.optional().default({ conversionRate: 0.25 }),
+  contractingParty: contractingPartySchema.optional().default({}),
+  primaryContact: primaryContactSchema.optional().default({}),
+  signatoryContact: signatoryContactSchema.optional().default({}),
+  proposalType: z
+    .enum(["Technical (software/IT)", "Non-technical"], { required_error: "Please select one" })
+    .optional()
+    .meta({
+      label: "Type of Proposal",
+      required: true,
+      options: [
+        { value: "Technical (software/IT)", label: "Technical (software/IT)" },
+        { value: "Non-technical", label: "Non-technical" },
+      ],
+    }),
+  kycInfo: kycInfoSchema.optional().default({}),
+  legalDeclarations: declarationsSchema.optional(),
+});
+
+/** Full form schema: shape matches API request body (title, summary, status, metaData). */
 export const formSchema = z.object({
   title: z.string().min(2).max(100).meta({
     label: "Proposal Title",
@@ -243,340 +410,13 @@ export const formSchema = z.object({
     placeholder: "Enter Summary Here",
     required: true,
   }),
-  trackRecord: z
-    .union([
-      z.literal(""),
-      z.string().min(2, "Track record must be at least 2 characters").max(650),
-    ])
-    .meta({
-      label: "Track Record",
-      description: "Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience.",
-      placeholder: "Enter Track Record Here",
-      required: false,
-    }),
-  category: z
-    .string()
-    .length(24, "Please choose a strategic focus area")
-    .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
-    .meta({
-      label: "Strategic Focus Area",
-      description: "The primary Cardano strategic pillar your project addresses (e.g., L1 Improvements, DeFi, RWA).",
-      placeholder: "Choose a strategic focus area...",
-      required: true,
-    }),
-  kpis: z.array(z.object({
-    kpi: z.string().min(1, "KPI is required").max(400),
-    contributionStrategy: z.string().min(1, "Contribution strategy is required").max(800),
-  })).min(1, "At least one KPI is required").meta({
-    label: "Key Performance Indicators",
-    description: "Select specific KPIs you intend to impact (e.g., TVL, Monthly Transactions, Active Users).",
-    required: true,
-  }),
-  timeline: z.object({
-    startDate: z.date("Start Date is required"),
-    endDate: z.date("End Date is required"),
-  }).meta({
-    label: "Timeline",
-    description: "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
-    required: true,
-  }),
-  workPackages: z
-    .array(workPackageSchema)
-    .optional()
-    .default([])
-    .meta({
-      label: "Work Package Breakdown",
-      description: "Add work packages. Copy the table for each work package.",
-      required: false,
-    }),
-  adaUsdConversionRate: z.coerce
-    .number({ invalid_type_error: "Enter a valid number" })
-    .min(0, "Conversion rate must be 0 or greater")
-    .refine((v) => v > 0, { message: "Conversion rate is required" })
-    .meta({
-      label: "ADA/USD conversion rate",
-      description: "Specify the rate used for all USD estimations in this proposal.",
-      placeholder: "0.25",
-      required: true,
-    }),
-  administrative: z.object({
-    intersectAdministrator: z
-      .boolean({
-        required_error: "Please select Yes or No",
-        invalid_type_error: "Please select Yes or No",
-      })
-      .meta({
-        label: "Intersect Administrator?",
-        description: "Do you choose Intersect to be your administrator?",
-        required: true,
-        options: [
-          { value: true, label: "Yes" },
-          { value: false, label: "No" },
-        ],
-      }),
-    // Shown when Intersect is not admin
-    otherAdministrators: z.string().max(400).optional().meta({
-      label: "Other Administrators?",
-      description: "Please specify who is your administrator",
-      placeholder: "",
-      required: false,
-      notPublic: true,
-    }),
-    // Contracting Party (both branches) – metaData.contractingParty.legalEntityType
-    legalEntityType: z
-      .enum(["company", "individual"], {
-        required_error: "Please select Company or Individual",
-        invalid_type_error: "Please select Company or Individual",
-      })
-      .optional()
-      .meta({
-        label: "Contracting Party Details",
-        description: "Are you contracting as a registered company or an individual?",
-        required: true,
-        options: [
-          { value: "company", label: "A Company" },
-          { value: "individual", label: "An Individual" },
-        ],
-      }),
-    // Company-only
-    legalEntityName: z.string().max(100).optional().meta({
-      label: "Legal Entity Name",
-      description: "The official registered name of the organization receiving funds. Must match bank/KYC records.",
-      placeholder: "Registered Company Name",
-      required: true,
-      notPublic: false,
-    }),
-    legalEntityRegistrationNumber: z.string().max(100).optional().meta({
-      label: "Registration Number",
-      description: "Tax ID, UEN, or Company Registration Number in your jurisdiction.",
-      placeholder: "Tax ID / UEN",
-      required: true,
-      notPublic: true,
-    }),
-    legalEntityCountry: z
-      .string()
-      .length(2, "Select a country")
-      .optional()
-      .meta({
-        label: "Country of Incorporation",
-        description: "The legal jurisdiction where your entity is registered.",
-        placeholder: "Select country...",
-        required: true,
-        notPublic: true,
-      }),
-    legalEntityAddress: z.string().max(100).optional().meta({
-      label: "Registered Address",
-      description: "Registered office address for legal correspondence.",
-      placeholder: "Full Registered Address",
-      required: true,
-      notPublic: true,
-    }),
-    // Individual-only
-    countryOfResidence: z
-      .string()
-      .length(2, "Select a country")
-      .optional()
-      .meta({
-        label: "Country of Residence",
-        description: "Country of residence for the individual.",
-        placeholder: "Select country...",
-        required: true,
-        notPublic: true,
-      }),
-    govtIssuedIdNumber: z.string().max(100).optional().meta({
-      label: "Govt Issued ID Number",
-      description: "Government issued ID number.",
-      placeholder: "ID / Passport #",
-      required: true,
-      notPublic: true,
-    }),
-    fullResidentialAddress: z.string().max(100).optional().meta({
-      label: "Full Residential Address",
-      description: "Full residential address for legal correspondence.",
-      placeholder: "Full Home Address",
-      required: true,
-      notPublic: true,
-    }),
-    // Shared (Company and Individual)
-    primaryContactFullName: z.string().max(100).optional().meta({
-      label: "Primary Contact Full Name",
-      description: "The main person responsible for day-to-day communication regarding this proposal.",
-      placeholder: "Enter Name",
-      required: true,
-    }),
-    primaryContactEmail: z
-      .string()
-      .trim()
-      .max(255)
-      .email("Enter a valid email")
-      .optional()
-      .meta({
-        label: "Primary Contact Email",
-        description: "Primary email for notifications and official correspondence.",
-        placeholder: "Enter Email",
-        required: true,
-        notPublic: true,
-      }),
-    xHandle: z.string().max(100).optional().meta({
-      label: "X Handle",
-      description: "X handle to be tagged in Intersect communications on project progress.",
-      placeholder: "Enter X Handle",
-      required: false,
-    }),
-    signatoryName: z.string().max(100).optional().meta({
-      label: "Signatory Name",
-      description: "The person legally authorized to sign contracts on behalf of the entity/individual.",
-      placeholder: "Enter Name",
-      required: true,
-      notPublic: true,
-    }),
-    signatoryTitle: z.string().max(100).optional().meta({
-      label: "Signatory Title",
-      description: "Job title or role of the signatory (e.g., CEO, Director).",
-      placeholder: "Enter Title",
-      required: true,
-      notPublic: true,
-    }),
-    signatoryEmail: z
-      .string()
-      .trim()
-      .max(255)
-      .email("Enter a valid email")
-      .optional()
-      .meta({
-        label: "Signatory Email",
-        description: "Direct email address for the authorized signatory.",
-        placeholder: "Enter Email",
-        required: true,
-        notPublic: true,
-      }),
-    signatoryAuthorization: z.boolean().optional().meta({
-      label: "Signatory Authorization",
-      description: "The above individual is authorized to execute a binding agreement on behalf of the vendor entity, subject to selection and contract execution.",
-      required: true,
-      notPublic: true,
-    }),
-    totalProposalsSubmitted: z.string().max(100).optional().meta({
-      label: "Total Proposals Submitted",
-      description: "The total count of proposals submitted by this entity/individual in this funding round.",
-      placeholder: "Enter Count",
-      required: false,
-      notPublic: true,
-    }),
-    kycKybSubmitted: z
-      .boolean({
-        required_error: "Please select Yes or No",
-        invalid_type_error: "Please select Yes or No",
-      })
-      .optional()
-      .meta({
-        label: "KYC/KYB Submitted?",
-        description: "Have you previously submitted valid KYB/KYC with Intersect?",
-        required: true,
-        notPublic: true,
-        options: [
-          { value: true, label: "Yes" },
-          { value: false, label: "No" },
-        ],
-      }),
-    kycContactEmail: z
-      .string()
-      .trim()
-      .max(255)
-      .email("Enter a valid email")
-      .optional()
-      .meta({
-        label: "KYC Contact Email (If No)",
-        description: "Contact email for submitting KYC/KYB if not already done.",
-        placeholder: "Enter Email",
-        required: false,
-        notPublic: true,
-      }),
-    // Other fields (not related to choosing Admin)
-    treasuryRepayment: z
-      .boolean({
-        required_error: "Please select Yes or No",
-        invalid_type_error: "Please select Yes or No",
-      })
-      .optional()
-      .meta({
-        label: "Treasury Repayment?",
-        description: "Will any portion of the requested funds be returned to the treasury (e.g., any unused fund, from profits)?",
-        required: true,
-        options: [
-          { value: true, label: "Yes" },
-          { value: false, label: "No" },
-        ],
-      }),
-    treasuryRepaymentCondition: z.string().max(800).optional().meta({
-      label: "Repayment Circumstances",
-      description: "The specific conditions or triggers that would cause a repayment to occur.",
-      placeholder: "Enter Explanation",
-      required: false,
-    }),
-    initiativeType: z
-      .enum(["New Initiative", "Maintenance"], {
-        required_error: "Please select one",
-        invalid_type_error: "Please select one",
-      })
-      .optional()
-      .meta({
-        label: "Initiative Type",
-        description: "Is this a brand new project or the continuation/maintenance of an existing one?",
-        required: true,
-        options: [
-          { value: "New Initiative", label: "New Initiative" },
-          { value: "Maintenance", label: "Maintenance" },
-        ],
-      }),
-    proposalType: z
-      .enum(["Technical (software/IT)", "Non-technical"], {
-        required_error: "Please select one",
-        invalid_type_error: "Please select one",
-      })
-      .optional()
-      .meta({
-        label: "Type of Proposal",
-        description: "Classification of the proposal type.",
-        required: true,
-        options: [
-          { value: "Technical (software/IT)", label: "Technical (software/IT)" },
-          { value: "Non-technical", label: "Non-technical" },
-        ],
-      }),
-    priorFunding: z.string().max(800).optional().meta({
-      label: "Prior Funding",
-      description: "List any funds previously received from Catalyst, Treasury, or other ecosystem grants.",
-      placeholder: "Enter Details or N/A",
-      required: true,
-    }),
-    treasuryDonationHash: z.string().min(1, "Treasury donation hash is required").max(255).optional().meta({
-      label: "Treasury Donation Verification Hash",
-      description: "The transaction hash confirming the required 1000 ada donation to the Cardano Treasury. This serves as proof of wallet control and commitment.",
-      placeholder: "Transaction hash",
-      required: true,
-    }),
-    thirdPartyAssurers: z.string().max(600).optional().meta({
-      label: "Third Party Assurers",
-      description: "Who is your Third Party Assurer? This person can be a person or organization.",
-      placeholder: "If known please write vendor/person/organization and cost involved…",
-      required: false,
-    }),
-    supportingInfoLinks: z
-      .array(supportingInfoLinkSchema)
-      .optional()
-      .default([])
-      .meta({
-        label: "Other Supporting Info",
-        description:
-          "External links get the disclaimer text popup before they open. Any other details relevant to the proposal.",
-        required: false,
-      }),
-  }),
-  legalDeclarations: declarationsSchema.optional(),
+  status: z.enum(["draft", "live"]).default("draft").meta({ label: "Status" }),
+  metaData: metaDataSchema,
 });
 
-/** Schema for main form only (excludes legal declarations, validated before opening dialog). */
-export const mainFormSchema = formSchema.omit({ legalDeclarations: true });
+// Legacy flat shape removed; form uses nested metaData. FormAdministrative receives metaData and binds to metaData.contractingParty, .primaryContact, etc.
+
+/** Schema for main form validation before opening declarations dialog. Same as formSchema (legalDeclarations in metaData is optional). */
+export const mainFormSchema = formSchema;
 
 export default formSchema;
