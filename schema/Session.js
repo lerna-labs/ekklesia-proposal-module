@@ -53,11 +53,5 @@ sessionSchema.index({ userId: 1 });
 // TTL index to automatically delete sessions older than 1 hour (cleanup old nonces)
 sessionSchema.index({ createdAt: 1 }, { expireAfterSeconds: 3600 });
 
-// Pre-save middleware to update the updatedAt field
-sessionSchema.pre("save", function (next) {
-  this.updatedAt = new Date();
-  next();
-});
-
 const Session = mongoose.model("Session", sessionSchema);
 export { Session };

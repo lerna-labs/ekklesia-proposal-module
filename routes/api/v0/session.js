@@ -73,6 +73,8 @@ const sessionVerificationLimiter = rateLimit({
 router.get("/", isAuthenticated, async (req, res) => {
   const { userId } = req;
 
+  console.log("Session request received for user", userId);
+
   return res.status(200).json({
     userId: userId,
   });

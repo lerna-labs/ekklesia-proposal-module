@@ -1,5 +1,9 @@
 <script>
+  import { api, user, loggedIn } from "$stores/sessionManager.js";
   import Button from "$lib/components/ui/button/button.svelte";
+  import WalletSigner from "$lib/WalletSigner/WalletSigner.svelte";
+  import { User } from "lucide-svelte";
+  import { shortenString } from "$lib/utils.js";
 </script>
 
 <header class="bg-(--mbo-tangy-blue) text-white">
@@ -24,6 +28,20 @@
           >
             View Budget
           </Button>
+        </li>
+        <li>
+          {#if !$loggedIn}
+            <WalletSigner mode="login" dark={true} />
+          {:else}
+            <Button
+              href="/dashboard"
+              size="sm"
+              class="bg-white text-black hover:bg-gray-200"
+            >
+              <User />
+              {shortenString($user?.userId, 10, true)}
+            </Button>
+          {/if}
         </li>
       </ul>
     </nav>
