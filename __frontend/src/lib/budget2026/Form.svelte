@@ -12,90 +12,140 @@
   import FormWorkPackages from "./FormWorkPackages.svelte";
   import FormFinancialSummary from "./FormFinancialSummary.svelte";
   import * as Card from "$lib/components/ui/card/index.js";
-  import { formSchema, mainFormSchema, declarationsSchema } from "./Schema.js";
+  import {
+    formSchema,
+    mainFormSchema,
+    declarationsSchema,
+    financialAndAdministrativeSchema,
+    contractingPartySchema,
+    primaryContactSchema,
+    signatoryContactSchema,
+    kycInfoSchema,
+  } from "./Schema.js";
   import { z } from "zod";
+  import { getLocalTimeZone } from "@internationalized/date";
+
   let { budget, categories } = $props();
 
+  /** CalendarDate (from DatePicker) to Date for Zod validation. */
+  function toDateForValidation(val) {
+    if (val == null) return undefined;
+    if (val instanceof Date) return val;
+    if (typeof val?.toDate === "function") return val.toDate(getLocalTimeZone());
+    return undefined;
+  }
+
+  /** Form data with executionRoadmap dates as Date so mainFormSchema.safeParse succeeds. */
+  function formDataForValidation() {
+    const er = formData.metaData.executionRoadmap;
+    return {
+      ...formData,
+      metaData: {
+        ...formData.metaData,
+        executionRoadmap: {
+          ...er,
+          projectStartDate: toDateForValidation(er?.projectStartDate),
+          projectEndDate: toDateForValidation(er?.projectEndDate),
+        },
+      },
+    };
+  }
+
+  /** Form data with executionRoadmap dates as ISO 8601 strings for API request body. */
+  function formDataToApiPayload(data) {
+    const er = data.metaData?.executionRoadmap;
+    if (!er) return data;
+    const toIso = (val) => {
+      if (val == null) return undefined;
+      if (val instanceof Date) return val.toISOString();
+      if (typeof val?.toDate === "function") return val.toDate(getLocalTimeZone()).toISOString();
+      return undefined;
+    };
+    return {
+      ...data,
+      metaData: {
+        ...data.metaData,
+        executionRoadmap: {
+          ...er,
+          projectStartDate: toIso(er.projectStartDate),
+          projectEndDate: toIso(er.projectEndDate),
+        },
+      },
+    };
+  }
+
   const initialLegalDeclarations = () => ({
-    dataProcessingConsent: false,
+    dataProtection: false,
     publicVisibilityConsent: false,
-    authorizedToSubmit: false,
-    authorizedToAttest: false,
+    authorizationEntity: false,
+    authorizationAttestation: false,
     submitterName: "",
     submitterRole: "",
     submitterEmail: "",
   });
 
+  const initialWorkPackage = () => ({
+    title: "WP1 Example Work Package",
+    scope: "Example scope: key activities and deliverables for testing the form.",
+    supportingDocuments: [],
+    estimatedDuration: "",
+    coreObjectives: ["Validate work package UI and budget flow"],
+    expectedValue: "Faster testing and demo of the budget module.",
+    metric: "Time to complete a full work package entry.",
+    milestones: [
+      {
+        milestoneName: "Milestone 1 – Design",
+        deliverables: "Design doc and mockups",
+        acceptanceCriteria: "Approved by stakeholder",
+        duration: "2 weeks",
+      },
+    ],
+    budgetBreakdown: [
+      { costCategory: "Development", description: "Backend API development", quantity: 1, unitPrice: 10000, total: 10000 },
+    ],
+  });
+
   let formData = $state({
     title: "",
     summary: "",
-    trackRecord: "",
-    category: "",
-    kpis: [],
-    timeline: {
-      startDate: undefined,
-      endDate: undefined,
-    },
-    adaUsdConversionRate: 0,
-    workPackages: [
-      {
-        name: "WP1 Example Work Package",
-        scopeOfWork:
-          "Example scope: key activities and deliverables for testing the form.",
-        supportingDocumentationLinks: [],
-        coreObjectives: ["Validate work package UI and budget flow"],
-        expectedValueRoi: "Faster testing and demo of the budget module.",
-        metric: "Time to complete a full work package entry.",
-        milestones: [
-          {
-            milestoneName: "Milestone 1 – Design",
-            deliverables: "Design doc and mockups",
-            acceptanceCriteria: "Approved by stakeholder",
-            duration: "2 weeks",
-          },
-        ],
-        budgetRows: [
-          {
-            costCategory: "Development",
-            itemDescription: "Backend API development",
-            qty: 1,
-            unitCostAda: 10000,
-            totalAda: 10000,
-          },
-        ],
+    status: "draft",
+    metaData: {
+      trackRecord: "",
+      strategicFocusArea: "",
+      keyPerformanceIndicators: [],
+      executionRoadmap: {
+        projectStartDate: undefined,
+        projectEndDate: undefined,
+        workPackages: [initialWorkPackage()],
       },
-    ],
-    administrative: {
-      intersectAdministrator: true,
-      otherAdministrators: "",
-      contractingParty: "",
-      legalEntityName: "",
-      registrationNumber: "",
-      countryOfIncorporation: "",
-      registeredAddress: "",
-      countryOfResidence: "",
-      govtIssuedIdNumber: "",
-      fullResidentialAddress: "",
-      primaryContactFullName: "",
-      primaryContactEmail: "",
-      xHandle: "",
-      signatoryName: "",
-      signatoryTitle: "",
-      signatoryEmail: "",
-      signatoryAuthorization: false,
-      totalProposalsSubmitted: "",
-      kycKybSubmitted: undefined,
-      kycContactEmail: "",
-      treasuryRepayment: undefined,
-      repaymentCircumstances: "",
-      initiativeType: "",
-      typeOfProposal: "",
-      priorFunding: "",
-      treasuryDonationVerificationHash: "",
-      thirdPartyAssurers: "",
-      supportingInfoLinks: [],
+      financialAndAdministrative: {
+        conversionRate: 0.25,
+        intersectAdministrator: true,
+        otherAdministrators: "",
+        initiativeType: "",
+        priorFunding: "",
+        treasuryRepayment: undefined,
+        treasuryRepaymentCondition: "",
+        treasuryDonationHash: "",
+        thirdPartyAssurers: "",
+        supportingDocuments: [],
+      },
+      contractingParty: {
+        legalEntityType: undefined,
+        legalEntityName: "",
+        legalEntityRegistrationNumber: "",
+        legalEntityCountry: "",
+        legalEntityAddress: "",
+        countryOfResidence: "",
+        govtIssuedIdNumber: "",
+        fullResidentialAddress: "",
+      },
+      primaryContact: { name: "", title: "", email: "", socialMedia: "" },
+      signatoryContact: { name: "", title: "", email: "", authorization: false },
+      proposalType: "",
+      kycInfo: { submitted: false, email: "" },
+      legalDeclarations: initialLegalDeclarations(),
     },
-    legalDeclarations: initialLegalDeclarations(),
   });
 
   let validationErrors = $state(null);
@@ -104,7 +154,7 @@
 
   function handleSubmit(e) {
     e.preventDefault();
-    const result = mainFormSchema.safeParse(formData);
+    const result = mainFormSchema.safeParse(formDataForValidation());
     if (result.success) {
       validationErrors = null;
       declarationsDialogOpen = true;
@@ -115,36 +165,26 @@
   }
 
   function confirmDeclarations() {
-    const result = declarationsSchema.safeParse(formData.legalDeclarations);
+    const result = declarationsSchema.safeParse(formData.metaData.legalDeclarations);
     if (!result.success) {
       declarationValidationErrors = z.treeifyError(result.error);
       return;
     }
     declarationValidationErrors = null;
     declarationsDialogOpen = false;
-    // TODO: submit to API with full formData (including legalDeclarations)
+    // TODO: submit to API with body = formDataToApiPayload(formData) (dates as ISO 8601)
   }
 
   // Snapshot so the effect re-runs when any part of formData changes (main fields only for revalidation)
   const formDataSnapshot = $derived(
-    JSON.stringify({
-      title: formData.title,
-      summary: formData.summary,
-      trackRecord: formData.trackRecord,
-      category: formData.category,
-      kpis: formData.kpis,
-      timeline: formData.timeline,
-      workPackages: formData.workPackages,
-      adaUsdConversionRate: formData.adaUsdConversionRate,
-      administrative: formData.administrative,
-    }),
+    JSON.stringify({ title: formData.title, summary: formData.summary, status: formData.status, metaData: formData.metaData }),
   );
 
   // When validation has failed and the user changes form data, revalidate main form only
   $effect(() => {
     formDataSnapshot;
     if (untrack(() => !validationErrors)) return;
-    const result = mainFormSchema.safeParse(formData);
+    const result = mainFormSchema.safeParse(formDataForValidation());
     if (result.success) {
       validationErrors = null;
     } else {
@@ -182,9 +222,9 @@
           />
           <Textarea
             id="trackRecord"
-            bind:value={formData.trackRecord}
-            {formSchema}
-            {validationErrors}
+            bind:value={formData.metaData.trackRecord}
+            formSchema={formSchema.shape.metaData}
+            validationErrors={validationErrors?.properties?.metaData}
           />
         </Card.Content>
       </Card.Root>
@@ -204,29 +244,29 @@
         </Card.Header>
         <Card.Content class="space-y-4">
           <FormFocusArea
-            id="category"
+            id="strategicFocusArea"
             {categories}
-            {formSchema}
-            {validationErrors}
-            bind:value={formData.category}
-            hasKpis={(formData.kpis?.length ?? 0) > 0}
+            formSchema={formSchema.shape.metaData}
+            validationErrors={validationErrors?.properties?.metaData}
+            bind:value={formData.metaData.strategicFocusArea}
+            hasKpis={(formData.metaData.keyPerformanceIndicators?.length ?? 0) > 0}
             onUpdate={(newCategory) => {
-              formData.category = newCategory;
-              formData.kpis = [];
+              formData.metaData.strategicFocusArea = newCategory;
+              formData.metaData.keyPerformanceIndicators = [];
             }}
           />
-          {#if formData.category}
-            {#key formData.category}
+          {#if formData.metaData.strategicFocusArea}
+            {#key formData.metaData.strategicFocusArea}
               <FormFocusAreaKPI
-                id="kpis"
+                id="keyPerformanceIndicators"
                 {categories}
-                {formSchema}
-                {validationErrors}
-                category={formData.category}
-                bind:value={formData.kpis}
+                formSchema={formSchema.shape.metaData}
+                validationErrors={validationErrors?.properties?.metaData}
+                category={formData.metaData.strategicFocusArea}
+                bind:value={formData.metaData.keyPerformanceIndicators}
                 class="mt-4"
                 onUpdate={(kpis) => {
-                  formData.kpis = kpis;
+                  formData.metaData.keyPerformanceIndicators = kpis;
                 }}
               />
             {/key}
@@ -246,18 +286,22 @@
         </Card.Header>
         <Card.Content class="space-y-4">
           <FormTimeline
-            {formSchema}
-            {validationErrors}
-            bind:value={formData.timeline}
+            formSchema={formSchema.shape.metaData}
+            validationErrors={validationErrors?.properties?.metaData}
+            bind:value={formData.metaData.executionRoadmap}
           />
 
           <FormWorkPackages
-            {formSchema}
-            {validationErrors}
-            bind:value={formData.workPackages}
+            formSchema={formSchema.shape.metaData?.shape?.executionRoadmap?.shape?.workPackages != null ? { shape: { workPackages: formSchema.shape.metaData?.shape?.executionRoadmap?.shape?.workPackages } } : undefined}
+            validationErrors={validationErrors?.properties?.metaData?.properties?.executionRoadmap}
+            bind:value={formData.metaData.executionRoadmap.workPackages}
           />
 
-          <FormFinancialSummary {formSchema} {validationErrors} {formData} />
+          <FormFinancialSummary
+            formSchema={formSchema.shape.metaData?.shape?.financialAndAdministrative}
+            validationErrors={validationErrors?.properties?.metaData?.properties?.financialAndAdministrative}
+            formData={formData.metaData}
+          />
         </Card.Content>
       </Card.Root>
     </div>
@@ -276,9 +320,16 @@
         </Card.Header>
         <Card.Content>
           <FormAdministrative
-            formSchema={formSchema.shape.administrative}
-            validationErrors={validationErrors?.properties?.administrative}
-            bind:value={formData.administrative}
+            formSchema={formSchema.shape.metaData}
+            validationErrors={validationErrors?.properties?.metaData}
+            sectionSchemas={{
+              financialAndAdministrative: financialAndAdministrativeSchema,
+              contractingParty: contractingPartySchema,
+              primaryContact: primaryContactSchema,
+              signatoryContact: signatoryContactSchema,
+              kycInfo: kycInfoSchema,
+            }}
+            bind:value={formData.metaData}
           />
         </Card.Content>
       </Card.Root>

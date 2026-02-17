@@ -31,7 +31,7 @@
   } = $props();
 
   const list = $derived(Array.isArray(value) ? value : []);
-  const meta = $derived(formSchema?.shape?.budgetRows?.meta?.() ?? {});
+  const meta = $derived(formSchema?.shape?.budgetBreakdown?.meta?.() ?? {});
   const sectionLabel = $derived(meta?.label ?? "Budget");
   const sectionDescription = $derived(
     meta?.description ?? "Budget breakdown for this work package.",
@@ -42,15 +42,15 @@
   let editingIndex = $state(null);
   let draft = $state({
     costCategory: "",
-    itemDescription: "",
-    qty: "",
-    unitCostAda: "",
+    description: "",
+    quantity: "",
+    unitPrice: "",
   });
   let draftErrors = $state(null);
 
-  const draftTotalAda = $derived.by(() => {
-    const q = Number(draft.qty);
-    const u = Number(draft.unitCostAda);
+  const draftTotal = $derived.by(() => {
+    const q = Number(draft.quantity);
+    const u = Number(draft.unitPrice);
     if (!Number.isFinite(q) || !Number.isFinite(u) || q < 0 || u < 0)
       return null;
     return Math.round(q * u * 1000) / 1000;
@@ -59,9 +59,9 @@
   function getDefaultDraft() {
     return {
       costCategory: "",
-      itemDescription: "",
-      qty: "",
-      unitCostAda: "",
+      description: "",
+      quantity: "",
+      unitPrice: "",
     };
   }
 
@@ -70,9 +70,9 @@
     if (row) {
       draft = {
         costCategory: row.costCategory ?? "",
-        itemDescription: row.itemDescription ?? "",
-        qty: row.qty != null ? String(row.qty) : "",
-        unitCostAda: row.unitCostAda != null ? String(row.unitCostAda) : "",
+        description: row.description ?? "",
+        quantity: row.quantity != null ? String(row.quantity) : "",
+        unitPrice: row.unitPrice != null ? String(row.unitPrice) : "",
       };
       editingIndex = index;
     } else {
@@ -87,9 +87,9 @@
   function submitRow() {
     const toParse = {
       costCategory: draft.costCategory || undefined,
-      itemDescription: draft.itemDescription,
-      qty: draft.qty,
-      unitCostAda: draft.unitCostAda,
+      description: draft.description,
+      quantity: draft.quantity,
+      unitPrice: draft.unitPrice,
     };
     const result = budgetRowSchema.safeParse(toParse);
     if (!result.success) {
@@ -152,16 +152,16 @@
               <td class="p-2">{row.costCategory ?? "—"}</td>
               <td class="p-2 align-top">
                 <Markdown
-                  content={row.itemDescription}
+                  content={row.description}
                   class="prose-p:my-0 prose-ul:my-1 prose-li:my-0"
                 />
               </td>
-              <td class="p-2 text-right">{row.qty ?? "—"}</td>
+              <td class="p-2 text-right">{row.quantity ?? "—"}</td>
               <td class="p-2 text-right tabular-nums">
-                {formatAda(row.unitCostAda)}
+                {formatAda(row.unitPrice)}
               </td>
               <td class="p-2 text-right tabular-nums">
-                {formatAda(row.totalAda)}
+                {formatAda(row.total)}
               </td>
               <td class="p-2">
                 <div class="flex gap-1">
@@ -219,7 +219,7 @@
           : "Add a budget line: cost category, item description, quantity, and unit cost in ADA. All fields are required."}
       </Dialog.Description>
     </Dialog.Header>
-    <div class="grid gap-4 py-4">
+        <div class="grid gap-4 py-4">
       <div class="grid grid-cols-1 sm:grid-cols-[2fr_0.6fr_1fr] gap-1">
         <Field.Field class="gap-2">
           <Field.Label
@@ -260,62 +260,62 @@
 
         <Field.Field class="gap-2">
           <Field.Label
-            for="qty"
+            for="quantity"
             class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
           >
             Quantity
             <span class="text-(--mbo-electric-blue)">*</span>
           </Field.Label>
           <Input
-            id="qty"
+            id="quantity"
             type="number"
             min="0"
             step="any"
-            bind:value={draft.qty}
-            aria-invalid={draftErrors?.properties?.qty?.errors?.[0]
+            bind:value={draft.quantity}
+            aria-invalid={draftErrors?.properties?.quantity?.errors?.[0]
               ? true
               : false}
             class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white w-full"
           />
-          {#if draftErrors?.properties?.qty?.errors?.[0]}
+          {#if draftErrors?.properties?.quantity?.errors?.[0]}
             <Field.Error class="text-xs">
-              {draftErrors.properties.qty.errors[0]}
+              {draftErrors.properties.quantity.errors[0]}
             </Field.Error>
           {/if}
         </Field.Field>
 
         <Field.Field class="gap-2">
           <Field.Label
-            for="unitCostAda"
+            for="unitPrice"
             class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
           >
             Unit Cost (ADA)
             <span class="text-(--mbo-electric-blue)">*</span>
           </Field.Label>
           <Input
-            id="unitCostAda"
+            id="unitPrice"
             type="number"
             min="0"
             step="any"
-            bind:value={draft.unitCostAda}
-            aria-invalid={draftErrors?.properties?.unitCostAda?.errors?.[0]
+            bind:value={draft.unitPrice}
+            aria-invalid={draftErrors?.properties?.unitPrice?.errors?.[0]
               ? true
               : false}
             class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white w-full"
           />
-          {#if draftErrors?.properties?.unitCostAda?.errors?.[0]}
+          {#if draftErrors?.properties?.unitPrice?.errors?.[0]}
             <Field.Error class="text-xs">
-              {draftErrors.properties.unitCostAda.errors[0]}
+              {draftErrors.properties.unitPrice.errors[0]}
             </Field.Error>
           {/if}
         </Field.Field>
       </div>
 
       <FormTextarea
-        id="itemDescription"
-        bind:value={draft.itemDescription}
+        id="description"
+        bind:value={draft.description}
         formSchema={z.object({
-          itemDescription: budgetRowInputSchema.shape.itemDescription,
+          description: budgetRowInputSchema.shape.description,
         })}
         validationErrors={draftErrors}
       />
@@ -329,8 +329,8 @@
           class="flex items-center h-9 rounded-md px-3 text-sm text-white font-medium bg-black"
           aria-live="polite"
         >
-          Total Budget Position{draftTotalAda != null
-            ? `: ${draftTotalAda.toLocaleString()} ADA`
+          Total Budget Position{draftTotal != null
+            ? `: ${draftTotal.toLocaleString()} ADA`
             : ": — ADA"}
         </div>
         <div class="flex gap-1">

@@ -6,7 +6,7 @@
   import { COST_CATEGORIES, COST_CATEGORIES_LIST } from "./Schema.js";
   import { formatAda, formatUsd } from "$lib/utils.js";
 
-  const id = "adaUsdConversionRate";
+  const id = "conversionRate";
   let { formSchema, validationErrors, formData } = $props();
 
   let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
@@ -16,19 +16,19 @@
   );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
-  const rate = $derived(Number(formData?.adaUsdConversionRate) || 0);
+  const rate = $derived(Number(formData?.financialAndAdministrative?.conversionRate) || 0);
 
-  /** Aggregate totalAda by cost category from all work packages. */
+  /** Aggregate total by cost category from all work packages (metaData.executionRoadmap.workPackages). */
   const byCategory = $derived.by(() => {
     const map = /** @type {Record<string, number>} */ ({});
-    const packages = Array.isArray(formData?.workPackages)
-      ? formData.workPackages
+    const packages = Array.isArray(formData?.executionRoadmap?.workPackages)
+      ? formData.executionRoadmap.workPackages
       : [];
     for (const pkg of packages) {
-      const rows = Array.isArray(pkg?.budgetRows) ? pkg.budgetRows : [];
+      const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
       for (const row of rows) {
         const cat = row?.costCategory ?? "Other";
-        const ada = Number(row?.totalAda);
+        const ada = Number(row?.total ?? row?.quantity * row?.unitPrice);
         if (!Number.isFinite(ada)) continue;
         map[cat] = (map[cat] ?? 0) + ada;
       }
@@ -90,7 +90,7 @@
             {id}
             prefix="$"
             suffix="/ ADA"
-            bind:value={formData.adaUsdConversionRate}
+            bind:value={formData.financialAndAdministrative.conversionRate}
             placeholder={schemaMeta?.placeholder ?? "0.25"}
             decimalComma={true}
             invalid={!!schemaError}

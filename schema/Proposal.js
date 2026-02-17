@@ -140,6 +140,7 @@ const proposalSchema = new Schema(
                     url: String,
                 }],
             },
+            // Legal declarations: PDF has 4 checkboxes only (§1: dataProtection, publicVisibilityConsent; §8: authorizationEntity, authorizationAttestation) + §8 submitter fields
             legalDeclarations: {
                 type: Object,
                 required: false,
@@ -150,6 +151,14 @@ const proposalSchema = new Schema(
                         validate: {
                             validator: (v) => v === true,
                             message: "dataProtection must be accepted (true)",
+                        },
+                    },
+                    publicVisibilityConsent: {
+                        type: Boolean,
+                        required: true,
+                        validate: {
+                            validator: (v) => v === true,
+                            message: "publicVisibilityConsent must be accepted (true)",
                         },
                     },
                     authorizationEntity: {
@@ -168,70 +177,9 @@ const proposalSchema = new Schema(
                             message: "authorizationAttestation must be accepted (true)",
                         },
                     },
-                    antiBribery: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "antiBribery must be accepted (true)",
-                        },
-                    },
-                    authenticity: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "authenticity must be accepted (true)",
-                        },
-                    },
-                    ipOwnership: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "ipOwnership must be accepted (true)",
-                        },
-                    },
-                    conflicts: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "conflicts must be accepted (true)",
-                        },
-                    },
-                    compliance: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "compliance must be accepted (true)",
-                        },
-                    },
-                    sanctions: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "sanctions must be accepted (true)",
-                        },
-                    },
-                    noContract: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "noContract must be accepted (true)",
-                        },
-                    },
-                    noGuarantee: {
-                        type: Boolean,
-                        required: true,
-                        validate: {
-                            validator: (v) => v === true,
-                            message: "noGuarantee must be accepted (true)",
-                        },
-                    },
+                    submitterName: { type: String, required: false },
+                    submitterRole: { type: String, required: false },
+                    submitterEmail: { type: String, required: false },
                 },
             },
 
@@ -293,7 +241,7 @@ proposalSchema.index({ budgetId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 })
 
-// Pre-validate middleware: throw so Mongoose handles the error (works with Mongoose 9 async hooks)
+// Pre-validate middleware: require only the 4 PDF checkboxes when status is live (CBC Proposal Template FORM Final DRAFT)
 proposalSchema.pre("validate", function () {
     if (this.status !== "live") return;
     if (!this.metaData?.legalDeclarations) {
@@ -302,35 +250,14 @@ proposalSchema.pre("validate", function () {
     if (!this.metaData?.legalDeclarations?.dataProtection) {
         throw new Error("dataProtection is required when status is live");
     }
+    if (!this.metaData?.legalDeclarations?.publicVisibilityConsent) {
+        throw new Error("publicVisibilityConsent is required when status is live");
+    }
     if (!this.metaData?.legalDeclarations?.authorizationEntity) {
         throw new Error("authorizationEntity is required when status is live");
     }
     if (!this.metaData?.legalDeclarations?.authorizationAttestation) {
         throw new Error("authorizationAttestation is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.antiBribery) {
-        throw new Error("antiBribery is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.authenticity) {
-        throw new Error("authenticity is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.ipOwnership) {
-        throw new Error("ipOwnership is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.conflicts) {
-        throw new Error("conflicts is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.compliance) {
-        throw new Error("compliance is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.sanctions) {
-        throw new Error("sanctions is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.noContract) {
-        throw new Error("noContract is required when status is live");
-    }
-    if (!this.metaData?.legalDeclarations?.noGuarantee) {
-        throw new Error("noGuarantee is required when status is live");
     }
 });
 
