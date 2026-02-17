@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 // Create a writable store to manage the session
 export const loggedIn = writable(false);
 export const showLogin = writable(false);
-export const voter = writable(null);
+export const user = writable(null);
 export const jwt = writable(null);
 
 // Set JWT in cookie and localStorage (if cookies are not available)
@@ -153,7 +153,7 @@ export const logout = async () => {
 		// Clear the session
 		jwt.set(null);
 		loggedIn.set(false);
-		voter.set(null);
+		user.set(null);
 
 		// Redirect to the home page after logout
 		goto('/');

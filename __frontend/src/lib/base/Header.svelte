@@ -1,7 +1,9 @@
 <script>
-  import { api, voter, loggedIn } from "$stores/sessionManager.js";
+  import { api, user, loggedIn } from "$stores/sessionManager.js";
   import Button from "$lib/components/ui/button/button.svelte";
   import WalletSigner from "$lib/WalletSigner/WalletSigner.svelte";
+  import { User } from "lucide-svelte";
+  import { shortenString } from "$lib/utils.js";
 </script>
 
 <header class="bg-(--mbo-tangy-blue) text-white">
@@ -37,7 +39,7 @@
               class="bg-white text-black hover:bg-gray-200"
             >
               <User />
-              {shortenString($voter?.voterId, 10, true)}
+              {shortenString($user?.userId, 10, true)}
             </Button>
           {/if}
         </li>

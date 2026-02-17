@@ -1,4 +1,4 @@
-import { api, loggedIn, voter, getJWT } from '$stores/sessionManager.js';
+import { api, loggedIn, user, getJWT } from '$stores/sessionManager.js';
 const VITE_SERVER_STATUS = import.meta.env.VITE_SERVER_STATUS;
 import { error } from '@sveltejs/kit';
 
@@ -34,7 +34,7 @@ export async function load({ fetch }) {
             const validate = await api.fetch(fetch, '/session/');
             if (validate.status === 200) {
                 const sessionData = await validate.json();
-                voter.set(sessionData);
+                user.set(sessionData);
                 loggedIn.set(true);
             } else {
                 loggedIn.set(false);

@@ -39,6 +39,8 @@ export function isAuthenticated(req, res, next) {
     } else {
       req.userId = userToken.userId;
       req.signType = userToken.signType;
+      next();  // add this
+
     }
   } catch (error) {
     return res.status(500).json({
