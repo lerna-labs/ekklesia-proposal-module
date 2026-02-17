@@ -28,7 +28,6 @@ export async function load({ fetch }) {
 
     // TOKEN CHECKS
     const jwt = getJWT();
-    console.log('jwt', jwt);
     if (jwt) {
         try {
             const validate = await api.fetch(fetch, '/session/');
