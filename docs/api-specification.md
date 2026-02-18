@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|----------------------------------------------------------------------- |
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.3                                                                  |
+| **Version**        | 0.2.4                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | February 18, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan                                              |
@@ -412,7 +412,7 @@ Returns a paginated list of proposals. Visibility depends on whether the request
 | **Proposer** | All (`live`, `withdrawn`, `draft`, `archived`) | When authenticated and `proposer` query param matches the authenticated user's ID. Default (no `status` param) returns all statuses for own proposals. |
 | **Admin** | `live`, `withdrawn`, `draft` (for their budget) | When authenticated and the user's address (JWT) is in the budget's `admins` array. Must set `budget` and `status=draft` to see draft proposals; default is `live` only. |
 
-> **WIP:** It still has to be defined which fields are returned (not all of `metaData`) and which fields are excluded from the public API. Also missing: search for the vendor name.
+List responses include a shortened `metaData` object containing only `strategicFocusArea` (category ObjectId), `proposalType`, and `initiativeType`; full `metaData` is available only from `GET /proposals/{proposalId}`.
 
 #### Query Parameters
 
@@ -437,7 +437,7 @@ Returns a paginated list of proposals. Visibility depends on whether the request
       "_id": "b1c2d3e4f5a67890bcdef123",
       "budgetId": "a1b2c3d4e5f67890abcdef12",
       "title": "Cardano Node Performance Optimization",
-      "description": "Improving node synchronization and transaction processing efficiency",
+      "summary": "Improving node synchronization and transaction processing efficiency",
       "status": "live",
       "totalBudget": 50000000,
       "submittedAt": "2026-01-20T10:00:00Z",
@@ -446,8 +446,7 @@ Returns a paginated list of proposals. Visibility depends on whether the request
       "metaData": {
         "strategicFocusArea": "a1b2c3d4e5f67890abcdef13",
         "proposalType": "Technical (software/IT)",
-        "initiativeType": "New Initiative",
-        "...": "..."
+        "initiativeType": "New Initiative"
       }
     }
   ],
@@ -572,7 +571,7 @@ Full proposal document, including full `metaData` and category when available. C
   "budgetId": "a1b2c3d4e5f67890abcdef12",
   "proposerId": "stake1ux4...",
   "title": "Cardano Node Performance Optimization",
-  "description": "...",
+  "summary": "Executive summary of the proposal.",
   "status": "live",
   "totalBudget": 50000000,
   "submittedAt": "2026-01-20T10:00:00Z",
@@ -1084,7 +1083,7 @@ Returned when rate limit is exceeded (10 requests per minute per IP).
 
 ### 4.3 `GET /session`
 
-Validates the JWT token and returns the user's ID. Used to check if a user is authenticated and get their user ID.
+Validates the JWT token and returns the user's ID and optional profile data. Used to check if a user is authenticated and to obtain their user ID, display name, and (when applicable) the list of budget IDs for which they are an admin.
 
 #### Headers
 
@@ -1096,9 +1095,17 @@ Validates the JWT token and returns the user's ID. Used to check if a user is au
 
 ```json
 {
-  "userId": "stake1ux9...xyz"
+  "userId": "stake1ux9...xyz",
+  "name": "Alice",
+  "adminBudgetIds": ["a1b2c3d4e5f67890abcdef12", "b2c3d4e5f67890abcdef123"]
 }
 ```
+
+| Field            | Type     | Description |
+|------------------|----------|-------------|
+| `userId`         | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID). |
+| `name`           | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set. |
+| `adminBudgetIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
 
 > **Note:** The `userId` field contains a bech32-encoded Cardano identifier. It can be a stake address (`stake1...`), CIP-129 DRep ID (`drep1...`), or stake pool ID (`pool1...`), depending on how the user authenticated.
 
@@ -2058,6 +2065,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version    | Date       | Description |
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
+| 0.2.4      | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminBudgetIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
 | 0.2.3      | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or budget admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly. |
 | 0.2.2      | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking. |
 | 0.2.1      | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`. |
