@@ -1,7 +1,7 @@
 [
   {
     "name": "Resources (Labor)",
-    "description": "high level assumptions on how costs have been calculated"
+    "description": "Human effort required to deliver the work (e.g., engineering, research, design, or coordination), described at a high-level."
   },
   {
     "name": "Development",
@@ -33,6 +33,6 @@
   },
   {
     "name": "Governance",
-    "description": ""
+    "description": "Activities required to support governance participation, reporting, or compliance processes."
   }
 ]

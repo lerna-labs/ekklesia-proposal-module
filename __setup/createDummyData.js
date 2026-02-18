@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 budget, import categories for it, 1 proposal, 10 comments (including replies).
+ * Create dummy data: 1 budget, import categories for it, 1 live proposal, 1 draft proposal, 10 comments (including replies).
  * Uses current schemas: Budget, Category, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
@@ -187,6 +187,7 @@ async function importCategoriesForBudget(budgetId) {
 
 const LEGAL_TRUE = {
     dataProtection: true,
+    publicVisibilityConsent: true,
     authorizationEntity: true,
     authorizationAttestation: true,
     antiBribery: true,
@@ -251,9 +252,11 @@ async function createDummyData() {
         );
         console.log("Proposer user ensured:", proposerId);
 
-        // 4. Create one proposal (live, with required metaData and legalDeclarations)
+        // 4. Create one live proposal and one draft proposal
         const categoryId = categories[0]._id;
-        console.log("Creating proposal...");
+        const DRAFT_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
+
+        console.log("Creating live proposal...");
         const proposal = await Proposal.create({
             proposerId,
             budgetId: budget._id,
@@ -330,7 +333,144 @@ async function createDummyData() {
                 legalDeclarations: LEGAL_TRUE,
             },
         });
-        console.log(`Proposal created: ${proposal._id}`);
+        console.log(`Live proposal created: ${proposal._id}`);
+
+        // 4b. Create one live proposal for stake_test1... user (all required data)
+        const STAKE_TEST_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
+        await User.findOneAndUpdate(
+            { _id: STAKE_TEST_PROPOSER_ID },
+            { $set: { name: "Stake Test Proposer", lastLogin: now, updatedAt: now } },
+            { upsert: true }
+        );
+        console.log("Creating live proposal for stake_test user...");
+        const liveProposalStakeTest = await Proposal.create({
+            proposerId: STAKE_TEST_PROPOSER_ID,
+            budgetId: budget._id,
+            title: "Open-Source Tooling and Developer Experience",
+            summary: "Improve developer experience and maintain open-source tooling for the ecosystem.",
+            status: "live",
+            submittedAt: now,
+            totalBudget: 85000,
+            metaData: {
+                trackRecord: "Maintained open-source libraries and CLI tools for 2+ years.",
+                contractingParty: {
+                    legalEntityName: "Stake Test Community",
+                    legalEntityType: "company",
+                    legalEntityRegistrationNumber: "67890",
+                    legalEntityCountry: "GB",
+                    legalEntityAddress: "2 Dev Lane",
+                },
+                primaryContact: {
+                    name: "Stake Test Proposer",
+                    title: "Maintainer",
+                    email: "stake-test@example.com",
+                    socialMedia: "@staketest",
+                },
+                signatoryContact: {
+                    name: "Stake Test Proposer",
+                    title: "Maintainer",
+                    email: "stake-test@example.com",
+                    authorization: true,
+                },
+                proposalType: "Technical (software/IT)",
+                kycInfo: { submitted: true, email: "stake-test@example.com" },
+                strategicFocusArea: categoryId,
+                keyPerformanceIndicators: [
+                    { kpi: "CLI downloads", contributionStrategy: "Monthly releases" },
+                    { kpi: "Documentation coverage", contributionStrategy: "Keep docs in sync" },
+                ],
+                executionRoadmap: {
+                    projectStartDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+                    projectEndDate: new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000),
+                    workPackages: [
+                        {
+                            title: "WP1 Tooling",
+                            scope: "Maintain and improve CLI and SDK.",
+                            supportingDocuments: [{ title: "Roadmap", url: "https://example.com/roadmap.pdf" }],
+                            estimatedDuration: "4 months",
+                            coreObjectives: ["Stable releases", "Documentation"],
+                            expectedValue: "Better DX for developers.",
+                            metric: "10k+ monthly downloads.",
+                            milestones: [
+                                {
+                                    milestoneName: "M1 – Beta",
+                                    deliverables: "Beta release",
+                                    acceptanceCriteria: "Feature-complete",
+                                    duration: "4 weeks",
+                                },
+                            ],
+                            budgetBreakdown: [
+                                { costCategory: "Development", description: "Tooling", quantity: 1, unitPrice: 45000, total: 45000 },
+                                { costCategory: "Documentation", description: "Docs site", quantity: 1, unitPrice: 40000, total: 40000 },
+                            ],
+                        },
+                    ],
+                },
+                financialAndAdministrative: {
+                    conversionRate: 0.45,
+                    intersectAdministrator: true,
+                    otherAdministrators: "",
+                    initiativeType: "Maintenance",
+                    priorFunding: "Prior round 2025",
+                    treasuryRepayment: false,
+                    treasuryRepaymentCondition: "",
+                    treasuryDonationHash: "hash789",
+                    thirdPartyAssurers: "",
+                    supportingDocuments: [{ title: "Budget breakdown", url: "https://example.com/budget.pdf" }],
+                },
+                legalDeclarations: LEGAL_TRUE,
+            },
+        });
+        console.log(`Live proposal (stake_test user) created: ${liveProposalStakeTest._id}`);
+
+        console.log("Creating draft proposal...");
+        const draftProposal = await Proposal.create({
+            proposerId: DRAFT_PROPOSER_ID,
+            budgetId: budget._id,
+            title: "Draft proposal (in progress)",
+            summary: "",
+            status: "draft",
+            metaData: {
+                trackRecord: "",
+                strategicFocusArea: null,
+                keyPerformanceIndicators: [],
+                executionRoadmap: {
+                    projectStartDate: null,
+                    projectEndDate: null,
+                    workPackages: [
+                        {
+                            title: "",
+                            scope: "",
+                            supportingDocuments: [],
+                            estimatedDuration: "",
+                            coreObjectives: [],
+                            expectedValue: "",
+                            metric: "",
+                            milestones: [],
+                            budgetBreakdown: [
+                                { costCategory: "Development", description: "", quantity: 1, unitPrice: 0, total: 0 },
+                            ],
+                        },
+                    ],
+                },
+                financialAndAdministrative: {
+                    conversionRate: 0,
+                    intersectAdministrator: true,
+                    otherAdministrators: "",
+                    priorFunding: "",
+                    treasuryRepayment: false,
+                    treasuryRepaymentCondition: "",
+                    treasuryDonationHash: "",
+                    thirdPartyAssurers: "",
+                    supportingDocuments: [],
+                },
+                contractingParty: {},
+                primaryContact: {},
+                signatoryContact: {},
+                kycInfo: {},
+            },
+        });
+        console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
 
         // 5. Create 10 comments (including replies): e.g. 5 top-level, 3 replies, 2 nested replies
         const commentBodies = [
@@ -395,7 +535,9 @@ async function createDummyData() {
         console.log("\n✅ Dummy data created successfully.");
         console.log(`  Budget: ${budget._id} (slug: ${budget.slug})`);
         console.log(`  Categories: ${categories.length}`);
-        console.log(`  Proposal: ${proposal._id}`);
+        console.log(`  Live proposal: ${proposal._id}`);
+        console.log(`  Live proposal (stake_test user): ${liveProposalStakeTest._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
+        console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
         console.log(`  Comments: ${createdComments.length}`);
     } catch (error) {
         console.error("Error creating dummy data:", error);

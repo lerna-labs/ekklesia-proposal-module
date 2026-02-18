@@ -1,5 +1,6 @@
 <script>
   import { untrack } from "svelte";
+  import { toast } from "svelte-sonner";
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
   import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
@@ -12,9 +13,12 @@
   import FormWorkPackages from "./FormWorkPackages.svelte";
   import FormFinancialSummary from "./FormFinancialSummary.svelte";
   import * as Card from "$lib/components/ui/card/index.js";
+  import * as Select from "$lib/components/ui/select/index.js";
+  import * as Switch from "$lib/components/ui/switch/index.js";
   import {
     formSchema,
     mainFormSchema,
+    draftFormSchema,
     declarationsSchema,
     financialAndAdministrativeSchema,
     contractingPartySchema,
@@ -25,7 +29,7 @@
   import { z } from "zod";
   import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
-  let { budget, categories, proposal = undefined, onSave = undefined } = $props();
+  let { budget, categories, proposal = undefined, onSave = undefined, budgets = [], onBudgetChange = undefined } = $props();
 
   /** CalendarDate (from DatePicker) to Date for Zod validation. */
   function toDateForValidation(val) {
@@ -85,23 +89,16 @@
   });
 
   const initialWorkPackage = () => ({
-    title: "WP1 Example Work Package",
-    scope: "Example scope: key activities and deliverables for testing the form.",
+    title: "",
+    scope: "",
     supportingDocuments: [],
     estimatedDuration: "",
-    coreObjectives: ["Validate work package UI and budget flow"],
-    expectedValue: "Faster testing and demo of the budget module.",
-    metric: "Time to complete a full work package entry.",
-    milestones: [
-      {
-        milestoneName: "Milestone 1 – Design",
-        deliverables: "Design doc and mockups",
-        acceptanceCriteria: "Approved by stakeholder",
-        duration: "2 weeks",
-      },
-    ],
+    coreObjectives: [],
+    expectedValue: "",
+    metric: "",
+    milestones: [],
     budgetBreakdown: [
-      { costCategory: "Development", description: "Backend API development", quantity: 1, unitPrice: 10000, total: 10000 },
+      { costCategory: "Development", description: "", quantity: 1, unitPrice: 0, total: 0 },
     ],
   });
 
@@ -119,19 +116,19 @@
         workPackages: [initialWorkPackage()],
       },
       financialAndAdministrative: {
-        conversionRate: 0.25,
+        conversionRate: 0,
         intersectAdministrator: true,
         otherAdministrators: "",
         initiativeType: "",
         priorFunding: "",
-        treasuryRepayment: undefined,
+        treasuryRepayment: false,
         treasuryRepaymentCondition: "",
         treasuryDonationHash: "",
         thirdPartyAssurers: "",
         supportingDocuments: [],
       },
       contractingParty: {
-        legalEntityType: undefined,
+        legalEntityType: "",
         legalEntityName: "",
         legalEntityRegistrationNumber: "",
         legalEntityCountry: "",
@@ -143,7 +140,7 @@
       primaryContact: { name: "", title: "", email: "", socialMedia: "" },
       signatoryContact: { name: "", title: "", email: "", authorization: false },
       proposalType: "",
-      kycInfo: { submitted: false, email: "", totalProposalsSubmitted: undefined },
+      kycInfo: { submitted: false, email: "", totalProposalsSubmitted: "" },
       legalDeclarations: initialLegalDeclarations(),
     },
   });
@@ -151,6 +148,21 @@
   let validationErrors = $state(null);
   let declarationsDialogOpen = $state(false);
   let declarationValidationErrors = $state(null);
+  let autoSaveEnabled = $state(false);
+
+  const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  $effect(() => {
+    if (!autoSaveEnabled || formData.status !== "draft" || !onSave) return;
+    const id = setInterval(() => {
+      const result = draftFormSchema.safeParse({ title: formData.title });
+      if (result.success && onSave) {
+        const payload = formDataToApiPayload({ ...formData, status: "draft" });
+        Promise.resolve(onSave(payload)).catch(() => {});
+      }
+    }, AUTO_SAVE_INTERVAL_MS);
+    return () => clearInterval(id);
+  });
 
   /** Prefill formData from proposal once when editing */
   let prefilled = false;
@@ -183,8 +195,14 @@
     }
   });
 
-  /** Save Draft: no full validation; send with status "draft". */
+  /** Save Draft: validate title only (same as backend draft validation), show errors on form. */
   function saveDraft() {
+    const result = draftFormSchema.safeParse({ title: formData.title });
+    if (!result.success) {
+      validationErrors = z.treeifyError(result.error);
+      toast.error("Please fix the errors below.");
+      return;
+    }
     validationErrors = null;
     if (onSave) {
       const payload = formDataToApiPayload({ ...formData, status: "draft" });
@@ -202,6 +220,7 @@
       declarationsDialogOpen = true;
     } else {
       validationErrors = z.treeifyError(result.error);
+      toast.error("Please fix the errors below.");
     }
   }
 
@@ -210,6 +229,7 @@
     const result = declarationsSchema.safeParse(formData.metaData.legalDeclarations);
     if (!result.success) {
       declarationValidationErrors = z.treeifyError(result.error);
+      toast.error("Please complete all legal declarations.");
       return;
     }
     declarationValidationErrors = null;
@@ -225,11 +245,17 @@
     JSON.stringify({ title: formData.title, summary: formData.summary, status: formData.status, metaData: formData.metaData }),
   );
 
-  // When validation has failed and the user changes form data, revalidate main form only
+  // When validation has failed and the user changes form data, revalidate with the same schema (draft vs full)
   $effect(() => {
     formDataSnapshot;
     if (untrack(() => !validationErrors)) return;
-    const result = mainFormSchema.safeParse(formDataForValidation());
+    const isDraftErrors =
+      validationErrors?.properties?.title != null &&
+      validationErrors?.properties?.summary == null &&
+      validationErrors?.properties?.metaData == null;
+    const result = isDraftErrors
+      ? draftFormSchema.safeParse({ title: formData.title })
+      : mainFormSchema.safeParse(formDataForValidation());
     if (result.success) {
       validationErrors = null;
     } else {
@@ -244,6 +270,34 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
+  {#if !proposal && budgets.length > 1}
+    <section class="w-full bg-muted-foreground/5 py-6" id="budget-selection">
+      <div class="max-w-4xl mx-auto">
+        <Card.Root>
+          <Card.Header>
+            <Card.Title class="text-lg font-medium">Budget cycle</Card.Title>
+            <Card.Description>Choose the budget cycle for this proposal.</Card.Description>
+          </Card.Header>
+          <Card.Content>
+            <Select.Root
+              type="single"
+              value={budget?._id ?? ""}
+              onValueChange={(v) => v && onBudgetChange?.(v)}
+            >
+              <Select.Trigger class="w-full max-w-sm" aria-label="Budget cycle">
+                <span class="line-clamp-1">{budget ? (budget.title ?? budget.name ?? budget._id) : "Select budget..."}</span>
+              </Select.Trigger>
+              <Select.Content>
+                {#each budgets as b (b._id)}
+                  <Select.Item value={b._id}>{b.title ?? b.name ?? b._id}</Select.Item>
+                {/each}
+              </Select.Content>
+            </Select.Root>
+          </Card.Content>
+        </Card.Root>
+      </div>
+    </section>
+  {/if}
   <section class="w-full bg-muted-foreground/5 py-10" id="project-definition">
     <div class="max-w-4xl mx-auto space-y-4">
       <Card.Root>
@@ -405,9 +459,15 @@
     class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto flex gap-3">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-4">
       <Button type="button" class="cursor-pointer" onclick={saveDraft}>Save Draft</Button>
       <Button type="submit" class="cursor-pointer">Submit</Button>
+      {#if formData.status === "draft" && onSave}
+        <label class="flex items-center gap-2 cursor-pointer select-none text-sm">
+          <Switch.Root bind:checked={autoSaveEnabled} />
+          <span>Auto-save every 5 min</span>
+        </label>
+      {/if}
     </div>
   </section>
 </form>

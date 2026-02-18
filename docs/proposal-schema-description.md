@@ -1,6 +1,22 @@
 # Proposal schema – field reference (CBC template 2026)
 
+---
+
+| Field              | Detail                                                                 |
+|--------------------|----------------------------------------------------------------------- |
+| **Document Title** | Proposal Schema – Field Reference                                    |
+| **Version**        | 0.1.0                                                                 |
+| **Created**        | February 3, 2026                                                      |
+| **Last Revised**   | February 18, 2026                                                     |
+| **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md) |
+| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
+| **Status**         | Draft                                                                 |
+
+---
+
 This document lists every proposal field with **PDF source**, **schema path**, **required** status, **max length** (or type constraints), and **validation** notes. It is based on the CBC Proposal Template FORM Final DRAFT PDF. Legend: **\*** = mandatory in PDF; **Not Public** = PDF marks field as not public (yellow).
+
+**Draft vs live:** For `status: "draft"`, only `budgetId`, `title`, and `status` are required on create; `summary` and most `metaData` are optional. When submitting with `status: "live"`, the API and frontend enforce full validation (see [proposalCreateSchema.js](../validation/proposalCreateSchema.js) and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
 
 ---
 
@@ -10,8 +26,8 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 |-------------|-----------|-------------|----------|-------------------|---------------------|
 | — | (proposer) | `proposerId` | Yes | String (ref User) | Set from authenticated user. |
 | — | (budget) | `budgetId` | Yes | ObjectId (ref Budget) | Must be valid budget. |
-| 1 | Proposal Title * | `title` | Yes | 100 chars | Short text. |
-| 1 | Executive Summary * | `summary` | Yes | 2000 chars | Text area. |
+| 1 | Proposal Title * | `title` | Yes | 2–100 chars | Short text. |
+| 1 | Executive Summary * | `summary` | Yes (when live) | 2–2000 chars | Text area; optional for draft. |
 | — | (status) | `status` | Yes | enum | `draft`, `live`, `withdrawnByProposer`, `withdrawnByAdmin`, `archived`. |
 | — | (submitted at) | `submittedAt` | No | Date | Set on submit. |
 | — | (total budget) | `totalBudget` | No | Number | Computed or stored. |
@@ -35,7 +51,7 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 
 | PDF field | Schema path | Required | Max length / type | Validation / notes |
 |-----------|-------------|----------|-------------------|---------------------|
-| Track Record | `metaData.trackRecord` | No | 650 chars | Text area. |
+| Track Record | `metaData.trackRecord` | No | 2–650 chars | Text area; min 2 when non-empty. |
 
 ---
 
@@ -64,13 +80,13 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 |-----------|-------------|----------|-------------------|---------------------|
 | Work Package * | `workPackages[].title` | Yes | 100 chars | Short text. |
 | Scope of Work * | `workPackages[].scope` | Yes | 2000 chars | Text area. |
-| Supporting Documentation Link | `workPackages[].supportingDocuments` | No | Array of `{ title, url }` | Title + URL per link; external links need disclaimer. |
-| (WP duration) | `workPackages[].estimatedDuration` | No | String | e.g. "3 months". |
+| Supporting Documentation Link | `workPackages[].supportingDocuments` | No | Array of `{ title, url }` | Title 1–255 chars, URL required; external links need disclaimer. |
+| (WP duration) | `workPackages[].estimatedDuration` | No | String, max 200 | e.g. "3 months". |
 | Core Objectives * | `workPackages[].coreObjectives` | Yes | Array of strings, each max 400 chars | Repeatable long text. |
 | Expected Value (ROI) * | `workPackages[].expectedValue` | Yes | 600 chars | Long text. |
 | Metric * | `workPackages[].metric` | Yes | 600 chars | Long text. |
 | Milestones | `workPackages[].milestones` | No | Array | Each milestone below. |
-| Budget Breakdown | `workPackages[].budgetBreakdown` | No | Array | Each row below. |
+| Budget Breakdown | `workPackages[].budgetBreakdown` | Yes (min 1) | Array | At least one row; each row below. |
 
 ### Milestone (each element of workPackages[].milestones)
 
@@ -83,13 +99,15 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 
 ### Budget row (each element of workPackages[].budgetBreakdown)
 
+At least one item is required in `budgetBreakdown` per work package.
+
 | PDF field | Schema path | Required | Max length / type | Validation / notes |
 |-----------|-------------|----------|-------------------|---------------------|
-| Cost Category * | `budgetBreakdown[].costCategory` | Yes | String (from category list) | Select. |
-| Item Description | `budgetBreakdown[].description` | Yes | String | e.g. 600 chars. |
-| Qty | `budgetBreakdown[].quantity` | Yes | Number | ≥ 0. |
-| Unit Cost (ada) | `budgetBreakdown[].unitPrice` | Yes | Number | ADA. |
-| Total (ada) | `budgetBreakdown[].total` | Yes | Number | ADA; can be computed. |
+| Cost Category * | `budgetBreakdown[].costCategory` | Yes | String (from category list) | Must be one of the names in [costCategories.json](../__frontend/src/lib/budget2026/costCategories.json). |
+| Item Description | `budgetBreakdown[].description` | Yes | String | 1–600 chars. |
+| Qty | `budgetBreakdown[].quantity` | Yes | Number | > 0 (API min 0.001). |
+| Unit Cost (ada) | `budgetBreakdown[].unitPrice` | Yes | Number | ADA, ≥ 0. |
+| Total (ada) | `budgetBreakdown[].total` | Yes | Number | ADA; computed from quantity × unitPrice if omitted. |
 
 ---
 
@@ -102,13 +120,12 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | Other Administrators? | `financialAndAdministrative.otherAdministrators` | No | 400 chars | Text area; when not Intersect. Not Public. |
 | Initiative Type * | `financialAndAdministrative.initiativeType` | Yes | enum | `"New Initiative"` \| `"Maintenance"`. |
 | Type of Proposal | `financialAndAdministrative` / `metaData.proposalType` | Yes | enum | `"Technical (software/IT)"` \| `"Non-technical"`. (Stored in metaData.) |
-| Prior Funding * | `financialAndAdministrative.priorFunding` | Yes | 800 chars | Long text; "N/A" allowed. |
-| Treasury Repayment? * | `financialAndAdministrative.treasuryRepayment` | Yes | Boolean | Yes/No. |
+| Prior Funding * | `financialAndAdministrative.priorFunding` | Yes (when live) | 800 chars | Long text; "N/A" allowed. |
+| Treasury Repayment? * | `financialAndAdministrative.treasuryRepayment` | Yes (when live) | Boolean | Yes/No; optional in API for draft. |
 | Repayment Circumstances | `financialAndAdministrative.treasuryRepaymentCondition` | No | 800 chars | Text area; when repayment Yes. |
-| Treasury Donation Verification Hash * | `financialAndAdministrative.treasuryDonationHash` | Yes | String | Transaction hash (1000 ada donation). |
+| Treasury Donation Verification Hash * | `financialAndAdministrative.treasuryDonationHash` | Yes (when live) | String, max 255 | Transaction hash (1000 ada donation); optional in API for draft. |
 | Third Party Assurers | `financialAndAdministrative.thirdPartyAssurers` | No | 600 chars | Text area. |
-| Other Supporting Info | `financialAndAdministrative.supportingDocuments` | No | Array of `{ title, url }` | Link title + URL; external link disclaimer. |
-| (legacy) | `financialAndAdministrative.administrator` | No | String | Legacy / optional. |
+| Other Supporting Info | `financialAndAdministrative.supportingDocuments` | No | Array of `{ title, url }` | Title 1–255 chars, URL required; external link disclaimer. |
 
 ---
 
@@ -119,7 +136,7 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | Contracting Party Details * | `contractingParty.legalEntityType` | Yes | enum | `"company"` \| `"individual"`. |
 | Legal Entity Name * (Company) | `contractingParty.legalEntityName` | Yes (if company) | 100 chars | Not Public (company). |
 | Registration Number * (Company) | `contractingParty.legalEntityRegistrationNumber` | Yes (if company) | 100 chars | Tax ID / UEN. Not Public. |
-| Country of Incorporation * (Company) | `contractingParty.legalEntityCountry` | Yes (if company) | 100 chars (or 2 for code) | Not Public. |
+| Country of Incorporation * (Company) | `contractingParty.legalEntityCountry` | Yes (if company) | 2-char country code (implementation) or 100 chars | Not Public. |
 | Registered Address * (Company) | `contractingParty.legalEntityAddress` | Yes (if company) | 100 chars | Not Public. |
 | Country of Residence * (Individual) | (same or `countryOfResidence`) | Yes (if individual) | 100 chars | Not Public. PDF: distinct field for individual. |
 | Govt Issued ID Number * (Individual) | (same or `govtIssuedIdNumber`) | Yes (if individual) | 100 chars | Not Public. PDF: distinct field. |
@@ -201,8 +218,29 @@ The PDF (CBC Proposal Template FORM Final DRAFT) has **four checkboxes** only: t
 
 ---
 
+## Cost categories (budgetBreakdown[].costCategory)
+
+The allowed values are defined in [costCategories.json](../__frontend/src/lib/budget2026/costCategories.json). Current list: *Resources (Labor)*, *Development*, *Infrastructure*, *Security & Audits*, *Legal & Compliance*, *Engagement & Ecosystem support*, *Research*, *Operations*, *Governance*.
+
+---
+
 ## Related docs
 
 - [proposal-schema-gap-analysis.md](proposal-schema-gap-analysis.md) – Gap analysis vs CBC template and improvement list.
 - [api-specification.md](api-specification.md) – API request/response for proposals.
 - Schema implementation: [../schema/Proposal.js](../schema/Proposal.js).
+- API create/update validation: [../validation/proposalCreateSchema.js](../validation/proposalCreateSchema.js); frontend form: [../__frontend/src/lib/budget2026/Schema.js](../__frontend/src/lib/budget2026/Schema.js).
+
+---
+
+## Revision History
+
+This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version numbers use the form **MAJOR.MINOR.PATCH**:
+
+- **MAJOR** — Incompatible schema or field changes (e.g. renamed paths, removed fields, breaking validation).
+- **MINOR** — Backwards-compatible additions (e.g. new fields, new sections, new constraints).
+- **PATCH** — Backwards-compatible fixes and clarifications (e.g. typo corrections, clarified wording, alignment with implementation).
+
+| Version | Date       | Description |
+|---------|------------|-------------|
+| 0.1.0   | 2026-02-18 | Document metadata block and Revision history. Content aligned with implementation: draft vs live requirements, cost categories source, link titles 1–255 chars, quantity &gt; 0, treasury/prior-funding optional-for-draft notes. |

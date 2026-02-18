@@ -227,7 +227,12 @@ export const workPackageSchema = z.object({
     description: "How do you plan to deliver this package? Copy this table for each milestone.",
     required: false,
   }),
-  budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
+  budgetBreakdown: z
+    .array(budgetRowSchema)
+    .min(1, "At least one budget row is required")
+    .optional()
+    .default([])
+    .meta({ label: "Budget Breakdown", required: true }),
 });
 
 // --- Nested schemas matching API / proposal-schema-description.md ---
@@ -291,7 +296,7 @@ export const kycInfoSchema = z
       notPublic: true,
     }),
     totalProposalsSubmitted: z
-      .union(z.string(), z.number())
+      .union([z.string(), z.number()])
       .transform((v) => {
         if (v === "" || v == null) return undefined;
         const n = Number(v);
@@ -364,7 +369,6 @@ export const financialAndAdministrativeSchema = z.object({
   treasuryDonationHash: z.string().max(255).optional().meta({ label: "Treasury Donation Verification Hash", required: true }),
   thirdPartyAssurers: z.string().max(600).optional().meta({ label: "Third Party Assurers", required: false }),
   supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]).meta({ label: "Other Supporting Info", required: false }),
-  administrator: z.string().optional().meta({ label: "Administrator (legacy)", required: false }),
 });
 
 /** metaData.executionRoadmap */
@@ -416,6 +420,14 @@ export const metaDataSchema = z.object({
     }),
   kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: declarationsSchema.optional(),
+});
+
+/** Draft validation: only title required (matches backend createDraftProposalBodySchema). */
+export const draftFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100).meta({
+    label: "Proposal Title",
+    required: true,
+  }),
 });
 
 /** Full form schema: shape matches API request body (title, summary, status, metaData). */

@@ -5,10 +5,11 @@ const VALID_DIRECTION = new Set(['asc', 'desc']);
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
-	const { user } = await parent();
+	const parentData = await parent();
+	const user = parentData?.user;
 	const userId = user?.userId;
 	if (!userId) {
-		return { proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, budgetTitles: {}, budgetSlugs: {} };
+		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, budgetTitles: {}, budgetSlugs: {} };
 	}
 
 	// URL params with defaults and validation
@@ -54,6 +55,7 @@ export async function load({ fetch, url, parent }) {
 	}
 
 	return {
+		user,
 		proposals,
 		budgetTitles,
 		budgetSlugs,

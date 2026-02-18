@@ -12,15 +12,9 @@
   let budget = $derived(data.budget);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
-  let selectedFilters = $state([]);
+  let categories = $derived(data.categories ?? []);
   let sort = $state("title");
   let ascending = $state(true);
-
-  const filterOptions = [
-    { value: "category", label: "Category" },
-    { value: "status", label: "Status" },
-    { value: "amount", label: "Amount" },
-  ];
 
   function navigate(pageNum) {
     const pathname = page.url.pathname;
@@ -33,16 +27,14 @@
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
   <!-- Budget/Ballot Info -->
-  <Card.Root class="mb-8">
-    <Card.Header>
-      <Card.Title class="text-2xl">
-        {budget.name || budget.title || "Budget"}
-      </Card.Title>
-      {#if budget.description}
-        <Card.Description>{budget.description}</Card.Description>
-      {/if}
-    </Card.Header>
-    <Card.Content class="space-y-4">
+  <div class="mb-8">
+    <h1 class="text-2xl font-semibold">
+      {budget.name || budget.title || "Budget"}
+    </h1>
+    {#if budget.description}
+      <p class="text-muted-foreground mt-2">{budget.description}</p>
+    {/if}
+    <div class="mt-4 space-y-2">
       {#if budget.year}
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-muted-foreground">Year:</span>
@@ -65,10 +57,8 @@
           <span class="text-sm">{budget.status}</span>
         </div>
       {/if}
-    </Card.Content>
-  </Card.Root>
-
-  <Separator.Root class="mb-8" />
+    </div>
+  </div>
 
   <!-- Proposals Section -->
   <div class="space-y-6">
@@ -83,7 +73,7 @@
       </h2>
       <div class="flex items-center gap-2">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
-        <SearchFilter filters={filterOptions} bind:selected={selectedFilters} />
+        <SearchFilter {categories} budgetId={budget._id} />
         <SearchSort bind:sort bind:ascending />
       </div>
     </div>
@@ -100,7 +90,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {budget} />
+          <ProposalCard {proposal} {budget} {categories} />
         {/each}
       </div>
 

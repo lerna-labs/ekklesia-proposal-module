@@ -70,9 +70,11 @@
     </Card.Content>
   </Card.Root>
 
-  <section class="mt-4">
-    <PillarInfo {proposal} />
-  </section>
+  {#if proposal.category?.metaData}
+    <section class="mt-4">
+      <PillarInfo category={proposal.category} />
+    </section>
+  {/if}
 
   <section class="mt-8" id="comments">
     <Comments {comments} />

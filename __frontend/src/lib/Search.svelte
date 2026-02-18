@@ -1,75 +1,89 @@
 <script>
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import * as Input from '$lib/components/ui/input';
-	import * as Button from '$lib/components/ui/button';
-	import SearchIcon from '@lucide/svelte/icons/search';
-	import XIcon from '@lucide/svelte/icons/x';
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
+  import * as Input from "$lib/components/ui/input";
+  import * as Button from "$lib/components/ui/button";
+  import SearchIcon from "@lucide/svelte/icons/search";
+  import XIcon from "@lucide/svelte/icons/x";
 
-	let { class: className = '', placeholder = 'Search...' } = $props();
-	let value = $state('');
+  let { class: className = "", placeholder = "Search..." } = $props();
+  let value = $state("");
 
-	$effect(() => {
-		const search = page.url.searchParams.get('search') ?? '';
-		value = search;
-	});
+  $effect(() => {
+    const search = page.url.searchParams.get("search") ?? "";
+    value = search;
+  });
 
-	function submit() {
-		const searchParams = new URLSearchParams(page.url.searchParams);
-		const trimmed = value.trim();
-		if (trimmed) {
-			searchParams.set('search', trimmed);
-		} else {
-			searchParams.delete('search');
-		}
-		const url = `${page.url.pathname}?${searchParams.toString()}`;
-		goto(url);
-	}
+  /** Build query string with literal commas for status and category (no %2C). */
+  function queryStringWithLiteralCommas(searchParams) {
+    let qs = searchParams.toString();
+    for (const key of ["status", "category"]) {
+      const m = qs.match(new RegExp(`\\b${key}=([^&]*)`));
+      if (m) qs = qs.replace(new RegExp(`\\b${key}=[^&]*`), key + "=" + decodeURIComponent(m[1]));
+    }
+    return qs;
+  }
 
-	function clear() {
-		value = '';
-		const searchParams = new URLSearchParams(page.url.searchParams);
-		searchParams.delete('search');
-		const url = `${page.url.pathname}?${searchParams.toString()}`;
-		goto(url);
-	}
+  function submit() {
+    const searchParams = new URLSearchParams(page.url.searchParams);
+    const trimmed = value.trim();
+    if (trimmed) {
+      searchParams.set("search", trimmed);
+    } else {
+      searchParams.delete("search");
+    }
+    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
+    goto(url);
+  }
 
-	function handleKeydown(e) {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			submit();
-		}
-	}
+  function clear() {
+    value = "";
+    const searchParams = new URLSearchParams(page.url.searchParams);
+    searchParams.delete("search");
+    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
+    goto(url);
+  }
+
+  function handleKeydown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submit();
+    }
+  }
 </script>
 
-<div class="relative flex w-full items-center gap-2 {className}">
-	<Input.Root
-		bind:value
-		{placeholder}
-		onkeydown={handleKeydown}
-		class="pr-20"
-		aria-label="Search"
-	/>
-	{#if value.trim()}
-		<Button.Root
-			type="button"
-			variant="ghost"
-			size="icon"
-			class="absolute right-9 top-0 h-full rounded-none"
-			onclick={clear}
-			aria-label="Clear search"
-		>
-			<XIcon class="size-4" />
-		</Button.Root>
-	{/if}
-	<Button.Root
-		type="button"
-		variant="ghost"
-		size="icon"
-		class="absolute right-0 top-0 h-full rounded-l-none"
-		onclick={submit}
-		aria-label="Search"
-	>
-		<SearchIcon class="size-4" />
-	</Button.Root>
+<div class="relative flex w-full items-center gap-1 {className}">
+  <Input.Root
+    bind:value
+    {placeholder}
+    onkeydown={handleKeydown}
+    class="pr-16"
+    aria-label="Search"
+  />
+  <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-1">
+    {#if value.trim()}
+      <Button.Root
+        type="button"
+        variant="ghost"
+        size="icon"
+        class="size-8! min-w-0 shrink-0 rounded-none p-0! hover:bg-transparent cursor-pointer"
+        onclick={clear}
+        aria-label="Clear search"
+        title="Clear search"
+      >
+        <XIcon class="size-4" />
+      </Button.Root>
+    {/if}
+    <Button.Root
+      type="button"
+      variant="ghost"
+      size="icon"
+      class="!size-8 min-w-0 shrink-0 rounded-none !p-0 -ml-3 hover:bg-transparent cursor-pointer"
+      onclick={submit}
+      aria-label="Search"
+      title="Search"
+    >
+      <SearchIcon class="size-4" />
+    </Button.Root>
+  </div>
 </div>
