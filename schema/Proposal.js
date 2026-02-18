@@ -69,7 +69,7 @@ const proposalSchema = new Schema(
             proposalType: {
                 type: String,
                 enum: ["Technical (software/IT)", "Non-technical"],
-                required: true,
+                required: false, // optional for draft; required when status is live
             },
             kycInfo: {
                 type: Object,
@@ -83,7 +83,7 @@ const proposalSchema = new Schema(
             strategicFocusArea: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Category",
-                required: true,
+                required: false, // optional for draft; required when status is live (enforce in validation or pre-save)
             },
             keyPerformanceIndicators: {
                 type: [
@@ -132,13 +132,12 @@ const proposalSchema = new Schema(
                 initiativeType: {
                     type: String,
                     enum: ["New Initiative", "Maintenance"],
-                    required: true,
+                    required: false, // optional for draft; required when status is live
                 },
                 priorFunding: String,
                 treasuryRepayment: Boolean,
                 treasuryRepaymentCondition: String,
                 treasuryDonationHash: String,
-                administrator: String,
                 thirdPartyAssurers: String,
                 supportingDocuments: [{
                     title: String,
