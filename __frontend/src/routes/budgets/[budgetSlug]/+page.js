@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { getJWT } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, url, fetch }) {
@@ -7,6 +8,10 @@ export async function load({ params, url, fetch }) {
     const search = url.searchParams.get('search') || '';
     const sort = url.searchParams.get('sort') || 'title';
     const direction = url.searchParams.get('direction') || 'asc';
+    const category = url.searchParams.get('category') || '';
+    const status = url.searchParams.get('status') || 'live';
+    const proposalType = url.searchParams.get('proposalType') || '';
+    const initiativeType = url.searchParams.get('initiativeType') || '';
 
     const apiUrl = import.meta.env.VITE_API_URL || '/api/v0';
 
@@ -34,8 +39,23 @@ export async function load({ params, url, fetch }) {
     if (search) {
         proposalsSearchParams.set('search', search);
     }
+    if (category) {
+        proposalsSearchParams.set('category', category);
+    }
+    if (status) {
+        proposalsSearchParams.set('status', status);
+    }
+    if (proposalType) {
+        proposalsSearchParams.set('proposalType', proposalType);
+    }
+    if (initiativeType) {
+        proposalsSearchParams.set('initiativeType', initiativeType);
+    }
     const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
-    const proposalsResponse = await fetch(proposalsUrl);
+    const token = getJWT();
+    const proposalsOpts = { credentials: 'include' };
+    if (token) proposalsOpts.headers = { Authorization: `Bearer ${token}` };
+    const proposalsResponse = await fetch(proposalsUrl, proposalsOpts);
 
     let proposals = { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } };
     if (proposalsResponse.ok) {

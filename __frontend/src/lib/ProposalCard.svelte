@@ -3,7 +3,14 @@
   import * as Button from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
+  import { user } from "$stores/sessionManager.js";
   let { proposal, budget, categories = [], class: className } = $props();
+
+  const isOwnProposal = $derived(
+    $user?.userId &&
+    proposal?.proposerId &&
+    String(proposal.proposerId).trim() === String($user.userId).trim(),
+  );
 
   const proposalHref = $derived(
     budget && (proposal._id || proposal.id)
@@ -23,8 +30,11 @@
 
 <Card.Root class="hover:shadow-md transition-shadow {className || ''}">
   <Card.Header>
-    <Card.Title class="text-lg flex flex-wrap items-center gap-2">
+    <Card.Title class="text-lg flex flex-wrap items-center gap-1">
       <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
+      {#if isOwnProposal}
+        <Badge class="bg-(--mbo-electric-blue) text-white uppercase text-xs border-transparent">Your Proposal</Badge>
+      {/if}
       {#if proposal.status}
         <Badge class="bg-black text-white uppercase text-xs">
           {proposal.status}
