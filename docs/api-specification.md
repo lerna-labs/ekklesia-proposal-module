@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|----------------------------------------------------------------------- |
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.4                                                                  |
+| **Version**        | 0.2.6                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | February 18, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan                                              |
@@ -177,7 +177,7 @@ Budget Module's API surface and should be kept up to date as the module evolves.
 - **`_id` fields** – All `_id` fields in responses are MongoDB ObjectIds (24-character hexadecimal strings).
 - **DRep identifiers** – All `drep_id` values use the `drep1…` bech32 encoding defined by CIP-0509.
 - **Admin addresses** – All `admins` array entries are bech32 Cardano stake addresses (`stake1…`).
-- **Base URL** – All paths below are relative to a versioned base, e.g. `https://domain.tld/api/v1`.
+- **Base URL** – All paths below are relative to a versioned base, e.g. `https://domain.tld/api/v0`.
 - **Requests** – Request bodies must be `Content-Type: application/json`. The API returns JSON; clients may send `Accept: application/json`.
 - **Responses** – All responses return **JSON** (except 204 No Content, which has no body).
 - **Pagination** – All paginated list endpoints use the same `meta` shape: `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The list of items is in the `data` array.
@@ -422,11 +422,13 @@ List responses include a shortened `metaData` object containing only `strategicF
 | `limit`     | integer | `10`    | Items per page. Max 100.                                                    |
 | `budget`    | string  | —       | Filter by budget cycle (exact match, must be valid ObjectId). If provided, only returns proposals for the specified budget. |
 | `category`  | string  | —       | Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where `metaData.strategicFocusArea` matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema. |
-| `proposer`  | string  | —       | Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. |
-| `status`    | string  | `live`  | Filter by proposal status. Valid values: `live` or `withdrawn` (includes both `withdrawnByProposer` and `withdrawnByAdmin`). |
+| `proposalType`  | string  | —       | Filter by proposal type (exact match). Valid values: `Technical (software/IT)`, `Non-technical`. |
+| `initiativeType`  | string  | —       | Filter by initiative type (exact match). Valid values: `New Initiative`, `Maintenance`. |
+| `proposer`  | string  | —       | Filter by proposer ID (exact match, must be valid User ObjectId). When authenticated and `proposer` matches the authenticated user's ID, all statuses (including `draft`, `archived`) can be returned; use `status` to filter. |
+| `status`    | string  | `live`  | Filter by proposal status. Single value or comma-separated: `live`, `withdrawn` (withdrawn includes both `withdrawnByProposer` and `withdrawnByAdmin`). For **budget admins** or when querying own proposals (`proposer` = authenticated user ID), `draft` may also be included (e.g. `status=live,withdrawn,draft`). Sending `status=draft` without being a budget admin or the proposal owner returns `400`. |
 | `search`    | string  | —       | Search term to match against proposal `_id` (exact match), `title`, `summary`, or `metaData.contractingParty.legalEntityName` (partial, case-insensitive). |
-| `sort`      | string  | `date`  | Sort field: `title`, `status`, `date` (submittedAt), or `amount` (totalBudget). |
-| `direction` | string  | `desc`  | Sort direction: `asc` or `desc`.                                            |
+| `sort`      | string  | `date`  | Sort field: `title`, `status`, `date` (submittedAt), `updatedAt`, or `totalBudget`. Case-insensitive. |
+| `direction` | string  | `desc`  | Sort direction: `asc` or `desc`. Case-insensitive. |
 
 #### Success Response — `200 OK`
 
@@ -461,7 +463,7 @@ List responses include a shortened `metaData` object containing only `strategicF
 }
 ```
 
-> **Note:** By default, only proposals with `status = "live"` are returned. Use the `status` parameter to filter by `live` or `withdrawn` (which includes both `withdrawnByProposer` and `withdrawnByAdmin`). Draft and archived proposals (statuses: `draft`, `archived`) are excluded from this public endpoint. When `budget` is provided, the endpoint validates that the budget exists and returns 404 if it doesn't.
+> **Note:** By default, only proposals with `status = "live"` are returned. Use the `status` parameter to filter by `live` and/or `withdrawn` (withdrawn includes both `withdrawnByProposer` and `withdrawnByAdmin`). The `status` parameter accepts comma-separated values (e.g. `live,withdrawn`). **Budget admins** (authenticated user in the budget's `admins` array) or callers querying their own proposals (`proposer` = authenticated user ID) may also include `draft` in `status` (e.g. `status=live,withdrawn,draft`). Including `draft` without being a budget admin or the proposal owner returns `400 Bad Request`. When `budget` is provided, the endpoint validates that the budget exists and returns 404 if it doesn't.
 
 #### Error Response — `400 Bad Request`
 
@@ -479,7 +481,7 @@ Or when `category` parameter is invalid or category not found:
 ```json
 {
   "status": "error",
-  "message": "Invalid category parameter. The following categories were not found: a1b2c3d4e5f67890abcdef99, b2c3d4e5f67890abcdef123"
+  "message": "Invalid category parameter. The following categories were not found or do not belong to this budget: a1b2c3d4e5f67890abcdef99, b2c3d4e5f67890abcdef123"
 }
 ```
 
@@ -497,7 +499,7 @@ Or when `sort` parameter is invalid:
 ```json
 {
   "status": "error",
-  "message": "Invalid sort parameter. Must be one of: title, status, date, amount."
+  "message": "Invalid sort parameter. Must be one of: title, status, date, updatedAt, totalBudget."
 }
 ```
 
@@ -510,12 +512,12 @@ Or when `direction` parameter is invalid:
 }
 ```
 
-Or when `status` parameter is invalid:
+Or when `status=draft` is sent by a caller who is neither a budget admin nor the proposal owner (e.g. `proposer` not set or not matching the authenticated user):
 
 ```json
 {
   "status": "error",
-  "message": "Invalid status parameter. Must be 'live' or 'withdrawn'."
+  "message": "Invalid status parameter. Draft proposals are only accessible to budget admins or the proposal owner."
 }
 ```
 
@@ -911,7 +913,7 @@ Returned when no comment exists with the given ID or the parent comment is not l
 
 ## 4. Authentication Endpoints
 
-> **Note:** All endpoints in this section are relative to the base path `/api/v1`. For example, `POST /session` refers to `POST /api/v1/session`.
+> **Note:** All endpoints in this section are relative to the base path `/api/v0`. For example, `POST /session` refers to `POST /api/v0/session`.
 
 The endpoints in this section handle authentication and session management. They use a challenge-response flow where clients first request a nonce, sign it, and then submit the signature to obtain a JWT token. The token is stored in an HTTP-only cookie for subsequent authenticated requests.
 
@@ -1152,7 +1154,7 @@ Returned when not authenticated.
 
 ## 5. Authenticated (Write) Endpoints
 
-> **Note:** All endpoints in this section are relative to the base path `/api/v1`. For example, `POST /proposals` refers to `POST /api/v1/proposals`.
+> **Note:** All endpoints in this section are relative to the base path `/api/v0`. For example, `POST /proposals` refers to `POST /api/v0/proposals`.
 
 The endpoints in this section require authentication via JWT token (provided as an HTTP-only cookie). These endpoints allow authenticated users to create or update resources. Access control is enforced based on the user's role and ownership of resources.
 
@@ -2065,6 +2067,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version    | Date       | Description |
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
+| 0.2.5      | 2026-02-18 | `GET /proposals`: `status` parameter documented as accepting comma-separated values (e.g. `live,withdrawn`) to return proposals in any of the given statuses. Note updated accordingly. |
 | 0.2.4      | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminBudgetIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
 | 0.2.3      | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or budget admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly. |
 | 0.2.2      | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking. |
