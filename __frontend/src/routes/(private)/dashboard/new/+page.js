@@ -1,15 +1,21 @@
+import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
 	await parent();
-	const budgetId = url.searchParams.get('budget');
+	let budgetId = url.searchParams.get('budget');
 	let budget = null;
 	let categories = [];
 
 	const budgetsRes = await api.fetch(fetch, '/budgets?limit=50');
 	const budgetsJson = await budgetsRes.json();
 	const budgets = budgetsJson.data ?? [];
+
+	// Auto-select when only one budget: redirect so budget + categories load
+	if (!budgetId && budgets.length === 1) {
+		throw redirect(302, `/dashboard/new?budget=${budgets[0]._id}`);
+	}
 
 	if (budgetId) {
 		try {

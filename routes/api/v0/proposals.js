@@ -11,6 +11,138 @@ import { Budget } from "../../../schema/Budget.js";
 import mongoose from "mongoose";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
+import { validateCreateProposalBody } from "../../../validation/proposalCreateSchema.js";
+
+/**
+ * @route POST /api/v0/proposals
+ * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
+ * @access Private (requires valid JWT)
+ *
+ * @body {string} budgetId - Valid MongoDB ObjectId for the budget cycle (required)
+ * @body {string} title - Proposal title (2–100 chars)
+ * @body {string} summary - Executive summary (2–2000 chars)
+ * @body {string} status - "draft" or "live"
+ * @body {Object} metaData - Full metaData object per proposal-schema-description.md
+ *
+ * @returns {Object} 201 - Created proposal document
+ * @returns {Object} 400 - Validation error (Zod errors in body)
+ * @returns {Object} 401 - Not authenticated
+ * @returns {Object} 404 - Budget not found
+ * @returns {Object} 500 - Server error
+ */
+router.post("/", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(tokenResult.code ?? 401).json({
+        status: "error",
+        message: tokenResult.message ?? "Authentication required",
+      });
+    }
+
+    const proposerId = tokenResult.userId;
+
+    const validation = validateCreateProposalBody(req.body);
+    if (!validation.success) {
+      const errors = validation.error.flatten();
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: errors.fieldErrors ?? {},
+        formErrors: errors.formErrors ?? [],
+      });
+    }
+
+    const { budgetId, title, summary, status, metaData } = validation.data;
+
+    if (!mongoose.Types.ObjectId.isValid(budgetId) || budgetId.length !== 24) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid budgetId. Must be a valid ObjectId.",
+      });
+    }
+
+    const budgetDoc = await Budget.findById(budgetId).lean();
+    if (!budgetDoc) {
+      return res.status(404).json({
+        status: "error",
+        message: "Budget not found",
+      });
+    }
+
+    // For draft, merge with minimal defaults so Mongoose metaData subfields exist
+    const defaultDraftMetaData =
+      status === "draft"
+        ? {
+            trackRecord: "",
+            strategicFocusArea: null,
+            keyPerformanceIndicators: [],
+            executionRoadmap: { projectStartDate: null, projectEndDate: null, workPackages: [] },
+            financialAndAdministrative: {},
+            contractingParty: {},
+            primaryContact: {},
+            signatoryContact: {},
+            kycInfo: {},
+          }
+        : null;
+
+    let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
+
+    // Draft: treat empty enum fields as unset so Mongoose optional + enum doesn't reject ""
+    if (status === "draft") {
+      if (rawMetaData.proposalType === "") rawMetaData.proposalType = undefined;
+      if (rawMetaData.financialAndAdministrative?.initiativeType === "") {
+        rawMetaData = {
+          ...rawMetaData,
+          financialAndAdministrative: { ...rawMetaData.financialAndAdministrative, initiativeType: undefined },
+        };
+      }
+    }
+
+    // Empty string strategicFocusArea is allowed for draft; store as null for Mongoose ObjectId
+    const sanitizedMetaData = { ...rawMetaData };
+    if (sanitizedMetaData.strategicFocusArea === "") {
+      sanitizedMetaData.strategicFocusArea = null;
+    } else if (sanitizedMetaData.strategicFocusArea) {
+      sanitizedMetaData.strategicFocusArea = new mongoose.Types.ObjectId(sanitizedMetaData.strategicFocusArea);
+    }
+
+    const doc = {
+      proposerId,
+      budgetId: new mongoose.Types.ObjectId(budgetId),
+      title,
+      summary: summary ?? "",
+      status,
+      metaData: sanitizedMetaData,
+    };
+
+    if (status === "live") {
+      doc.submittedAt = new Date();
+    }
+
+    const proposal = await Proposal.create(doc);
+    const created = proposal.toObject ? proposal.toObject() : proposal;
+
+    return res.status(201).json(created);
+  } catch (error) {
+    if (error.name === "ValidationError" && error.errors) {
+      const fieldErrors = {};
+      for (const [path, err] of Object.entries(error.errors)) {
+        fieldErrors[path] = err.message;
+      }
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: fieldErrors,
+      });
+    }
+    console.error("Error creating proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
 
 /**
  * @route GET /api/v0/proposals/:proposalId
