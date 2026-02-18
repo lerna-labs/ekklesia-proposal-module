@@ -59,12 +59,17 @@
     <div
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <h2 class="text-xl font-semibold">
-        My proposals
-        <span class="text-muted-foreground font-normal">
-          ({proposalPagination.totalItems})
-        </span>
-      </h2>
+      <div class="flex items-center gap-3">
+        <h2 class="text-xl font-semibold">
+          My proposals
+          <span class="text-muted-foreground font-normal">
+            ({proposalPagination.totalItems})
+          </span>
+        </h2>
+        <Button.Root variant="default" href="/dashboard/new">
+          New proposal
+        </Button.Root>
+      </div>
       <div class="flex items-center gap-2">
         <Select.Root
           type="single"
@@ -73,7 +78,7 @@
         >
           <Select.Trigger class="w-[140px]" aria-label="Sort by">
             <ArrowUpDownIcon class="size-4 opacity-50 mr-1" />
-            <Select.Value placeholder="Sort by" />
+            <span class="line-clamp-1">{SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Sort by"}</span>
           </Select.Trigger>
           <Select.Content>
             {#each SORT_OPTIONS as option (option.value)}
@@ -114,18 +119,22 @@
             <tbody>
               {#each proposals as proposal (proposal._id)}
                 {@const href = proposalHref(proposal)}
+                {@const editHref = `/dashboard/${proposal._id}/edit`}
                 <tr class="border-b border-border/50 hover:bg-muted/50">
                   <td class="py-3 px-4 text-muted-foreground">
                     {budgetTitles[proposal.budgetId] ?? proposal.budgetId}
                   </td>
                   <td class="py-3 px-4">
-                    {#if href}
-                      <a href={href} class="text-primary hover:underline font-medium">
-                        {proposal.title ?? proposal._id}
-                      </a>
-                    {:else}
-                      <span class="font-medium">{proposal.title ?? proposal._id}</span>
-                    {/if}
+                    <div class="flex items-center gap-2">
+                      {#if href}
+                        <a href={href} class="text-primary hover:underline font-medium">
+                          {proposal.title ?? proposal._id}
+                        </a>
+                      {:else}
+                        <span class="font-medium">{proposal.title ?? proposal._id}</span>
+                      {/if}
+                      <a href={editHref} class="text-sm text-muted-foreground hover:underline">Edit</a>
+                    </div>
                   </td>
                   <td class="py-3 px-4">
                     <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-muted">

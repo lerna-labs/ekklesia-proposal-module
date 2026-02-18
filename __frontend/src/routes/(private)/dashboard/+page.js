@@ -31,21 +31,26 @@ export async function load({ fetch, url, parent }) {
 		},
 	};
 
-	// Resolve budget titles and slugs for unique budgetIds
+	// Resolve budget titles and slugs for unique budgetIds (parallel fetches)
 	const budgetIds = [...new Set((proposals.data || []).map((p) => p.budgetId).filter(Boolean))];
-	const budgetTitles = {};
-	const budgetSlugs = {};
-	for (const budgetId of budgetIds) {
+	const budgetPromises = budgetIds.map(async (budgetId) => {
 		try {
 			const budgetRes = await api.fetch(fetch, `/budgets/${budgetId}`);
 			if (budgetRes.ok) {
 				const budgetJson = await budgetRes.json();
-				budgetTitles[budgetId] = budgetJson.title ?? budgetJson.name ?? budgetId;
-				if (budgetJson.slug) budgetSlugs[budgetId] = budgetJson.slug;
+				return { budgetId, title: budgetJson.title ?? budgetJson.name ?? budgetId, slug: budgetJson.slug };
 			}
 		} catch {
-			budgetTitles[budgetId] = budgetId;
+			// fallback to id as label
 		}
+		return { budgetId, title: budgetId, slug: undefined };
+	});
+	const budgetResults = await Promise.all(budgetPromises);
+	const budgetTitles = {};
+	const budgetSlugs = {};
+	for (const r of budgetResults) {
+		budgetTitles[r.budgetId] = r.title;
+		if (r.slug) budgetSlugs[r.budgetId] = r.slug;
 	}
 
 	return {

@@ -82,19 +82,16 @@ export const api = {
 			}
 
 			if (!response.ok) {
-				// Handle non-2xx responses
-				const errorData = await response.json();
-
-				// if (response.status === 403) {
-				// 	// Handle 403 Forbidden error
-				// 	throw error(403, 'Forbidden: You do not have permission to access this resource');
-				// }
-				if (response.status === 404) {
-					// Handle 404 Not Found error
-					throw error(404, 'Not Found: The requested resource could not be found');
+				// Parse error body safely (API may return non-JSON, e.g. HTML or plain text)
+				const text = await response.text();
+				let message = 'An error occurred';
+				try {
+					const data = text ? JSON.parse(text) : {};
+					message = data.message ?? message;
+				} catch {
+					if (text) message = text;
 				}
-				// Throw the error instead of calling the error function
-				throw error(response.status, errorData.message || 'An error occurred');
+				throw error(response.status, message);
 			}
 
 			return response;
