@@ -11,6 +11,7 @@
     formSchema,
     validationErrors,
     notPublic = false,
+    type = "text",
     class: className,
   } = $props();
 
@@ -59,6 +60,7 @@
   </div>
   <Input
     {id}
+    {type}
     bind:value
     placeholder={schemaMeta?.placeholder}
     maxlength={maxLength}

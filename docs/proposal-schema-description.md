@@ -150,7 +150,7 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 |-----------|-------------|----------|-------------------|---------------------|
 | KYC/KYB Submitted? * | `metaData.kycInfo.submitted` | Yes | Boolean | Yes/No. Not Public. |
 | KYC Contact Email (If No) * | `metaData.kycInfo.email` | Yes if submitted=false | 100 chars | Not Public. |
-| Total Proposals Submitted | (not in schema yet) | No | Number / 100 chars | Count this funding round. Not Public. |
+| Total Proposals Submitted | `metaData.kycInfo.totalProposalsSubmitted` | No | Number (int, 0–99999) | Count this funding round. Not Public. |
 
 ---
 

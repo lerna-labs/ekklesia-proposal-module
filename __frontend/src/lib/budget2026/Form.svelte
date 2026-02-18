@@ -23,9 +23,9 @@
     kycInfoSchema,
   } from "./Schema.js";
   import { z } from "zod";
-  import { getLocalTimeZone } from "@internationalized/date";
+  import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
-  let { budget, categories } = $props();
+  let { budget, categories, proposal = undefined, onSave = undefined } = $props();
 
   /** CalendarDate (from DatePicker) to Date for Zod validation. */
   function toDateForValidation(val) {
@@ -143,7 +143,7 @@
       primaryContact: { name: "", title: "", email: "", socialMedia: "" },
       signatoryContact: { name: "", title: "", email: "", authorization: false },
       proposalType: "",
-      kycInfo: { submitted: false, email: "" },
+      kycInfo: { submitted: false, email: "", totalProposalsSubmitted: undefined },
       legalDeclarations: initialLegalDeclarations(),
     },
   });
@@ -152,18 +152,60 @@
   let declarationsDialogOpen = $state(false);
   let declarationValidationErrors = $state(null);
 
+  /** Prefill formData from proposal once when editing */
+  let prefilled = false;
+  $effect(() => {
+    const p = proposal;
+    if (!p || prefilled) return;
+    prefilled = true;
+    formData.title = p.title ?? "";
+    formData.summary = p.summary ?? p.description ?? "";
+    formData.status = p.status ?? "draft";
+    if (p.metaData) {
+      Object.assign(formData.metaData, p.metaData);
+      const er = p.metaData.executionRoadmap;
+      if (er) {
+        if (typeof er.projectStartDate === "string") {
+          try {
+            formData.metaData.executionRoadmap.projectStartDate = parseDate(er.projectStartDate.slice(0, 10));
+          } catch {
+            formData.metaData.executionRoadmap.projectStartDate = undefined;
+          }
+        }
+        if (typeof er.projectEndDate === "string") {
+          try {
+            formData.metaData.executionRoadmap.projectEndDate = parseDate(er.projectEndDate.slice(0, 10));
+          } catch {
+            formData.metaData.executionRoadmap.projectEndDate = undefined;
+          }
+        }
+      }
+    }
+  });
+
+  /** Save Draft: no full validation; send with status "draft". */
+  function saveDraft() {
+    validationErrors = null;
+    if (onSave) {
+      const payload = formDataToApiPayload({ ...formData, status: "draft" });
+      Promise.resolve(onSave(payload)).catch(() => {});
+    }
+  }
+
+  /** Submit (go live): full validation, then open declarations dialog. */
   function handleSubmit(e) {
     e.preventDefault();
     const result = mainFormSchema.safeParse(formDataForValidation());
     if (result.success) {
       validationErrors = null;
-      declarationsDialogOpen = true;
       declarationValidationErrors = null;
+      declarationsDialogOpen = true;
     } else {
       validationErrors = z.treeifyError(result.error);
     }
   }
 
+  /** After user confirms declarations in dialog: validate and send with status "live". */
   function confirmDeclarations() {
     const result = declarationsSchema.safeParse(formData.metaData.legalDeclarations);
     if (!result.success) {
@@ -172,7 +214,10 @@
     }
     declarationValidationErrors = null;
     declarationsDialogOpen = false;
-    // TODO: submit to API with body = formDataToApiPayload(formData) (dates as ISO 8601)
+    if (onSave) {
+      const payload = formDataToApiPayload({ ...formData, status: "live" });
+      Promise.resolve(onSave(payload)).catch(() => {});
+    }
   }
 
   // Snapshot so the effect re-runs when any part of formData changes (main fields only for revalidation)
@@ -360,8 +405,33 @@
     class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto">
-      <Button type="submit" class="cursor-pointer">Save Draft</Button>
+    <div class="max-w-4xl mx-auto flex gap-3">
+      <Button type="button" class="cursor-pointer" onclick={saveDraft}>Save Draft</Button>
+      <Button type="submit" class="cursor-pointer">Submit</Button>
     </div>
   </section>
 </form>
+
+<Dialog.Root bind:open={declarationsDialogOpen}>
+  <Dialog.Content class="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <Dialog.Header>
+      <Dialog.Title>Legal declarations</Dialog.Title>
+      <Dialog.Description>
+        Confirm the legal declarations below before submitting your proposal.
+      </Dialog.Description>
+    </Dialog.Header>
+    <div class="flex-1 overflow-y-auto min-h-0">
+      <FormLegalDeclarations
+        formSchema={declarationsSchema}
+        validationErrors={declarationValidationErrors}
+        bind:value={formData.metaData.legalDeclarations}
+      />
+    </div>
+    <Dialog.Footer class="shrink-0 gap-2">
+      <Dialog.Close class={buttonVariants({ variant: "outline" })}>Cancel</Dialog.Close>
+      <Button type="button" class="cursor-pointer" onclick={confirmDeclarations}>
+        Confirm and Submit
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

@@ -40,6 +40,10 @@ const proposalSchema = new Schema(
                     legalEntityRegistrationNumber: String,
                     legalEntityCountry: String,
                     legalEntityAddress: String,
+                    // Individual (PDF: country of residence, govt ID, full residential address)
+                    countryOfResidence: String,
+                    govtIssuedIdNumber: String,
+                    fullResidentialAddress: String,
                 },
             },
             primaryContact: {
@@ -73,6 +77,7 @@ const proposalSchema = new Schema(
                 properties: {
                     submitted: Boolean,
                     email: String,
+                    totalProposalsSubmitted: { type: Number, required: false }, // count this funding round (proposal-schema-description §4)
                 },
             },
             strategicFocusArea: {

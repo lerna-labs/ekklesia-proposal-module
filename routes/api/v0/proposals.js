@@ -21,7 +21,8 @@ import { validateAddress } from "../../../helper/validateAddress.js";
  *
  * @returns {Object} 200 - Full proposal document with category (when found)
  * @returns {Object} 400 - Invalid proposalId format
- * @returns {Object} 404 - Proposal not found or not allowed to view (e.g. draft/archived without permission)
+ * @returns {Object} 403 - Proposal exists but requester is not the proposer or a budget admin (draft/archived)
+ * @returns {Object} 404 - Proposal not found (invalid ID or no document)
  */
 router.get("/:proposalId", async (req, res) => {
   try {
@@ -81,9 +82,10 @@ router.get("/:proposalId", async (req, res) => {
       const allowed =
         isProposer || (status === "draft" && isBudgetAdmin);
       if (!allowed) {
-        return res.status(404).json({
+        return res.status(403).json({
           status: "error",
-          message: "Proposal not found",
+          message:
+            "You do not have permission to view or edit this proposal.",
         });
       }
     }

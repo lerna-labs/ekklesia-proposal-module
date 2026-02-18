@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|----------------------------------------------------------------------- |
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.2                                                                  |
+| **Version**        | 0.2.3                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 16, 2026                                                      |
+| **Last Revised**   | February 18, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan                                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -46,6 +46,7 @@
       - [Path Parameters](#path-parameters-2)
       - [Success Response — `200 OK`](#success-response--200-ok-4)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-3)
+      - [Error Response — `403 Forbidden`](#error-response--403-forbidden)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-4)
     - [3.6 `GET /comments`](#36-get-comments)
       - [Access by role](#access-by-role-2)
@@ -553,7 +554,7 @@ Returns the full data of a single proposal by its MongoDB ObjectId. Visibility d
 | **Proposer** | Status is any (including `draft`, `archived`) when the authenticated user's ID matches the proposal's `proposerId`. |
 | **Admin** | Status is `draft` when the authenticated user's address (JWT) is in that proposal's budget `admins` array; also has public access for `live`/`withdrawn`. |
 
-If the proposal exists but the requester is not allowed to see it (e.g. draft or archived and not proposer/admin), the server returns **404 Not Found** (same as when the proposal does not exist).
+If the proposal exists but the requester is not allowed to see it (e.g. draft or archived and not the proposer or a budget admin), the server returns **403 Forbidden**. If no proposal exists with the given ID, the server returns **404 Not Found**.
 
 #### Path Parameters
 
@@ -607,9 +608,20 @@ Returned when `proposalId` is not a valid ObjectId.
 }
 ```
 
+#### Error Response — `403 Forbidden`
+
+Returned when a proposal exists with the given ID but the requester is not allowed to see it (e.g. draft or archived and the requester is not the proposer or a budget admin for that proposal's budget).
+
+```json
+{
+  "status": "error",
+  "message": "You do not have permission to view or edit this proposal."
+}
+```
+
 #### Error Response — `404 Not Found`
 
-Returned when no proposal exists with the given ID, or when the proposal exists but the requester is not allowed to see it (e.g. draft/archived without being the proposer or a budget admin).
+Returned when no proposal exists with the given ID.
 
 ```json
 {
@@ -2027,7 +2039,7 @@ Implementations may add extra fields (e.g. `code`, `details`) for debugging or v
 | **400 Bad Request** | Invalid or disallowed request. | Invalid path/query/body (e.g. bad ObjectId, missing required field), validation failures, business-rule violations (e.g. submission window closed, live proposal status change, comment not withdrawable). |
 | **401 Unauthorized** | Authentication required or invalid. | Missing or invalid JWT (cookie), expired session, or unauthenticated access to an endpoint that requires a session. |
 | **403 Forbidden** | Authenticated but not allowed. | User is logged in but lacks permission (e.g. not the proposer, not a budget admin) for the requested action. |
-| **404 Not Found** | Resource not found or not visible. | No resource for the given id, or the resource exists but the caller is not allowed to see it (e.g. draft proposal for non-proposer). |
+| **404 Not Found** | Resource not found. | No resource for the given id. For `GET /proposals/{proposalId}`, when the proposal exists but the caller is not allowed to see it, the API returns **403 Forbidden** instead. |
 | **429 Too Many Requests** | Rate limit exceeded. | Per-IP or per-user limit exceeded (see Section 6). |
 | **500 Internal Server Error** | Server-side failure. | Unexpected errors (e.g. database or external service failure). The `message` may be generic; details are not guaranteed. |
 
@@ -2046,6 +2058,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version    | Date       | Description |
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
+| 0.2.3      | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or budget admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly. |
 | 0.2.2      | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking. |
 | 0.2.1      | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`. |
 | 0.2.0      | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history. |

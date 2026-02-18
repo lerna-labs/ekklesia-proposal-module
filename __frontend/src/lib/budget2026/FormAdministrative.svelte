@@ -226,6 +226,15 @@
       />
     {/if}
 
+    <Input
+      id="totalProposalsSubmitted"
+      type="number"
+      bind:value={value.kycInfo.totalProposalsSubmitted}
+      notPublic={isNotPublic(kycSchema, "totalProposalsSubmitted")}
+      formSchema={kycSchema}
+      validationErrors={kycErrors}
+    />
+
     <Switch
       id="treasuryRepayment"
       bind:value={value.financialAndAdministrative.treasuryRepayment}
