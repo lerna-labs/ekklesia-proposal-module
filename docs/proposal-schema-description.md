@@ -70,7 +70,7 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | Expected Value (ROI) * | `workPackages[].expectedValue` | Yes | 600 chars | Long text. |
 | Metric * | `workPackages[].metric` | Yes | 600 chars | Long text. |
 | Milestones | `workPackages[].milestones` | No | Array | Each milestone below. |
-| Budget Breakdown | `workPackages[].budgetBreakdown` | No | Array | Each row below. |
+| Budget Breakdown | `workPackages[].budgetBreakdown` | Yes (min 1) | Array | At least one row; each row below. |
 
 ### Milestone (each element of workPackages[].milestones)
 
@@ -82,6 +82,8 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | Duration | `milestones[].duration` | Yes | String (e.g. 200 chars) | Short text; e.g. "2 weeks". |
 
 ### Budget row (each element of workPackages[].budgetBreakdown)
+
+At least one item is required in `budgetBreakdown` per work package.
 
 | PDF field | Schema path | Required | Max length / type | Validation / notes |
 |-----------|-------------|----------|-------------------|---------------------|
@@ -108,7 +110,6 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | Treasury Donation Verification Hash * | `financialAndAdministrative.treasuryDonationHash` | Yes | String | Transaction hash (1000 ada donation). |
 | Third Party Assurers | `financialAndAdministrative.thirdPartyAssurers` | No | 600 chars | Text area. |
 | Other Supporting Info | `financialAndAdministrative.supportingDocuments` | No | Array of `{ title, url }` | Link title + URL; external link disclaimer. |
-| (legacy) | `financialAndAdministrative.administrator` | No | String | Legacy / optional. |
 
 ---
 

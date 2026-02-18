@@ -1216,7 +1216,7 @@ Creates a new proposal. The authenticated user's `userId` is automatically set a
 
 **`executionRoadmap`:** `projectStartDate`, `projectEndDate` (ISO 8601; required when live), `workPackages` (array). Per-work-package structure: see [proposal-schema-description.md](proposal-schema-description.md) §3.
 
-**`financialAndAdministrative`:** `conversionRate` (number), `intersectAdministrator` (boolean), `otherAdministrators` (max 400), `initiativeType`: `"New Initiative"` or `"Maintenance"`, `priorFunding` (max 800), `treasuryRepayment` (boolean), `treasuryRepaymentCondition` (max 800), `treasuryDonationHash` (required when live), `thirdPartyAssurers` (max 600), `supportingDocuments`: array of `{ title` (max 255), `url }`. `administrator` (optional, legacy). Full field list: [proposal-schema-description.md](proposal-schema-description.md) §4.
+**`financialAndAdministrative`:** `conversionRate` (number), `intersectAdministrator` (boolean), `otherAdministrators` (max 400), `initiativeType`: `"New Initiative"` or `"Maintenance"`, `priorFunding` (max 800), `treasuryRepayment` (boolean), `treasuryRepaymentCondition` (max 800), `treasuryDonationHash` (required when live), `thirdPartyAssurers` (max 600), `supportingDocuments`: array of `{ title` (max 255), `url }`. Full field list: [proposal-schema-description.md](proposal-schema-description.md) §4.
 
 
 **`legalDeclarations` Object (Required when `status` is `"live"`):**
