@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 budget, import categories for it, 1 proposal, 10 comments (including replies).
+ * Create dummy data: 1 budget, import categories for it, 1 live proposal, 1 draft proposal, 10 comments (including replies).
  * Uses current schemas: Budget, Category, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
@@ -187,6 +187,7 @@ async function importCategoriesForBudget(budgetId) {
 
 const LEGAL_TRUE = {
     dataProtection: true,
+    publicVisibilityConsent: true,
     authorizationEntity: true,
     authorizationAttestation: true,
     antiBribery: true,
@@ -251,9 +252,11 @@ async function createDummyData() {
         );
         console.log("Proposer user ensured:", proposerId);
 
-        // 4. Create one proposal (live, with required metaData and legalDeclarations)
+        // 4. Create one live proposal and one draft proposal
         const categoryId = categories[0]._id;
-        console.log("Creating proposal...");
+        const DRAFT_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
+
+        console.log("Creating live proposal...");
         const proposal = await Proposal.create({
             proposerId,
             budgetId: budget._id,
@@ -330,7 +333,56 @@ async function createDummyData() {
                 legalDeclarations: LEGAL_TRUE,
             },
         });
-        console.log(`Proposal created: ${proposal._id}`);
+        console.log(`Live proposal created: ${proposal._id}`);
+
+        console.log("Creating draft proposal...");
+        const draftProposal = await Proposal.create({
+            proposerId: DRAFT_PROPOSER_ID,
+            budgetId: budget._id,
+            title: "Draft proposal (in progress)",
+            summary: "",
+            status: "draft",
+            metaData: {
+                trackRecord: "",
+                strategicFocusArea: null,
+                keyPerformanceIndicators: [],
+                executionRoadmap: {
+                    projectStartDate: null,
+                    projectEndDate: null,
+                    workPackages: [
+                        {
+                            title: "",
+                            scope: "",
+                            supportingDocuments: [],
+                            estimatedDuration: "",
+                            coreObjectives: [],
+                            expectedValue: "",
+                            metric: "",
+                            milestones: [],
+                            budgetBreakdown: [
+                                { costCategory: "Development", description: "", quantity: 1, unitPrice: 0, total: 0 },
+                            ],
+                        },
+                    ],
+                },
+                financialAndAdministrative: {
+                    conversionRate: 0,
+                    intersectAdministrator: true,
+                    otherAdministrators: "",
+                    priorFunding: "",
+                    treasuryRepayment: false,
+                    treasuryRepaymentCondition: "",
+                    treasuryDonationHash: "",
+                    thirdPartyAssurers: "",
+                    supportingDocuments: [],
+                },
+                contractingParty: {},
+                primaryContact: {},
+                signatoryContact: {},
+                kycInfo: {},
+            },
+        });
+        console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
 
         // 5. Create 10 comments (including replies): e.g. 5 top-level, 3 replies, 2 nested replies
         const commentBodies = [
@@ -395,7 +447,8 @@ async function createDummyData() {
         console.log("\n✅ Dummy data created successfully.");
         console.log(`  Budget: ${budget._id} (slug: ${budget.slug})`);
         console.log(`  Categories: ${categories.length}`);
-        console.log(`  Proposal: ${proposal._id}`);
+        console.log(`  Live proposal: ${proposal._id}`);
+        console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
         console.log(`  Comments: ${createdComments.length}`);
     } catch (error) {
         console.error("Error creating dummy data:", error);
