@@ -14,6 +14,27 @@ import { validateAddress } from "../../../helper/validateAddress.js";
 import { validateCreateProposalBody } from "../../../validation/proposalCreateSchema.js";
 
 /**
+ * Compute total budget (ADA) from metaData.executionRoadmap.workPackages, same logic as FormFinancialSummary.
+ * Sums each budgetBreakdown row's total or quantity*unitPrice.
+ * @param {Object} metaData - proposal metaData
+ * @returns {number} grand total in ADA
+ */
+function computeTotalBudgetFromMetaData(metaData) {
+  if (!metaData?.executionRoadmap?.workPackages || !Array.isArray(metaData.executionRoadmap.workPackages)) {
+    return 0;
+  }
+  let total = 0;
+  for (const pkg of metaData.executionRoadmap.workPackages) {
+    const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
+    for (const row of rows) {
+      const ada = Number(row?.total ?? (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN));
+      if (Number.isFinite(ada)) total += ada;
+    }
+  }
+  return total;
+}
+
+/**
  * @route POST /api/v0/proposals
  * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
  * @access Private (requires valid JWT)
@@ -120,6 +141,8 @@ router.post("/", async (req, res) => {
       doc.submittedAt = new Date();
     }
 
+    doc.totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
+
     const proposal = await Proposal.create(doc);
     const created = proposal.toObject ? proposal.toObject() : proposal;
 
@@ -137,6 +160,246 @@ router.post("/", async (req, res) => {
       });
     }
     console.error("Error creating proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
+
+const WITHDRAWAL_CATEGORIES = [
+  "Inappropriate content",
+  "Spam",
+  "Policy violation",
+  "Duplicate submission",
+  "Other",
+];
+
+/**
+ * @route PUT /api/v0/proposals/:proposalId/withdraw
+ * @description Withdraw a live or draft proposal (proposer or budget admin). Request body: { category, comment } (both required).
+ * @access Private (proposer or budget admin)
+ */
+router.put("/:proposalId/withdraw", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(tokenResult.code ?? 401).json({
+        status: "error",
+        message: tokenResult.message ?? "Authentication required",
+      });
+    }
+    const userId = tokenResult.userId;
+    const { proposalId } = req.params;
+    const { category, comment } = req.body ?? {};
+
+    if (
+      !mongoose.Types.ObjectId.isValid(proposalId) ||
+      proposalId.length !== 24
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid proposalId. Must be a valid ObjectId.",
+      });
+    }
+
+    if (!category || !WITHDRAWAL_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        status: "error",
+        message: `category is required and must be one of: ${WITHDRAWAL_CATEGORIES.join(", ")}`,
+      });
+    }
+
+    const commentStr =
+      typeof comment === "string" ? comment.trim() : "";
+    if (!commentStr) {
+      return res.status(400).json({
+        status: "error",
+        message: "comment is required and must be a non-empty string.",
+      });
+    }
+
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) {
+      return res.status(404).json({
+        status: "error",
+        message: "Proposal not found",
+      });
+    }
+
+    if (proposal.status !== "live" && proposal.status !== "draft") {
+      return res.status(400).json({
+        status: "error",
+        message: "Only live or draft proposals can be withdrawn.",
+      });
+    }
+
+    const budgetDoc = await Budget.findById(proposal.budgetId).lean();
+    if (!budgetDoc) {
+      return res.status(400).json({
+        status: "error",
+        message: "Proposal budget not found.",
+      });
+    }
+
+    // Require: authenticated user must be the proposer or a budget admin
+    const authUserId = String(userId ?? "").trim();
+    const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
+    const isProposer = proposerIdStr && authUserId && proposerIdStr === authUserId;
+    const isBudgetAdmin =
+      Array.isArray(budgetDoc.admins) &&
+      budgetDoc.admins.some((id) => String(id).trim() === authUserId);
+
+    if (!isProposer && !isBudgetAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Only the proposer or a budget admin can withdraw this proposal.",
+      });
+    }
+
+    const now = new Date();
+    // Date limits apply only to live proposals
+    if (proposal.status === "live") {
+      if (isProposer && budgetDoc.feedbackEndDate && now > new Date(budgetDoc.feedbackEndDate)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposer withdrawal is only allowed until the budget feedback end date.",
+        });
+      }
+      if (isBudgetAdmin && budgetDoc.reviewEndDate && now > new Date(budgetDoc.reviewEndDate)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Admin withdrawal is only allowed until the budget review end date.",
+        });
+      }
+    }
+
+    proposal.status = isProposer ? "withdrawnByProposer" : "withdrawnByAdmin";
+    proposal.withdrawalDetails = {
+      category,
+      userId,
+      comment: commentStr,
+      date: now,
+    };
+    await proposal.save();
+
+    const updated = proposal.toObject ? proposal.toObject() : proposal;
+    return res.status(200).json(updated);
+  } catch (error) {
+    console.error("Error withdrawing proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
+ * @route PUT /api/v0/proposals/:proposalId
+ * @description Update a proposal (same body as POST). Only proposer or budget admin (draft only). Computes totalBudget from work packages.
+ * @access Private (proposer or budget admin for draft)
+ */
+router.put("/:proposalId", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(tokenResult.code ?? 401).json({
+        status: "error",
+        message: tokenResult.message ?? "Authentication required",
+      });
+    }
+    const userId = String(tokenResult.userId ?? "").trim();
+    const { proposalId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid proposalId. Must be a valid ObjectId.",
+      });
+    }
+
+    const validation = validateCreateProposalBody(req.body);
+    if (!validation.success) {
+      const errors = validation.error.flatten();
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: errors.fieldErrors ?? {},
+        formErrors: errors.formErrors ?? [],
+      });
+    }
+
+    const proposal = await Proposal.findById(proposalId);
+    if (!proposal) {
+      return res.status(404).json({
+        status: "error",
+        message: "Proposal not found",
+      });
+    }
+
+    const isProposer = proposal.proposerId && String(proposal.proposerId).trim() === userId;
+    let isBudgetAdmin = false;
+    if (proposal.budgetId && proposal.status === "draft") {
+      const budgetDoc = await Budget.findById(proposal.budgetId).lean();
+      if (budgetDoc?.admins && Array.isArray(budgetDoc.admins)) {
+        isBudgetAdmin = budgetDoc.admins.some((id) => String(id).trim() === userId);
+      }
+    }
+    if (!isProposer && !isBudgetAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Only the proposer or a budget admin can update this proposal.",
+      });
+    }
+
+    const { budgetId, title, summary, status, metaData } = validation.data;
+
+    let rawMetaData = metaData;
+    if (status === "draft") {
+      if (rawMetaData.proposalType === "") rawMetaData = { ...rawMetaData, proposalType: undefined };
+      if (rawMetaData.financialAndAdministrative?.initiativeType === "") {
+        rawMetaData = {
+          ...rawMetaData,
+          financialAndAdministrative: { ...rawMetaData.financialAndAdministrative, initiativeType: undefined },
+        };
+      }
+    }
+
+    const sanitizedMetaData = { ...rawMetaData };
+    if (sanitizedMetaData.strategicFocusArea === "") {
+      sanitizedMetaData.strategicFocusArea = null;
+    } else if (sanitizedMetaData.strategicFocusArea) {
+      sanitizedMetaData.strategicFocusArea = new mongoose.Types.ObjectId(sanitizedMetaData.strategicFocusArea);
+    }
+
+    const totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
+
+    proposal.budgetId = new mongoose.Types.ObjectId(budgetId);
+    proposal.title = title;
+    proposal.summary = summary ?? "";
+    proposal.status = status;
+    proposal.metaData = sanitizedMetaData;
+    proposal.totalBudget = totalBudget;
+    if (status === "live") {
+      proposal.submittedAt = proposal.submittedAt || new Date();
+    }
+    await proposal.save();
+
+    const updated = proposal.toObject ? proposal.toObject() : proposal;
+    return res.status(200).json(updated);
+  } catch (error) {
+    if (error.name === "ValidationError" && error.errors) {
+      const fieldErrors = {};
+      for (const [path, err] of Object.entries(error.errors)) {
+        fieldErrors[path] = err.message;
+      }
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: fieldErrors,
+      });
+    }
+    console.error("Error updating proposal:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -186,26 +449,28 @@ router.get("/:proposalId", async (req, res) => {
       status === "withdrawnByAdmin";
 
     if (!isLiveOrWithdrawn) {
-      // Optional auth: same permission logic as list endpoint
+      // Require auth: proposer or (draft and budget admin) can view
       let authenticatedUserId = null;
       const tokenResult = verifyToken(req);
       if (tokenResult.status === "success" && tokenResult.userId) {
-        authenticatedUserId = tokenResult.userId.toString();
+        authenticatedUserId = String(tokenResult.userId ?? "").trim();
       }
 
+      const proposerIdStr = proposal.proposerId
+        ? String(proposal.proposerId).trim()
+        : "";
       const isProposer =
         authenticatedUserId &&
-        proposal.proposerId &&
-        proposal.proposerId === authenticatedUserId;
+        proposerIdStr &&
+        proposerIdStr === authenticatedUserId;
 
       let isBudgetAdmin = false;
       if (authenticatedUserId && proposal.budgetId && status === "draft") {
         const budgetDoc = await Budget.findById(proposal.budgetId).lean();
         if (
-          budgetDoc &&
-          budgetDoc.admins &&
+          budgetDoc?.admins &&
           Array.isArray(budgetDoc.admins) &&
-          budgetDoc.admins.includes(authenticatedUserId)
+          budgetDoc.admins.some((id) => String(id).trim() === authenticatedUserId)
         ) {
           isBudgetAdmin = true;
         }

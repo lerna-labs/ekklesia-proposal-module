@@ -6,6 +6,7 @@ const router = Router();
 // schema import
 import { Session } from "../../../schema/Session.js";
 import { User } from "../../../schema/User.js";
+import { Budget } from "../../../schema/Budget.js";
 
 // helper
 import jwt from "jsonwebtoken";
@@ -63,21 +64,46 @@ const sessionVerificationLimiter = rateLimit({
 
 /**
  * @route GET /api/v0/session
- * @description Validate JWT token and return user ID. Used to check if user is authenticated and get their user ID.
+ * @description Validate JWT token and return user ID and name. Used to check if user is authenticated and get their user ID and display name.
  * @access Private (requires authentication)
  *
  * @returns {Object} 200 - Object containing:
  *   - userId: The user ID from the validated JWT token
+ *   - name: The user's display name (from User record, if set)
+ *   - adminBudgetIds: Array of budget _id strings where the authenticated user is an admin (only present if non-empty)
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
 router.get("/", isAuthenticated, async (req, res) => {
   const { userId } = req;
 
-  console.log("Session request received for user", userId);
+  let name = null;
+  try {
+    const userDoc = await User.findById(userId).select("name").lean();
+    if (userDoc?.name) name = userDoc.name;
+  } catch (err) {
+    console.error("Error fetching user name for session:", err);
+  }
 
-  return res.status(200).json({
-    userId: userId,
-  });
+  let adminBudgetIds = [];
+  try {
+    const userIdStr = String(userId).trim();
+    const budgetDocs = await Budget.find({ admins: userIdStr })
+      .select("_id")
+      .lean();
+    adminBudgetIds = budgetDocs.map((b) => String(b._id));
+  } catch (err) {
+    console.error("Error fetching admin budgets for session:", err);
+  }
+
+  const payload = {
+    userId,
+    name: name ?? undefined,
+  };
+  if (adminBudgetIds.length > 0) {
+    payload.adminBudgetIds = adminBudgetIds;
+  }
+
+  return res.status(200).json(payload);
 });
 
 /**
