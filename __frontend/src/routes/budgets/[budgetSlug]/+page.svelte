@@ -12,6 +12,7 @@
   let budget = $derived(data.budget);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
+  let categories = $derived(data.categories ?? []);
   let selectedFilters = $state([]);
   let sort = $state("title");
   let ascending = $state(true);
@@ -100,7 +101,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {budget} />
+          <ProposalCard {proposal} {budget} {categories} />
         {/each}
       </div>
 

@@ -1,22 +1,41 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
-  let { proposal, budget, class: className } = $props();
+  let { proposal, budget, categories = [], class: className } = $props();
 
   const proposalHref = $derived(
     budget && (proposal._id || proposal.id)
       ? `/budgets/${budget.slug}/${proposal._id || proposal.id}`
       : null,
   );
+
+  const categoryId = $derived(proposal?.metaData?.strategicFocusArea ?? null);
+  const categoryLabel = $derived(
+    categoryId && Array.isArray(categories)
+      ? (categories.find(
+          (c) => String(c._id) === String(categoryId),
+        )?.title ?? null)
+      : null,
+  );
 </script>
 
 <Card.Root class="hover:shadow-md transition-shadow {className || ''}">
   <Card.Header>
-    <Card.Title class="text-lg">
-      {proposal.title || proposal.name || "Untitled Proposal"}
+    <Card.Title class="text-lg flex flex-wrap items-center gap-2">
+      <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
+      {#if proposal.status}
+        <Badge class="bg-black text-white uppercase text-xs">
+          {proposal.status}
+        </Badge>
+      {/if}
     </Card.Title>
-    {#if proposal.description}
+    {#if proposal.summary}
+      <Card.Description class="line-clamp-2">
+        {proposal.summary}
+      </Card.Description>
+    {:else if proposal.description}
       <Card.Description class="line-clamp-2">
         {proposal.description}
       </Card.Description>
@@ -43,16 +62,22 @@
         />
       </div>
     {/if}
-    {#if proposal.categoryTitle}
+    {#if categoryLabel}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Category:</span>
-        <span class="text-sm">{proposal.categoryTitle}</span>
+        <span class="text-sm">{categoryLabel}</span>
       </div>
     {/if}
-    {#if proposal.status}
+    {#if proposal.metaData?.proposalType}
       <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-muted-foreground">Status:</span>
-        <span class="text-sm">{proposal.status}</span>
+        <span class="text-sm font-medium text-muted-foreground">Proposal type:</span>
+        <span class="text-sm">{proposal.metaData.proposalType}</span>
+      </div>
+    {/if}
+    {#if proposal.metaData?.initiativeType}
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium text-muted-foreground">Initiative type:</span>
+        <span class="text-sm">{proposal.metaData.initiativeType}</span>
       </div>
     {/if}
   </Card.Content>

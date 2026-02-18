@@ -1,4 +1,6 @@
 import { error } from '@sveltejs/kit';
+import { api } from '$stores/sessionManager.js';
+
 export async function load({ params, fetch }) {
 	const { budgetSlug, proposalId } = params;
 
@@ -15,18 +17,16 @@ export async function load({ params, fetch }) {
 		error(404, `Budget not found`);
 	}
 
-	// Fetch proposal by budget and id
-	const proposalResponse = await fetch(`${apiUrl}/proposals/${proposalId}`);
+	// Fetch proposal (use api.fetch so auth cookie/header is sent; proposer can then view draft/archived)
+	const proposalResponse = await api.fetch(fetch, `/proposals/${proposalId}`);
 	if (!proposalResponse.ok) {
 		error(proposalResponse.status, `Failed to load proposal: ${proposalResponse.statusText}`);
 	}
 	const proposalResponseJson = await proposalResponse.json();
-	let proposalData = proposalResponseJson
+	let proposalData = proposalResponseJson;
 	if (!proposalData) {
 		error(404, `Proposal not found`);
 	}
-
-	console.log(proposalData);
 
 	// API spec §3.6: GET /comments?proposal={proposalId} — returns { data, meta }
 	// const commentsResponse = await fetch(`${apiUrl}/comments?proposal=${proposalId}`);

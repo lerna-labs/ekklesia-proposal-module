@@ -14,6 +14,7 @@
   import FormFinancialSummary from "./FormFinancialSummary.svelte";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as Switch from "$lib/components/ui/switch/index.js";
   import {
     formSchema,
     mainFormSchema,
@@ -147,6 +148,21 @@
   let validationErrors = $state(null);
   let declarationsDialogOpen = $state(false);
   let declarationValidationErrors = $state(null);
+  let autoSaveEnabled = $state(false);
+
+  const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  $effect(() => {
+    if (!autoSaveEnabled || formData.status !== "draft" || !onSave) return;
+    const id = setInterval(() => {
+      const result = draftFormSchema.safeParse({ title: formData.title });
+      if (result.success && onSave) {
+        const payload = formDataToApiPayload({ ...formData, status: "draft" });
+        Promise.resolve(onSave(payload)).catch(() => {});
+      }
+    }, AUTO_SAVE_INTERVAL_MS);
+    return () => clearInterval(id);
+  });
 
   /** Prefill formData from proposal once when editing */
   let prefilled = false;
@@ -443,9 +459,15 @@
     class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto flex gap-3">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-4">
       <Button type="button" class="cursor-pointer" onclick={saveDraft}>Save Draft</Button>
       <Button type="submit" class="cursor-pointer">Submit</Button>
+      {#if formData.status === "draft" && onSave}
+        <label class="flex items-center gap-2 cursor-pointer select-none text-sm">
+          <Switch.Root bind:checked={autoSaveEnabled} />
+          <span>Auto-save every 5 min</span>
+        </label>
+      {/if}
     </div>
   </section>
 </form>

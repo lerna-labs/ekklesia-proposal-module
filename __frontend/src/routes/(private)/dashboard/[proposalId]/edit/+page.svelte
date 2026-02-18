@@ -12,11 +12,16 @@
 
   async function onSave(payload) {
     if (!proposal?._id) return;
+    if (!proposal?.budgetId) {
+      toast.error("Proposal budget is missing.");
+      return;
+    }
     saving = true;
     try {
+      const body = { ...payload, budgetId: proposal.budgetId };
       const res = await api.fetch(fetch, `/proposals/${proposal._id}`, {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         toast.success("Proposal saved.");

@@ -52,8 +52,17 @@ export async function load({ params, url, fetch }) {
         };
     }
 
+    // Load categories for this budget once (for mapping strategicFocusArea → title on cards)
+    let categories = [];
+    const catRes = await fetch(`${apiUrl}/budgets/${budgetData._id}/categories`);
+    if (catRes.ok) {
+        const catJson = await catRes.json();
+        categories = catJson.data ?? [];
+    }
+
     return {
         budget: budgetData,
         proposals,
+        categories,
     };
 }

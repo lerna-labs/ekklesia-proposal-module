@@ -381,7 +381,7 @@
   <div class="flex justify-start">
     <Button
       variant="outline"
-      class="add-item-btn w-fit cursor-pointer gap-2"
+      class="add-item-btn w-fit cursor-pointer gap-1"
       onclick={openAddDialog}
     >
       <PlusIcon class="size-4" />

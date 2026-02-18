@@ -21,7 +21,7 @@
             size="sm"
             class="text-xs text-black"
           >
-            View Budget
+            View Proposals
           </Button>
         </li>
         <li>
@@ -31,7 +31,7 @@
             <Button
               href="/dashboard"
               size="sm"
-              class="bg-white text-black hover:bg-gray-200"
+              class="bg-white text-black hover:bg-gray-200 text-xs"
             >
               <User />
               {shortenString($user?.userId, 10, true)}
