@@ -512,10 +512,12 @@ router.get("/:proposalId", async (req, res) => {
  *
  * @query {string} [budget] - Filter by budget cycle (exact match, must be valid ObjectId). If provided, validates budget exists.
  * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where metaData.strategicFocusArea matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.
+ * @query {string} [proposalType] - Filter by proposal type (exact match). Valid values: 'Technical (software/IT)', 'Non-technical'.
+ * @query {string} [initiativeType] - Filter by initiative type (exact match). Valid values: 'New Initiative', 'Maintenance'.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
  * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, or metaData.contractingParty.legalEntityName (partial, case-insensitive)
- * @query {string} [sort=date] - Sort field: title, status, date (submittedAt), or amount (totalBudget)
+ * @query {string} [sort=date] - Sort field: title, status, date (submittedAt), updatedAt, or totalBudget
  * @query {string} [direction=desc] - Sort direction: asc or desc
  * @query {number} [page=1] - Page number for pagination (default: 1)
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
@@ -532,6 +534,8 @@ router.get("/", async (req, res) => {
       search,
       budget,
       category,
+      proposalType: proposalTypeParam,
+      initiativeType: initiativeTypeParam,
       proposer,
       status: statusParam,
       sort: sortParam,
@@ -611,35 +615,53 @@ router.get("/", async (req, res) => {
       query.budgetId = new mongoose.Types.ObjectId(budgetTerm);
     }
 
-    // Handle status filter
-    if (statusParam) {
-      const statusTerm = statusParam.trim().toLowerCase();
-      if (statusTerm === "live") {
+    // Handle status filter (single value or comma-separated: live,withdrawn,draft).
+    // Draft may only be requested by: (1) admins on the given budget, or (2) authenticated users
+    // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
+    // Normalize: accept string "live,draft" or array ["live", "draft"] from query
+    const statusStr =
+      typeof statusParam === "string"
+        ? statusParam
+        : Array.isArray(statusParam)
+          ? statusParam.join(",")
+          : "";
+    if (statusStr) {
+      const statusTerms = statusStr
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+      const hasLive = statusTerms.includes("live");
+      const hasWithdrawn = statusTerms.includes("withdrawn");
+      const hasDraft = statusTerms.includes("draft");
+      const mayRequestDraft = isBudgetAdmin || isAuthenticatedUserQueryingOwnProposals;
+      if (hasDraft && !mayRequestDraft) {
+        return res.status(400).json({
+          status: "error",
+          message:
+            "Invalid status parameter. Draft proposals are only accessible to budget admins or the proposal owner.",
+        });
+      }
+      const statusIn = [];
+      if (hasLive) statusIn.push("live");
+      if (hasWithdrawn) {
+        statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
+      }
+      if (hasDraft && mayRequestDraft) {
+        statusIn.push("draft");
+      }
+      if (statusTerms.length === 0 && !isAuthenticatedUserQueryingOwnProposals) {
         query.status = "live";
-      } else if (statusTerm === "withdrawn") {
-        // Include both withdrawn statuses
-        query.status = { $in: ["withdrawnByProposer", "withdrawnByAdmin"] };
-      } else if (statusTerm === "draft") {
-        // Allow draft status if user is a budget admin or querying own proposals
-        if (isBudgetAdmin || isAuthenticatedUserQueryingOwnProposals) {
-          query.status = "draft";
-        } else {
-          return res.status(400).json({
-            status: "error",
-            message:
-              "Invalid status parameter. Must be 'live' or 'withdrawn'. Draft proposals are only accessible to budget admins or the proposal owner.",
-          });
+      } else if (statusTerms.length === 0) {
+        // invalid and own proposals: don't filter by status
+      } else if (statusIn.length === 0) {
+        // only invalid terms (e.g. draft for non-admin) – default to live for non-own
+        if (!isAuthenticatedUserQueryingOwnProposals) {
+          query.status = "live";
         }
+      } else if (statusIn.length === 1) {
+        query.status = statusIn[0];
       } else {
-        // If authenticated user is querying own proposals, allow all statuses
-        if (isAuthenticatedUserQueryingOwnProposals) {
-          query.status = statusTerm;
-        } else {
-          return res.status(400).json({
-            status: "error",
-            message: "Invalid status parameter. Must be 'live' or 'withdrawn'.",
-          });
-        }
+        query.status = { $in: [...new Set(statusIn)] };
       }
     } else {
       // Default to live if no status specified, unless authenticated user is querying own proposals
@@ -675,13 +697,15 @@ router.get("/", async (req, res) => {
         });
       }
 
-      // Validate that all categories exist
+      // Validate that all categories exist (and belong to this budget when budget filter is set)
       const categoryObjectIds = categoryIds.map(
         (id) => new mongoose.Types.ObjectId(id)
       );
-      const existingCategories = await Category.find({
-        _id: { $in: categoryObjectIds },
-      }).lean();
+      const categoryQuery = { _id: { $in: categoryObjectIds } };
+      if (query.budgetId) {
+        categoryQuery.budgetId = query.budgetId;
+      }
+      const existingCategories = await Category.find(categoryQuery).lean();
 
       if (existingCategories.length !== categoryIds.length) {
         const existingIds = new Set(
@@ -690,14 +714,43 @@ router.get("/", async (req, res) => {
         const missingIds = categoryIds.filter(
           (id) => !existingIds.has(id)
         );
+        const hint = query.budgetId
+          ? " Categories must exist and belong to the requested budget."
+          : "";
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following categories were not found: ${missingIds.join(", ")}`,
+          message: `Invalid category parameter. The following categories were not found or do not belong to this budget: ${missingIds.join(", ")}.${hint}`,
         });
       }
 
       // Filter by strategicFocusArea (category reference in Proposal schema) using $in for multiple values
       query["metaData.strategicFocusArea"] = { $in: categoryObjectIds };
+    }
+
+    // Add proposalType filter (exact match)
+    const PROPOSAL_TYPES = ["Technical (software/IT)", "Non-technical"];
+    if (proposalTypeParam) {
+      const proposalType = String(proposalTypeParam).trim();
+      if (!PROPOSAL_TYPES.includes(proposalType)) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid proposalType parameter. Must be one of: ${PROPOSAL_TYPES.join(", ")}.`,
+        });
+      }
+      query["metaData.proposalType"] = proposalType;
+    }
+
+    // Add initiativeType filter (exact match; stored in metaData.financialAndAdministrative.initiativeType)
+    const INITIATIVE_TYPES = ["New Initiative", "Maintenance"];
+    if (initiativeTypeParam) {
+      const initiativeType = String(initiativeTypeParam).trim();
+      if (!INITIATIVE_TYPES.includes(initiativeType)) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid initiativeType parameter. Must be one of: ${INITIATIVE_TYPES.join(", ")}.`,
+        });
+      }
+      query["metaData.financialAndAdministrative.initiativeType"] = initiativeType;
     }
 
     // Add proposer filter (exact match, must be valid bech32 address)
@@ -756,10 +809,14 @@ router.get("/", async (req, res) => {
       title: "title",
       status: "status",
       date: "submittedAt",
-      amount: "totalBudget",
+      updatedAt: "updatedAt",
+      totalBudget: "totalBudget",
     };
-    const sortField = sortParam ? sortParam.trim().toLowerCase() : "date";
-    if (!Object.hasOwn(sortFieldMap, sortField)) {
+    const sortParamNorm = sortParam ? sortParam.trim().toLowerCase() : "date";
+    const sortKey = Object.keys(sortFieldMap).find(
+      (k) => k.toLowerCase() === sortParamNorm
+    );
+    if (!sortKey) {
       return res.status(400).json({
         status: "error",
         message: `Invalid sort parameter. Must be one of: ${Object.keys(sortFieldMap).join(", ")}.`,
@@ -776,7 +833,7 @@ router.get("/", async (req, res) => {
     }
 
     const sortDirection = directionNorm === "asc" ? 1 : -1;
-    const sortOption = { [sortFieldMap[sortField]]: sortDirection };
+    const sortOption = { [sortFieldMap[sortKey]]: sortDirection };
 
     // Calculate skip value for pagination
     const skip = (pageNum - 1) * limitNum;
