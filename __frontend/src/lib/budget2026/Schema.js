@@ -290,6 +290,28 @@ export const kycInfoSchema = z
       required: false,
       notPublic: true,
     }),
+    totalProposalsSubmitted: z
+      .union(z.string(), z.number())
+      .transform((v) => {
+        if (v === "" || v == null) return undefined;
+        const n = Number(v);
+        return Number.isNaN(n) ? undefined : n;
+      })
+      .pipe(
+        z
+          .number()
+          .int("Must be a whole number")
+          .min(0, "Must be 0 or greater")
+          .max(99999)
+          .optional()
+      )
+      .optional()
+      .meta({
+        label: "Total Proposals Submitted",
+        description: "Count this funding round.",
+        required: false,
+        notPublic: true,
+      }),
   })
   .refine(
     (data) => {
