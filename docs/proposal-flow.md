@@ -70,30 +70,24 @@ flowchart TD
 | `archived`            | Previous version of a live proposal after an update (historical copy).                                                                                            |
 
 ```mermaid
-stateDiagram-v2
-    [*] --> draft : POST /proposals (proposer, before submissionEndDate)
+flowchart TD
+    START(( )) --> DRAFT[draft]
 
-    draft --> draft : PUT /proposals/{id} save draft (no full validation)
+    DRAFT -->|Save changes| UPDATED[updated draft<br />no versioning]
+    UPDATED --> DRAFT
 
-    draft --> live : PUT /proposals/{id} status: live (full validation + within submission window)
+    DRAFT -->|Delete<br />proposer only| DEL([Deleted])
 
-    draft --> withdrawnByProposer : PUT /proposals/{id}/withdraw (proposer, no date restriction)
+    DRAFT --> SUB{Submit?}
+    SUB -->|Fails validation<br />or outside window| DRAFT
+    SUB -->|Passes full validation<br />within submission window| LIVE[live]
 
-    draft --> withdrawnByAdmin : PUT /proposals/{id}/withdraw (admin, no date restriction)
+    LIVE -->|Update<br />current version archived| ARCHIVED[archived]
+    ARCHIVED -->|New version published| LIVE
 
-    draft --> [*] : DELETE /proposals/{id} (proposer only)
-
-    live --> live : PUT /proposals/{id} (update in place; previous version archived)
-
-    live --> archived : system creates archived copy on every live update
-
-    live --> withdrawnByProposer : PUT /proposals/{id}/withdraw (proposer, before feedbackEndDate)
-
-    live --> withdrawnByAdmin : PUT /proposals/{id}/withdraw (admin, before reviewEndDate)
-
-    withdrawnByProposer --> [*]
-    withdrawnByAdmin --> [*]
-    archived --> [*]
+    LIVE --> WDL{Withdraw?}
+    WDL -->|Proposer · before feedbackEndDate| WBP([withdrawnByProposer])
+    WDL -->|Admin · before reviewEndDate| WBA([withdrawnByAdmin])
 ```
 
 ---
