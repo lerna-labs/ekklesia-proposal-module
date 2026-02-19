@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.2                                                                  |
+| **Version**        | 0.1.3                                                                  |
 | **Created**        | February 19, 2026                                                      |
 | **Last Revised**   | February 19, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
@@ -120,7 +120,6 @@ Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
 | `/proposals/new`               | Proposer            | Create new proposal           |
 | `/proposals/{proposalId}/edit` | Proposer (owner)    | Edit draft or live proposal   |
 | `/dashboard`                   | Authenticated       | User's own proposals          |
-| `/admin`                       | Admin               | Budget admin oversight        |
 
 ### 3.2 Backend API (Node.js / Express)
 
@@ -476,6 +475,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                       |
 |---------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.3   | 2026-02-19 | Correction to remove reference to /admin routes as all displays are handled via the authenticated user's permissions                              |
 | 0.1.2   | 2026-02-19 | Remove some legacy references to stake pool authentication which is out of scope and fix a few formatting errors                                  |
 | 0.1.1   | 2026-02-19 | Minor update to reflect that only live proposals may be withdrawn.                                                                                |
 | 0.1.0   | 2026-02-19 | Initial architecture document: component overview, ASCII system diagram, data flow sequences, RBAC summary, infrastructure and security sections. |
