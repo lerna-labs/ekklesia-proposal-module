@@ -30,9 +30,18 @@
 
   const withdrawSchema = z.object({
     category: z
-      .enum(["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"], {
-        message: "Please select a reason.",
-      })
+      .enum(
+        [
+          "Inappropriate content",
+          "Spam",
+          "Policy violation",
+          "Duplicate submission",
+          "Other",
+        ],
+        {
+          message: "Please select a reason.",
+        },
+      )
       .meta({ label: "Reason", required: true }),
     comment: z
       .string()
@@ -41,9 +50,13 @@
       .meta({ label: "Comment", required: true }),
   });
 
+  const triggerContent = $derived(
+    category || "Select Reason for Withdrawal",
+  );
+
   $effect(() => {
     if (open && proposal) {
-      category = WITHDRAWAL_CATEGORIES[0] ?? "";
+      category = "";
       comment = "";
       validationErrors = null;
     }
@@ -60,10 +73,17 @@
     validationErrors = null;
     submitting = true;
     try {
-      const res = await api.fetch(fetch, `/proposals/${proposal._id}/withdraw`, {
-        method: "PUT",
-        body: JSON.stringify({ category: result.data.category, comment: result.data.comment }),
-      });
+      const res = await api.fetch(
+        fetch,
+        `/proposals/${proposal._id}/withdraw`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            category: result.data.category,
+            comment: result.data.comment,
+          }),
+        },
+      );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         toast.error(err?.message ?? "Failed to withdraw proposal");
@@ -86,13 +106,17 @@
       <Dialog.Title>Withdraw proposal</Dialog.Title>
       <Dialog.Description>
         {#if proposal}
-          Choose a reason and add a comment. This will withdraw "{proposal.title ?? proposal._id}".
+          Choose a reason and add a comment. This will withdraw "{proposal.title ??
+            proposal._id}".
         {/if}
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
       <div class="grid gap-2">
-        <Label.Root for="withdraw-reason">Reason <span class="text-(--mbo-electric-blue)">*</span></Label.Root>
+        <Label.Root for="withdraw-reason" class="gap-0">
+          Reason
+          <span class="text-(--mbo-electric-blue)">*</span>
+        </Label.Root>
         <Select.Root
           type="single"
           value={category}
@@ -101,10 +125,11 @@
           <Select.Trigger
             id="withdraw-reason"
             class="w-full aria-invalid:border-destructive aria-invalid:ring-destructive/20"
-            aria-invalid={validationErrors?.properties?.category?.errors?.length > 0}
+            aria-invalid={validationErrors?.properties?.category?.errors
+              ?.length > 0}
             aria-label="Withdrawal reason"
           >
-            <span class="line-clamp-1">{category || "Select reason"}</span>
+            <span class="line-clamp-1">{triggerContent}</span>
           </Select.Trigger>
           <Select.Content>
             {#each WITHDRAWAL_CATEGORIES as cat (cat)}
@@ -113,18 +138,26 @@
           </Select.Content>
         </Select.Root>
         {#if validationErrors?.properties?.category?.errors?.[0]}
-          <Field.Error class="text-xs">{validationErrors.properties.category.errors[0]}</Field.Error>
+          <Field.Error class="text-xs">
+            {validationErrors.properties.category.errors[0]}
+          </Field.Error>
         {/if}
       </div>
-      <Textarea
-        id="comment"
-        bind:value={comment}
-        formSchema={withdrawSchema}
-        validationErrors={validationErrors}
-        placeholder="Explain why you are withdrawing this proposal."
-      />
+      <div class="grid gap-0">
+        <Label.Root for="comment" class="gap-0">
+          Comment
+          <span class="text-(--mbo-electric-blue)">*</span>
+        </Label.Root>
+        <Textarea
+          id="comment"
+          bind:value={comment}
+          formSchema={withdrawSchema}
+          {validationErrors}
+          placeholder="Explain why you are withdrawing this proposal."
+        />
+      </div>
     </div>
-    <Dialog.Footer class="gap-2">
+    <Dialog.Footer class="gap-1">
       <Button.Root
         variant="outline"
         disabled={submitting}
