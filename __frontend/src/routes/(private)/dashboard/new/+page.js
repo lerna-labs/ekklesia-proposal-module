@@ -4,36 +4,36 @@ import { api } from '$stores/sessionManager.js';
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
 	await parent();
-	let budgetId = url.searchParams.get('budget');
-	let budget = null;
+	let voteId = url.searchParams.get('vote');
+	let vote = null;
 	let categories = [];
 
-	const budgetsRes = await api.fetch(fetch, '/budgets?limit=50');
-	const budgetsJson = await budgetsRes.json();
-	const budgets = budgetsJson.data ?? [];
+	const votesRes = await api.fetch(fetch, '/votes?limit=50');
+	const votesJson = await votesRes.json();
+	const votes = votesJson.data ?? [];
 
-	if (!budgetId) {
-		if (budgets.length === 1) {
-			throw redirect(302, `/dashboard/new?budget=${budgets[0]._id}`);
+	if (!voteId) {
+		if (votes.length === 1) {
+			throw redirect(302, `/dashboard/new?vote=${votes[0]._id}`);
 		}
-		throw error(400, 'Budget is required. Use the URL parameter ?budget=<budgetId>.');
+		throw error(400, 'Vote is required. Use the URL parameter ?vote=<voteId>.');
 	}
 
-	if (budgetId) {
+	if (voteId) {
 		try {
-			const budgetRes = await api.fetch(fetch, `/budgets/${budgetId}`);
-			if (budgetRes.ok) {
-				budget = await budgetRes.json();
-				const catRes = await api.fetch(fetch, `/budgets/${budgetId}/categories`);
+			const voteRes = await api.fetch(fetch, `/votes/${voteId}`);
+			if (voteRes.ok) {
+				vote = await voteRes.json();
+				const catRes = await api.fetch(fetch, `/votes/${voteId}/categories`);
 				if (catRes.ok) {
 					const catJson = await catRes.json();
 					categories = catJson.data ?? [];
 				}
 			}
 		} catch {
-			// leave budget/categories empty
+			// leave vote/categories empty
 		}
 	}
 
-	return { budgets, budget, categories };
+	return { votes, vote, categories };
 }

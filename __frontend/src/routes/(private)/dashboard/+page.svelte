@@ -17,8 +17,8 @@
   let user = $derived(data.user ?? null);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
-  let budgetSlugs = $derived(data.budgetSlugs ?? {});
-  let budgetTitles = $derived(data.budgetTitles ?? {});
+  let voteSlugs = $derived(data.voteSlugs ?? {});
+  let voteTitles = $derived(data.voteTitles ?? {});
 
   let withdrawDialogOpen = $state(false);
   let withdrawProposal = $state(null);
@@ -51,9 +51,9 @@
   }
 
   function viewHref(proposal) {
-    const slug = budgetSlugs[proposal.budgetId];
+    const slug = voteSlugs[proposal.voteId];
     if (!slug) return null;
-    return `/budgets/${slug}/${proposal._id}`;
+    return `/votes/${slug}/${proposal._id}`;
   }
 </script>
 
@@ -125,7 +125,7 @@
               <thead>
                 <tr class="border-b border-border">
                   <th class="text-left font-medium py-3 pl-0 pr-4">Title</th>
-                  <th class="text-right font-medium py-3 px-4">Budget</th>
+                  <th class="text-right font-medium py-3 px-4">Vote</th>
                   <th class="text-left font-medium py-3 px-4">Last updated</th>
                   <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%]">
                     Actions
@@ -202,7 +202,7 @@
                             size="icon"
                             disabled
                             aria-label="View"
-                            title="View (no budget slug)"
+                            title="View (no vote slug)"
                           >
                             <EyeIcon class="size-4" />
                           </Button.Root>

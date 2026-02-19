@@ -3,16 +3,16 @@ import { Router } from "express";
 const router = Router();
 
 // schema import
-import { Budget } from "../../../schema/Budget.js";
+import { Vote } from "../../../schema/Vote.js";
 import { Category } from "../../../schema/Category.js";
 
 // helper imports
 import mongoose from "mongoose";
 import { isAuthenticated } from "../../../helper/middleWare.js";
 
-// Helper function to format categories for budget responses (sections 3.1, 3.2)
+// Helper function to format categories for vote responses (sections 3.1, 3.2)
 // Returns simplified categories with flattened metaData fields
-const formatCategoryForBudget = (category) => {
+const formatCategoryForVote = (category) => {
   const formatted = {
     _id: category._id,
     title: category.title,
@@ -53,43 +53,43 @@ const formatCategoryForCategoriesEndpoint = (category) => {
 };
 
 /**
- * @route GET /api/v0/budgets/:budgetId/categories
- * @description Get categories for a specific budget cycle. Returns categories sorted by sortOrder.
+ * @route GET /api/v0/votes/:voteId/categories
+ * @description Get categories for a specific vote cycle. Returns categories sorted by sortOrder.
  * @access Public
  *
- * @param {string} budgetId - MongoDB ObjectId of the budget cycle
+ * @param {string} voteId - MongoDB ObjectId of the vote cycle
  *
  * @returns {Object} 200 - Response object containing data array of categories
- * @returns {Object} 400 - Invalid budgetId format
- * @returns {Object} 404 - Budget not found
+ * @returns {Object} 400 - Invalid voteId format
+ * @returns {Object} 404 - Vote not found
  */
-router.get("/:budgetId/categories", async (req, res) => {
+router.get("/:voteId/categories", async (req, res) => {
   try {
-    const { budgetId } = req.params;
+    const { voteId } = req.params;
 
-    // Validate budgetId format
+    // Validate voteId format
     if (
-      !mongoose.Types.ObjectId.isValid(budgetId) ||
-      budgetId.length !== 24
+      !mongoose.Types.ObjectId.isValid(voteId) ||
+      voteId.length !== 24
     ) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid budgetId parameter. Must be a valid ObjectId.",
+        message: "Invalid voteId parameter. Must be a valid ObjectId.",
       });
     }
 
-    // Check if budget exists
-    const budget = await Budget.findById(budgetId).lean();
-    if (!budget) {
+    // Check if vote exists
+    const vote = await Vote.findById(voteId).lean();
+    if (!vote) {
       return res.status(404).json({
         status: "error",
-        message: "Budget not found",
+        message: "Vote not found",
       });
     }
 
-    // Fetch categories for this budget, sorted by sortOrder
+    // Fetch categories for this vote, sorted by sortOrder
     const categories = await Category.find({
-      budgetId: new mongoose.Types.ObjectId(budgetId),
+      voteId: new mongoose.Types.ObjectId(voteId),
     })
       .sort({ sortOrder: 1 })
       .lean();
@@ -101,7 +101,7 @@ router.get("/:budgetId/categories", async (req, res) => {
       data: formattedCategories,
     });
   } catch (error) {
-    console.error("Error fetching categories by budgetId:", error);
+    console.error("Error fetching categories by voteId:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -110,58 +110,58 @@ router.get("/:budgetId/categories", async (req, res) => {
 });
 
 /**
- * @route GET /api/v0/budgets/:budgetId
- * @description Get a single budget by MongoDB ObjectId. Returns the budget with its categories.
+ * @route GET /api/v0/votes/:voteId
+ * @description Get a single vote by MongoDB ObjectId. Returns the vote with its categories.
  * @access Public
  *
- * @param {string} budgetId - MongoDB ObjectId of the budget cycle
+ * @param {string} voteId - MongoDB ObjectId of the vote cycle
  *
- * @returns {Object} 200 - Budget document including a categories array
- * @returns {Object} 400 - Invalid budgetId format
- * @returns {Object} 404 - Budget not found
+ * @returns {Object} 200 - Vote document including a categories array
+ * @returns {Object} 400 - Invalid voteId format
+ * @returns {Object} 404 - Vote not found
  */
-router.get("/:budgetId", async (req, res) => {
+router.get("/:voteId", async (req, res) => {
   try {
-    const { budgetId } = req.params;
+    const { voteId } = req.params;
 
-    // Validate budgetId format
+    // Validate voteId format
     if (
-      !mongoose.Types.ObjectId.isValid(budgetId) ||
-      budgetId.length !== 24
+      !mongoose.Types.ObjectId.isValid(voteId) ||
+      voteId.length !== 24
     ) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid budgetId parameter. Must be a valid ObjectId.",
+        message: "Invalid voteId parameter. Must be a valid ObjectId.",
       });
     }
 
-    // Find budget by ID
-    const budget = await Budget.findById(budgetId).lean();
+    // Find vote by ID
+    const vote = await Vote.findById(voteId).lean();
 
-    if (!budget) {
+    if (!vote) {
       return res.status(404).json({
         status: "error",
-        message: "Budget not found",
+        message: "Vote not found",
       });
     }
 
-    // Fetch categories for this budget, sorted by sortOrder
+    // Fetch categories for this vote, sorted by sortOrder
     const categories = await Category.find({
-      budgetId: budget._id,
+      voteId: vote._id,
     })
       .sort({ sortOrder: 1 })
       .lean();
 
-    // Format categories with flattened metaData for budget response (section 3.2)
-    const formattedCategories = categories.map(formatCategoryForBudget);
+    // Format categories with flattened metaData for vote response (section 3.2)
+    const formattedCategories = categories.map(formatCategoryForVote);
 
-    // Return budget data directly as an object
+    // Return vote data directly as an object
     return res.status(200).json({
-      ...budget,
+      ...vote,
       categories: formattedCategories,
     });
   } catch (error) {
-    console.error("Error fetching budget by ID:", error);
+    console.error("Error fetching vote by ID:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -170,8 +170,8 @@ router.get("/:budgetId", async (req, res) => {
 });
 
 /**
- * @route GET /api/v0/budgets
- * @description Get budgets with search and pagination. Supports searching by title (case-insensitive partial match) or _id (exact match), and filtering by slug (case-sensitive exact match).
+ * @route GET /api/v0/votes
+ * @description Get votes with search and pagination. Supports searching by title (case-insensitive partial match) or _id (exact match), and filtering by slug (case-sensitive exact match).
  * @access Private (requires authentication)
  *
  * @query {string} [search] - Search term to match against title (partial, case-insensitive) or _id (exact match)
@@ -180,17 +180,17 @@ router.get("/:budgetId", async (req, res) => {
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
  *
  * @returns {Object} 200 - Response object containing:
- *   - data: Array of budget documents, each including a categories array
+ *   - data: Array of vote documents, each including a categories array
  *   - meta: Object containing:
  *     - page: Current page number
  *     - limit: Number of items per page
- *     - total: Total number of budgets matching the search
+ *     - total: Total number of votes matching the search
  *     - totalPages: Total number of pages
  *     - hasNextPage: Boolean indicating if there's a next page
  *     - hasPreviousPage: Boolean indicating if there's a previous page
  * @returns {Object} 400 - Error if pagination parameters are invalid
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
- * @returns {Object} 404 - No budgets found when search or slug parameters are provided
+ * @returns {Object} 404 - No votes found when search or slug parameters are provided
  */
 router.get("/", async (req, res) => {
   try {
@@ -244,51 +244,51 @@ router.get("/", async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Execute query with pagination
-    const [budgets, totalItems] = await Promise.all([
-      Budget.find(query)
+    const [votes, totalItems] = await Promise.all([
+      Vote.find(query)
         .sort({ createdAt: -1 }) // Sort by newest first
         .skip(skip)
         .limit(limitNum)
         .lean(), // Use lean() for better performance
-      Budget.countDocuments(query), // Get total count for pagination
+      Vote.countDocuments(query), // Get total count for pagination
     ]);
 
     // Return 404 if search or slug parameters were provided but no matches found
     if ((search || slug) && totalItems === 0) {
       return res.status(404).json({
         status: "error",
-        message: "No budgets found matching the provided criteria",
+        message: "No votes found matching the provided criteria",
       });
     }
 
-    // Get all budget IDs to fetch their categories
-    const budgetIds = budgets.map((budget) => budget._id);
+    // Get all vote IDs to fetch their categories
+    const voteIds = votes.map((vote) => vote._id);
 
-    // Fetch all categories for these budgets
+    // Fetch all categories for these votes
     const categories = await Category.find({
-      budgetId: { $in: budgetIds },
+      voteId: { $in: voteIds },
     }).lean();
 
-    // Group categories by budgetId and format them
-    const categoriesByBudget = {};
+    // Group categories by voteId and format them
+    const categoriesByVote = {};
     categories.forEach((category) => {
-      const budgetId = category.budgetId.toString();
-      if (!categoriesByBudget[budgetId]) {
-        categoriesByBudget[budgetId] = [];
+      const voteIdStr = category.voteId.toString();
+      if (!categoriesByVote[voteIdStr]) {
+        categoriesByVote[voteIdStr] = [];
       }
       // For list endpoint (3.1), use simplified format (just _id, title, description)
-      categoriesByBudget[budgetId].push({
+      categoriesByVote[voteIdStr].push({
         _id: category._id,
         title: category.title,
         description: category.description,
       });
     });
 
-    // Attach categories to each budget
-    const budgetsWithCategories = budgets.map((budget) => {
+    // Attach categories to each vote
+    const votesWithCategories = votes.map((vote) => {
       return {
-        ...budget,
-        categories: categoriesByBudget[budget._id.toString()] || [],
+        ...vote,
+        categories: categoriesByVote[vote._id.toString()] || [],
       };
     });
 
@@ -298,7 +298,7 @@ router.get("/", async (req, res) => {
     const hasPreviousPage = pageNum > 1;
 
     return res.status(200).json({
-      data: budgetsWithCategories,
+      data: votesWithCategories,
       meta: {
         page: pageNum,
         limit: limitNum,
@@ -309,7 +309,7 @@ router.get("/", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching budgets:", error);
+    console.error("Error fetching votes:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -318,55 +318,55 @@ router.get("/", async (req, res) => {
 });
 
 /**
- * @route GET /api/v0/budgets/:slug
- * @description Get a single budget by slug. Returns the budget with its categories.
+ * @route GET /api/v0/votes/:slug
+ * @description Get a single vote by slug. Returns the vote with its categories.
  * @access Public
- * @note This route should come after /:budgetId routes. Slugs that are 24-character hex strings will match :budgetId first.
+ * @note This route should come after /:voteId routes. Slugs that are 24-character hex strings will match :voteId first.
  *
- * @param {string} slug - The slug of the budget to retrieve
+ * @param {string} slug - The slug of the vote to retrieve
  *
- * @returns {Object} 200 - Budget document including a categories array
- * @returns {Object} 404 - Budget not found
+ * @returns {Object} 200 - Vote document including a categories array
+ * @returns {Object} 404 - Vote not found
  */
 router.get("/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
 
-    // Skip if this looks like an ObjectId (should have been handled by :budgetId route)
+    // Skip if this looks like an ObjectId (should have been handled by :voteId route)
     if (
       mongoose.Types.ObjectId.isValid(slug) &&
       slug.length === 24
     ) {
-      // This should have matched :budgetId route, but if we get here, treat as slug
+      // This should have matched :voteId route, but if we get here, treat as slug
     }
 
-    // Find budget by slug
-    const budget = await Budget.findOne({ slug }).lean();
+    // Find vote by slug
+    const vote = await Vote.findOne({ slug }).lean();
 
-    if (!budget) {
+    if (!vote) {
       return res.status(404).json({
         status: "error",
-        message: "Budget not found",
+        message: "Vote not found",
       });
     }
 
-    // Fetch categories for this budget, sorted by sortOrder
+    // Fetch categories for this vote, sorted by sortOrder
     const categories = await Category.find({
-      budgetId: budget._id,
+      voteId: vote._id,
     })
       .sort({ sortOrder: 1 })
       .lean();
 
-    // Format categories with flattened metaData for budget response
-    const formattedCategories = categories.map(formatCategoryForBudget);
+    // Format categories with flattened metaData for vote response
+    const formattedCategories = categories.map(formatCategoryForVote);
 
-    // Return budget data directly as an object
+    // Return vote data directly as an object
     return res.status(200).json({
-      ...budget,
+      ...vote,
       categories: formattedCategories,
     });
   } catch (error) {
-    console.error("Error fetching budget by slug:", error);
+    console.error("Error fetching vote by slug:", error);
     return res.status(500).json({
       status: "error",
       message: "Internal server error",

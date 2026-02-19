@@ -6,7 +6,7 @@ const router = Router();
 // schema import
 import { Session } from "../../../schema/Session.js";
 import { User } from "../../../schema/User.js";
-import { Budget } from "../../../schema/Budget.js";
+import { Vote } from "../../../schema/Vote.js";
 
 // helper
 import jwt from "jsonwebtoken";
@@ -70,7 +70,7 @@ const sessionVerificationLimiter = rateLimit({
  * @returns {Object} 200 - Object containing:
  *   - userId: The user ID from the validated JWT token
  *   - name: The user's display name (from User record, if set)
- *   - adminBudgetIds: Array of budget _id strings where the authenticated user is an admin (only present if non-empty)
+ *   - adminVoteIds: Array of vote _id strings where the authenticated user is an admin (only present if non-empty)
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
 router.get("/", isAuthenticated, async (req, res) => {
@@ -84,23 +84,23 @@ router.get("/", isAuthenticated, async (req, res) => {
     console.error("Error fetching user name for session:", err);
   }
 
-  let adminBudgetIds = [];
+  let adminVoteIds = [];
   try {
     const userIdStr = String(userId).trim();
-    const budgetDocs = await Budget.find({ admins: userIdStr })
+    const voteDocs = await Vote.find({ admins: userIdStr })
       .select("_id")
       .lean();
-    adminBudgetIds = budgetDocs.map((b) => String(b._id));
+    adminVoteIds = voteDocs.map((v) => String(v._id));
   } catch (err) {
-    console.error("Error fetching admin budgets for session:", err);
+    console.error("Error fetching admin votes for session:", err);
   }
 
   const payload = {
     userId,
     name: name ?? undefined,
   };
-  if (adminBudgetIds.length > 0) {
-    payload.adminBudgetIds = adminBudgetIds;
+  if (adminVoteIds.length > 0) {
+    payload.adminVoteIds = adminVoteIds;
   }
 
   return res.status(200).json(payload);

@@ -1,7 +1,7 @@
 /**
  * Budget 2026 proposal validation script.
- * Validates POST/PUT proposal body (budgetId, title, summary, status, metaData).
- * Used when a budget has validationScript set to "validationBudget2026".
+ * Validates POST/PUT proposal body (voteId, title, summary, status, metaData).
+ * Used when a vote has validationScript set to "validationBudget2026".
  */
 import { z } from "zod";
 import { readFileSync } from "fs";
@@ -179,28 +179,28 @@ const formSchema = z.object({
   metaData: metaDataSchema,
 });
 
-/** Full proposal body: form payload + budgetId (ObjectId string). */
+/** Full proposal body: form payload + voteId (ObjectId string). */
 export const createProposalBodySchema = formSchema.extend({
-  budgetId: z
+  voteId: z
     .string()
-    .length(24, "budgetId must be a valid ObjectId")
-    .regex(/^[a-fA-F0-9]{24}$/, "budgetId must be a valid ObjectId"),
+    .length(24, "voteId must be a valid ObjectId")
+    .regex(/^[a-fA-F0-9]{24}$/, "voteId must be a valid ObjectId"),
 });
 
-/** Draft: only title (and budgetId) required. */
+/** Draft: only title (and voteId) required. */
 export const createDraftProposalBodySchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
-  budgetId: z
+  voteId: z
     .string()
-    .length(24, "budgetId must be a valid ObjectId")
-    .regex(/^[a-fA-F0-9]{24}$/, "budgetId must be a valid ObjectId"),
+    .length(24, "voteId must be a valid ObjectId")
+    .regex(/^[a-fA-F0-9]{24}$/, "voteId must be a valid ObjectId"),
   status: z.enum(["draft"]).optional().default("draft"),
   summary: z.string().max(2000).optional().default(""),
   metaData: z.record(z.string(), z.any()).optional().default({}),
 });
 
 /**
- * Validate proposal body. For status "live" uses full schema; otherwise draft schema (title + budgetId only).
+ * Validate proposal body. For status "live" uses full schema; otherwise draft schema (title + voteId only).
  * @param {unknown} body - Raw request body
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */

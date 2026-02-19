@@ -4,9 +4,9 @@
  * categories.csv is semicolon-delimited. kpis.csv is comma-delimited.
  *
  * Usage (from project root):
- *   BUDGET_ID=<mongodb-object-id> node __setup/importCategories.js
+ *   VOTE_ID=<mongodb-object-id> node __setup/importCategories.js
  * Or (from __setup):
- *   BUDGET_ID=<mongodb-object-id> node importCategories.js
+ *   VOTE_ID=<mongodb-object-id> node importCategories.js
  */
 
 import { readFileSync } from "fs";
@@ -96,14 +96,14 @@ function getKpisForTitle(title, kpisByFocusArea) {
     return [];
 }
 
-function getBudgetId() {
-    const id = process.env.BUDGET_ID?.trim();
+function getVoteId() {
+    const id = process.env.VOTE_ID?.trim();
     if (!id) {
-        console.error("BUDGET_ID is required. Example: BUDGET_ID=507f1f77bcf86cd799439011 node __setup/importCategories.js");
+        console.error("VOTE_ID is required. Example: VOTE_ID=507f1f77bcf86cd799439011 node __setup/importCategories.js");
         process.exit(1);
     }
     if (!mongoose.Types.ObjectId.isValid(id) || id.length !== 24) {
-        console.error("BUDGET_ID must be a valid 24-character MongoDB ObjectId.");
+        console.error("VOTE_ID must be a valid 24-character MongoDB ObjectId.");
         process.exit(1);
     }
     return new mongoose.Types.ObjectId(id);
@@ -149,7 +149,7 @@ function parseCsvLine(line) {
 }
 
 async function importCategories() {
-    const budgetId = getBudgetId();
+    const voteId = getVoteId();
     const kpisByFocusArea = loadKpisByFocusArea();
 
     const raw = readFileSync(CSV_PATH, "utf8");
@@ -197,7 +197,7 @@ async function importCategories() {
         metaData.kpis = getKpisForTitle(title, kpisByFocusArea);
 
         await Category.create({
-            budgetId,
+            voteId,
             title,
             description: descriptionStrategy || pillarDesc || title,
             metaData: Object.keys(metaData).length ? metaData : undefined,
@@ -208,7 +208,7 @@ async function importCategories() {
     }
 
     await disconnectFromDatabase();
-    console.log(`\nImported ${created} categories for budget ${budgetId}`);
+    console.log(`\nImported ${created} categories for vote ${voteId}`);
 }
 
 importCategories().catch((err) => {

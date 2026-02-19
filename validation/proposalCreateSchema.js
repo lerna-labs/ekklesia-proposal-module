@@ -1,7 +1,7 @@
 /**
  * Proposal create (POST) body validation.
- * Delegates to the budget-specific validation script. Default script is validationBudget2026.
- * Routes that have not yet been updated to use the budget's validationScript can keep
+ * Delegates to the vote-specific validation script. Default script is validationBudget2026.
+ * Routes that have not yet been updated to use the vote's validationScript can keep
  * importing validateCreateProposalBody and the schemas from here.
  */
 import {
@@ -13,7 +13,7 @@ import {
 export { createProposalBodySchema, createDraftProposalBodySchema };
 
 /**
- * Validate POST body. For status "live" uses full schema; otherwise draft schema (title + budgetId only).
+ * Validate POST body. For status "live" uses full schema; otherwise draft schema (title + voteId only).
  * @param {unknown} body - Raw request body
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */

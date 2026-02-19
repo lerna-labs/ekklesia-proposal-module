@@ -9,14 +9,14 @@
 
 <header class="bg-(--mbo-tangy-blue) text-white">
   <div
-    class="container mx-auto max-w-4xl py-8 px-4 flex justify-between items-center"
+    class="container mx-auto max-w-4xl py-4 px-4 flex justify-between items-center"
   >
     <Logo />
     <nav>
       <ul class="flex items-center gap-2">
         <li>
           <Button
-            href="/budgets/test-budget-2026"
+            href="/votes/test-budget-2026"
             variant="outline"
             size="sm"
             class="text-xs text-black"

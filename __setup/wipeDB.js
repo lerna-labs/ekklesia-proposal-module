@@ -15,13 +15,13 @@ import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.j
 await connectToDatabase();
 
 // import schemas
-import { Budget } from "../schema/Budget.js";
+import { Vote } from "../schema/Vote.js";
 import { Category } from "../schema/Category.js";
 import { Proposal } from "../schema/Proposal.js";
 import { Comment } from "../schema/Comment.js";
 
 // wipe database
-await Budget.deleteMany({});
+await Vote.deleteMany({});
 // await Category.deleteMany({});
 await Proposal.deleteMany({});
 await Comment.deleteMany({});

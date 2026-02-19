@@ -2,7 +2,6 @@ import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ url, fetch }) {
-	// API spec §3.1 GET /budgets: page (default 1), limit (default 10, max 100), search, slug
 	const pageNum = url.searchParams.get('page') || '1';
 	const limitParam = url.searchParams.get('limit') || '10';
 	const limit = Math.min(Math.max(1, parseInt(limitParam, 10) || 10), 100);
@@ -14,13 +13,11 @@ export async function load({ url, fetch }) {
 	if (search) params.set('search', search);
 	if (slug) params.set('slug', slug);
 
-	const response = await fetch(`${apiUrl}/budgets?${params.toString()}`);
-	console.log(response);
+	const response = await fetch(`${apiUrl}/votes?${params.toString()}`);
 
-	// Spec: 404 when search or slug provided but no matching budgets — treat as empty result
 	if (response.status === 404) {
 		return {
-			budgets: [],
+			votes: [],
 			meta: {
 				page: 1,
 				limit,
@@ -33,7 +30,7 @@ export async function load({ url, fetch }) {
 	}
 
 	if (!response.ok) {
-		error(response.status, `Failed to load budgets: ${response.statusText}`);
+		error(response.status, `Failed to load votes: ${response.statusText}`);
 	}
 
 	const json = await response.json();
@@ -41,7 +38,7 @@ export async function load({ url, fetch }) {
 	const meta = json.meta ?? {};
 
 	return {
-		budgets: data,
+		votes: data,
 		meta: {
 			page: meta.page ?? 1,
 			limit: meta.limit ?? limit,

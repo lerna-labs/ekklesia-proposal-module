@@ -9,7 +9,7 @@ export async function load({ fetch, url, parent }) {
 	const user = parentData?.user;
 	const userId = user?.userId;
 	if (!userId) {
-		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, budgetTitles: {}, budgetSlugs: {} };
+		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, voteTitles: {}, voteSlugs: {} };
 	}
 
 	// URL params with defaults and validation
@@ -32,32 +32,32 @@ export async function load({ fetch, url, parent }) {
 		},
 	};
 
-	// Resolve budget titles and slugs for unique budgetIds (parallel fetches)
-	const budgetIds = [...new Set((proposals.data || []).map((p) => p.budgetId).filter(Boolean))];
-	const budgetPromises = budgetIds.map(async (budgetId) => {
+	// Resolve vote titles and slugs for unique voteIds (parallel fetches)
+	const voteIds = [...new Set((proposals.data || []).map((p) => p.voteId).filter(Boolean))];
+	const votePromises = voteIds.map(async (voteId) => {
 		try {
-			const budgetRes = await api.fetch(fetch, `/budgets/${budgetId}`);
-			if (budgetRes.ok) {
-				const budgetJson = await budgetRes.json();
-				return { budgetId, title: budgetJson.title ?? budgetJson.name ?? budgetId, slug: budgetJson.slug };
+			const voteRes = await api.fetch(fetch, `/votes/${voteId}`);
+			if (voteRes.ok) {
+				const voteJson = await voteRes.json();
+				return { voteId, title: voteJson.title ?? voteJson.name ?? voteId, slug: voteJson.slug };
 			}
 		} catch {
 			// fallback to id as label
 		}
-		return { budgetId, title: budgetId, slug: undefined };
+		return { voteId, title: voteId, slug: undefined };
 	});
-	const budgetResults = await Promise.all(budgetPromises);
-	const budgetTitles = {};
-	const budgetSlugs = {};
-	for (const r of budgetResults) {
-		budgetTitles[r.budgetId] = r.title;
-		if (r.slug) budgetSlugs[r.budgetId] = r.slug;
+	const voteResults = await Promise.all(votePromises);
+	const voteTitles = {};
+	const voteSlugs = {};
+	for (const r of voteResults) {
+		voteTitles[r.voteId] = r.title;
+		if (r.slug) voteSlugs[r.voteId] = r.slug;
 	}
 
 	return {
 		user,
 		proposals,
-		budgetTitles,
-		budgetSlugs,
+		voteTitles,
+		voteSlugs,
 	};
 }
