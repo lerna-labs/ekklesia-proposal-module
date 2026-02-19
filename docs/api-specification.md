@@ -181,9 +181,9 @@ kept up to date as the module evolves.
   ObjectIds (24-character hexadecimal strings).
 - **`_id` fields** – All `_id` fields in responses are MongoDB ObjectIds
   (24-character hexadecimal strings).
-- **DRep identifiers** – All `drep_id` values use the `drep1…` bech32 encoding
+- **DRep identifiers** – All `drep_id` values use the `drep1…` Bech32 encoding
   defined by CIP-0129.
-- **Admin addresses** – All `admins` array entries are bech32 Cardano stake
+- **Admin addresses** – All `admins` array entries are Bech32 Cardano stake
   addresses (`stake1…`).
 - **Base URL** – All paths below are relative to a versioned base, e.g.
   `https://domain.tld/api/v0`.
@@ -1030,7 +1030,7 @@ HTTP-only cookie for later authenticated requests.
 The `userId` field returned by these endpoints can be one of the following
 Cardano identifier types:
 
-- **Cardano bech32 stake address** (`stake1...`) — for standard wallet
+- **Cardano Bech32 stake address** (`stake1...`) — for standard wallet
   authentication
 - **CIP-0129 DRep ID** (`drep1...`) — for DRep credential authentication
 
@@ -1065,7 +1065,7 @@ Script addresses are not allowed (use `/multisig` route instead).
 > **Note:**
 >
 > - The `dataHex` field contains a string with the prefix "Sign in! " followed by hex-encoded nonce (e.g.,`"Sign in! a3f8d2e1b4c9f0a7d6e5b8c1a2f3d4e5"`). The client must sign this entire string value and submit it via `PUT /session` to complete authentication.
-> - The `userId` field contains a bech32-encoded Cardano identifier. It can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`) depending on the `signType` provided.
+> - The `userId` field contains a Bech32-encoded Cardano identifier. It can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`) depending on the `signType` provided.
 > - The `userIdHex` and `signerAddressHex` fields contain hex-encoded versions of the address for clients that require hex formats.
 
 [//]: # (@formatter:on)
@@ -1142,7 +1142,7 @@ atomically marked as used to prevent race conditions.
 
 > **Note:** The JWT token is also set as an HTTP-only cookie named `token`.
 > Subsequent requests should include this cookie automatically. The token
-> contains `userId` (which can be a Cardano bech32 stake address or CIP-0129
+> contains `userId` (which can be a Cardano Bech32 stake address or CIP-0129
 > DRep ID) and `signType`.
 
 #### Error Response — `400 Bad Request`
@@ -1236,7 +1236,7 @@ and (when applicable) the list of budget IDs for which they are an admin.
 | `name`           | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                              |
 | `adminBudgetIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
 
-> **Note:** The `userId` field contains a bech32-encoded Cardano identifier. It
+> **Note:** The `userId` field contains a Bech32-encoded Cardano identifier. It
 > can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`)
 > depending on how the user authenticated.
 
@@ -1296,7 +1296,7 @@ ownership of resources.
 
 - All endpoints require a valid JWT token in the `token` cookie (obtained via
   `PUT /session`).
-- The token must contain a valid `userId` (bech32 Cardano stake or CIP-0129 DRep
+- The token must contain a valid `userId` (Bech32 Cardano stake or CIP-0129 DRep
   ID).
 
 **Access Control:**
