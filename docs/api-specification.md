@@ -1033,7 +1033,6 @@ Cardano identifier types:
 - **Cardano bech32 stake address** (`stake1...`) — for standard wallet
   authentication
 - **CIP-0129 DRep ID** (`drep1...`) — for DRep credential authentication
-- **Bech32 stake pool ID** (`pool1...`) — for pool operator authentication
 
 ---
 
@@ -1048,7 +1047,7 @@ Script addresses are not allowed (use `/multisig` route instead).
 | Field           | Type   | Required | Description                                              |
 |-----------------|--------|----------|----------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (must be valid Bech32 address) |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, or `pool`            |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`                       |
 
 #### Success Response — `200 OK`
 
@@ -1066,7 +1065,7 @@ Script addresses are not allowed (use `/multisig` route instead).
 > **Note:**
 >
 > - The `dataHex` field contains a string with the prefix "Sign in! " followed by hex-encoded nonce (e.g.,`"Sign in! a3f8d2e1b4c9f0a7d6e5b8c1a2f3d4e5"`). The client must sign this entire string value and submit it via `PUT /session` to complete authentication.
-> - The `userId` field contains a bech32-encoded Cardano identifier. It can be a stake address (`stake1...`), CIP-0129 DRep ID (`drep1...`), or stake pool ID (`pool1...`), depending on the `signType` provided.
+> - The `userId` field contains a bech32-encoded Cardano identifier. It can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`) depending on the `signType` provided.
 > - The `userIdHex` and `signerAddressHex` fields contain hex-encoded versions of the address for clients that require hex formats.
 
 [//]: # (@formatter:on)
@@ -1129,7 +1128,7 @@ atomically marked as used to prevent race conditions.
 | Field           | Type   | Required | Description                                                                 |
 |-----------------|--------|----------|-----------------------------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (validated by middleware)                         |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, or `pool`                               |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`                                          |
 | `signature`     | object | Yes      | Signature object containing the signed nonce (structure varies by signType) |
 
 #### Success Response — `200 OK`
@@ -1143,8 +1142,8 @@ atomically marked as used to prevent race conditions.
 
 > **Note:** The JWT token is also set as an HTTP-only cookie named `token`.
 > Subsequent requests should include this cookie automatically. The token
-> contains `userId` (which can be a Cardano bech32 stake address, CIP-0129 DRep
-> ID, or bech32 stake pool ID) and `signType`.
+> contains `userId` (which can be a Cardano bech32 stake address or CIP-0129
+> DRep ID) and `signType`.
 
 #### Error Response — `400 Bad Request`
 
@@ -1233,13 +1232,13 @@ and (when applicable) the list of budget IDs for which they are an admin.
 
 | Field            | Type     | Description                                                                                                                                                                                                   |
 |------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `userId`         | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                                  |
+| `userId`         | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address or DRep ID).                                                                                                            |
 | `name`           | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                              |
 | `adminBudgetIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
 
 > **Note:** The `userId` field contains a bech32-encoded Cardano identifier. It
-> can be a stake address (`stake1...`), CIP-0129 DRep ID (`drep1...`), or stake
-> pool ID (`pool1...`), depending on how the user authenticated.
+> can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`)
+> depending on how the user authenticated.
 
 #### Error Response — `401 Unauthorized`
 
@@ -1297,8 +1296,8 @@ ownership of resources.
 
 - All endpoints require a valid JWT token in the `token` cookie (obtained via
   `PUT /session`).
-- The token must contain a valid `userId` (bech32 Cardano stake or pool address
-  or CIP-0129 DRep ID).
+- The token must contain a valid `userId` (bech32 Cardano stake or CIP-0129 DRep
+  ID).
 
 **Access Control:**
 
