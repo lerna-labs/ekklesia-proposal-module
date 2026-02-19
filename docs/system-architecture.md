@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.0                                                                  |
+| **Version**        | 0.1.2                                                                  |
 | **Created**        | February 19, 2026                                                      |
 | **Last Revised**   | February 19, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
@@ -148,14 +148,14 @@ Module API under the versioned base path `/api/v0`.
 
 **Primary route groups:**
 
-| Path prefix                                                        | Section              | Description                             |
-|--------------------------------------------------------------------|----------------------|-----------------------------------------|
-| `GET /budgets[/...]`                                               | §3                   | Budget and category reads               |
-| `GET /proposals[/...]`                                             | §3                   | Proposal reads (role-filtered)          |
-| `GET /comments[/...]`                                              | §3                   | Comment and reply reads (role-filtered) |
-| `POST /session`, `PUT /session`, `GET /session`, `DELETE /session` | §4                   | Auth: nonce, verify, validate, logout   |
-| `POST                                                              | PUT                  | DELETE /proposals[/...]`                | §5 | Proposal writes |
-| `POST                                                              | PUT /comments[/...]` | §5                                      | Comment writes, likes, withdrawals |
+| Path prefix                                                        | Section | Description                             |
+|--------------------------------------------------------------------|---------|-----------------------------------------|
+| `GET /budgets[/...]`                                               | §3      | Budget and category reads               |
+| `GET /proposals[/...]`                                             | §3      | Proposal reads (role-filtered)          |
+| `GET /comments[/...]`                                              | §3      | Comment and reply reads (role-filtered) |
+| `POST /session`, `PUT /session`, `GET /session`, `DELETE /session` | §4      | Auth: nonce, verify, validate, logout   |
+| `POST, PUT, DELETE /proposals[/...]`                               | §5      | Proposal writes                         |
+| `POST, PUT /comments[/...]`                                        | §5      | Comment writes, likes, withdrawals      |
 
 **Key middleware:**
 
@@ -169,19 +169,18 @@ Module API under the versioned base path `/api/v0`.
 ### 3.3 Database (MongoDB)
 
 MongoDB is used as the primary data store, accessed via Mongoose ODM. All
-collections reside in a single database instance. Data is stored in a
-European-region hosting environment (see §7).
+collections reside in a single database instance.
 
 **Collections:**
 
-| Collection    | Schema doc                                                       | Description                                                                 |
+| Collection    | Schema/Process doc                                               | Description                                                                 |
 |---------------|------------------------------------------------------------------|-----------------------------------------------------------------------------|
 | `Budget`      | [budget-schema-description.md](budget-schema-description.md)     | Budget cycles with date windows and admin arrays                            |
 | `Category`    | _(pending schema doc)_                                           | Categories belonging to a budget; ordered by `sortOrder`                    |
 | `Proposal`    | [proposal-schema-description.md](proposal-schema-description.md) | Proposal lifecycle documents including versioning, withdrawal, and metadata |
 | `Comment`     | [comment-schema-description.md](comment-schema-description.md)   | Top-level comments and replies on proposals                                 |
 | `CommentLike` | [comment-schema-description.md](comment-schema-description.md)   | One document per user-comment like; unique index on `(commentId, userId)`   |
-| `Session`     | _(login-flow.md)_                                                | Short-lived nonce sessions; TTL-indexed (expires ~1 hr)                     |
+| `Session`     | [login-flow.md](login-flow.md)                                   | Short-lived nonce sessions; TTL-indexed (expires ~1 hr)                     |
 | `User`        | _(pending schema doc)_                                           | User display names and last login; keyed by Bech32 `userId`                 |
 
 **Indexes of note:**
@@ -207,7 +206,6 @@ are stored.
 |---------------|--------------------|-----------------------------------|
 | Stake address | `stake1…` (bech32) | Standard Cardano stake credential |
 | DRep ID       | `drep1…` (bech32)  | CIP-0509 / CIP-0129               |
-| Stake pool ID | `pool1…` (bech32)  | Standard pool credential          |
 
 **Flow summary** (detailed in [login-flow.md](login-flow.md)):
 
@@ -245,7 +243,7 @@ between the two applications.
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Auth pattern**           | Implements the same wallet-signature challenge-response flow (`POST /session` → sign nonce → `PUT /session`) as the Ekklesia Voting Module           |
 | **JWT structure**          | JWT payload shape (`{ userId, signType }`) and cookie configuration (`token`, HTTP-only, `SameSite=Strict`) are consistent with the Ekklesia pattern |
-| **Identity types**         | Supports the same Cardano identifier types: `stake1…`, `drep1…`, `pool1…` (bech32)                                                                   |
+| **Identity types**         | Supports the same Cardano identifier types: `stake1…`, `drep1…` (bech32)                                                                             |
 | **Frontend session store** | `sessionManager.js` pattern (stores: `loggedIn`, `user`, `jwt`) is adopted from the Ekklesia frontend implementation                                 |
 | **DRep registry lookup**   | On successful login, the backend queries the DRep registry (external) to resolve a display name for DRep-authenticated users                         |
 | **ADA handle service**     | On successful login, the backend queries the ADA handle service (external) to resolve a display name for stake-address-authenticated users           |
@@ -342,7 +340,7 @@ sequenceDiagram
     Backend->>MongoDB: verify sig, upsert User, issue JWT
     MongoDB-->>Backend: ok
     Backend-->>Frontend: Set-Cookie: token=<JWT><br/>{ token, expiresIn }
-    Frontend-->>User: setJWT(); loggedIn = true
+    Frontend-->>User: setJWT()<br />loggedIn = true
 ```
 
 ### 5.3 Proposal Create / Submit Flow
@@ -430,10 +428,6 @@ its own database instance, and its own deployment pipeline.
 | **Database**              | MongoDB (European region)               | Dedicated MongoDB instance for the Budget Module; no shared collections with the Ekklesia Voting Module |
 | **Environment variables** | Budget Module `.env`                    | `JWT_SECRET`, `JWT_MAX_AGE`, `FRONTEND_URL`, `MONGO_URI` scoped to this application only                |
 
-**Data residency:** All user and proposal data must be stored in a
-European-region hosting environment. This applies to the MongoDB instance and
-any caching layer.
-
 ---
 
 ## 8. Security Considerations
@@ -482,5 +476,6 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                       |
 |---------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.2   | 2026-02-19 | Remove some legacy references to stake pool authentication which is out of scope and fix a few formatting errors                                  |
 | 0.1.1   | 2026-02-19 | Minor update to reflect that only live proposals may be withdrawn.                                                                                |
 | 0.1.0   | 2026-02-19 | Initial architecture document: component overview, ASCII system diagram, data flow sequences, RBAC summary, infrastructure and security sections. |
