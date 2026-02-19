@@ -183,6 +183,7 @@ router.post("/", nonceRequestLimiter, validateSessionRequest, async (req, res) =
  * @returns {Object} 200 - Response object containing:
  *   - token: JWT token string (also set as HTTP-only cookie)
  *   - expiresIn: ISO 8601 timestamp when the token expires
+ *   - userId: Bech32 address of the authenticated user
  * @returns {Object} 400 - Error if:
  *   - Address is a script address (must use /multisig route)
  *   - Nonce not found in database
@@ -394,10 +395,11 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
     path: "/",
   });
 
-  // Return the response with token data
+  // Return the response with token data and userId so the frontend can update UI without waiting for GET /session
   return res.status(200).json({
     token,
     expiresIn: expiryDate,
+    userId: addressBech32,
   });
 });
 
