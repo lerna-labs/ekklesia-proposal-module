@@ -6,7 +6,7 @@ module.exports = {
       name: "preprod-budget-module",
       script: path.resolve(__dirname, "server.js"),
       watch: true,
-      ignore_watch: ["node_modules", "logs", "backup", "scripts", "public", "preprod-logs", "mainnet-logs", ".git", ".DS_Store"],
+      ignore_watch: ["node_modules", "logs", "backup", "scripts", "public", "preprod-logs", "mainnet-logs", ".git", ".DS_Store", "__frontend", "__setup"],
       watch_options: {
         followSymlinks: false,
         usePolling: true,
