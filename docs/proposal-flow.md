@@ -41,19 +41,19 @@ save.
 flowchart TD
     A([Receive proposal request]) --> B{status = live?}
 
-    B -- No / draft --> C{now before\nsubmissionEndDate?}
-    C -- No --> D[400 Bad Request\nSubmission deadline passed]
-    C -- Yes --> E[Partial validation only\nno legal declarations required]
+    B -- No / draft --> C{now before submissionEndDate?}
+    C -- No --> D[400 Bad Request Submission deadline passed]
+    C -- Yes --> E[Partial validation only no legal declarations required]
     E --> F([Save draft ✓])
 
-    B -- Yes / live --> G{now before\nsubmissionStartDate?}
-    G -- Yes --> H[400 Bad Request\nSubmission window not yet open]
-    G -- No --> I{now after\nsubmissionEndDate?}
-    I -- Yes --> J[400 Bad Request\nSubmission deadline passed]
-    I -- No --> K{All required fields\npresent?}
-    K -- No --> L[400 Bad Request\nValidation failed]
-    K -- Yes --> M{All 4 legal\ndeclarations = true?}
-    M -- No --> N[400 Bad Request\nLegal declarations required]
+    B -- Yes / live --> G{now before submissionStartDate?}
+    G -- Yes --> H[400 Bad Request Submission window not yet open]
+    G -- No --> I{now after submissionEndDate?}
+    I -- Yes --> J[400 Bad Request Submission deadline passed]
+    I -- No --> K{All required fields present?}
+    K -- No --> L[400 Bad Request Validation failed]
+    K -- Yes --> M{All 4 legal declarations = true?}
+    M -- No --> N[400 Bad Request Legal declarations required]
     M -- Yes --> O([Proposal goes live ✓])
 ```
 
@@ -71,25 +71,25 @@ flowchart TD
 
 ```mermaid
 stateDiagram-v2
-    [*] --> draft : POST /proposals\n(proposer, before submissionEndDate)
+    [*] --> draft : POST /proposals (proposer, before submissionEndDate)
 
-    draft --> draft : PUT /proposals/{id}\nsave draft\n(no full validation)
+    draft --> draft : PUT /proposals/{id} save draft (no full validation)
 
-    draft --> live : PUT /proposals/{id}\nstatus: live\n(full validation + within submission window)
+    draft --> live : PUT /proposals/{id} status: live (full validation + within submission window)
 
-    draft --> withdrawnByProposer : PUT /proposals/{id}/withdraw\n(proposer, no date restriction)
+    draft --> withdrawnByProposer : PUT /proposals/{id}/withdraw (proposer, no date restriction)
 
-    draft --> withdrawnByAdmin : PUT /proposals/{id}/withdraw\n(admin, no date restriction)
+    draft --> withdrawnByAdmin : PUT /proposals/{id}/withdraw (admin, no date restriction)
 
-    draft --> [*] : DELETE /proposals/{id}\n(proposer only)
+    draft --> [*] : DELETE /proposals/{id} (proposer only)
 
-    live --> live : PUT /proposals/{id}\n(update in place;\nprevious version archived)
+    live --> live : PUT /proposals/{id} (update in place; previous version archived)
 
-    live --> archived : system creates archived copy\non every live update
+    live --> archived : system creates archived copy on every live update
 
-    live --> withdrawnByProposer : PUT /proposals/{id}/withdraw\n(proposer, before feedbackEndDate)
+    live --> withdrawnByProposer : PUT /proposals/{id}/withdraw (proposer, before feedbackEndDate)
 
-    live --> withdrawnByAdmin : PUT /proposals/{id}/withdraw\n(admin, before reviewEndDate)
+    live --> withdrawnByAdmin : PUT /proposals/{id}/withdraw (admin, before reviewEndDate)
 
     withdrawnByProposer --> [*]
     withdrawnByAdmin --> [*]
@@ -184,7 +184,7 @@ sequenceDiagram
     Frontend->>Frontend: Run full client-side validation (Zod)
 
     alt Client-side validation fails
-        Frontend-->>Proposer: Show field errors\nProposal remains draft
+        Frontend-->>Proposer: Show field errors Proposal remains draft
     else Client-side validation passes
         Frontend->>Backend: PUT /proposals/{id}<br/>{ status: "live", legalDeclarations, ...full data }
         Backend->>Backend: Verify proposer owns proposal
@@ -194,7 +194,7 @@ sequenceDiagram
 
         alt Any validation fails
             Backend-->>Frontend: 400 Bad Request + error message
-            Frontend-->>Proposer: Show error\nProposal remains draft
+            Frontend-->>Proposer: Show error Proposal remains draft
         else All validation passes
             Backend->>MongoDB: Update proposal (status: live, submittedAt: now)
             MongoDB-->>Backend: ok
@@ -275,10 +275,10 @@ sequenceDiagram
     end
 
     alt Date check fails
-        Backend-->>Frontend: 400 Bad Request\nWithdrawal window has closed
+        Backend-->>Frontend: 400 Bad Request Withdrawal window has closed
         Frontend-->>User: Show error
     else Date check passes
-        Backend->>MongoDB: Set status: withdrawnByProposer\nor withdrawnByAdmin<br/>Store withdrawalDetails
+        Backend->>MongoDB: Set status: withdrawnByProposer or withdrawnByAdmin<br/>Store withdrawalDetails
         MongoDB-->>Backend: ok
         Backend-->>Frontend: 200 OK<br/>{ status: "withdrawnBy...", withdrawalDetails }
         Frontend-->>User: Proposal withdrawn ✓
@@ -306,7 +306,7 @@ sequenceDiagram
     Backend->>Backend: Verify proposer owns proposal
 
     alt Proposal status is not draft
-        Backend-->>Frontend: 400 Bad Request\nOnly draft proposals can be deleted
+        Backend-->>Frontend: 400 Bad Request Only draft proposals can be deleted
         Frontend-->>Proposer: Show error
     else Proposal status is draft
         Backend->>MongoDB: Delete proposal document
