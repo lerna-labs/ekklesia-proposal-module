@@ -10,6 +10,10 @@
 
 <Toaster />
 <VersionCheck />
-<Header />
-{@render children()}
-<Footer />
+<div class="min-h-dvh flex flex-col">
+  <Header />
+  <main class="flex-1 flex flex-col">
+    {@render children()}
+  </main>
+  <Footer />
+</div>
