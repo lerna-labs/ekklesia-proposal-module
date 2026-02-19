@@ -223,7 +223,7 @@ are stored.
    middleware reading `req.cookies.token`.
 
 JWT tokens are signed with `JWT_SECRET` and expire per `JWT_MAX_AGE` (default
-`1d`). Nonces are single-use, stored in the `Session` collection, and expire
+`1d`). Nonce are single-use, stored in the `Session` collection, and expire
 after 5 minutes.
 
 ### 3.5 Ekklesia Authentication Integration
@@ -342,7 +342,7 @@ sequenceDiagram
     Backend->>MongoDB: verify sig, upsert User, issue JWT
     MongoDB-->>Backend: ok
     Backend-->>Frontend: Set-Cookie: token=<JWT><br/>{ token, expiresIn }
-    Frontend-->>User: setJWT() <br /> loggedIn = true
+    Frontend-->>User: setJWT(); loggedIn = true
 ```
 
 ### 5.3 Proposal Create / Submit Flow
@@ -402,13 +402,13 @@ authenticated user's `userId` (from the JWT) is checked against proposal
 `proposerId` fields and budget `admins` arrays to determine role at request
 time.
 
-| Role         | Identity                                         | Key permissions                                                                                                                                   |
-|--------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | Unauthenticated                                  | Read `live` and `withdrawn` proposals and comments                                                                                                |
-| **User**     | Any authenticated wallet                         | Public access + create and manage own comments                                                                                                    |
-| **Proposer** | Authenticated wallet; owns a proposal            | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `feedbackEndDate`                                           |
-| **DRep**     | Authenticated via `drep1…` credential            | Same as User in this MVP (view and comment)                                                                                                       |
-| **Admin**    | Authenticated wallet; address in `budget.admins` | All of the above + view draft proposals for assigned budgets; withdraw proposals until `reviewEndDate`; withdraw comments until `feedbackEndDate` |
+| Role         | Identity                                         | Key permissions                                                                                                                                        |
+|--------------|--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | Unauthenticated                                  | Read `live` and `withdrawn` proposals and comments                                                                                                     |
+| **User**     | Any authenticated wallet                         | Public access + create and manage own comments                                                                                                         |
+| **Proposer** | Authenticated wallet; owns a proposal            | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `feedbackEndDate`                                                |
+| **DRep**     | Authenticated via `drep1…` credential            | Same as User in this MVP (view and comment)                                                                                                            |
+| **Admin**    | Authenticated wallet; address in `budget.admins` | All of the above + view draft proposals for assigned budgets; withdraw live proposals until `reviewEndDate`; withdraw comments until `feedbackEndDate` |
 
 Admin status is budget-scoped — a user is only an admin for the specific budgets
 in which their address appears in the `admins` array. The `GET /session`
@@ -482,4 +482,5 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                       |
 |---------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.1   | 2026-02-19 | Minor update to reflect that only live proposals may be withdrawn.                                                                                |
 | 0.1.0   | 2026-02-19 | Initial architecture document: component overview, ASCII system diagram, data flow sequences, RBAC summary, infrastructure and security sections. |
