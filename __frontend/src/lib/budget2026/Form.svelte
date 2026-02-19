@@ -29,7 +29,8 @@
   function toDateForValidation(val) {
     if (val == null) return undefined;
     if (val instanceof Date) return val;
-    if (typeof val?.toDate === "function") return val.toDate(getLocalTimeZone());
+    if (typeof val?.toDate === "function")
+      return val.toDate(getLocalTimeZone());
     return undefined;
   }
 
@@ -56,7 +57,8 @@
     const toIso = (val) => {
       if (val == null) return undefined;
       if (val instanceof Date) return val.toISOString();
-      if (typeof val?.toDate === "function") return val.toDate(getLocalTimeZone()).toISOString();
+      if (typeof val?.toDate === "function")
+        return val.toDate(getLocalTimeZone()).toISOString();
       return undefined;
     };
     return {
@@ -92,7 +94,13 @@
     metric: "",
     milestones: [],
     budgetBreakdown: [
-      { costCategory: "Development", description: "", quantity: 1, unitPrice: 0, total: 0 },
+      {
+        costCategory: "Development",
+        description: "",
+        quantity: 1,
+        unitPrice: 0,
+        total: 0,
+      },
     ],
   });
 
@@ -132,7 +140,12 @@
         fullResidentialAddress: "",
       },
       primaryContact: { name: "", title: "", email: "", socialMedia: "" },
-      signatoryContact: { name: "", title: "", email: "", authorization: false },
+      signatoryContact: {
+        name: "",
+        title: "",
+        email: "",
+        authorization: false,
+      },
       proposalType: "",
       kycInfo: { submitted: false, email: "", totalProposalsSubmitted: "" },
       legalDeclarations: initialLegalDeclarations(),
@@ -141,7 +154,8 @@
 
   let declarationsDialogOpen = $state(false);
   let declarationValidationErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.legalDeclarations ?? null,
+    validationErrors?.properties?.metaData?.properties?.legalDeclarations ??
+      null,
   );
   let autoSaveEnabled = $state(false);
 
@@ -171,14 +185,18 @@
       if (er) {
         if (typeof er.projectStartDate === "string") {
           try {
-            formData.metaData.executionRoadmap.projectStartDate = parseDate(er.projectStartDate.slice(0, 10));
+            formData.metaData.executionRoadmap.projectStartDate = parseDate(
+              er.projectStartDate.slice(0, 10),
+            );
           } catch {
             formData.metaData.executionRoadmap.projectStartDate = undefined;
           }
         }
         if (typeof er.projectEndDate === "string") {
           try {
-            formData.metaData.executionRoadmap.projectEndDate = parseDate(er.projectEndDate.slice(0, 10));
+            formData.metaData.executionRoadmap.projectEndDate = parseDate(
+              er.projectEndDate.slice(0, 10),
+            );
           } catch {
             formData.metaData.executionRoadmap.projectEndDate = undefined;
           }
@@ -213,7 +231,12 @@
 
   // Snapshot so the effect re-runs when any part of formData changes (main fields only for revalidation)
   const formDataSnapshot = $derived(
-    JSON.stringify({ title: formData.title, summary: formData.summary, status: formData.status, metaData: formData.metaData }),
+    JSON.stringify({
+      title: formData.title,
+      summary: formData.summary,
+      status: formData.status,
+      metaData: formData.metaData,
+    }),
   );
 
   // Clear backend-sourced validation errors when user edits the form (not when errors are first set)
@@ -221,7 +244,11 @@
   $effect(() => {
     const snap = formDataSnapshot;
     const hadErrors = untrack(() => validationErrors);
-    if (prevFormDataSnapshot !== undefined && snap !== prevFormDataSnapshot && hadErrors) {
+    if (
+      prevFormDataSnapshot !== undefined &&
+      snap !== prevFormDataSnapshot &&
+      hadErrors
+    ) {
       validationErrors = null;
     }
     prevFormDataSnapshot = snap;
@@ -251,7 +278,7 @@
             placeholder="Enter Title Here"
             required
             maxLength={100}
-            validationErrors={validationErrors}
+            {validationErrors}
           />
           <Textarea
             id="summary"
@@ -261,14 +288,14 @@
             placeholder="Enter Summary Here"
             required
             maxLength={2000}
-            validationErrors={validationErrors}
+            {validationErrors}
           />
           <Textarea
             id="trackRecord"
             bind:value={formData.metaData.trackRecord}
             label="Track Record"
-            description="Previous proposals, mainnet deployments, and other relevant experience."
-            placeholder="e.g. FundX proposal, mainnet deployment, community contributions"
+            description="Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience."
+            placeholder="Enter Track Record Here"
             maxLength={650}
             validationErrors={validationErrors?.properties?.metaData}
           />
@@ -294,7 +321,8 @@
             {categories}
             validationErrors={validationErrors?.properties?.metaData}
             bind:value={formData.metaData.strategicFocusArea}
-            hasKpis={(formData.metaData.keyPerformanceIndicators?.length ?? 0) > 0}
+            hasKpis={(formData.metaData.keyPerformanceIndicators?.length ?? 0) >
+              0}
             onUpdate={(newCategory) => {
               formData.metaData.strategicFocusArea = newCategory;
               formData.metaData.keyPerformanceIndicators = [];
@@ -335,12 +363,14 @@
           />
 
           <FormWorkPackages
-            validationErrors={validationErrors?.properties?.metaData?.properties?.executionRoadmap}
+            validationErrors={validationErrors?.properties?.metaData?.properties
+              ?.executionRoadmap}
             bind:value={formData.metaData.executionRoadmap.workPackages}
           />
 
           <FormFinancialSummary
-            validationErrors={validationErrors?.properties?.metaData?.properties?.financialAndAdministrative}
+            validationErrors={validationErrors?.properties?.metaData?.properties
+              ?.financialAndAdministrative}
             formData={formData.metaData}
           />
         </Card.Content>
@@ -394,10 +424,14 @@
     id="controls"
   >
     <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-4">
-      <Button type="button" class="cursor-pointer" onclick={saveDraft}>Save Draft</Button>
+      <Button type="button" class="cursor-pointer" onclick={saveDraft}>
+        Save Draft
+      </Button>
       <Button type="submit" class="cursor-pointer">Submit</Button>
       {#if formData.status === "draft" && onSave}
-        <label class="flex items-center gap-2 cursor-pointer select-none text-sm">
+        <label
+          class="flex items-center gap-2 cursor-pointer select-none text-sm"
+        >
           <Switch.Root bind:checked={autoSaveEnabled} />
           <span>Auto-save every 5 min</span>
         </label>
@@ -421,8 +455,14 @@
       />
     </div>
     <Dialog.Footer class="shrink-0 gap-2">
-      <Dialog.Close class={buttonVariants({ variant: "outline" })}>Cancel</Dialog.Close>
-      <Button type="button" class="cursor-pointer" onclick={confirmDeclarations}>
+      <Dialog.Close class={buttonVariants({ variant: "outline" })}>
+        Cancel
+      </Dialog.Close>
+      <Button
+        type="button"
+        class="cursor-pointer"
+        onclick={confirmDeclarations}
+      >
         Confirm and Submit
       </Button>
     </Dialog.Footer>
