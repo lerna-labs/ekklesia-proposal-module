@@ -2,15 +2,15 @@
 
 ---
 
-| Field              | Detail                                                                 |
-|--------------------|------------------------------------------------------------------------|
-| **Document Title** | Budget Schema – Field Reference                                        |
-| **Version**        | 0.1.1                                                                  |
-| **Created**        | February 18, 2026                                                      |
-| **Last Revised**   | February 19, 2026                                                      |
-| **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
-| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
-| **Status**         | Draft                                                                  |
+| Field              | Detail                                                                                                  |
+|--------------------|---------------------------------------------------------------------------------------------------------|
+| **Document Title** | Budget Schema – Field Reference                                                                         |
+| **Version**        | 0.1.1                                                                                                   |
+| **Created**        | February 18, 2026                                                                                       |
+| **Last Revised**   | February 19, 2026                                                                                       |
+| **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
+| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
+| **Status**         | Draft                                                                                                   |
 
 ---
 
@@ -79,10 +79,14 @@ Implementation: [../schema/Budget.js](../schema/Budget.js).
 ## Related docs
 
 - [api-specification.md](api-specification.md)
-    - `GET /budgets` - [API Specification §3.1](api-specification.md#31-get-budgets)
-    - `GET /budgets/{budgetId}` - [API Specification §3.2](api-specification.md#32-get-budgetsbudgetid)
-    - `GET /budgets/{budgetId}/categories` - [API Specification §3.3](api-specification.md#33-get-budgetsbudgetidcategories)
-    - `GET /budgets?slug={slug}` [API Specification §3.1](api-specification.md#31-get-budgets)
+    -
+    `GET /budgets` - [API Specification §3.1](api-specification.md#31-get-budgets)
+    -
+    `GET /budgets/{budgetId}` - [API Specification §3.2](api-specification.md#32-get-budgetsbudgetid)
+    -
+    `GET /budgets/{budgetId}/categories` - [API Specification §3.3](api-specification.md#33-get-budgetsbudgetidcategories)
+    -
+    `GET /budgets?slug={slug}` [API Specification §3.1](api-specification.md#31-get-budgets)
 - Schema implementation: [../schema/Budget.js](../schema/Budget.js).
 
 ---

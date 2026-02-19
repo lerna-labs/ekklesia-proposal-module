@@ -5,10 +5,10 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.3                                                                  |
+| **Version**        | 0.1.4                                                                  |
 | **Created**        | February 19, 2026                                                      |
 | **Last Revised**   | February 19, 2026                                                      |
-| **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
+| **Companion Doc**  | [API Specification](api-specification.md)                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
 
@@ -172,15 +172,15 @@ collections reside in a single database instance.
 
 **Collections:**
 
-| Collection    | Schema/Process doc                                               | Description                                                                 |
-|---------------|------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| `Budget`      | [budget-schema-description.md](budget-schema-description.md)     | Budget cycles with date windows and admin arrays                            |
-| `Category`    | _(pending schema doc)_                                           | Categories belonging to a budget; ordered by `sortOrder`                    |
-| `Proposal`    | [proposal-schema-description.md](proposal-schema-description.md) | Proposal lifecycle documents including versioning, withdrawal, and metadata |
-| `Comment`     | [comment-schema-description.md](comment-schema-description.md)   | Top-level comments and replies on proposals                                 |
-| `CommentLike` | [comment-schema-description.md](comment-schema-description.md)   | One document per user-comment like; unique index on `(commentId, userId)`   |
-| `Session`     | [login-flow.md](login-flow.md)                                   | Short-lived nonce sessions; TTL-indexed (expires ~1 hr)                     |
-| `User`        | _(pending schema doc)_                                           | User display names and last login; keyed by Bech32 `userId`                 |
+| Collection    | Schema/Process doc                                               | Description                                                                                      |
+|---------------|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `Budget`      | [budget-schema-description.md](budget-schema-description.md)     | Budget cycles with date windows and admin arrays                                                 |
+| `Category`    | _(pending schema doc)_                                           | Categories belonging to a budget; ordered by `sortOrder`                                         |
+| `Proposal`    | [proposal-schema-description.md](proposal-schema-description.md) | Proposal lifecycle documents including versioning, withdrawal, and embedded admin action details |
+| `Comment`     | [comment-schema-description.md](comment-schema-description.md)   | Top-level comments and replies; includes embedded admin withdrawal details                       |
+| `CommentLike` | [comment-schema-description.md](comment-schema-description.md)   | One document per user-comment like; unique index on `(commentId, userId)`                        |
+| `Session`     | [login-flow.md](login-flow.md)                                   | Short-lived nonce sessions; TTL-indexed (expires ~1 hr)                                          |
+| `User`        | [user-schema-description.md](user-schema-description.md)         | User display names and last login; keyed by Bech32 `userId`                                      |
 
 **Indexes of note:**
 
@@ -191,6 +191,37 @@ collections reside in a single database instance.
   `proposerId` for owner queries.
 - `Comment`: Index on `(proposalId, parentId, status)` for top-level and reply
   fetches.
+
+### Admin Actions & Audit Trail
+
+The Budget Module does not use a dedicated admin actions collection. Instead,
+admin moderation actions are recorded as embedded `withdrawalDetails` objects
+directly on the affected `Proposal` or `Comment` document at the time the action
+is taken. This provides a lightweight, queryable audit trail without a separate
+collection or join.
+
+**Fields captured on every admin withdrawal:**
+
+| Field          | Path (Proposal)              | Path (Comment)               | Type            | Description                                                                                  |
+|----------------|------------------------------|------------------------------|-----------------|----------------------------------------------------------------------------------------------|
+| Admin identity | `withdrawalDetails.userId`   | `withdrawalDetails.userId`   | String (Bech32) | The `_id` of the admin who performed the action                                              |
+| Timestamp      | `withdrawalDetails.date`     | `withdrawalDetails.date`     | Date            | When the withdrawal was recorded                                                             |
+| Reason code    | `withdrawalDetails.category` | `withdrawalDetails.category` | String (enum)   | One of: `Inappropriate content`, `Spam`, `Policy violation`, `Duplicate submission`, `Other` |
+| Optional note  | `withdrawalDetails.comment`  | `withdrawalDetails.comment`  | String          | Free-text elaboration on the reason; required when category is `Other`                       |
+
+**Querying admin actions:**
+
+- All proposals withdrawn by a specific admin:
+  `db.proposals.find({ "withdrawalDetails.userId": "<adminId>", status: "withdrawnByAdmin" })`
+- All comments withdrawn by a specific admin:
+  `db.comments.find({ "withdrawalDetails.userId": "<adminId>", status: "withdrawnByAdmin" })`
+- All admin actions across both collections can be aggregated by querying
+  `status: "withdrawnByAdmin"` in each collection and joining on
+  `withdrawalDetails.userId`.
+
+Proposer-initiated withdrawals (`withdrawnByProposer`) also use the
+`withdrawalDetails` structure but `userId` will match the proposal's
+`proposerId`, distinguishing them from admin actions.
 
 ### 3.4 Authentication Layer
 
@@ -473,9 +504,10 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 - **PATCH** — Backwards-compatible fixes and clarifications (e.g. typo
   corrections, updated file references, clarified wording).
 
-| Version | Date       | Description                                                                                                                                       |
-|---------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0.1.3   | 2026-02-19 | Correction to remove reference to /admin routes as all displays are handled via the authenticated user's permissions                              |
-| 0.1.2   | 2026-02-19 | Remove some legacy references to stake pool authentication which is out of scope and fix a few formatting errors                                  |
-| 0.1.1   | 2026-02-19 | Minor update to reflect that only live proposals may be withdrawn.                                                                                |
-| 0.1.0   | 2026-02-19 | Initial architecture document: component overview, ASCII system diagram, data flow sequences, RBAC summary, infrastructure and security sections. |
+| Version | Date       | Description                                                                                                                                         |
+|---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.4   | 2026-02-19 | Add reference to user-schema-description.md                                                                                                         |
+| 0.1.3   | 2026-02-19 | Correction to remove reference to /admin routes as all displays are handled via the authenticated user's permissions                                |
+| 0.1.2   | 2026-02-19 | Remove some legacy references to stake pool authentication which is out of scope and fix a few formatting errors                                    |
+| 0.1.1   | 2026-02-19 | Minor update to reflect that only live proposals may be withdrawn.                                                                                  |
+| 0.1.0   | 2026-02-19 | Initial architecture document: component overview, Mermai system diagrams, data flow sequences, RBAC summary, infrastructure and security sections. |

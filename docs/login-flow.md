@@ -2,15 +2,15 @@
 
 ---
 
-| Field              | Detail                                                                 |
-|--------------------|------------------------------------------------------------------------|
-| **Document Title** | Login Flow (Frontend & Backend)                                        |
-| **Version**        | 0.1.1                                                                  |
-| **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 19, 2026                                                      |
-| **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
-| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
-| **Status**         | Draft                                                                  |
+| Field              | Detail                                                                                                  |
+|--------------------|---------------------------------------------------------------------------------------------------------|
+| **Document Title** | Login Flow (Frontend & Backend)                                                                         |
+| **Version**        | 0.1.1                                                                                                   |
+| **Created**        | February 3, 2026                                                                                        |
+| **Last Revised**   | February 19, 2026                                                                                       |
+| **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
+| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
+| **Status**         | Draft                                                                                                   |
 
 ---
 

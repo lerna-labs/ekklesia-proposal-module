@@ -2,15 +2,15 @@
 
 ---
 
-| Field              | Detail                                                                 |
-|--------------------|------------------------------------------------------------------------|
-| **Document Title** | Comment & CommentLike Schema – Field Reference                         |
-| **Version**        | 0.1.1                                                                  |
-| **Created**        | February 18, 2026                                                      |
-| **Last Revised**   | February 19, 2026                                                      |
-| **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
-| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
-| **Status**         | Draft                                                                  |
+| Field              | Detail                                                                                                  |
+|--------------------|---------------------------------------------------------------------------------------------------------|
+| **Document Title** | Comment & CommentLike Schema – Field Reference                                                          |
+| **Version**        | 0.1.1                                                                                                   |
+| **Created**        | February 18, 2026                                                                                       |
+| **Last Revised**   | February 19, 2026                                                                                       |
+| **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
+| **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
+| **Status**         | Draft                                                                                                   |
 
 ---
 
@@ -77,13 +77,20 @@ comment.
 ## Related docs
 
 - [api-specification.md](api-specification.md)
-    - `GET /comments` - [API Specification §3.6](api-specification.md#36-get-comments)
-    - `GET /comments/{commentId}` - [API Specification §3.7](api-specification.md#37-get-commentscommentid)
-    - `GET /comments/{commentId}/replies` - [API Specification §3.8](api-specification.md#38-get-commentscommentidreplies)
-    - `POST /comments` - [API Specification §5.5](api-specification.md#55-post-comments)
-    - `PUT /comments/{commentId}` - [API Specification §5.6](api-specification.md#56-put-commentscommentid)
-    - `POST /comments/{commentId}/like` - [API Specification §5.7](api-specification.md#57-post-commentscommentidlike)
-    - `PUT /comments/{commentId}/withdraw` - [API Specification §5.8](api-specification.md#58-put-commentscommentidwithdraw)
+    -
+    `GET /comments` - [API Specification §3.6](api-specification.md#36-get-comments)
+    -
+    `GET /comments/{commentId}` - [API Specification §3.7](api-specification.md#37-get-commentscommentid)
+    -
+    `GET /comments/{commentId}/replies` - [API Specification §3.8](api-specification.md#38-get-commentscommentidreplies)
+    -
+    `POST /comments` - [API Specification §5.5](api-specification.md#55-post-comments)
+    -
+    `PUT /comments/{commentId}` - [API Specification §5.6](api-specification.md#56-put-commentscommentid)
+    -
+    `POST /comments/{commentId}/like` - [API Specification §5.7](api-specification.md#57-post-commentscommentidlike)
+    -
+    `PUT /comments/{commentId}/withdraw` - [API Specification §5.8](api-specification.md#58-put-commentscommentidwithdraw)
 - Schema implementations:
     - [../schema/Comment.js](../schema/Comment.js)
     - [../schema/CommentLike.js](../schema/CommentLike.js).

@@ -5,10 +5,10 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 0.2.6                                                                  |
+| **Version**        | 1.0.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | February 18, 2026                                                      |
-| **Companion Doc**  | Ekklesia Integration Plan                                              |
+| **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
 
@@ -2347,7 +2347,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                |
 |---------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.0.0   | —          | In progress.                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 1.0.0   | 2026-02-19 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                                   |
 | 0.2.6   | 2026-02-19 | Updates to grammar and formatting.                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 0.2.5   | 2026-02-18 | `GET /proposals`: `status` parameter documented as accepting comma-separated values (e.g. `live,withdrawn`) to return proposals in any of the given statuses. Note updated accordingly.                                                                                                                                                                                                                                                    |
 | 0.2.4   | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminBudgetIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
