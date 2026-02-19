@@ -7,11 +7,13 @@
 
   let {
     id,
-    description,
+    label = "",
+    description: descriptionProp,
+    placeholder = "Select country...",
     value = $bindable(),
-    formSchema,
     validationErrors,
     notPublic = false,
+    required = false,
     class: className,
   } = $props();
 
@@ -20,15 +22,7 @@
       ? import.meta.env.VITE_API_URL
       : "/api/v0";
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ?? false,
-  );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
-  let showNotPublic = $derived(
-    notPublic ?? formSchema?.shape?.[id]?.meta()?.notPublic ?? false,
-  );
 
   let items = $state([]);
   let loading = $state(true);
@@ -77,8 +71,6 @@
     items.find((item) => item.value === value)?.label ?? "",
   );
 
-  const placeholder = $derived(schemaMeta?.placeholder ?? "Select country...");
-
   const displayValue = $derived(open ? searchQuery : selectedLabel);
 
   const q = $derived(searchQuery.trim().toLowerCase());
@@ -101,15 +93,15 @@
   <div class="flex items-center gap-1 w-full">
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
-{#if schemaRequired}
-      <span class="text-(--mbo-electric-blue)">*</span>
-    {/if}
+      {#if required}
+        <span class="text-(--mbo-electric-blue)">*</span>
+      {/if}
     </Field.Label>
-    {#if showNotPublic}
+    {#if notPublic}
       <PrivateFieldIndicator />
     {/if}
-    {#if schemaMeta?.description}
-      <ToolTip content={schemaMeta.description} />
+    {#if descriptionProp}
+      <ToolTip content={descriptionProp} />
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
@@ -166,9 +158,6 @@
       </Select.Content>
     </Select.Root>
   </div>
-  {#if description}
-    <Field.Description>{description}</Field.Description>
-  {/if}
   {#if schemaError}
     <Field.Error class="text-xs">{schemaError}</Field.Error>
   {/if}

@@ -5,12 +5,13 @@
   import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
   let {
     id,
-    description,
+    label = "",
+    description: descriptionProp,
     value = $bindable(),
     options = [],
-    formSchema,
     validationErrors,
     notPublic = false,
+    required = false,
     class: className,
     onUpdate,
   } = $props();
@@ -25,15 +26,7 @@
     if (v !== internal) internal = v;
   });
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ? true : false,
-  );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
-  let showNotPublic = $derived(
-    notPublic ?? formSchema?.shape?.[id]?.meta()?.notPublic ?? false,
-  );
   $effect(() => {
     onUpdate?.(internal);
   });
@@ -49,15 +42,15 @@
     <div class="flex items-center gap-1 w-full mb-2">
       <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
         {label}
-        {#if schemaRequired}
+        {#if required}
           <span class="text-(--mbo-electric-blue)">*</span>
         {/if}
       </Field.Label>
-      {#if showNotPublic}
+      {#if notPublic}
         <PrivateFieldIndicator />
       {/if}
-      {#if schemaMeta?.description}
-        <ToolTip content={schemaMeta.description} />
+      {#if descriptionProp}
+        <ToolTip content={descriptionProp} />
       {/if}
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>
@@ -73,9 +66,6 @@
       {/each}
     </RadioGroup.Root>
   </div>
-  {#if description}
-    <Field.Description>{description}</Field.Description>
-  {/if}
   {#if schemaError}
     <Field.Error class="text-xs">{schemaError}</Field.Error>
   {/if}

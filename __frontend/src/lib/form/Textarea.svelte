@@ -5,50 +5,33 @@
   import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
   let {
     id,
-    description,
+    label = "",
+    description: descriptionProp,
     placeholder,
     value = $bindable(),
-    formSchema,
     validationErrors,
     notPublic = false,
+    required = false,
+    maxLength,
     class: className,
   } = $props();
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ? true : false,
-  );
-  let schemaError = $derived(
-    validationErrors?.properties?.[id]?.errors?.[0],
-  );
-  let showNotPublic = $derived(
-    notPublic ?? formSchema?.shape?.[id]?.meta()?.notPublic ?? false,
-  );
-  /** Read max length from schema validation (e.g. z.string().max(n)); unwrap optional/default. Fall back to meta. */
-  let maxLength = $derived.by(() => {
-    let schema = formSchema?.shape?.[id];
-    if (!schema) return undefined;
-    while (schema?._zod?.def?.innerType) schema = schema._zod.def.innerType;
-    const fromBag = schema?._zod?.bag?.maximum;
-    if (typeof fromBag === "number") return fromBag;
-    return schemaMeta?.maxLength;
-  });
+  let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
   /** Strip markdown syntax to get visible character count (for limit display). */
   function stripMarkdownForCount(text) {
     if (typeof text !== "string") return "";
     return text
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1") // ![alt](url) -> alt
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [text](url) -> text
-      .replace(/(\*\*|__)(.*?)\1/g, "$2") // **bold** __bold__
-      .replace(/(\*|_)(.*?)\1/g, "$2") // *italic* _italic_
-      .replace(/`([^`]+)`/g, "$1") // `code`
-      .replace(/^#{1,6}\s+/gm, "") // # headers
-      .replace(/^>\s*/gm, "") // blockquote
-      .replace(/^[-*+]\s+/gm, "") // unordered list
-      .replace(/^\d+\.\s+/gm, "") // ordered list
-      .replace(/```[\s\S]*?```/g, "") // fenced code blocks
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/(\*\*|__)(.*?)\1/g, "$2")
+      .replace(/(\*|_)(.*?)\1/g, "$2")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/^>\s*/gm, "")
+      .replace(/^[-*+]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "")
+      .replace(/```[\s\S]*?```/g, "")
       .trim();
   }
 
@@ -59,15 +42,15 @@
   <div class="flex items-center gap-1 w-full">
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
-      {#if schemaRequired}
+      {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
       {/if}
     </Field.Label>
-    {#if showNotPublic}
+    {#if notPublic}
       <PrivateFieldIndicator />
     {/if}
-    {#if schemaMeta?.description}
-      <ToolTip content={schemaMeta.description} />
+    {#if descriptionProp}
+      <ToolTip content={descriptionProp} />
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
     {#if maxLength}
@@ -82,9 +65,6 @@
   >
     <Editor bind:value />
   </div>
-  {#if description}
-    <Field.Description>{description}</Field.Description>
-  {/if}
   {#if schemaError}
     <Field.Error class="text-xs">{schemaError}</Field.Error>
   {/if}

@@ -9,10 +9,7 @@
   let budget = $derived(data.budget);
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
-
-  function onBudgetChange(budgetId) {
-    goto(`/dashboard/new?budget=${budgetId}`);
-  }
+  let validationErrors = $state(null);
 
   async function onSave(payload) {
     if (!budget?._id) {
@@ -20,22 +17,24 @@
       return;
     }
     saving = true;
+    validationErrors = null;
     try {
       const body = { ...payload, budgetId: budget._id };
       const res = await api.fetch(fetch, "/proposals", {
         method: "POST",
         body: JSON.stringify(body),
       });
+      const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        await res.json();
         toast.success("Proposal saved.");
         goto("/dashboard");
       } else {
-        const json = await res.json().catch(() => ({}));
+        if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";
         toast.error(msg);
       }
     } catch (err) {
+      if (err?.body?.errors != null) validationErrors = err.body.errors;
       const msg =
         typeof err?.body === "string"
           ? err.body
@@ -54,5 +53,5 @@
 {#if budgets.length === 0}
   <p class="text-muted-foreground">No budgets available.</p>
 {:else}
-  <Form {budget} {budgets} {categories} {onSave} {onBudgetChange} />
+  <Form {budget} {categories} {onSave} bind:validationErrors />
 {/if}

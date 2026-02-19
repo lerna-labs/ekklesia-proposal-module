@@ -3,7 +3,6 @@
   import Checkbox from "$lib/form/Checkbox.svelte";
   let {
     value = $bindable(),
-    formSchema,
     validationErrors,
     class: className,
   } = $props();
@@ -12,7 +11,6 @@
 <div class="max-h-[70vh] overflow-y-auto space-y-6 pr-2 {className ?? ''}">
   <h2 class="text-xl font-semibold">0. Proposal Submission Legal Declarations</h2>
 
-  <!-- 1. Data Protection (PDF: 2 checkboxes) -->
   <section class="space-y-3">
     <h3 class="text-base font-medium">1. Data Protection</h3>
     <p class="text-sm text-muted-foreground">
@@ -23,18 +21,19 @@
     <Checkbox
       id="dataProtection"
       bind:value={value.dataProtection}
-      {formSchema}
-      {validationErrors}
+      label="I acknowledge and consent to the above data processing and sharing."
+      required
+      validationErrors={validationErrors}
     />
     <Checkbox
       id="publicVisibilityConsent"
       bind:value={value.publicVisibilityConsent}
-      {formSchema}
-      {validationErrors}
+      label="By submitting this form, you acknowledge and agree that the legal entity name, personal name, and X (Twitter) handle entered will be publicly visible in connection with this budget request."
+      required
+      validationErrors={validationErrors}
     />
   </section>
 
-  <!-- 2–7. Text only in PDF (no checkboxes) -->
   <section class="space-y-2">
     <h3 class="text-base font-medium">2. Anti-Bribery and Anti-Corruption</h3>
     <p class="text-sm text-muted-foreground">
@@ -98,46 +97,56 @@
     </p>
     <p class="text-sm text-muted-foreground">
       The vendor acknowledges that submission of this proposal does not
-      guarantee approval and that only the delegated representatives (“DReps”)
+      guarantee approval and that only the delegated representatives ("DReps")
       have authority to vote on and approve proposals. DReps reserve sole
       discretion over evaluation, voting, and approval.
     </p>
   </section>
 
-  <!-- 8. Declaration of Submitter (PDF: 3 text inputs + 2 checkboxes) -->
   <section class="space-y-4">
     <h3 class="text-base font-medium">8. Declaration of Submitter</h3>
     <div class="grid gap-3">
       <Input
         id="submitterName"
         bind:value={value.submitterName}
-        {formSchema}
-        {validationErrors}
+        label="Name"
+        placeholder="Enter Full Name"
+        required
+        maxLength={100}
+        validationErrors={validationErrors}
       />
       <Input
         id="submitterRole"
         bind:value={value.submitterRole}
-        {formSchema}
-        {validationErrors}
+        label="Role"
+        placeholder="Enter Role"
+        required
+        maxLength={100}
+        validationErrors={validationErrors}
       />
       <Input
         id="submitterEmail"
         bind:value={value.submitterEmail}
-        {formSchema}
-        {validationErrors}
+        label="Email"
+        placeholder="Enter Email"
+        required
+        maxLength={100}
+        validationErrors={validationErrors}
       />
     </div>
     <Checkbox
       id="authorizationEntity"
       bind:value={value.authorizationEntity}
-      {formSchema}
-      {validationErrors}
+      label="I confirm that I am authorized to submit this proposal on behalf of the vendor entity. I acknowledge that submission does not constitute authority to bind the entity contractually."
+      required
+      validationErrors={validationErrors}
     />
     <Checkbox
       id="authorizationAttestation"
       bind:value={value.authorizationAttestation}
-      {formSchema}
-      {validationErrors}
+      label="I confirm that I am authorized to submit and attest to all legal declarations above on behalf of the vendor."
+      required
+      validationErrors={validationErrors}
     />
   </section>
 </div>

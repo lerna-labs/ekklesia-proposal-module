@@ -9,9 +9,11 @@ import { Budget } from "../../../schema/Budget.js";
 
 // helper imports
 import mongoose from "mongoose";
+import { z } from "zod";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { validateCreateProposalBody } from "../../../validation/proposalCreateSchema.js";
+import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 
 /**
  * Compute total budget (ADA) from metaData.executionRoadmap.workPackages, same logic as FormFinancialSummary.
@@ -63,33 +65,44 @@ router.post("/", async (req, res) => {
 
     const proposerId = tokenResult.userId;
 
-    const validation = validateCreateProposalBody(req.body);
-    if (!validation.success) {
-      const errors = validation.error.flatten();
-      return res.status(400).json({
-        status: "error",
-        message: "Validation failed",
-        errors: errors.fieldErrors ?? {},
-        formErrors: errors.formErrors ?? [],
-      });
-    }
-
-    const { budgetId, title, summary, status, metaData } = validation.data;
-
-    if (!mongoose.Types.ObjectId.isValid(budgetId) || budgetId.length !== 24) {
+    const rawBudgetId = req.body?.budgetId;
+    if (!rawBudgetId || !mongoose.Types.ObjectId.isValid(rawBudgetId) || String(rawBudgetId).length !== 24) {
       return res.status(400).json({
         status: "error",
         message: "Invalid budgetId. Must be a valid ObjectId.",
       });
     }
 
-    const budgetDoc = await Budget.findById(budgetId).lean();
+    const budgetDoc = await Budget.findById(rawBudgetId).lean();
     if (!budgetDoc) {
       return res.status(404).json({
         status: "error",
         message: "Budget not found",
       });
     }
+
+    let validation;
+    if (budgetDoc.validationScript) {
+      const script = await loadValidationScript(budgetDoc.validationScript);
+      if (script) {
+        validation = script.validate(req.body);
+      } else {
+        validation = validateCreateProposalBody(req.body);
+      }
+    } else {
+      validation = validateCreateProposalBody(req.body);
+    }
+
+    if (!validation.success) {
+      const errorTree = z.treeifyError(validation.error);
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: errorTree,
+      });
+    }
+
+    const { budgetId, title, summary, status, metaData } = validation.data;
 
     // For draft, merge with minimal defaults so Mongoose metaData subfields exist
     const defaultDraftMetaData =
@@ -145,7 +158,6 @@ router.post("/", async (req, res) => {
 
     const proposal = await Proposal.create(doc);
     const created = proposal.toObject ? proposal.toObject() : proposal;
-
     return res.status(201).json(created);
   } catch (error) {
     if (error.name === "ValidationError" && error.errors) {
@@ -331,22 +343,36 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
-    const validation = validateCreateProposalBody(req.body);
-    if (!validation.success) {
-      const errors = validation.error.flatten();
-      return res.status(400).json({
-        status: "error",
-        message: "Validation failed",
-        errors: errors.fieldErrors ?? {},
-        formErrors: errors.formErrors ?? [],
-      });
-    }
-
     const proposal = await Proposal.findById(proposalId);
     if (!proposal) {
       return res.status(404).json({
         status: "error",
         message: "Proposal not found",
+      });
+    }
+
+    const budgetDoc = proposal.budgetId
+      ? await Budget.findById(proposal.budgetId).lean()
+      : null;
+
+    let validation;
+    if (budgetDoc?.validationScript) {
+      const script = await loadValidationScript(budgetDoc.validationScript);
+      if (script) {
+        validation = script.validate(req.body);
+      } else {
+        validation = validateCreateProposalBody(req.body);
+      }
+    } else {
+      validation = validateCreateProposalBody(req.body);
+    }
+
+    if (!validation.success) {
+      const errorTree = z.treeifyError(validation.error);
+      return res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: errorTree,
       });
     }
 
@@ -539,12 +565,11 @@ router.get("/:proposalId", async (req, res) => {
       }
     }
 
-    // Include category when returning a single proposal (omit budgetId and timestamps)
-    const categoryDoc = await Category.findById(proposal.categoryId).lean();
     let payload = proposal;
+    const categoryDoc = await Category.findById(proposal.categoryId).lean();
     if (categoryDoc) {
       const { budgetId, createdAt, updatedAt, ...category } = categoryDoc;
-      payload = { ...proposal, category };
+      payload = { ...payload, category };
     }
 
     return res.status(200).json(payload);
@@ -829,13 +854,12 @@ router.get("/", async (req, res) => {
       query.proposerId = validatedAddress;
     }
 
-    // Add search: match title, description, metaData.contractingParty.legalEntityName (partial, case-insensitive) or _id (exact match)
+    // Add search: title, metaData.contractingParty.legalEntityName (partial, case-insensitive) or _id (exact match)
     if (search) {
       const searchTerm = search.trim();
       if (searchTerm) {
         const searchConditions = [
           { title: { $regex: searchTerm, $options: "i" } },
-          { description: { $regex: searchTerm, $options: "i" } },
           {
             "metaData.contractingParty.legalEntityName": {
               $regex: searchTerm,
@@ -843,14 +867,8 @@ router.get("/", async (req, res) => {
             },
           },
         ];
-        // If search term is a valid ObjectId, also search by _id
-        if (
-          mongoose.Types.ObjectId.isValid(searchTerm) &&
-          searchTerm.length === 24
-        ) {
-          searchConditions.push({
-            _id: new mongoose.Types.ObjectId(searchTerm),
-          });
+        if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
+          searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
         }
         query.$or = searchConditions;
       }
@@ -885,33 +903,16 @@ router.get("/", async (req, res) => {
     }
 
     const sortDirection = directionNorm === "asc" ? 1 : -1;
-    const sortOption = { [sortFieldMap[sortKey]]: sortDirection };
+    const sortField = sortKey === "title" ? "title" : sortFieldMap[sortKey];
+    const sortOption = { [sortField]: sortDirection };
 
-    // Calculate skip value for pagination
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query with pagination
-    const [proposals, totalItems] = await Promise.all([
-      Proposal.find(query)
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(), // Use lean() for better performance
-      Proposal.countDocuments(query), // Get total count for pagination
-    ]);
+    const proposals = await Proposal.find(query).sort(sortOption).skip(skip).limit(limitNum).lean();
+    const totalItems = await Proposal.countDocuments(query);
 
-    // Format proposals - include all fields but shorten metaData
     const formattedProposals = proposals.map((proposal) => {
-      const {
-        metaData,
-        withdrawalReason,
-        versions,
-        signature,
-        userId,
-        ...rest
-      } = proposal;
-
-      // Shorten metaData to only include key fields
+      const { metaData, withdrawalReason, versions, signature, userId, ...rest } = proposal;
       const shortenedMetaData = metaData
         ? {
             strategicFocusArea: metaData.strategicFocusArea,
@@ -919,11 +920,7 @@ router.get("/", async (req, res) => {
             initiativeType: metaData.financialAndAdministrative?.initiativeType,
           }
         : null;
-
-      return {
-        ...rest,
-        metaData: shortenedMetaData,
-      };
+      return { ...rest, metaData: shortenedMetaData };
     });
 
     // Calculate pagination metadata

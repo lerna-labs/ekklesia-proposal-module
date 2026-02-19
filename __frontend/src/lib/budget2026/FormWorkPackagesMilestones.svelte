@@ -18,19 +18,10 @@
   let {
     value = $bindable([]),
     onvaluechange,
-    formSchema,
     class: className,
   } = $props();
 
   const list = $derived(Array.isArray(value) ? value : []);
-  const meta = $derived(
-    formSchema?.shape?.milestones?.meta?.() ?? {
-      label: "Milestones",
-      description: "How do you plan to deliver this package?",
-    },
-  );
-  const sectionLabel = $derived(meta?.label ?? "Milestones");
-  const sectionDescription = $derived(meta?.description ?? "");
 
   let addDialogOpen = $state(false);
   let editingIndex = $state(null);
@@ -99,13 +90,11 @@
     <Field.Label
       class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit font-medium text-muted-foreground"
     >
-      {sectionLabel}
+      Milestones
     </Field.Label>
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
-  {#if sectionDescription}
-    <p class="text-xs text-muted-foreground mb-2">{sectionDescription}</p>
-  {/if}
+  <p class="text-xs text-muted-foreground mb-2">How do you plan to deliver this package?</p>
 
   {#if list.length > 0}
     <ul
@@ -192,25 +181,41 @@
       <FormInput
         id="milestoneName"
         bind:value={draft.milestoneName}
-        formSchema={milestoneSchema}
+        label="Milestone (and reference name)"
+        description="You may use labels like 'Milestone 1,' but please include a descriptive name afterward."
+        placeholder="e.g. Milestone 1 – Design Approval"
+        required
+        maxLength={100}
         validationErrors={draftErrors}
       />
       <FormTextarea
         id="deliverables"
         bind:value={draft.deliverables}
-        formSchema={milestoneSchema}
+        label="Deliverables"
+        description="What is produced? Concrete outputs (reports, code, documentation, audits, etc.)."
+        placeholder="e.g. Senior Dev"
+        required
+        maxLength={600}
         validationErrors={draftErrors}
       />
       <FormTextarea
         id="acceptanceCriteria"
         bind:value={draft.acceptanceCriteria}
-        formSchema={milestoneSchema}
+        label="Acceptance Criteria"
+        description="How do you know it's done?"
+        placeholder="Enter Description"
+        required
+        maxLength={600}
         validationErrors={draftErrors}
       />
       <FormInput
         id="duration"
         bind:value={draft.duration}
-        formSchema={milestoneSchema}
+        label="Duration"
+        description="How long do you expect it to take for this milestone to be finished?"
+        placeholder="e.g. 2 weeks"
+        required
+        maxLength={200}
         validationErrors={draftErrors}
       />
     </div>
