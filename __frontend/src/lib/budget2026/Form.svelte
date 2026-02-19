@@ -1,10 +1,9 @@
 <script>
-  import { untrack } from "svelte";
   import { toast } from "svelte-sonner";
+  import { beforeNavigate, goto } from "$app/navigation";
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
-  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import FormFocusArea from "./FormFocusArea.svelte";
   import FormFocusAreaKPI from "./FormFocusAreaKPI.svelte";
   import FormTimeline from "./FormTimeline.svelte";
@@ -15,6 +14,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Switch from "$lib/components/ui/switch/index.js";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
   let {
@@ -152,11 +152,6 @@
     },
   });
 
-  let declarationsDialogOpen = $state(false);
-  let declarationValidationErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.legalDeclarations ??
-      null,
-  );
   let autoSaveEnabled = $state(false);
 
   const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -205,59 +200,84 @@
     }
   });
 
+  /** Snapshot of form for dirty check (dates normalized to ISO). */
+  const formDataSnapshot = $derived(
+    JSON.stringify(formDataToApiPayload({ ...formData })),
+  );
+  let initialSnapshot = $state(null);
+  $effect(() => {
+    if (initialSnapshot !== null) return;
+    if (proposal && !prefilled) return;
+    initialSnapshot = formDataSnapshot;
+  });
+  const isDirty = $derived(
+    initialSnapshot !== null && formDataSnapshot !== initialSnapshot,
+  );
+  const dirtyRef = { current: false };
+  $effect(() => {
+    dirtyRef.current = isDirty;
+  });
+
+  /** Leave-confirm: intercept in-app navigation when dirty; show dialog and optionally goto. */
+  let leaveConfirmOpen = $state(false);
+  let pendingNavigateUrl = $state(null);
+  beforeNavigate(({ to, cancel }) => {
+    if (!to || !dirtyRef.current) return;
+    cancel();
+    pendingNavigateUrl = to.url.href;
+    leaveConfirmOpen = true;
+  });
+
+  $effect(() => {
+    if (!isDirty) return;
+    const handler = (e) => e.preventDefault();
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  });
+
+  function confirmLeave() {
+    const url = pendingNavigateUrl;
+    leaveConfirmOpen = false;
+    pendingNavigateUrl = null;
+    if (!url) return;
+    // Clear dirty so beforeNavigate doesn't cancel this goto
+    dirtyRef.current = false;
+    initialSnapshot = formDataSnapshot;
+    goto(url);
+  }
+
+  function stayOnPage() {
+    leaveConfirmOpen = false;
+    pendingNavigateUrl = null;
+  }
+
   /** Save Draft: no frontend validation; backend validates. On 400 parent sets validationErrors from body.errors. */
   function saveDraft() {
     if (onSave) {
       const payload = formDataToApiPayload({ ...formData, status: "draft" });
-      Promise.resolve(onSave(payload)).catch(() => {});
+      Promise.resolve(onSave(payload))
+        .then(() => {
+          initialSnapshot = formDataSnapshot;
+        })
+        .catch(() => {});
     }
   }
 
-  /** Submit (go live): open declarations dialog; no frontend validation. */
+  /** Submit (go live): no frontend validation. */
   function handleSubmit(e) {
     e.preventDefault();
     validationErrors = null;
-    declarationsDialogOpen = true;
-  }
-
-  /** After user confirms declarations: send with status "live". Backend validates; on 400 parent sets validationErrors. */
-  function confirmDeclarations() {
-    declarationsDialogOpen = false;
     if (onSave) {
       const payload = formDataToApiPayload({ ...formData, status: "live" });
-      Promise.resolve(onSave(payload)).catch(() => {});
+      Promise.resolve(onSave(payload))
+        .then(() => {
+          initialSnapshot = formDataSnapshot;
+        })
+        .catch(() => {});
     }
   }
 
-  // Snapshot so the effect re-runs when any part of formData changes (main fields only for revalidation)
-  const formDataSnapshot = $derived(
-    JSON.stringify({
-      title: formData.title,
-      summary: formData.summary,
-      status: formData.status,
-      metaData: formData.metaData,
-    }),
-  );
-
-  // Clear backend-sourced validation errors when user edits the form (not when errors are first set)
-  let prevFormDataSnapshot = $state(undefined);
-  $effect(() => {
-    const snap = formDataSnapshot;
-    const hadErrors = untrack(() => validationErrors);
-    if (
-      prevFormDataSnapshot !== undefined &&
-      snap !== prevFormDataSnapshot &&
-      hadErrors
-    ) {
-      validationErrors = null;
-    }
-    prevFormDataSnapshot = snap;
-  });
-
-  // Clear declaration errors when the dialog closes (e.g. Cancel) so they don't persist on reopen
-  $effect(() => {
-    if (!declarationsDialogOpen) declarationValidationErrors = null;
-  });
+  // Backend validation errors persist until the next submit (parent sets validationErrors from API response)
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
@@ -368,11 +388,13 @@
             bind:value={formData.metaData.executionRoadmap.workPackages}
           />
 
-          <FormFinancialSummary
-            validationErrors={validationErrors?.properties?.metaData?.properties
-              ?.financialAndAdministrative}
-            formData={formData.metaData}
-          />
+          {#if (formData.metaData.executionRoadmap.workPackages?.length ?? 0) > 0}
+            <FormFinancialSummary
+              validationErrors={validationErrors?.properties?.metaData?.properties
+                ?.financialAndAdministrative}
+              formData={formData.metaData}
+            />
+          {/if}
         </Card.Content>
       </Card.Root>
     </div>
@@ -404,18 +426,11 @@
     id="proposal-submission-legal-declarations"
   >
     <div class="max-w-4xl mx-auto space-y-4">
-      <Card.Root>
-        <Card.Header>
-          <Card.Title class="text-2xl font-medium">
-            5. Proposal Submission Legal Declarations
-          </Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <p class="text-sm text-muted-foreground mt-2">
-            You will be asked to confirm legal declarations when you submit.
-          </p>
-        </Card.Content>
-      </Card.Root>
+      <FormLegalDeclarations
+        validationErrors={validationErrors?.properties?.metaData?.properties
+          ?.legalDeclarations ?? null}
+        bind:value={formData.metaData.legalDeclarations}
+      />
     </div>
   </section>
 
@@ -423,11 +438,11 @@
     class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-4">
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-1">
       <Button type="button" class="cursor-pointer" onclick={saveDraft}>
         Save Draft
       </Button>
-      <Button type="submit" class="cursor-pointer">Submit</Button>
+      <Button type="submit" class="cursor-pointer">Submit Proposal</Button>
       {#if formData.status === "draft" && onSave}
         <label
           class="flex items-center gap-2 cursor-pointer select-none text-sm"
@@ -440,31 +455,21 @@
   </section>
 </form>
 
-<Dialog.Root bind:open={declarationsDialogOpen}>
-  <Dialog.Content class="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-    <Dialog.Header>
-      <Dialog.Title>Legal declarations</Dialog.Title>
-      <Dialog.Description>
-        Confirm the legal declarations below before submitting your proposal.
-      </Dialog.Description>
-    </Dialog.Header>
-    <div class="flex-1 overflow-y-auto min-h-0">
-      <FormLegalDeclarations
-        validationErrors={declarationValidationErrors}
-        bind:value={formData.metaData.legalDeclarations}
-      />
-    </div>
-    <Dialog.Footer class="shrink-0 gap-2">
-      <Dialog.Close class={buttonVariants({ variant: "outline" })}>
-        Cancel
-      </Dialog.Close>
-      <Button
-        type="button"
-        class="cursor-pointer"
-        onclick={confirmDeclarations}
-      >
-        Confirm and Submit
-      </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+<AlertDialog.Root bind:open={leaveConfirmOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Unsaved changes</AlertDialog.Title>
+      <AlertDialog.Description>
+        You have unsaved changes. Are you sure you want to leave?
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer class="flex gap-2">
+      <AlertDialog.Cancel class="cursor-pointer" onclick={stayOnPage}>
+        Stay
+      </AlertDialog.Cancel>
+      <AlertDialog.Action class="cursor-pointer" onclick={confirmLeave}>
+        Leave
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

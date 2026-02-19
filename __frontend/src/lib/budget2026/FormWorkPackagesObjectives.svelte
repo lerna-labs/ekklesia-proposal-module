@@ -28,7 +28,9 @@
   );
 
   const objectiveSchema = $derived(
-    z.object({ objective: z.string().min(1, "Objective is required").max(400) }),
+    z.object({
+      objective: z.string().min(1, "Objective is required").max(400),
+    }),
   );
 
   let addDialogOpen = $state(false);
@@ -41,7 +43,8 @@
     const core = validationErrors?.properties?.coreObjectives;
     const topError = core?.errors?.[0];
     if (topError) return topError;
-    const firstItemError = core?.items?.find((i) => i?.errors?.length)?.errors?.[0];
+    const firstItemError = core?.items?.find((i) => i?.errors?.length)
+      ?.errors?.[0];
     return firstItemError ?? "";
   });
 
@@ -86,7 +89,9 @@
         Core Objectives
         <span class="text-(--mbo-electric-blue)">*</span>
       </Field.Label>
-      <ToolTip content="What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities." />
+      <ToolTip
+        content="What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities."
+      />
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>
 
@@ -126,12 +131,14 @@
 
     <div class="flex justify-start">
       <Button
+        type="button"
+        size="sm"
         variant="outline"
-        class="w-fit cursor-pointer"
+        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
         onclick={() => openDialog()}
       >
-        <PlusIcon class="size-4 mr-1" />
-        Add objective
+        <PlusIcon class="size-4" />
+        Add Objective
       </Button>
     </div>
 
@@ -149,7 +156,8 @@
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}
       </Dialog.Title>
       <Dialog.Description>
-        What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities.
+        What is this Work Package intended to achieve? Focus on outcomes or
+        improvements, not tasks or activities.
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-2">
@@ -174,7 +182,7 @@
         Cancel
       </Button>
       <Button type="button" class="cursor-pointer" onclick={submitObjective}>
-        {editingIndex != null ? "Save changes" : "Add"}
+        {editingIndex != null ? "Save Objective" : "Add Objective"}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

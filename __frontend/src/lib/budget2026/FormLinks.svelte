@@ -16,7 +16,8 @@
   let {
     value = $bindable([]),
     label: labelProp = "Other Supporting Info",
-    description: descriptionProp = "External links get the disclaimer text popup before they open. Any other details relevant to the proposal.",
+    description:
+      descriptionProp = "External links get the disclaimer text popup before they open. Any other details relevant to the proposal.",
     notPublic = false,
     validationErrors,
     class: className,
@@ -156,7 +157,8 @@
     <Button
       type="button"
       variant="outline"
-      class="add-item-btn w-fit cursor-pointer gap-1"
+      size="sm"
+      class="add-item-btn text-xs w-fit cursor-pointer gap-1"
       onclick={openAddDialog}
     >
       <PlusIcon class="size-4" />

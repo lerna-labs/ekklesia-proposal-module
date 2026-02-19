@@ -61,7 +61,10 @@ const workPackageSchema = z.object({
 });
 
 const contractingPartySchema = z.object({
-  legalEntityType: z.enum(["company", "individual"]).optional(),
+  legalEntityType: z.enum(["company", "individual"], {
+    required_error: "Legal entity type is required",
+    invalid_type_error: "Legal entity type must be company or individual",
+  }),
   legalEntityName: z.string().max(100).optional(),
   legalEntityRegistrationNumber: z.string().max(100).optional(),
   legalEntityCountry: z.string().max(100).optional(),
@@ -72,17 +75,17 @@ const contractingPartySchema = z.object({
 });
 
 const primaryContactSchema = z.object({
-  name: z.string().max(100).optional(),
-  title: z.string().max(100).optional(),
-  email: z.string().trim().max(255).email().optional(),
+  name: z.string().max(100).min(1, "Name is required"),
+  title: z.string().max(100).min(1, "Title is required"),
+  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
   socialMedia: z.string().max(100).optional(),
 });
 
 const signatoryContactSchema = z.object({
-  name: z.string().max(100).optional(),
-  title: z.string().max(100).optional(),
-  email: z.string().trim().max(255).email().optional(),
-  authorization: z.boolean().optional(),
+  name: z.string().max(100).min(1, "Name is required"),
+  title: z.string().max(100).min(1, "Role is required"),
+  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
+  authorization: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
 });
 
 const kycInfoSchema = z
@@ -129,8 +132,8 @@ const financialAndAdministrativeSchema = z.object({
 
 // API receives dates as ISO strings; coerce to Date for validation/storage
 const executionRoadmapSchema = z.object({
-  projectStartDate: z.coerce.date().optional(),
-  projectEndDate: z.coerce.date().optional(),
+  projectStartDate: z.coerce.date("Start Date is required"),
+  projectEndDate: z.coerce.date("End Date is required"),
   workPackages: z.array(workPackageSchema).optional().default([]),
 });
 
@@ -147,12 +150,10 @@ const legalDeclarationsSchema = z.object({
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
   strategicFocusArea: z
-    .union([
-      z.literal(""),
-      z.string().length(24, "Please choose a strategic focus area").regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId"),
-    ])
-    .optional()
-    .default(""),
+    .string()
+    .min(1, "Please choose a strategic focus area")
+    .length(24, "Please choose a strategic focus area")
+    .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId"),
   keyPerformanceIndicators: z
     .array(
       z.object({

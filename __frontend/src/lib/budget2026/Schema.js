@@ -55,7 +55,8 @@ export const workPackageSchema = z.object({
   expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
   metric: z.string().min(1, "Metric is required").max(600),
   milestones: z.array(milestoneSchema).optional().default([]),
-  budgetBreakdown: z.array(budgetRowSchema).min(1, "At least one budget row is required").optional().default([]),
+  /** Allow empty in add/edit dialog; user adds budget rows in the expanded card. Backend still requires at least one row on submit. */
+  budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
 });
 
 export default workPackageSchema;
