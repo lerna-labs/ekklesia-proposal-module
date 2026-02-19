@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | Proposal Flow – Draft, Save, and Submit                                |
-| **Version**        | 0.1.2                                                                  |
+| **Version**        | 0.1.3                                                                  |
 | **Created**        | February 18, 2026                                                      |
 | **Last Revised**   | February 19, 2026                                                      |
 | **Companion Doc**  | Ekklesia Integration Plan · [API Specification](api-specification.md)  |
@@ -98,7 +98,7 @@ flowchart TD
 
 - **User:** Starts a new proposal (e.g. "Create proposal" in a budget).
 - **API:** `POST /proposals` with `budgetId`, `title`, `summary` (optional for
-  draft), `metaData` (can be minimal), and optionally `status: "draft"` 
+  draft), `metaData` (can be minimal), and optionally `status: "draft"`
   (default).
 - **Validation:** Only basic requirements (e.g. valid `budgetId`, valid
   structure). **No** requirement for complete `metaData`, legal declarations, or
@@ -153,7 +153,7 @@ sequenceDiagram
 
 - **User:** Clicks "Submit" (or equivalent), confirming they want the proposal
   to become visible and reviewed.
-- **API:** `PUT /proposals/{proposalId}` with the full proposal body and 
+- **API:** `PUT /proposals/{proposalId}` with the full proposal body and
   **`status: "live"`** (or create with `POST /proposals` and `status: "live"`).
 - **Validation:** **Full validation** applies:
     - All required fields
@@ -203,10 +203,11 @@ sequenceDiagram
 - **User:** Edits an already-submitted (live) proposal.
 - **API:** `PUT /proposals/{proposalId}` with updated data. **`status` must
   remain `"live"`** (server rejects any attempt to change status).
-- **Behavior:** Server creates an **archived** copy of the current version,
-  then updates the proposal in place and appends the previous version to
+- **Behavior:** Server creates an **archived** copy of the current version, then
+  updates the proposal in place and appends the previous version to
   `versions`
-  (see [api-specification.md §5.2](api-specification.md#52-put-proposalsproposalid)).
+  (
+  see [api-specification.md §5.2](api-specification.md#52-put-proposalsproposalid)).
 
 ```mermaid
 sequenceDiagram
@@ -237,13 +238,12 @@ sequenceDiagram
 
 ### 3.5 Withdraw proposal
 
-- **User (proposer or budget admin):** Withdraws a **live or draft** proposal.
+- **User (proposer or budget admin):** Withdraws a **live** proposal.
 - **API:** `PUT /proposals/{proposalId}/withdraw` with `category` and
   `comment` (both required).
   See [api-specification.md §5.3](api-specification.md#53-put-proposalsproposalidwithdraw).
 - **Constraints:** For **live** proposals, proposer can withdraw until the
-  budget's `feedbackEndDate`, admin until `reviewEndDate`. Draft proposals can
-  be withdrawn by proposer or admin without date restriction.
+  budget's `feedbackEndDate`, admin until `reviewEndDate`.
 
 ```mermaid
 sequenceDiagram
@@ -284,7 +284,8 @@ sequenceDiagram
 - **User:** Deletes a **draft** proposal.
 - **API:** `DELETE /proposals/{proposalId}`. Only proposals with
   `status: "draft"` can be deleted
-  (see [api-specification.md §5.4](api-specification.md#54-delete-proposalsproposalid)).
+  (
+  see [api-specification.md §5.4](api-specification.md#54-delete-proposalsproposalid)).
 
 ```mermaid
 sequenceDiagram
@@ -383,8 +384,9 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 - **PATCH** — Backwards-compatible fixes and clarifications (e.g. typo
   corrections, alignment with implementation).
 
-| Version | Date       | Description                                                                                                                                                   |
-|---------|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 0.1.2   | 2026-02-19 | Add sequence diagrams and flowcharts for documenting various state changes of proposals.                                                                      |
-| 0.1.1   | 2026-02-19 | Grammar, formatting, and minor tweaks and changes.                                                                                                            |
-| 0.1.0   | 2026-02-18 | Document metadata block and revision history. Fixed: create uses `summary` (not `description`); withdraw applies to live or draft, date limits only for live. |
+| Version | Date       | Description                                                                                                                                                                   |
+|---------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.3   | 2026-02-19 | Remove the concept/ability to "withdraw" a draft proposal. Draft proposals may be deleted by the author, otherwise only live proposals may be withdrawn by admin or the user. |
+| 0.1.2   | 2026-02-19 | Add sequence diagrams and flowcharts for documenting various state changes of proposals.                                                                                      |
+| 0.1.1   | 2026-02-19 | Grammar, formatting, and minor tweaks and changes.                                                                                                                            |
+| 0.1.0   | 2026-02-18 | Document metadata block and revision history. Fixed: create uses `summary` (not `description`); withdraw applies to live or draft, date limits only for live.                 |
