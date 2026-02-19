@@ -28,8 +28,16 @@ export async function load({ params, fetch }) {
 		error(404, `Proposal not found`);
 	}
 
+	let categories = [];
+	const catRes = await fetch(`${apiUrl}/votes/${voteData._id}/categories`);
+	if (catRes.ok) {
+		const catJson = await catRes.json();
+		categories = catJson.data ?? [];
+	}
+
 	return {
 		vote: voteData,
 		proposal: proposalData,
+		categories,
 	};
 }
