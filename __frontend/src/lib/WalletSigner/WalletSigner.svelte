@@ -74,7 +74,7 @@
   <AlertDialog.Trigger>
     <Button
       size="sm"
-      class={dark ? "bg-white text-black hover:bg-gray-200" : ""}
+      class={dark ? "bg-white text-black hover:bg-gray-200 text-xs" : "text-xs"}
     >
       {mode == "login" ? "Connect Wallet" : buttonText}
     </Button>
