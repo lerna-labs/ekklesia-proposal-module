@@ -258,14 +258,12 @@ sequenceDiagram
     Frontend->>Backend: PUT /proposals/{id}/withdraw<br/>{ category, comment }
 
     Backend->>Backend: Identify caller role<br/>(proposer or admin)
-    Backend->>Backend: Check proposal is draft or live
+    Backend->>Backend: Check proposal is live
 
     alt Proposal is live AND caller is Proposer
         Backend->>Backend: Check now ≤ feedbackEndDate
     else Proposal is live AND caller is Admin
         Backend->>Backend: Check now ≤ reviewEndDate
-    else Proposal is draft
-        Backend->>Backend: No date restriction
     end
 
     alt Date check fails
