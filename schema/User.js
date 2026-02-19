@@ -31,11 +31,5 @@ const userSchema = new Schema(
     }
 );
 
-// Pre-save middleware to update the updatedAt field
-userSchema.pre("save", function (next) {
-    this.updatedAt = new Date();
-    next();
-});
-
 const User = mongoose.model("User", userSchema);
 export { User };
