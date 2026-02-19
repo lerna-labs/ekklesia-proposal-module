@@ -342,7 +342,7 @@ sequenceDiagram
     Backend->>MongoDB: verify sig, upsert User, issue JWT
     MongoDB-->>Backend: ok
     Backend-->>Frontend: Set-Cookie: token=<JWT><br/>{ token, expiresIn }
-    Frontend-->>User: setJWT(); loggedIn = true
+    Frontend-->>User: setJWT() <br /> loggedIn = true
 ```
 
 ### 5.3 Proposal Create / Submit Flow
