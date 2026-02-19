@@ -312,6 +312,73 @@ router.put("/:proposalId/withdraw", async (req, res) => {
 });
 
 /**
+ * @route DELETE /api/v0/proposals/:proposalId
+ * @description Delete a proposal. Authenticated users may delete only their own draft proposals.
+ * @access Private (requires valid JWT)
+ * @returns {Object} 200 - { status: "success", message: "Proposal deleted" }
+ * @returns {Object} 400 - Invalid proposalId
+ * @returns {Object} 401 - Not authenticated
+ * @returns {Object} 403 - Not the proposer or proposal is not a draft
+ * @returns {Object} 404 - Proposal not found
+ */
+router.delete("/:proposalId", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(tokenResult.code ?? 401).json({
+        status: "error",
+        message: tokenResult.message ?? "Authentication required",
+      });
+    }
+    const userId = String(tokenResult.userId ?? "").trim();
+    const { proposalId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid proposalId. Must be a valid ObjectId.",
+      });
+    }
+
+    const proposal = await Proposal.findById(proposalId).lean();
+    if (!proposal) {
+      return res.status(404).json({
+        status: "error",
+        message: "Proposal not found",
+      });
+    }
+
+    if (proposal.status !== "draft") {
+      return res.status(403).json({
+        status: "error",
+        message: "Only draft proposals can be deleted.",
+      });
+    }
+
+    const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
+    if (proposerIdStr !== userId) {
+      return res.status(403).json({
+        status: "error",
+        message: "You can only delete your own proposals.",
+      });
+    }
+
+    await Proposal.findByIdAndDelete(proposalId);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Proposal deleted",
+    });
+  } catch (error) {
+    console.error("Error deleting proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
  * @route PUT /api/v0/proposals/:proposalId
  * @description Update a proposal (same body as POST). Only proposer or vote admin (draft only).
  * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
