@@ -125,7 +125,13 @@
       />
     </div>
     <Dialog.Footer class="gap-2">
-      <Dialog.Close disabled={submitting}>Cancel</Dialog.Close>
+      <Button.Root
+        variant="outline"
+        disabled={submitting}
+        onclick={() => (open = false)}
+      >
+        Cancel
+      </Button.Root>
       <Button.Root
         variant="destructive"
         disabled={submitting}
