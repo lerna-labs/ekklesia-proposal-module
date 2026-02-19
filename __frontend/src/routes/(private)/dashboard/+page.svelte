@@ -2,7 +2,7 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
   import { logout } from "$stores/sessionManager.js";
-  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import ProposalDelete from "$lib/ProposalDelete.svelte";
   import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
@@ -20,12 +20,12 @@
   let voteSlugs = $derived(data.voteSlugs ?? {});
   let voteTitles = $derived(data.voteTitles ?? {});
 
-  let withdrawDialogOpen = $state(false);
-  let withdrawProposal = $state(null);
+  let deleteDialogOpen = $state(false);
+  let deleteProposal = $state(null);
 
-  function openWithdrawDialog(proposal) {
-    withdrawProposal = proposal;
-    withdrawDialogOpen = true;
+  function openDeleteDialog(proposal) {
+    deleteProposal = proposal;
+    deleteDialogOpen = true;
   }
 
   function navigatePage(pageNum) {
@@ -175,17 +175,6 @@
                         >
                           <PencilIcon class="size-4" />
                         </Button.Root>
-                        {#if proposal.status === "live" || proposal.status === "draft"}
-                          <Button.Root
-                            variant="outline"
-                            size="icon"
-                            aria-label="Withdraw"
-                            title="Withdraw"
-                            onclick={() => openWithdrawDialog(proposal)}
-                          >
-                            <Trash2Icon class="size-4 text-black" />
-                          </Button.Root>
-                        {/if}
                         {#if viewUrl}
                           <Button.Root
                             variant="outline"
@@ -207,6 +196,22 @@
                             <EyeIcon class="size-4" />
                           </Button.Root>
                         {/if}
+                        <Button.Root
+                          variant="outline"
+                          size="icon"
+                          aria-label="Delete draft"
+                          title={proposal.status === "draft"
+                            ? "Delete draft proposal"
+                            : "Only draft proposals can be deleted"}
+                          disabled={proposal.status !== "draft"}
+                          onclick={() => openDeleteDialog(proposal)}
+                        >
+                          <Trash2Icon
+                            class="size-4 {proposal.status === 'draft'
+                              ? 'text-black'
+                              : 'text-muted-foreground'}"
+                          />
+                        </Button.Root>
                       </div>
                     </td>
                   </tr>
@@ -258,8 +263,8 @@
   </div>
 </div>
 
-<ProposalWithdrawal
-  bind:open={withdrawDialogOpen}
-  proposal={withdrawProposal}
+<ProposalDelete
+  bind:open={deleteDialogOpen}
+  proposal={deleteProposal}
   onSuccess={() => invalidateAll()}
 />

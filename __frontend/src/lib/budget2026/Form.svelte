@@ -438,14 +438,18 @@
     class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
     id="controls"
   >
-    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-1">
-      <Button type="button" class="cursor-pointer" onclick={saveDraft}>
-        Save Draft
+    <div class="max-w-4xl mx-auto flex flex-wrap items-center gap-2">
+      {#if formData.status === "draft"}
+        <Button type="button" class="cursor-pointer" onclick={saveDraft}>
+          Save Draft
+        </Button>
+      {/if}
+      <Button type="submit" class="cursor-pointer">
+        {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
       </Button>
-      <Button type="submit" class="cursor-pointer">Submit Proposal</Button>
       {#if formData.status === "draft" && onSave}
         <label
-          class="flex items-center gap-2 cursor-pointer select-none text-sm"
+          class="ml-auto flex h-9 items-center gap-2 rounded-md border bg-white px-4 py-2 shadow-xs cursor-pointer select-none text-sm font-medium"
         >
           <Switch.Root bind:checked={autoSaveEnabled} />
           <span>Auto-save every 5 min</span>

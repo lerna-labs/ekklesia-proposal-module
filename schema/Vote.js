@@ -52,7 +52,7 @@ const voteSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
-    collection: "budgets",
+    collection: "votes",
   }
 );
 
