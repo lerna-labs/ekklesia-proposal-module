@@ -1,6 +1,6 @@
 /**
- * Create dummy data: 1 budget, import categories for it, 1 live proposal, 1 draft proposal, 10 comments (including replies).
- * Uses current schemas: Budget, Category, Proposal, Comment, User.
+ * Create dummy data: 1 vote, import categories for it, 1 live proposal, 1 draft proposal, 10 comments (including replies).
+ * Uses current schemas: Vote, Category, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
  * From __setup: node createDummyData.js
@@ -18,7 +18,7 @@ import { loadEnvironmentVariables } from "../helper/envLoader.js";
 loadEnvironmentVariables();
 
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
-import { Budget } from "../schema/Budget.js";
+import { Vote } from "../schema/Vote.js";
 import { Category } from "../schema/Category.js";
 import { Proposal } from "../schema/Proposal.js";
 import { Comment } from "../schema/Comment.js";
@@ -134,8 +134,8 @@ function parseCsvLine(line) {
     return fields;
 }
 
-/** Import categories from CSV for the given budgetId. Returns created categories. */
-async function importCategoriesForBudget(budgetId) {
+/** Import categories from CSV for the given voteId. Returns created categories. */
+async function importCategoriesForVote(voteId) {
     const kpisByFocusArea = loadKpisByFocusArea();
 
     const raw = readFileSync(CSV_PATH, "utf8");
@@ -174,7 +174,7 @@ async function importCategoriesForBudget(budgetId) {
         metaData.kpis = getKpisForTitle(title, kpisByFocusArea);
 
         const cat = await Category.create({
-            budgetId,
+            voteId,
             title,
             description: descriptionStrategy || pillarDesc || title,
             metaData: Object.keys(metaData).length ? metaData : undefined,
@@ -205,8 +205,8 @@ async function createDummyData() {
         console.log("Connecting to database...");
         await connectToDatabase();
 
-        // 1. Create one budget (all required date fields)
-        console.log("Creating budget...");
+        // 1. Create one vote (all required date fields)
+        console.log("Creating vote...");
         const now = new Date();
         const submissionStart = new Date(now);
         submissionStart.setMonth(submissionStart.getMonth() - 1);
@@ -221,9 +221,9 @@ async function createDummyData() {
         const reviewEnd = new Date(reviewStart);
         reviewEnd.setMonth(reviewEnd.getMonth() + 1);
 
-        const budget = await Budget.create({
+        const vote = await Vote.create({
             title: "Test Budget 2026",
-            description: "A test budget for demonstration with one proposal and comments.",
+            description: "A test vote for demonstration with one proposal and comments.",
             slug: "test-budget-2026",
             admins: ["stake1ux7kxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxm4p1", "stake1ur9mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw6x3"],
             submissionStartDate: submissionStart,
@@ -232,12 +232,13 @@ async function createDummyData() {
             feedbackEndDate: feedbackEnd,
             reviewStartDate: reviewStart,
             reviewEndDate: reviewEnd,
+            validationScript: "validationBudget2026",
         });
-        console.log(`Budget created: ${budget._id}`);
+        console.log(`Vote created: ${vote._id}`);
 
-        // 2. Import categories for this budget
+        // 2. Import categories for this vote
         console.log("Importing categories from categories.csv...");
-        const categories = await importCategoriesForBudget(budget._id);
+        const categories = await importCategoriesForVote(vote._id);
         if (categories.length === 0) {
             throw new Error("No categories imported. Check categories.csv.");
         }
@@ -259,7 +260,7 @@ async function createDummyData() {
         console.log("Creating live proposal...");
         const proposal = await Proposal.create({
             proposerId,
-            budgetId: budget._id,
+            voteId: vote._id,
             title: "Community Website and Documentation Hub",
             summary: "A single proposal to build a community website and documentation hub.",
             status: "live",
@@ -345,7 +346,7 @@ async function createDummyData() {
         console.log("Creating live proposal for stake_test user...");
         const liveProposalStakeTest = await Proposal.create({
             proposerId: STAKE_TEST_PROPOSER_ID,
-            budgetId: budget._id,
+            voteId: vote._id,
             title: "Open-Source Tooling and Developer Experience",
             summary: "Improve developer experience and maintain open-source tooling for the ecosystem.",
             status: "live",
@@ -426,7 +427,7 @@ async function createDummyData() {
         console.log("Creating draft proposal...");
         const draftProposal = await Proposal.create({
             proposerId: DRAFT_PROPOSER_ID,
-            budgetId: budget._id,
+            voteId: vote._id,
             title: "Draft proposal (in progress)",
             summary: "",
             status: "draft",
@@ -533,7 +534,7 @@ async function createDummyData() {
         console.log(`Created ${createdComments.length} comments (5 top-level, 3 replies, 2 nested).`);
 
         console.log("\n✅ Dummy data created successfully.");
-        console.log(`  Budget: ${budget._id} (slug: ${budget.slug})`);
+        console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
         console.log(`  Categories: ${categories.length}`);
         console.log(`  Live proposal: ${proposal._id}`);
         console.log(`  Live proposal (stake_test user): ${liveProposalStakeTest._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);

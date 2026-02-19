@@ -14,18 +14,18 @@
 
 ---
 
-This document lists every Budget field: **schema path**, **required** status, **type**, and **validation** notes. Budgets represent funding cycles with submission, feedback, and review windows. Implementation: [../schema/Budget.js](../schema/Budget.js).
+This document lists every Vote field (formerly Budget): **schema path**, **required** status, **type**, and **validation** notes. Votes represent funding cycles with submission, feedback, and review windows. Implementation: [../schema/Vote.js](../schema/Vote.js). MongoDB collection name remains `budgets` for backward compatibility.
 
 ---
 
-## Top-level (budget root)
+## Top-level (vote root)
 
 | Field | Schema path | Required | Type | Validation / notes |
 |-------|-------------|----------|------|--------------------|
-| Title | `title` | Yes | String | Display name of the budget cycle. |
-| Description | `description` | Yes | String | Description of the budget. |
-| Slug | `slug` | Yes | String | URL-friendly identifier; used in `GET /api/v0/budgets/:slug` and frontend routes (e.g. `/budgets/{slug}`). Must be unique; exact match in list filter. |
-| Admins | `admins` | Yes | Array of String | Bech32 addresses (stake/DRep/pool) of users who can administer this budget (e.g. withdraw proposals, manage comments). Used for `GET /session` `adminBudgetIds` and access control. |
+| Title | `title` | Yes | String | Display name of the vote cycle. |
+| Description | `description` | Yes | String | Description of the vote. |
+| Slug | `slug` | Yes | String | URL-friendly identifier; used in `GET /api/v0/votes/:slug` and frontend routes (e.g. `/votes/{slug}`). Must be unique; exact match in list filter. |
+| Admins | `admins` | Yes | Array of String | Bech32 addresses (stake/DRep/pool) of users who can administer this vote (e.g. withdraw proposals, manage comments). Used for `GET /session` `adminVoteIds` and access control. |
 | Submission start | `submissionStartDate` | Yes | Date | ISO 8601. Proposals can be submitted (as live) from this date. |
 | Submission end | `submissionEndDate` | Yes | Date | ISO 8601. No new proposals (including drafts) after this date. |
 | Feedback start | `feedbackStartDate` | Yes | Date | ISO 8601. Start of feedback period (e.g. comments, proposer withdrawal). |

@@ -18,7 +18,7 @@
   import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
   let {
-    budget,
+    vote,
     categories,
     proposal = undefined,
     onSave = undefined,

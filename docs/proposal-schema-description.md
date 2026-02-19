@@ -16,7 +16,7 @@
 
 This document lists every proposal field with **PDF source**, **schema path**, **required** status, **max length** (or type constraints), and **validation** notes. It is based on the CBC Proposal Template FORM Final DRAFT PDF. Legend: **\*** = mandatory in PDF; **Not Public** = PDF marks field as not public (yellow).
 
-**Draft vs live:** For `status: "draft"`, only `budgetId`, `title`, and `status` are required on create; `summary` and most `metaData` are optional. When submitting with `status: "live"`, the API and frontend enforce full validation (see [proposalCreateSchema.js](../validation/proposalCreateSchema.js) and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
+**Draft vs live:** For `status: "draft"`, only `voteId`, `title`, and `status` are required on create; `summary` and most `metaData` are optional. When submitting with `status: "live"`, the API and frontend enforce full validation (see [proposalCreateSchema.js](../validation/proposalCreateSchema.js) and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
 
 ---
 
@@ -25,7 +25,7 @@ This document lists every proposal field with **PDF source**, **schema path**, *
 | PDF section | PDF field | Schema path | Required | Max length / type | Validation / notes |
 |-------------|-----------|-------------|----------|-------------------|---------------------|
 | — | (proposer) | `proposerId` | Yes | String (ref User) | Set from authenticated user. |
-| — | (budget) | `budgetId` | Yes | ObjectId (ref Budget) | Must be valid budget. |
+| — | (budget) | `voteId` | Yes | ObjectId (ref Budget) | Must be valid budget. |
 | 1 | Proposal Title * | `title` | Yes | 2–100 chars | Short text. |
 | 1 | Executive Summary * | `summary` | Yes (when live) | 2–2000 chars | Text area; optional for draft. |
 | — | (status) | `status` | Yes | enum | `draft`, `live`, `withdrawnByProposer`, `withdrawnByAdmin`, `archived`. |

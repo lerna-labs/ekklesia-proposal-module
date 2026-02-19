@@ -6,7 +6,7 @@
   import * as Pagination from "$lib/components/ui/pagination";
 
   let { data } = $props();
-  let budgets = $derived(data.budgets ?? []);
+  let votes = $derived(data.votes ?? []);
   let meta = $derived(data.meta ?? {});
 
   function formatDate(iso) {
@@ -25,31 +25,31 @@
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
   <div class="mb-8">
-    <h1 class="text-3xl font-semibold tracking-tight">Budgets</h1>
+    <h1 class="text-3xl font-semibold tracking-tight">Votes</h1>
     <p class="text-muted-foreground mt-1">
-      Browse budget cycles and view proposals.
+      Browse vote cycles and view proposals.
     </p>
   </div>
 
-  {#if !budgets.length}
+  {#if !votes.length}
     <Card.Root>
       <Card.Content class="py-12 text-center">
-        <p class="text-muted-foreground">No budgets found.</p>
+        <p class="text-muted-foreground">No votes found.</p>
       </Card.Content>
     </Card.Root>
   {:else}
     <ul class="space-y-4">
-      {#each budgets as budget (budget._id)}
+      {#each votes as vote (vote._id)}
         <li>
           <Card.Root class="overflow-hidden transition-shadow hover:shadow-md">
-            <a href="/budgets/{budget.slug ?? budget._id}" class="block">
+            <a href="/votes/{vote.slug ?? vote._id}" class="block">
               <Card.Header>
                 <Card.Title class="text-xl">
-                  {budget.title ?? "Untitled budget"}
+                  {vote.title ?? "Untitled vote"}
                 </Card.Title>
-                {#if budget.description}
+                {#if vote.description}
                   <Card.Description class="line-clamp-2">
-                    {budget.description}
+                    {vote.description}
                   </Card.Description>
                 {/if}
               </Card.Header>
@@ -57,20 +57,20 @@
                 <dl
                   class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground"
                 >
-                  {#if budget.submissionStartDate || budget.submissionEndDate}
+                  {#if vote.submissionStartDate || vote.submissionEndDate}
                     <div class="flex gap-1">
                       <dt>Submission:</dt>
                       <dd>
-                        {formatDate(budget.submissionStartDate)} – {formatDate(
-                          budget.submissionEndDate,
+                        {formatDate(vote.submissionStartDate)} – {formatDate(
+                          vote.submissionEndDate,
                         )}
                       </dd>
                     </div>
                   {/if}
-                  {#if budget.slug}
+                  {#if vote.slug}
                     <div class="flex gap-1">
                       <dt>Slug:</dt>
-                      <dd class="font-mono text-xs">{budget.slug}</dd>
+                      <dd class="font-mono text-xs">{vote.slug}</dd>
                     </div>
                   {/if}
                 </dl>

@@ -4,7 +4,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
   import { user } from "$stores/sessionManager.js";
-  let { proposal, budget, categories = [], class: className } = $props();
+  let { proposal, vote, categories = [], class: className } = $props();
 
   const isOwnProposal = $derived(
     $user?.userId &&
@@ -13,8 +13,8 @@
   );
 
   const proposalHref = $derived(
-    budget && (proposal._id || proposal.id)
-      ? `/budgets/${budget.slug}/${proposal._id || proposal.id}`
+    vote && (proposal._id || proposal.id)
+      ? `/votes/${vote.slug}/${proposal._id || proposal.id}`
       : null,
   );
 

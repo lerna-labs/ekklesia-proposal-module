@@ -21,16 +21,16 @@
   - [1. Purpose \& Scope](#1-purpose--scope)
   - [2. Conventions \& Notation](#2-conventions--notation)
   - [3. Public (Read) Endpoints](#3-public-read-endpoints)
-    - [3.1 `GET /budgets`](#31-get-budgets)
+    - [3.1 `GET /votes`](#31-get-votes)
       - [Query Parameters](#query-parameters)
       - [Success Response — `200 OK`](#success-response--200-ok)
       - [Error Response — `404 Not Found`](#error-response--404-not-found)
-    - [3.2 `GET /budgets/{budgetId}`](#32-get-budgetsbudgetid)
+    - [3.2 `GET /votes/{voteId}`](#32-get-votesvoteid)
       - [Path Parameters](#path-parameters)
       - [Success Response — `200 OK`](#success-response--200-ok-1)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-1)
-    - [3.3 `GET /budgets/{budgetId}/categories`](#33-get-budgetsbudgetidcategories)
+    - [3.3 `GET /votes/{voteId}/categories`](#33-get-votesvoteidcategories)
       - [Path Parameters](#path-parameters-1)
       - [Success Response — `200 OK`](#success-response--200-ok-2)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-1)
@@ -173,7 +173,7 @@ Budget Module's API surface and should be kept up to date as the module evolves.
 
 ## 2. Conventions & Notation
 
-- **`{budgetId}` / `{proposalId}`** – Path parameters represented as MongoDB ObjectIds (24-character hexadecimal strings).
+- **`{voteId}` / `{proposalId}`** – Path parameters represented as MongoDB ObjectIds (24-character hexadecimal strings).
 - **`_id` fields** – All `_id` fields in responses are MongoDB ObjectIds (24-character hexadecimal strings).
 - **DRep identifiers** – All `drep_id` values use the `drep1…` bech32 encoding defined by CIP-0509.
 - **Admin addresses** – All `admins` array entries are bech32 Cardano stake addresses (`stake1…`).
@@ -201,7 +201,7 @@ Rate limiting applies to all public endpoints (see [Section 6](#6-rate-limiting-
 
 ---
 
-### 3.1 `GET /budgets`
+### 3.1 `GET /votes`
 
 Returns a paginated list of all budget cycles that the Budget Module is currently tracking. Supports searching by title (case-insensitive partial match) or `_id` (exact match), and filtering by slug (case-sensitive exact match).
 
@@ -249,7 +249,7 @@ Returns a paginated list of all budget cycles that the Budget Module is currentl
 }
 ```
 
-> **Note:** Categories for a budget are available via `GET /budgets/{budgetId}/categories` (§3.3). Proposals and filters for that budget are scoped to that set.
+> **Note:** Categories for a budget are available via `GET /votes/{voteId}/categories` (§3.3). Proposals and filters for that budget are scoped to that set.
 
 #### Error Response — `404 Not Found`
 
@@ -258,13 +258,13 @@ Returned when `search` or `slug` parameters are provided but no matching budgets
 ```json
 {
   "status": "error",
-  "message": "No budgets found matching the provided criteria"
+  "message": "No votes found matching the provided criteria"
 }
 ```
 
 ---
 
-### 3.2 `GET /budgets/{budgetId}`
+### 3.2 `GET /votes/{voteId}`
 
 Returns a single budget cycle by its MongoDB ObjectId.
 
@@ -272,7 +272,7 @@ Returns a single budget cycle by its MongoDB ObjectId.
 
 | Parameter   | Type          | Required | Description                     |
 |-------------|---------------|----------|---------------------------------|
-| `budgetId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
+| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
 
 #### Success Response — `200 OK`
 
@@ -297,33 +297,33 @@ Returns a single budget cycle by its MongoDB ObjectId.
 }
 ```
 
-> **Note:** Categories for this budget are available via `GET /budgets/{budgetId}/categories` (§3.3).
+> **Note:** Categories for this budget are available via `GET /votes/{voteId}/categories` (§3.3).
 
 #### Error Response — `400 Bad Request`
 
-Returned when the `budgetId` parameter is not a valid MongoDB ObjectId.
+Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
 
 ```json
 {
   "status": "error",
-  "message": "Invalid budgetId parameter. Must be a valid ObjectId."
+  "message": "Invalid voteId parameter. Must be a valid ObjectId."
 }
 ```
 
 #### Error Response — `404 Not Found`
 
-Returned when no budget exists with the provided `budgetId`.
+Returned when no budget exists with the provided `voteId`.
 
 ```json
 {
   "status": "error",
-  "message": "Budget not found"
+  "message": "Vote not found"
 }
 ```
 
 ---
 
-### 3.3 `GET /budgets/{budgetId}/categories`
+### 3.3 `GET /votes/{voteId}/categories`
 
 Returns the full list of categories defined for a specific budget cycle. This is the single source of truth for valid category values — clients should fetch and cache this response for the lifetime of the budget cycle.
 
@@ -331,7 +331,7 @@ Returns the full list of categories defined for a specific budget cycle. This is
 
 | Parameter   | Type          | Required | Description                     |
 |-------------|---------------|----------|---------------------------------|
-| `budgetId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
+| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
 
 #### Success Response — `200 OK`
 
@@ -374,27 +374,27 @@ Returns the full list of categories defined for a specific budget cycle. This is
 }
 ```
 
-> **Note:** Responses from this endpoint are intended to be cached client-side for the lifetime of the budget cycle. The `updatedAt` field on the parent budget object (available via `GET /budgets/{budgetId}`) can be used to detect when a cache invalidation is warranted. Categories are returned sorted by their `sortOrder` field in ascending order, which dictates the canonical display order in the UI.
+> **Note:** Responses from this endpoint are intended to be cached client-side for the lifetime of the budget cycle. The `updatedAt` field on the parent budget object (available via `GET /votes/{voteId}`) can be used to detect when a cache invalidation is warranted. Categories are returned sorted by their `sortOrder` field in ascending order, which dictates the canonical display order in the UI.
 
 #### Error Response — `400 Bad Request`
 
-Returned when the `budgetId` parameter is not a valid MongoDB ObjectId.
+Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
 
 ```json
 {
   "status": "error",
-  "message": "Invalid budgetId parameter. Must be a valid ObjectId."
+  "message": "Invalid voteId parameter. Must be a valid ObjectId."
 }
 ```
 
 #### Error Response — `404 Not Found`
 
-Returned when no budget exists with the provided `budgetId`.
+Returned when no budget exists with the provided `voteId`.
 
 ```json
 {
   "status": "error",
-  "message": "Budget not found"
+  "message": "Vote not found"
 }
 ```
 
@@ -437,7 +437,7 @@ List responses include a shortened `metaData` object containing only `strategicF
   "data": [
     {
       "_id": "b1c2d3e4f5a67890bcdef123",
-      "budgetId": "a1b2c3d4e5f67890abcdef12",
+      "voteId": "a1b2c3d4e5f67890abcdef12",
       "title": "Cardano Node Performance Optimization",
       "summary": "Improving node synchronization and transaction processing efficiency",
       "status": "live",
@@ -537,7 +537,7 @@ Returned when `budget` is provided but no budget exists with that ID.
 ```json
 {
   "status": "error",
-  "message": "Budget not found"
+  "message": "Vote not found"
 }
 ```
 
@@ -565,12 +565,12 @@ If the proposal exists but the requester is not allowed to see it (e.g. draft or
 
 #### Success Response — `200 OK`
 
-Full proposal document, including full `metaData` and category when available. Category is included as a full category object (excluding `budgetId`, `createdAt`, `updatedAt`).
+Full proposal document, including full `metaData` and category when available. Category is included as a full category object (excluding `voteId`, `createdAt`, `updatedAt`).
 
 ```json
 {
   "_id": "b1c2d3e4f5a67890bcdef123",
-  "budgetId": "a1b2c3d4e5f67890abcdef12",
+  "voteId": "a1b2c3d4e5f67890abcdef12",
   "proposerId": "stake1ux4...",
   "title": "Cardano Node Performance Optimization",
   "summary": "Executive summary of the proposal.",
@@ -1099,7 +1099,7 @@ Validates the JWT token and returns the user's ID and optional profile data. Use
 {
   "userId": "stake1ux9...xyz",
   "name": "Alice",
-  "adminBudgetIds": ["a1b2c3d4e5f67890abcdef12", "b2c3d4e5f67890abcdef123"]
+  "adminVoteIds": ["a1b2c3d4e5f67890abcdef12", "b2c3d4e5f67890abcdef123"]
 }
 ```
 
@@ -1107,7 +1107,7 @@ Validates the JWT token and returns the user's ID and optional profile data. Use
 |------------------|----------|-------------|
 | `userId`         | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID). |
 | `name`           | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set. |
-| `adminBudgetIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
+| `adminVoteIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
 
 > **Note:** The `userId` field contains a bech32-encoded Cardano identifier. It can be a stake address (`stake1...`), CIP-129 DRep ID (`drep1...`), or stake pool ID (`pool1...`), depending on how the user authenticated.
 
@@ -1189,13 +1189,13 @@ Creates a new proposal. The authenticated user's `userId` is automatically set a
 
 | Field                    | Type    | Required | Description                                                                 |
 |--------------------------|---------|----------|-----------------------------------------------------------------------------|
-| `budgetId`               | string  | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string)      |
+| `voteId`               | string  | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string)      |
 | `title`                  | string  | Yes      | Title of the proposal                                                       |
 | `summary`                | string  | Yes*     | Executive summary. Max 2000 chars. Required when `status` is `"live"`; optional for draft. |
 | `metaData`               | object  | Yes      | Proposal metadata (see structure below)                                    |
 | `status`                 | string  | No       | Proposal status. Defaults to `"draft"`. Valid values: `"draft"`, `"live"`. To submit as `"live"`, all legal declarations must be accepted. Once set to `"live"`, status cannot be changed (see §5.2). |
 
-**Request body shape** is defined by [proposal-schema-description.md](proposal-schema-description.md). For draft, only `budgetId`, `title`, and `status` are required; full validation applies when `status` is `"live"`. **Server-set fields (not in request body):** Responses include `_id`, `proposerId` (from JWT), `createdAt`, `updatedAt`, `version`, `versions`, `submittedAt`, `totalBudget`, `signature`, `withdrawalDetails` (when withdrawn). See [schema/Proposal.js](../schema/Proposal.js) for internal tracking and versioning.
+**Request body shape** is defined by [proposal-schema-description.md](proposal-schema-description.md). For draft, only `voteId`, `title`, and `status` are required; full validation applies when `status` is `"live"`. **Server-set fields (not in request body):** Responses include `_id`, `proposerId` (from JWT), `createdAt`, `updatedAt`, `version`, `versions`, `submittedAt`, `totalBudget`, `signature`, `withdrawalDetails` (when withdrawn). See [schema/Proposal.js](../schema/Proposal.js) for internal tracking and versioning.
 
 **`metaData` Object Structure:**
 
@@ -1252,7 +1252,7 @@ Returns the created proposal document with all fields:
 {
   "_id": "b1c2d3e4f5a67890bcdef123",
   "proposerId": "stake1ux9...xyz",
-  "budgetId": "a1b2c3d4e5f67890abcdef12",
+  "voteId": "a1b2c3d4e5f67890abcdef12",
   "title": "Cardano Node Performance Optimization",
   "summary": "Improving node synchronization and transaction processing efficiency",
   "status": "draft",
@@ -1303,7 +1303,7 @@ Returned when:
 
 - Required fields are missing
 - Invalid field values (e.g., invalid enum values, invalid ObjectId format)
-- Invalid `budgetId` (budget does not exist)
+- Invalid `voteId` (budget does not exist)
 - Invalid `strategicFocusArea` (category does not exist or is not part of the specified budget)
 - `status` is `"live"` but legal declarations are missing or not all `true`
 - The current time is after the budget's `submissionEndDate` (proposals, including drafts, cannot be created after the submission deadline)
@@ -1313,7 +1313,7 @@ Returned when:
 ```json
 {
   "status": "error",
-  "message": "Invalid budgetId parameter. Budget not found."
+  "message": "Invalid voteId parameter. Budget not found."
 }
 ```
 
@@ -1394,7 +1394,7 @@ Updates an existing proposal. Only the proposal owner (authenticated user's `use
 
 #### Request Body
 
-Same structure as `POST /proposals` (see §5.1). Send the full proposal fields to retain, plus any changes. The `proposerId` and `budgetId` cannot be changed. If updating to `status: "live"`, the submission window rules apply (current time must be within `submissionStartDate` and `submissionEndDate`), and all required legal declarations must be present and accepted. **Once a proposal's status is `"live"`, the `status` field cannot be changed at all;** the server must ignore or reject any request that attempts to set a different `status` on a proposal that is already `"live"`. Attempting to change status on a live proposal returns `400 Bad Request`.
+Same structure as `POST /proposals` (see §5.1). Send the full proposal fields to retain, plus any changes. The `proposerId` and `voteId` cannot be changed. If updating to `status: "live"`, the submission window rules apply (current time must be within `submissionStartDate` and `submissionEndDate`), and all required legal declarations must be present and accepted. **Once a proposal's status is `"live"`, the `status` field cannot be changed at all;** the server must ignore or reject any request that attempts to set a different `status` on a proposal that is already `"live"`. Attempting to change status on a live proposal returns `400 Bad Request`.
 
 #### Success Response — `200 OK`
 
@@ -1404,7 +1404,7 @@ Returns the updated proposal document (the one at `proposalId`). If the proposal
 {
   "_id": "b1c2d3e4f5a67890bcdef123",
   "proposerId": "stake1ux9...xyz",
-  "budgetId": "a1b2c3d4e5f67890abcdef12",
+  "voteId": "a1b2c3d4e5f67890abcdef12",
   "title": "Cardano Node Performance Optimization (Revised)",
   "summary": "Updated scope and timeline.",
   "status": "live",
@@ -1549,7 +1549,7 @@ Example (proposer withdrawal):
 {
   "_id": "b1c2d3e4f5a67890bcdef123",
   "proposerId": "stake1ux9...xyz",
-  "budgetId": "a1b2c3d4e5f67890abcdef12",
+  "voteId": "a1b2c3d4e5f67890abcdef12",
   "title": "Cardano Node Performance Optimization",
   "description": "...",
   "status": "withdrawnByProposer",
@@ -2017,7 +2017,7 @@ Server-side cache TTLs apply to responses for the listed endpoints; cached data 
 
 | Endpoint / scope | Rate limit | Window | Cache (server) |
 |------------------|------------|--------|-----------------|
-| **Public read (Section 3)** — `GET /budgets`, `GET /budgets/{budgetId}`, `GET /budgets/{budgetId}/categories`, `GET /proposals`, `GET /proposals/{proposalId}`, `GET /comments`, `GET /comments/{commentId}`, `GET /comments/{commentId}/replies` | 200 per IP | 1 min | 30 s |
+| **Public read (Section 3)** — `GET /votes`, `GET /votes/{voteId}`, `GET /votes/{voteId}/categories`, `GET /proposals`, `GET /proposals/{proposalId}`, `GET /comments`, `GET /comments/{commentId}`, `GET /comments/{commentId}/replies` | 200 per IP | 1 min | 30 s |
 | `POST /session` (request nonce) | 5 per IP | 1 min | — |
 | `PUT /session` (complete sign-in) | 10 per IP | 1 min | — |
 | `GET /session` (check session) | 60 per IP | 1 min | — |
@@ -2068,7 +2068,7 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 |------------|------------|-------------|
 | Unreleased | —          | In progress. |
 | 0.2.5      | 2026-02-18 | `GET /proposals`: `status` parameter documented as accepting comma-separated values (e.g. `live,withdrawn`) to return proposals in any of the given statuses. Note updated accordingly. |
-| 0.2.4      | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminBudgetIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
+| 0.2.4      | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminVoteIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
 | 0.2.3      | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or budget admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly. |
 | 0.2.2      | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking. |
 | 0.2.1      | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`. |

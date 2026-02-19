@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 /**
  * Proposal schema. Operational fields at root; variable payload in metaData (Mixed).
- * Structure inside metaData is defined and validated by the budget's validationScript, not by Mongoose.
+ * Structure inside metaData is defined and validated by the vote's validationScript, not by Mongoose.
  */
 const proposalSchema = new Schema(
   {
@@ -12,14 +12,14 @@ const proposalSchema = new Schema(
       ref: "User",
       required: true,
     },
-    budgetId: {
+    voteId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Budget",
+      ref: "Vote",
       required: true,
     },
     title: { type: String, required: false },
     summary: { type: String, required: false },
-    /** Variable payload (trackRecord, executionRoadmap, legalDeclarations, etc.). Shape validated by budget validationScript on submit. */
+    /** Variable payload (trackRecord, executionRoadmap, legalDeclarations, etc.). Shape validated by vote validationScript on submit. */
     metaData: {
       type: Schema.Types.Mixed,
       default: () => ({}),
@@ -55,8 +55,8 @@ const proposalSchema = new Schema(
   { timestamps: true, versionKey: false }
 );
 
-proposalSchema.index({ proposerId: 1, budgetId: 1 });
-proposalSchema.index({ budgetId: 1 });
+proposalSchema.index({ proposerId: 1, voteId: 1 });
+proposalSchema.index({ voteId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 });
 

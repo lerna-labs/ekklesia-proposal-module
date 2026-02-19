@@ -5,21 +5,21 @@
   import { api } from "$stores/sessionManager.js";
 
   let { data } = $props();
-  let budgets = $derived(data.budgets ?? []);
-  let budget = $derived(data.budget);
+  let votes = $derived(data.votes ?? []);
+  let vote = $derived(data.vote);
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
 
   async function onSave(payload) {
-    if (!budget?._id) {
-      toast.error("Please select a budget first.");
+    if (!vote?._id) {
+      toast.error("Please select a vote first.");
       return;
     }
     saving = true;
     validationErrors = null;
     try {
-      const body = { ...payload, budgetId: budget._id };
+      const body = { ...payload, voteId: vote._id };
       const res = await api.fetch(fetch, "/proposals", {
         method: "POST",
         body: JSON.stringify(body),
@@ -50,8 +50,8 @@
   <h1 class="text-2xl font-semibold mb-6">New proposal</h1>
 </div>
 
-{#if budgets.length === 0}
-  <p class="text-muted-foreground">No budgets available.</p>
+{#if votes.length === 0}
+  <p class="text-muted-foreground">No votes available.</p>
 {:else}
-  <Form {budget} {categories} {onSave} bind:validationErrors />
+  <Form vote={vote} {categories} {onSave} bind:validationErrors />
 {/if}

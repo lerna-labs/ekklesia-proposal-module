@@ -4,7 +4,7 @@ import { Comment } from "../../../schema/Comment.js";
 import { CommentLike } from "../../../schema/CommentLike.js";
 import { Proposal } from "../../../schema/Proposal.js";
 import { User } from "../../../schema/User.js";
-import { Budget } from "../../../schema/Budget.js";
+import { Vote } from "../../../schema/Vote.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 
 const router = Router();
@@ -19,13 +19,13 @@ function getAuthenticatedUserId(req) {
   return null;
 }
 
-function isBudgetAdmin(proposal, budget, userId) {
+function isVoteAdmin(proposal, vote, userId) {
   return (
     !!userId &&
-    proposal?.budgetId &&
-    budget?.admins &&
-    Array.isArray(budget.admins) &&
-    budget.admins.includes(userId)
+    proposal?.voteId &&
+    vote?.admins &&
+    Array.isArray(vote.admins) &&
+    vote.admins.includes(userId)
   );
 }
 
@@ -51,7 +51,7 @@ function getCommentStatusFilter(statusParam, isAdmin) {
 }
 
 /** Build comment response shape: user with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches comment.userId. */
-async function formatComment(comment, proposal, budget, authenticatedUserId = null) {
+async function formatComment(comment, proposal, vote, authenticatedUserId = null) {
   // User._id is a String (bech32 address), and comment.userId is now also String
   const user = comment.userId
     ? await User.findById(comment.userId)
@@ -60,7 +60,7 @@ async function formatComment(comment, proposal, budget, authenticatedUserId = nu
     : null;
   let type = "user";
   if (proposal?.proposerId && comment.userId === proposal.proposerId) type = "proposer";
-  else if (budget?.admins && Array.isArray(budget.admins) && user?._id != null && budget.admins.includes(String(user._id))) type = "admin";
+  else if (vote?.admins && Array.isArray(vote.admins) && user?._id != null && vote.admins.includes(String(user._id))) type = "admin";
   const replyCount = await Comment.countDocuments({ parentId: comment._id, status: "live" });
   const likeCount = await CommentLike.countDocuments({ commentId: comment._id });
   const userWithType = user ? { ...user, type } : null;
@@ -143,7 +143,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const proposal = await Proposal.findById(proposalTerm).select("proposerId budgetId").lean();
+    const proposal = await Proposal.findById(proposalTerm).select("proposerId voteId").lean();
     if (!proposal) {
       return res.status(404).json({
         status: "error",
@@ -151,12 +151,12 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const budget = proposal.budgetId
-      ? await Budget.findById(proposal.budgetId).select("admins").lean()
+    const vote = proposal.voteId
+      ? await Vote.findById(proposal.voteId).select("admins").lean()
       : null;
 
     const userId = getAuthenticatedUserId(req);
-    const isAdmin = isBudgetAdmin(proposal, budget, userId);
+    const isAdmin = isVoteAdmin(proposal, vote, userId);
     const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
@@ -263,7 +263,7 @@ router.get("/", async (req, res) => {
     const [result] = await Comment.aggregate(pipeline);
     const total = result?.total?.[0]?.n ?? 0;
     const items = result?.items ?? [];
-    const data = await Promise.all(items.map((doc) => formatComment(doc, proposal, budget, userId)));
+    const data = await Promise.all(items.map((doc) => formatComment(doc, proposal, vote, userId)));
 
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({
@@ -288,7 +288,7 @@ router.get("/", async (req, res) => {
 
 /**
  * POST /comments
- * API spec §5.5 — Create a comment on a live proposal. Auth required. Before budget feedbackEndDate. Body: proposalId, content, optional parentId.
+ * API spec §5.5 — Create a comment on a live proposal. Auth required. Before vote feedbackEndDate. Body: proposalId, content, optional parentId.
  */
 router.post("/", async (req, res) => {
   try {
@@ -311,24 +311,24 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ status: "error", message: "Invalid proposalId. Must be a valid ObjectId." });
     }
 
-    const proposal = await Proposal.findById(proposalIdTrim).select("status budgetId").lean();
+    const proposal = await Proposal.findById(proposalIdTrim).select("status voteId").lean();
     if (!proposal) {
       return res.status(404).json({ status: "error", message: "Proposal not found" });
     }
     if (proposal.status !== "live") {
       return res.status(400).json({
         status: "error",
-        message: "Comments can only be added to live proposals before the budget feedback period ends (feedbackEndDate).",
+        message: "Comments can only be added to live proposals before the vote feedback period ends (feedbackEndDate).",
       });
     }
 
-    const budget = proposal.budgetId
-      ? await Budget.findById(proposal.budgetId).select("feedbackEndDate").lean()
+    const vote = proposal.voteId
+      ? await Vote.findById(proposal.voteId).select("feedbackEndDate").lean()
       : null;
-    if (budget && budget.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+    if (vote && vote.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
       return res.status(400).json({
         status: "error",
-        message: "Comments can only be added to live proposals before the budget feedback period ends (feedbackEndDate).",
+        message: "Comments can only be added to live proposals before the vote feedback period ends (feedbackEndDate).",
       });
     }
 
@@ -400,11 +400,11 @@ router.get("/:commentId/replies", async (req, res) => {
     }
 
     const proposal = parentComment.proposalId
-      ? await Proposal.findById(parentComment.proposalId).select("proposerId budgetId").lean()
+      ? await Proposal.findById(parentComment.proposalId).select("proposerId voteId").lean()
       : null;
-    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
+    const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
     const userId = getAuthenticatedUserId(req);
-    const isAdmin = isBudgetAdmin(proposal, budget, userId);
+    const isAdmin = isVoteAdmin(proposal, vote, userId);
     const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
@@ -422,7 +422,7 @@ router.get("/:commentId/replies", async (req, res) => {
       Comment.countDocuments(replyQuery),
     ]);
 
-    const data = await Promise.all(replies.map((r) => formatComment(r, proposal, budget, userId)));
+    const data = await Promise.all(replies.map((r) => formatComment(r, proposal, vote, userId)));
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({
       data,
@@ -436,7 +436,7 @@ router.get("/:commentId/replies", async (req, res) => {
 
 /**
  * POST /comments/:commentId/like
- * API spec §5.7 — Toggle like. 201 when added, 200 when removed. Live comment only; before budget feedbackEndDate.
+ * API spec §5.7 — Toggle like. 201 when added, 200 when removed. Live comment only; before vote feedbackEndDate.
  */
 router.post("/:commentId/like", async (req, res) => {
   try {
@@ -460,15 +460,15 @@ router.post("/:commentId/like", async (req, res) => {
     }
 
     const proposal = comment.proposalId
-      ? await Proposal.findById(comment.proposalId).select("status budgetId").lean()
+      ? await Proposal.findById(comment.proposalId).select("status voteId").lean()
       : null;
     if (!proposal || proposal.status !== "live") {
       return res.status(400).json({ status: "error", message: "Only live comments can be liked." });
     }
-    const budget = proposal.budgetId
-      ? await Budget.findById(proposal.budgetId).select("feedbackEndDate").lean()
+    const vote = proposal.voteId
+      ? await Vote.findById(proposal.voteId).select("feedbackEndDate").lean()
       : null;
-    if (budget?.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+    if (vote?.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
       return res.status(400).json({
         status: "error",
         message: "Comments on this proposal can no longer be liked (feedback period has ended).",
@@ -503,7 +503,7 @@ router.post("/:commentId/like", async (req, res) => {
 
 /**
  * PUT /comments/:commentId/withdraw
- * API spec §5.8 — Budget admin withdraws a live comment. Body: category (required), comment (optional). Until feedbackEndDate.
+ * API spec §5.8 — Vote admin withdraws a live comment. Body: category (required), comment (optional). Until feedbackEndDate.
  */
 router.put("/:commentId/withdraw", async (req, res) => {
   try {
@@ -539,18 +539,18 @@ router.put("/:commentId/withdraw", async (req, res) => {
     }
 
     const proposal = comment.proposalId
-      ? await Proposal.findById(comment.proposalId).select("budgetId").lean()
+      ? await Proposal.findById(comment.proposalId).select("voteId").lean()
       : null;
-    const budget = proposal?.budgetId
-      ? await Budget.findById(proposal.budgetId).select("admins feedbackEndDate").lean()
+    const vote = proposal?.voteId
+      ? await Vote.findById(proposal.voteId).select("admins feedbackEndDate").lean()
       : null;
-    if (!budget || !Array.isArray(budget.admins) || !budget.admins.includes(userId)) {
+    if (!vote || !Array.isArray(vote.admins) || !vote.admins.includes(userId)) {
       return res.status(403).json({ status: "error", message: "You do not have permission to withdraw this comment." });
     }
-    if (budget.feedbackEndDate && new Date() > new Date(budget.feedbackEndDate)) {
+    if (vote.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
       return res.status(400).json({
         status: "error",
-        message: "Comments cannot be withdrawn by an admin after the budget feedback period has ended (feedbackEndDate).",
+        message: "Comments cannot be withdrawn by an admin after the vote feedback period has ended (feedbackEndDate).",
       });
     }
 
@@ -602,11 +602,11 @@ router.get("/:commentId", async (req, res) => {
     }
 
     const proposal = comment.proposalId
-      ? await Proposal.findById(comment.proposalId).select("proposerId budgetId").lean()
+      ? await Proposal.findById(comment.proposalId).select("proposerId voteId").lean()
       : null;
-    const budget = proposal?.budgetId ? await Budget.findById(proposal.budgetId).select("admins").lean() : null;
+    const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
     const userId = getAuthenticatedUserId(req);
-    const isAdmin = isBudgetAdmin(proposal, budget, userId);
+    const isAdmin = isVoteAdmin(proposal, vote, userId);
     // User._id is String (bech32), and comment.userId is now also String
     const commentUser = comment.userId ? await User.findById(comment.userId).select("_id").lean() : null;
     const isAuthor = userId && commentUser && commentUser._id === userId;
@@ -637,7 +637,7 @@ router.get("/:commentId", async (req, res) => {
       return res.status(404).json({ status: "error", message: "Comment not found" });
     }
 
-    const data = await formatComment(comment, proposal, budget, userId);
+    const data = await formatComment(comment, proposal, vote, userId);
     return res.status(200).json(data);
   } catch (error) {
     console.error("Error fetching comment:", error);
