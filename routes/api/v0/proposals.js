@@ -177,8 +177,13 @@ const WITHDRAWAL_CATEGORIES = [
 
 /**
  * @route PUT /api/v0/proposals/:proposalId/withdraw
- * @description Withdraw a live or draft proposal (proposer or budget admin). Request body: { category, comment } (both required).
+ * @description Withdraw a live or draft proposal (proposer or budget admin). Only live or draft can be withdrawn;
+ * archived and already-withdrawn proposals return 400. Request body: { category, comment } (both required).
  * @access Private (proposer or budget admin)
+ * @returns {Object} 200 - Withdrawn proposal (status set to withdrawnByProposer or withdrawnByAdmin)
+ * @returns {Object} 400 - Invalid proposalId/category/comment; or proposal not live/draft (e.g. archived); or date limits exceeded
+ * @returns {Object} 403 - Not the proposer or a budget admin
+ * @returns {Object} 404 - Proposal not found
  */
 router.put("/:proposalId/withdraw", async (req, res) => {
   try {
@@ -296,8 +301,16 @@ router.put("/:proposalId/withdraw", async (req, res) => {
 
 /**
  * @route PUT /api/v0/proposals/:proposalId
- * @description Update a proposal (same body as POST). Only proposer or budget admin (draft only). Computes totalBudget from work packages.
- * @access Private (proposer or budget admin for draft)
+ * @description Update a proposal (same body as POST). Only proposer or budget admin (draft only).
+ * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
+ * status is immutable (400 if body tries to change it); updates are locked after the budget's
+ * reviewEndDate (400); the current version is archived (new doc with status "archived") and
+ * a reference is appended to versions before applying the update. Computes totalBudget from work packages.
+ * @access Private (proposer or budget admin for draft only)
+ * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
+ * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
+ * @returns {Object} 403 - Not the proposer or a budget admin for this draft
+ * @returns {Object} 404 - Proposal not found
  */
 router.put("/:proposalId", async (req, res) => {
   try {
@@ -352,7 +365,46 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
+    // Archived proposals are read-only (no update and no withdraw)
+    if (proposal.status === "archived") {
+      return res.status(400).json({
+        status: "error",
+        message: "Archived proposals cannot be updated.",
+      });
+    }
+
     const { budgetId, title, summary, status, metaData } = validation.data;
+
+    // When proposal is already live: reject status change; enforce reviewEndDate lock; archive current version then apply update
+    if (proposal.status === "live") {
+      if (status !== "live") {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposal status cannot be changed once the proposal is live.",
+        });
+      }
+      const budgetDoc = await Budget.findById(proposal.budgetId).lean();
+      if (budgetDoc?.reviewEndDate && new Date() > new Date(budgetDoc.reviewEndDate)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposal cannot be updated after the budget review period has ended (reviewEndDate).",
+        });
+      }
+      // Versioning: copy current document to a new doc with status "archived" (new _id), then append { _id, createdAt } to versions
+      const currentState = proposal.toObject ? proposal.toObject() : { ...proposal };
+      delete currentState._id;
+      delete currentState.createdAt;
+      delete currentState.updatedAt;
+      currentState.status = "archived";
+      currentState.versions = [];
+      const archivedDoc = new Proposal(currentState);
+      await archivedDoc.save();
+      if (!Array.isArray(proposal.versions)) proposal.versions = [];
+      proposal.versions.push({
+        _id: archivedDoc._id,
+        createdAt: archivedDoc.createdAt,
+      });
+    }
 
     let rawMetaData = metaData;
     if (status === "draft") {
@@ -449,7 +501,7 @@ router.get("/:proposalId", async (req, res) => {
       status === "withdrawnByAdmin";
 
     if (!isLiveOrWithdrawn) {
-      // Require auth: proposer or (draft and budget admin) can view
+      // Draft/archived: only proposer can view; for draft, budget admin can also view
       let authenticatedUserId = null;
       const tokenResult = verifyToken(req);
       if (tokenResult.status === "success" && tokenResult.userId) {
