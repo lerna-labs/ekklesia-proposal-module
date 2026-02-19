@@ -269,29 +269,29 @@ gracefully and do not prevent JWT issuance.
 flowchart TD
     subgraph Browser["Client (Browser)"]
         subgraph Frontend["SvelteKit Frontend (Tailwind CSS + Shadcn)"]
-            PV["Public Views\n/budgets · /proposals"]
-            PR["Proposer (Private)\n/dashboard · /proposals/new · /proposals/edit"]
-            AD["Admin (Private)\n/admin · Budget oversight"]
-            SM["sessionManager.js\nloggedIn / user / jwt stores"]
-            WS["WalletSigner\nCIP-30 wallet connect + nonce sign"]
+            PV["Public Views<br />/budgets · /proposals"]
+            PR["Proposer (Private)<br />/dashboard · /proposals/new · /proposals/edit"]
+            AD["Admin (Private)<br />/admin · Budget oversight"]
+            SM["sessionManager.js<br />loggedIn / user / jwt stores"]
+            WS["WalletSigner<br />CIP-30 wallet connect + nonce sign"]
         end
     end
 
     subgraph Backend["Budget Module Backend (Node.js / Express)"]
         subgraph API["Budget Module API  /api/v0"]
-            PUB["Public Reads §3\nGET /budgets\nGET /proposals\nGET /comments"]
-            AUTH["Auth Endpoints §4\nPOST /session\nPUT /session\nGET /session\nDELETE /session"]
-            WRITE["Authed Writes §5\nPOST /proposals\nPUT /proposals\nPOST /comments\nPUT /comments"]
-            MW["Middleware\nisAuthenticated · verifyToken\nrate limiters · CORS"]
+            PUB["Public Reads §3<br />GET /budgets<br />GET /proposals<br />GET /comments"]
+            AUTH["Auth Endpoints §4<br />POST /session<br />PUT /session<br />GET /session<br />DELETE /session"]
+            WRITE["Authed Writes §5<br />POST /proposals<br />PUT /proposals<br />POST /comments<br />PUT /comments"]
+            MW["Middleware<br />isAuthenticated · verifyToken<br />rate limiters · CORS"]
         end
     end
 
     subgraph DB["MongoDB (European region)"]
-        COL["Budget · Category · Proposal\nComment · CommentLike · Session · User"]
+        COL["Budget · Category · Proposal<br />Comment · CommentLike · Session · User"]
     end
 
-    DREP["DRep Registry\n(at login)"]
-    HANDLE["ADA Handle Service\n(at login)"]
+    DREP["DRep Registry<br />(at login)"]
+    HANDLE["ADA Handle Service<br />(at login)"]
 
     Frontend -->|"HTTPS · Authorization: Bearer JWT"| Backend
     Backend -->|"Mongoose ODM"| DB
