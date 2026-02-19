@@ -11,7 +11,9 @@
   <div
     class="container mx-auto max-w-4xl py-4 px-4 flex justify-between items-center"
   >
-    <Logo />
+    <a href="/">
+      <Logo />
+    </a>
     <nav>
       <ul class="flex items-center gap-2">
         <li>

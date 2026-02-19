@@ -3,7 +3,6 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import AmountInput from "$lib/form/AmountInput.svelte";
   import ToolTip from "$lib/form/ToolTip.svelte";
-  import { COST_CATEGORIES, COST_CATEGORIES_LIST } from "./Schema.js";
   import { formatAda, formatUsd } from "$lib/utils.js";
 
   const id = "conversionRate";
@@ -11,51 +10,36 @@
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
-  const rate = $derived(Number(formData?.financialAndAdministrative?.conversionRate) || 0);
+  const rate = $derived(
+    Number(formData?.financialAndAdministrative?.conversionRate) || 0,
+  );
 
-  /** Aggregate total by cost category from all work packages (metaData.executionRoadmap.workPackages). */
-  const byCategory = $derived.by(() => {
-    const map = /** @type {Record<string, number>} */ ({});
+  /** All budget positions from all work packages (category, budget position description, total). */
+  const budgetPositions = $derived.by(() => {
+    const out = [];
     const packages = Array.isArray(formData?.executionRoadmap?.workPackages)
       ? formData.executionRoadmap.workPackages
       : [];
     for (const pkg of packages) {
-      const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
+      const rows = Array.isArray(pkg?.budgetBreakdown)
+        ? pkg.budgetBreakdown
+        : [];
       for (const row of rows) {
-        const cat = row?.costCategory ?? "Other";
         const ada = Number(row?.total ?? row?.quantity * row?.unitPrice);
-        if (!Number.isFinite(ada)) continue;
-        map[cat] = (map[cat] ?? 0) + ada;
+        if (!Number.isFinite(ada) || ada <= 0) continue;
+        out.push({
+          category: row?.costCategory ?? "Other",
+          description: (row?.description ?? "").trim() || "—",
+          totalAda: ada,
+        });
       }
     }
-    return map;
-  });
-
-  /** Sorted categories: COST_CATEGORIES order, then any extra keys. */
-  const categoriesWithTotals = $derived.by(() => {
-    const seen = new Set(Object.keys(byCategory));
-    const ordered = [
-      ...COST_CATEGORIES.filter((c) => seen.has(c)),
-      ...Object.keys(byCategory).filter((c) => !COST_CATEGORIES.includes(c)),
-    ];
-    return ordered
-      .filter((c) => (byCategory[c] ?? 0) > 0)
-      .map((cat) => ({ category: cat, totalAda: byCategory[cat] ?? 0 }));
+    return out;
   });
 
   const grandTotalAda = $derived(
-    categoriesWithTotals.reduce((s, r) => s + r.totalAda, 0),
+    budgetPositions.reduce((s, r) => s + r.totalAda, 0),
   );
-
-  /** Lookup category name -> description from costCategories.json */
-  const categoryDescription = $derived.by(() => {
-    const map = /** @type {Record<string, string>} */ ({});
-    for (const { name, description } of COST_CATEGORIES_LIST) {
-      map[name] = description ?? "";
-    }
-    return map;
-  });
-
 </script>
 
 <Card.Root>
@@ -74,7 +58,9 @@
               ADA/USD conversion rate
               <span class="text-(--mbo-electric-blue)">*</span>
             </Field.Label>
-            <ToolTip content="Rate used to convert ADA amounts to USD in the financial summary. Must be greater than 0." />
+            <ToolTip
+              content="Rate used to convert ADA amounts to USD in the financial summary. Must be greater than 0."
+            />
             <span class="flex-1 min-w-0" aria-hidden="true"></span>
           </div>
           <AmountInput
@@ -89,16 +75,13 @@
             step="any"
             class="bg-white"
           />
-          <Field.Description class="text-xs text-muted-foreground">
-            Rate used to convert ADA amounts to USD in the financial summary. Must be greater than 0.
-          </Field.Description>
           {#if schemaError}
             <Field.Error class="text-xs">{schemaError}</Field.Error>
           {/if}
         </div>
       </div>
 
-      {#if categoriesWithTotals.length > 0}
+      {#if budgetPositions.length > 0}
         <div class="overflow-x-auto rounded-md border border-input mt-2">
           <table
             class="w-full text-left text-sm [&_th]:align-top [&_td]:align-top"
@@ -116,17 +99,17 @@
               </tr>
             </thead>
             <tbody>
-              {#each categoriesWithTotals as { category, totalAda } (category)}
+              {#each budgetPositions as pos, i (i)}
                 <tr class="border-b border-input last:border-0">
-                  <td class="p-2">{category}</td>
+                  <td class="p-2">{pos.category}</td>
                   <td class="p-2 text-muted-foreground text-xs max-w-xs">
-                    {categoryDescription[category] || "—"}
+                    {pos.description}
                   </td>
                   <td class="p-2 text-right tabular-nums">
-                    {formatAda(totalAda)}
+                    {formatAda(pos.totalAda)}
                   </td>
                   <td class="p-2 text-right tabular-nums">
-                    {formatUsd(totalAda * rate)}
+                    {formatUsd(pos.totalAda * rate)}
                   </td>
                 </tr>
               {/each}

@@ -60,10 +60,18 @@
     {/if}
   </div>
   <div
-    class="rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="relative rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
     aria-invalid={schemaError ? true : false}
   >
     <Editor bind:value />
+    {#if placeholder && (value == null || String(value).trim() === "")}
+      <span
+        class="absolute inset-0 flex items-start pt-12 pl-3 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
+        aria-hidden="true"
+      >
+        {placeholder}
+      </span>
+    {/if}
   </div>
   {#if schemaError}
     <Field.Error class="text-xs">{schemaError}</Field.Error>

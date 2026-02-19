@@ -57,7 +57,7 @@
     loggedIn.set(true);
     toast.success("Login successful");
     // get user data
-    const getUser = await api.fetch(fetch, "/dashboard/");
+    const getUser = await api.fetch(fetch, "/session/");
     const userData = await getUser.json();
     user.set(userData);
     goto("/");

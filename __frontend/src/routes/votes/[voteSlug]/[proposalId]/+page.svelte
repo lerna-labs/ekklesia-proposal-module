@@ -1,12 +1,17 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
+  import ProposalCard from "$lib/ProposalCard.svelte";
   import PillarInfo from "$lib/PillarInfo.svelte";
-  import BudgetConversion from "$lib/BudgetConversion.svelte";
-  import Comments from "$lib/Comments.svelte";
   let { data } = $props();
 
-  let { vote, proposal, comments } = $derived(data);
+  let { vote, proposal, categories = [] } = $derived(data);
+  const categoryForPillar = $derived(
+    proposal?.metaData?.strategicFocusArea && Array.isArray(categories)
+      ? categories.find(
+          (c) => String(c._id) === String(proposal.metaData.strategicFocusArea),
+        )
+      : null,
+  );
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
@@ -21,62 +26,17 @@
     </Button.Root>
   </div>
 
-  <Card.Root>
-    <Card.Header>
-      <Card.Title class="text-2xl">
-        {proposal.title ?? "Proposal"}
-      </Card.Title>
-      {#if proposal.summary}
-        <Card.Description class="mt-2">
-          {proposal.summary}
-        </Card.Description>
-      {/if}
-    </Card.Header>
-    <Card.Content class="space-y-4">
-      {#if proposal.amount !== undefined}
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">Amount:</span>
-          <span class="text-sm font-semibold">
-            ${proposal.amount?.toLocaleString() || "0"}
-          </span>
-        </div>
-      {/if}
-      {#if proposal.totalBudget !== undefined}
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">
-            Total Budget:
-          </span>
-          <BudgetConversion
-            totalBudget={proposal.totalBudget}
-            conversionRate={proposal.conversionRate}
-            class="text-sm"
-          />
-        </div>
-      {/if}
-      {#if proposal.category}
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">
-            Category:
-          </span>
-          <span class="text-sm">{proposal.category.title}</span>
-        </div>
-      {/if}
-      {#if proposal.status}
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">Status:</span>
-          <span class="text-sm">{proposal.status}</span>
-        </div>
-      {/if}
-    </Card.Content>
-  </Card.Root>
+  <ProposalCard {proposal} {vote} {categories} showLink={false} />
 
-  {#if proposal.category?.metaData}
+  {#if categoryForPillar?.metaData}
     <section class="mt-4">
-      <PillarInfo category={proposal.category} />
+      <PillarInfo category={categoryForPillar} />
     </section>
   {/if}
 
+  <!-- Comments section commented out for now
   <section class="mt-8" id="comments">
     <Comments {comments} />
   </section>
+  -->
 </div>

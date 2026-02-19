@@ -15,11 +15,7 @@
   import { z } from "zod";
   import Markdown from "$lib/base/Markdown.svelte";
 
-  let {
-    value = $bindable([]),
-    onvaluechange,
-    class: className,
-  } = $props();
+  let { value = $bindable([]), onvaluechange, class: className } = $props();
 
   const list = $derived(Array.isArray(value) ? value : []);
 
@@ -94,7 +90,9 @@
     </Field.Label>
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
-  <p class="text-xs text-muted-foreground mb-2">How do you plan to deliver this package?</p>
+  <p class="text-xs text-muted-foreground mb-2">
+    How do you plan to deliver this package?
+  </p>
 
   {#if list.length > 0}
     <ul
@@ -182,7 +180,7 @@
         id="milestoneName"
         bind:value={draft.milestoneName}
         label="Milestone (and reference name)"
-        description="You may use labels like 'Milestone 1,' but please include a descriptive name afterward."
+        description="You may use labels like “Milestone 1,” but please include a descriptive name afterward (e.g., “Milestone 1 – Design Approval”)."
         placeholder="e.g. Milestone 1 – Design Approval"
         required
         maxLength={100}
@@ -202,7 +200,7 @@
         id="acceptanceCriteria"
         bind:value={draft.acceptanceCriteria}
         label="Acceptance Criteria"
-        description="How do you know it's done?"
+        description="How do you know it’s “done”? Objective conditions for approval and payment."
         placeholder="Enter Description"
         required
         maxLength={600}

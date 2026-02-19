@@ -4,7 +4,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
   import { user } from "$stores/sessionManager.js";
-  let { proposal, vote, categories = [], class: className } = $props();
+  let { proposal, vote, categories = [], showLink = true, class: className } = $props();
 
   const isOwnProposal = $derived(
     $user?.userId &&
@@ -87,7 +87,7 @@
       </div>
     {/if}
   </Card.Content>
-  {#if proposalHref}
+  {#if showLink && proposalHref}
     <Card.Footer>
       <Button.Root
         href={proposalHref}
