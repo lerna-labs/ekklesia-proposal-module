@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const userSchema = new Schema(
     {
         _id: {
-            type: String,
+            type: String,  // bech32 stake address or cip129 drep id
             immutable: true,
         },
         name: {
-            type: String,
+            type: String,  // drep name or handle
             required: false,
         },
         lastLogin: {
