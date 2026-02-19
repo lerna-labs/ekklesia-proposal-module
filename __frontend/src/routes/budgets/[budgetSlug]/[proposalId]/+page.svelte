@@ -24,11 +24,11 @@
   <Card.Root>
     <Card.Header>
       <Card.Title class="text-2xl">
-        {proposal.title}
+        {proposal.title ?? "Proposal"}
       </Card.Title>
-      {#if proposal.description}
+      {#if proposal.summary}
         <Card.Description class="mt-2">
-          {proposal.description}
+          {proposal.summary}
         </Card.Description>
       {/if}
     </Card.Header>

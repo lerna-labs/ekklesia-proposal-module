@@ -15,21 +15,15 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Switch from "$lib/components/ui/switch/index.js";
-  import {
-    formSchema,
-    mainFormSchema,
-    draftFormSchema,
-    declarationsSchema,
-    financialAndAdministrativeSchema,
-    contractingPartySchema,
-    primaryContactSchema,
-    signatoryContactSchema,
-    kycInfoSchema,
-  } from "./Schema.js";
-  import { z } from "zod";
   import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
-  let { budget, categories, proposal = undefined, onSave = undefined, budgets = [], onBudgetChange = undefined } = $props();
+  let {
+    budget,
+    categories,
+    proposal = undefined,
+    onSave = undefined,
+    validationErrors = $bindable(null),
+  } = $props();
 
   /** CalendarDate (from DatePicker) to Date for Zod validation. */
   function toDateForValidation(val) {
@@ -39,7 +33,7 @@
     return undefined;
   }
 
-  /** Form data with executionRoadmap dates as Date so mainFormSchema.safeParse succeeds. */
+  /** Form data with executionRoadmap dates as Date for API payload (ISO strings). */
   function formDataForValidation() {
     const er = formData.metaData.executionRoadmap;
     return {
@@ -113,7 +107,7 @@
       executionRoadmap: {
         projectStartDate: undefined,
         projectEndDate: undefined,
-        workPackages: [initialWorkPackage()],
+        workPackages: [],
       },
       financialAndAdministrative: {
         conversionRate: 0,
@@ -145,9 +139,10 @@
     },
   });
 
-  let validationErrors = $state(null);
   let declarationsDialogOpen = $state(false);
-  let declarationValidationErrors = $state(null);
+  let declarationValidationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.legalDeclarations ?? null,
+  );
   let autoSaveEnabled = $state(false);
 
   const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -155,11 +150,8 @@
   $effect(() => {
     if (!autoSaveEnabled || formData.status !== "draft" || !onSave) return;
     const id = setInterval(() => {
-      const result = draftFormSchema.safeParse({ title: formData.title });
-      if (result.success && onSave) {
-        const payload = formDataToApiPayload({ ...formData, status: "draft" });
-        Promise.resolve(onSave(payload)).catch(() => {});
-      }
+      const payload = formDataToApiPayload({ ...formData, status: "draft" });
+      Promise.resolve(onSave(payload)).catch(() => {});
     }, AUTO_SAVE_INTERVAL_MS);
     return () => clearInterval(id);
   });
@@ -171,7 +163,7 @@
     if (!p || prefilled) return;
     prefilled = true;
     formData.title = p.title ?? "";
-    formData.summary = p.summary ?? p.description ?? "";
+    formData.summary = p.summary ?? "";
     formData.status = p.status ?? "draft";
     if (p.metaData) {
       Object.assign(formData.metaData, p.metaData);
@@ -195,44 +187,23 @@
     }
   });
 
-  /** Save Draft: validate title only (same as backend draft validation), show errors on form. */
+  /** Save Draft: no frontend validation; backend validates. On 400 parent sets validationErrors from body.errors. */
   function saveDraft() {
-    const result = draftFormSchema.safeParse({ title: formData.title });
-    if (!result.success) {
-      validationErrors = z.treeifyError(result.error);
-      toast.error("Please fix the errors below.");
-      return;
-    }
-    validationErrors = null;
     if (onSave) {
       const payload = formDataToApiPayload({ ...formData, status: "draft" });
       Promise.resolve(onSave(payload)).catch(() => {});
     }
   }
 
-  /** Submit (go live): full validation, then open declarations dialog. */
+  /** Submit (go live): open declarations dialog; no frontend validation. */
   function handleSubmit(e) {
     e.preventDefault();
-    const result = mainFormSchema.safeParse(formDataForValidation());
-    if (result.success) {
-      validationErrors = null;
-      declarationValidationErrors = null;
-      declarationsDialogOpen = true;
-    } else {
-      validationErrors = z.treeifyError(result.error);
-      toast.error("Please fix the errors below.");
-    }
+    validationErrors = null;
+    declarationsDialogOpen = true;
   }
 
-  /** After user confirms declarations in dialog: validate and send with status "live". */
+  /** After user confirms declarations: send with status "live". Backend validates; on 400 parent sets validationErrors. */
   function confirmDeclarations() {
-    const result = declarationsSchema.safeParse(formData.metaData.legalDeclarations);
-    if (!result.success) {
-      declarationValidationErrors = z.treeifyError(result.error);
-      toast.error("Please complete all legal declarations.");
-      return;
-    }
-    declarationValidationErrors = null;
     declarationsDialogOpen = false;
     if (onSave) {
       const payload = formDataToApiPayload({ ...formData, status: "live" });
@@ -245,22 +216,15 @@
     JSON.stringify({ title: formData.title, summary: formData.summary, status: formData.status, metaData: formData.metaData }),
   );
 
-  // When validation has failed and the user changes form data, revalidate with the same schema (draft vs full)
+  // Clear backend-sourced validation errors when user edits the form (not when errors are first set)
+  let prevFormDataSnapshot = $state(undefined);
   $effect(() => {
-    formDataSnapshot;
-    if (untrack(() => !validationErrors)) return;
-    const isDraftErrors =
-      validationErrors?.properties?.title != null &&
-      validationErrors?.properties?.summary == null &&
-      validationErrors?.properties?.metaData == null;
-    const result = isDraftErrors
-      ? draftFormSchema.safeParse({ title: formData.title })
-      : mainFormSchema.safeParse(formDataForValidation());
-    if (result.success) {
+    const snap = formDataSnapshot;
+    const hadErrors = untrack(() => validationErrors);
+    if (prevFormDataSnapshot !== undefined && snap !== prevFormDataSnapshot && hadErrors) {
       validationErrors = null;
-    } else {
-      validationErrors = z.treeifyError(result.error);
     }
+    prevFormDataSnapshot = snap;
   });
 
   // Clear declaration errors when the dialog closes (e.g. Cancel) so they don't persist on reopen
@@ -270,34 +234,6 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  {#if !proposal && budgets.length > 1}
-    <section class="w-full bg-muted-foreground/5 py-6" id="budget-selection">
-      <div class="max-w-4xl mx-auto">
-        <Card.Root>
-          <Card.Header>
-            <Card.Title class="text-lg font-medium">Budget cycle</Card.Title>
-            <Card.Description>Choose the budget cycle for this proposal.</Card.Description>
-          </Card.Header>
-          <Card.Content>
-            <Select.Root
-              type="single"
-              value={budget?._id ?? ""}
-              onValueChange={(v) => v && onBudgetChange?.(v)}
-            >
-              <Select.Trigger class="w-full max-w-sm" aria-label="Budget cycle">
-                <span class="line-clamp-1">{budget ? (budget.title ?? budget.name ?? budget._id) : "Select budget..."}</span>
-              </Select.Trigger>
-              <Select.Content>
-                {#each budgets as b (b._id)}
-                  <Select.Item value={b._id}>{b.title ?? b.name ?? b._id}</Select.Item>
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          </Card.Content>
-        </Card.Root>
-      </div>
-    </section>
-  {/if}
   <section class="w-full bg-muted-foreground/5 py-10" id="project-definition">
     <div class="max-w-4xl mx-auto space-y-4">
       <Card.Root>
@@ -310,19 +246,30 @@
           <Input
             id="title"
             bind:value={formData.title}
-            {formSchema}
-            {validationErrors}
+            label="Proposal Title"
+            description="The official name of your project as it will appear in governance voting."
+            placeholder="Enter Title Here"
+            required
+            maxLength={100}
+            validationErrors={validationErrors}
           />
           <Textarea
             id="summary"
             bind:value={formData.summary}
-            {formSchema}
-            {validationErrors}
+            label="Executive Summary"
+            description="A high-level overview of the problem, solution, and impact. This is the first thing voters read."
+            placeholder="Enter Summary Here"
+            required
+            maxLength={2000}
+            validationErrors={validationErrors}
           />
           <Textarea
             id="trackRecord"
             bind:value={formData.metaData.trackRecord}
-            formSchema={formSchema.shape.metaData}
+            label="Track Record"
+            description="Previous proposals, mainnet deployments, and other relevant experience."
+            placeholder="e.g. FundX proposal, mainnet deployment, community contributions"
+            maxLength={650}
             validationErrors={validationErrors?.properties?.metaData}
           />
         </Card.Content>
@@ -345,7 +292,6 @@
           <FormFocusArea
             id="strategicFocusArea"
             {categories}
-            formSchema={formSchema.shape.metaData}
             validationErrors={validationErrors?.properties?.metaData}
             bind:value={formData.metaData.strategicFocusArea}
             hasKpis={(formData.metaData.keyPerformanceIndicators?.length ?? 0) > 0}
@@ -359,7 +305,6 @@
               <FormFocusAreaKPI
                 id="keyPerformanceIndicators"
                 {categories}
-                formSchema={formSchema.shape.metaData}
                 validationErrors={validationErrors?.properties?.metaData}
                 category={formData.metaData.strategicFocusArea}
                 bind:value={formData.metaData.keyPerformanceIndicators}
@@ -385,19 +330,16 @@
         </Card.Header>
         <Card.Content class="space-y-4">
           <FormTimeline
-            formSchema={formSchema.shape.metaData}
             validationErrors={validationErrors?.properties?.metaData}
             bind:value={formData.metaData.executionRoadmap}
           />
 
           <FormWorkPackages
-            formSchema={formSchema.shape.metaData?.shape?.executionRoadmap?.shape?.workPackages != null ? { shape: { workPackages: formSchema.shape.metaData?.shape?.executionRoadmap?.shape?.workPackages } } : undefined}
             validationErrors={validationErrors?.properties?.metaData?.properties?.executionRoadmap}
             bind:value={formData.metaData.executionRoadmap.workPackages}
           />
 
           <FormFinancialSummary
-            formSchema={formSchema.shape.metaData?.shape?.financialAndAdministrative}
             validationErrors={validationErrors?.properties?.metaData?.properties?.financialAndAdministrative}
             formData={formData.metaData}
           />
@@ -419,15 +361,7 @@
         </Card.Header>
         <Card.Content>
           <FormAdministrative
-            formSchema={formSchema.shape.metaData}
             validationErrors={validationErrors?.properties?.metaData}
-            sectionSchemas={{
-              financialAndAdministrative: financialAndAdministrativeSchema,
-              contractingParty: contractingPartySchema,
-              primaryContact: primaryContactSchema,
-              signatoryContact: signatoryContactSchema,
-              kycInfo: kycInfoSchema,
-            }}
             bind:value={formData.metaData}
           />
         </Card.Content>
@@ -482,7 +416,6 @@
     </Dialog.Header>
     <div class="flex-1 overflow-y-auto min-h-0">
       <FormLegalDeclarations
-        formSchema={declarationsSchema}
         validationErrors={declarationValidationErrors}
         bind:value={formData.metaData.legalDeclarations}
       />

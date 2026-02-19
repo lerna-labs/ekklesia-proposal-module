@@ -10,12 +10,10 @@
     id,
     description,
     value = $bindable(),
-    formSchema,
     validationErrors,
     class: className,
     categories,
     onUpdate,
-    /** When true, show a confirmation dialog before changing focus area (KPIs will be cleared). */
     hasKpis = false,
   } = $props();
 
@@ -51,11 +49,6 @@
     confirmChangeOpen = false;
   }
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ? true : false,
-  );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
   let items = $derived(
@@ -83,9 +76,7 @@
     items.find((item) => item.value === value)?.label ?? "",
   );
 
-  const placeholder = $derived(
-    schemaMeta?.placeholder ?? "Select a focus area...",
-  );
+  const placeholder = "Select a focus area...";
 
   const displayValue = $derived(open ? searchQuery : selectedLabel);
 
@@ -111,14 +102,10 @@
 <Field.Field class="gap-2 {className}">
   <div class="flex items-center gap-1 w-full">
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
-      {label}
-      {#if schemaRequired}
-        <span class="text-(--mbo-electric-blue)">*</span>
-      {/if}
+      Strategic Focus Area
+      <span class="text-(--mbo-electric-blue)">*</span>
     </Field.Label>
-    {#if schemaMeta?.description}
-      <ToolTip content={schemaMeta.description} />
-    {/if}
+    <ToolTip content="Primary Cardano strategic pillar (e.g. L1, DeFi, RWA). Options come from the budget categories." />
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
   <div

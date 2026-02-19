@@ -17,7 +17,6 @@
     id,
     category,
     categories,
-    formSchema,
     validationErrors,
     description,
     onUpdate,
@@ -25,11 +24,6 @@
     class: className,
   } = $props();
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ? true : false,
-  );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   function getContributionError(index) {
     return validationErrors?.properties?.[id]?.items?.[index]?.properties
@@ -94,14 +88,10 @@
           for={id}
           class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
         >
-          {label}
-          {#if schemaRequired}
-            <span class="text-(--mbo-electric-blue)">*</span>
-          {/if}
+          Key Performance Indicators
+          <span class="text-(--mbo-electric-blue)">*</span>
         </Field.Label>
-        {#if schemaMeta?.description}
-          <ToolTip content={schemaMeta.description} />
-        {/if}
+        <ToolTip content="Select at least one KPI from the focus area and describe how your proposal contributes. Add a contribution strategy for each." />
         <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>
 

@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
@@ -12,9 +12,11 @@ export async function load({ fetch, url, parent }) {
 	const budgetsJson = await budgetsRes.json();
 	const budgets = budgetsJson.data ?? [];
 
-	// Auto-select when only one budget: redirect so budget + categories load
-	if (!budgetId && budgets.length === 1) {
-		throw redirect(302, `/dashboard/new?budget=${budgets[0]._id}`);
+	if (!budgetId) {
+		if (budgets.length === 1) {
+			throw redirect(302, `/dashboard/new?budget=${budgets[0]._id}`);
+		}
+		throw error(400, 'Budget is required. Use the URL parameter ?budget=<budgetId>.');
 	}
 
 	if (budgetId) {

@@ -7,13 +7,8 @@
   import { formatAda, formatUsd } from "$lib/utils.js";
 
   const id = "conversionRate";
-  let { formSchema, validationErrors, formData } = $props();
+  let { validationErrors, formData } = $props();
 
-  let label = $derived(formSchema?.shape?.[id]?.meta()?.label);
-  let schemaMeta = $derived(formSchema?.shape?.[id]?.meta());
-  let schemaRequired = $derived(
-    formSchema?.shape?.[id]?.meta()?.required ?? false,
-  );
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
 
   const rate = $derived(Number(formData?.financialAndAdministrative?.conversionRate) || 0);
@@ -76,14 +71,10 @@
               for={id}
               class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
             >
-              {label}
-              {#if schemaRequired}
-                <span class="text-(--mbo-electric-blue)">*</span>
-              {/if}
+              ADA/USD conversion rate
+              <span class="text-(--mbo-electric-blue)">*</span>
             </Field.Label>
-            {#if schemaMeta?.description}
-              <ToolTip content={schemaMeta.description} />
-            {/if}
+            <ToolTip content="Rate used to convert ADA amounts to USD in the financial summary. Must be greater than 0." />
             <span class="flex-1 min-w-0" aria-hidden="true"></span>
           </div>
           <AmountInput
@@ -91,18 +82,16 @@
             prefix="$"
             suffix="/ ADA"
             bind:value={formData.financialAndAdministrative.conversionRate}
-            placeholder={schemaMeta?.placeholder ?? "0.25"}
+            placeholder="0.25"
             decimalComma={true}
             invalid={!!schemaError}
             min="0"
             step="any"
             class="bg-white"
           />
-          {#if schemaMeta?.description}
-            <Field.Description class="text-xs text-muted-foreground">
-              {schemaMeta.description}
-            </Field.Description>
-          {/if}
+          <Field.Description class="text-xs text-muted-foreground">
+            Rate used to convert ADA amounts to USD in the financial summary. Must be greater than 0.
+          </Field.Description>
           {#if schemaError}
             <Field.Error class="text-xs">{schemaError}</Field.Error>
           {/if}

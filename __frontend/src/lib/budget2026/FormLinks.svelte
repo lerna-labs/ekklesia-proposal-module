@@ -15,23 +15,15 @@
 
   let {
     value = $bindable([]),
-    label: labelProp,
-    description: descriptionProp,
+    label: labelProp = "Other Supporting Info",
+    description: descriptionProp = "External links get the disclaimer text popup before they open. Any other details relevant to the proposal.",
     notPublic = false,
-    formSchema,
     validationErrors,
     class: className,
   } = $props();
 
-  const schemaMeta = $derived(formSchema?.shape?.supportingInfoLinks?.meta?.());
-  const label = $derived(
-    labelProp ?? schemaMeta?.label ?? "Other Supporting Info",
-  );
-  const description = $derived(
-    descriptionProp ??
-      schemaMeta?.description ??
-      "External links get the disclaimer text popup before they open. Any other details relevant to the proposal.",
-  );
+  const label = $derived(labelProp);
+  const description = $derived(descriptionProp);
 
   let addDialogOpen = $state(false);
   let deleteDialogOpen = $state(false);
@@ -46,7 +38,7 @@
   const schemaError = $derived(
     validationErrors?.properties?.supportingInfoLinks?.errors?.[0],
   );
-  const showNotPublic = $derived(notPublic ?? schemaMeta?.notPublic === true);
+  const showNotPublic = $derived(notPublic);
 
   function openAddDialog(index = null) {
     const link = index != null ? links[index] : null;

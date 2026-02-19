@@ -45,10 +45,6 @@
       <Card.Description class="line-clamp-2">
         {proposal.summary}
       </Card.Description>
-    {:else if proposal.description}
-      <Card.Description class="line-clamp-2">
-        {proposal.description}
-      </Card.Description>
     {/if}
   </Card.Header>
   <Card.Content class="space-y-2">

@@ -22,24 +22,11 @@
   import { formatAda } from "$lib/utils.js";
   import { z } from "zod";
 
-  /** FormLinks expects formSchema.shape.supportingInfoLinks; alias so validation errors map. */
-  const dialogSupportingLinksSchema = z.object({
-    supportingInfoLinks: workPackageSchema.shape.supportingDocuments,
-  });
-
   let {
-    formSchema,
     validationErrors,
     value = $bindable([]),
     class: className,
   } = $props();
-
-  const schemaMeta = $derived(formSchema?.shape?.workPackages?.meta?.());
-  const label = $derived(schemaMeta?.label ?? "Work Package Breakdown");
-  const description = $derived(
-    schemaMeta?.description ??
-      "Add work packages. Copy the table for each work package.",
-  );
 
   let addDialogOpen = $state(false);
   let deleteDialogOpen = $state(false);
@@ -216,11 +203,9 @@
 <Field.Field class="gap-2 {className}">
   <div class="flex items-center gap-1 w-full">
     <Field.Label class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
-      {label}
+      Work Packages
     </Field.Label>
-    {#if description}
-      <ToolTip content={description} />
-    {/if}
+    <ToolTip content="Break down the work into packages: scope, objectives, milestones, and budget per package." />
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
 
@@ -336,13 +321,11 @@
                   value={pkg.milestones ?? []}
                   onvaluechange={(milestones) =>
                     updatePackageMilestones(index, milestones)}
-                  formSchema={workPackageSchema}
                 />
                 <FormWorkPackagesBudget
                   value={pkg.budgetBreakdown ?? []}
                   onvaluechange={(budgetBreakdown) =>
                     updatePackageBudgetRows(index, budgetBreakdown)}
-                  formSchema={workPackageSchema}
                 />
                 {#if hasLinks}
                   <div>
@@ -413,48 +396,66 @@
       <FormInput
         id="title"
         bind:value={draft.title}
-        formSchema={workPackageSchema}
+        label="Work Package"
+        description="A descriptive name for this specific work package."
+        placeholder="e.g. WP1 Node Performance Improvements"
+        required
+        maxLength={100}
         validationErrors={draftErrors}
       />
 
       <FormTextarea
         id="scope"
         bind:value={draft.scope}
-        formSchema={workPackageSchema}
+        label="Scope of Work"
+        description="Provide a high-level description of the work involved."
+        placeholder="Describe the main activities and, where applicable, the key outputs or deliverables associated with this work package"
+        required
+        maxLength={2000}
         validationErrors={draftErrors}
       />
 
       <FormInput
         id="estimatedDuration"
         bind:value={draft.estimatedDuration}
-        formSchema={workPackageSchema}
+        label="Estimated Duration"
+        placeholder="e.g. 3 months"
+        maxLength={200}
         validationErrors={draftErrors}
       />
 
       <FormWorkPackagesObjectives
         value={draft.coreObjectives}
         onvaluechange={(v) => (draft = { ...draft, coreObjectives: v })}
-        formSchema={workPackageSchema}
         validationErrors={draftErrors}
       />
 
       <FormTextarea
         id="expectedValue"
         bind:value={draft.expectedValue}
-        formSchema={workPackageSchema}
+        label="Expected Value (ROI)"
+        description="Why does this work matter?"
+        placeholder="e.g. Faster onboarding for developers integrating with Cardano"
+        required
+        maxLength={600}
         validationErrors={draftErrors}
       />
 
       <FormTextarea
         id="metric"
         bind:value={draft.metric}
-        formSchema={workPackageSchema}
+        label="Metric"
+        description="How will success be measured?"
+        placeholder="e.g. Average time to first successful deployment reduced by 30%"
+        required
+        maxLength={600}
         validationErrors={draftErrors}
       />
 
       <FormLinks
         bind:value={draft.supportingDocuments}
-        formSchema={dialogSupportingLinksSchema}
+        label="Supporting Documentation Link"
+        description="Link any relevant diagrams, technical specs, or planning documents (PDF, PNG, JPG)."
         validationErrors={supportingLinksValidationErrors}
       />
     </div>

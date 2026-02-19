@@ -5,25 +5,17 @@
   import { getLocalTimeZone, today } from "@internationalized/date";
 
   let {
-    formSchema,
     validationErrors,
     value = $bindable({ projectStartDate: undefined, projectEndDate: undefined }),
   } = $props();
-
-  const schemaMeta = $derived(formSchema?.shape?.executionRoadmap?.meta?.());
-  const label = $derived(schemaMeta?.label ?? "Timeline");
-  const description = $derived(
-    schemaMeta?.description ??
-      "Project duration. How long do you realistically think the project will take? Consider including some contingency here.",
-  );
 </script>
 
 <Field.Set>
   <Field.Legend class="flex items-center gap-1">
     <div class="flex items-center gap-0">
-      {label} <span class="text-(--mbo-electric-blue)">*</span>
+      Timeline <span class="text-(--mbo-electric-blue)">*</span>
     </div>
-    <ToolTip content={description} />
+    <ToolTip content="Project duration. How long do you realistically think the project will take? Consider including some contingency here." />
   </Field.Legend>
   <Field.Group class="flex flex-row flex-wrap items-end gap-1 w-full md:w-1/2">
     <DatePicker

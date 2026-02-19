@@ -43,6 +43,11 @@ const budgetSchema = new Schema(
             type: Date,
             required: true,
         },
+        /** Optional. Name of the validation script for this budget (e.g. "validationBudget2026"). When set, POST/PUT proposals use that script; when missing, use default validateCreateProposalBody. */
+        validationScript: {
+            type: String,
+            required: false,
+        },
     },
     {
         timestamps: true,

@@ -16,7 +16,6 @@
   let {
     value = $bindable([]),
     onvaluechange,
-    formSchema,
     validationErrors,
     class: className,
   } = $props();
@@ -28,26 +27,8 @@
       .filter(({ text }) => (text ?? "").trim() !== ""),
   );
 
-  const meta = $derived(formSchema?.shape?.coreObjectives?.meta?.());
-  const label = $derived(meta?.label ?? "Core Objectives");
-  const description = $derived(
-    meta?.description ??
-      "What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities.",
-  );
-  const placeholder = $derived(
-    meta?.placeholder ??
-      "e.g. Improve node synchronization reliability across the network",
-  );
-
   const objectiveSchema = $derived(
-    z.object({
-      objective: z.string().min(1, "Objective is required").max(400).meta({
-        label: "Objective",
-        description,
-        placeholder,
-        required: true,
-      }),
-    }),
+    z.object({ objective: z.string().min(1, "Objective is required").max(400) }),
   );
 
   let addDialogOpen = $state(false);
@@ -102,12 +83,10 @@
   <Field.Field class="gap-2 {className}">
     <div class="flex items-center gap-1 w-full">
       <Field.Label class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
-        {label}
+        Core Objectives
         <span class="text-(--mbo-electric-blue)">*</span>
       </Field.Label>
-      {#if description}
-        <ToolTip content={description} />
-      {/if}
+      <ToolTip content="What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities." />
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>
 
@@ -170,14 +149,18 @@
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}
       </Dialog.Title>
       <Dialog.Description>
-        {description}
+        What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities.
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-2">
       <FormInput
         id="objective"
         bind:value={draftObjective}
-        formSchema={objectiveSchema}
+        label="Objective"
+        description="What is this Work Package intended to achieve? Focus on outcomes or improvements, not tasks or activities."
+        placeholder="e.g. Improve node synchronization reliability across the network"
+        required
+        maxLength={400}
         validationErrors={draftErrors}
       />
     </div>
