@@ -70,7 +70,7 @@ async function createDummyData() {
             feedbackEndDate: feedbackEnd,
             reviewStartDate: reviewStart,
             reviewEndDate: reviewEnd,
-            validationScript: "validationBudget2026",
+            validationScript: "budget2026/validationScript.js",
         });
         console.log(`Vote created: ${vote._id}`);
 

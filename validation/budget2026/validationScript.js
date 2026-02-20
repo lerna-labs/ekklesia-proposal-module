@@ -1,7 +1,7 @@
 /**
  * Budget 2026 proposal validation script.
  * Validates POST/PUT proposal body (voteId, title, summary, status, metaData).
- * Used when a vote has validationScript set to "validationBudget2026".
+ * Used when a vote has validationScript set to "budget2026/validationScript.js".
  */
 import { z } from "zod";
 import { readFileSync } from "fs";
