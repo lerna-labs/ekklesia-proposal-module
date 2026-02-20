@@ -14,17 +14,12 @@ const categorySchema = new Schema(
         },
         description: {
             type: String,
-            required: false,
+            required: true,
         },
         metaData: {
-            type: {
-                pillar: String,
-                pillarDescription: String,
-                highLevelThematicArea: String,
-                descriptionStrategy: String,
-                expectedEnhancement: String,
-                kpis: [String],
-            },
+            type: Schema.Types.Mixed,
+            default: () => ({}),
+            required: false,
         },
         sortOrder: {
             type: Number,

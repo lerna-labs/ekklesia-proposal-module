@@ -1,21 +1,20 @@
 <script>
   import * as Popover from "$lib/components/ui/popover";
-  import * as Button from "$lib/components/ui/button";
   import { formatAda, formatUsd } from "$lib/utils.js";
 
-  /** Default when proposal has no conversionRate. */
-  const DEFAULT_ADA_USD = 0.5;
+  /** @type {{ totalBudget: number, conversionRate?: number | null, class?: string }} */
+  let { totalBudget, conversionRate, class: className } = $props();
 
-  /** @type {{ totalBudget: number, conversionRate?: number, class?: string }} */
-  let { totalBudget, conversionRate = DEFAULT_ADA_USD, class: className } =
-    $props();
-
-  const rate = $derived(conversionRate ?? DEFAULT_ADA_USD);
+  const rate = $derived(conversionRate != null ? Number(conversionRate) : null);
   const adaAmount = $derived(totalBudget ?? 0);
-  const usdAmount = $derived(adaAmount * rate);
+  const hasRate = $derived(rate != null && rate !== 0);
+  const usdAmount = $derived(hasRate ? adaAmount * rate : 0);
 
   const formatRate = (r) =>
-    r.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    r.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
+    });
 </script>
 
 <Popover.Root class={className ?? ""}>
@@ -32,14 +31,25 @@
         <span class="text-muted-foreground">ADA</span>
         <span class="font-semibold tabular-nums">{formatAda(adaAmount)}</span>
       </div>
-      <div class="flex justify-between gap-4">
-        <span class="text-muted-foreground">USD</span>
-        <span class="font-semibold tabular-nums">{formatUsd(usdAmount)}</span>
-      </div>
-      <div class="flex justify-between gap-4 border-t pt-2 mt-1">
-        <span class="text-muted-foreground">Rate</span>
-        <span class="font-medium tabular-nums">{formatRate(rate)} USD/ADA</span>
-      </div>
+      {#if hasRate}
+        <div class="flex justify-between gap-4">
+          <span class="text-muted-foreground">USD</span>
+          <span class="font-semibold tabular-nums">{formatUsd(usdAmount)}</span>
+        </div>
+        <div class="flex justify-between gap-4 border-t pt-2 mt-1">
+          <span class="text-muted-foreground">Rate</span>
+          <span class="font-medium tabular-nums">
+            {formatRate(rate)} USD/ADA
+          </span>
+        </div>
+      {:else}
+        <p
+          class="text-destructive font-medium pt-2 mt-1 border-t text-xs"
+          role="alert"
+        >
+          USD conversion rate not set
+        </p>
+      {/if}
     </div>
   </Popover.Content>
 </Popover.Root>

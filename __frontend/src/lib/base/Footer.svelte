@@ -1,5 +1,6 @@
 <script>
   import Logo from "$lib/base/Logo.svelte";
+  import { versionInfo } from "$stores/versionStore.js";
 </script>
 
 <footer class="bg-(--mbo-tangy-blue) text-white">
@@ -8,7 +9,7 @@
       <Logo />
       <div class="text-xs">&copy; 2026. Intersect. All Rights Reserved.</div>
     </div>
-    <div class=" text-xs mt-4">
+    <div class="text-xs mt-4 flex items-center justify-between gap-4">
       <ul class="flex items-center gap-2">
         <li>
           <a
@@ -41,6 +42,11 @@
           </a>
         </li>
       </ul>
+      {#if $versionInfo.version}
+        <span class="text-white/50 shrink-0">
+          Version {$versionInfo.version}
+        </span>
+      {/if}
     </div>
   </div>
 </footer>

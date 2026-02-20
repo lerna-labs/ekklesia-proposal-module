@@ -43,10 +43,10 @@ const voteSchema = new Schema(
       type: Date,
       required: true,
     },
-    /** Optional. Name of the validation script for this vote (e.g. "validationBudget2026"). When set, POST/PUT proposals use that script; when missing, use default validateCreateProposalBody. */
+    /** Path inside the validation folder to the script (e.g. "budget2026/validationScript.js"). POST/PUT proposals always use this script. */
     validationScript: {
       type: String,
-      required: false,
+      required: true,
     },
     /** Optional. URL to the Ekklesia Voting Platform for this Vote **/
     votingUrl: {
