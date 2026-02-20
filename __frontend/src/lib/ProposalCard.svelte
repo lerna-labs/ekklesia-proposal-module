@@ -80,7 +80,7 @@
         </span>
         <BudgetConversion
           totalBudget={proposal.totalBudget}
-          conversionRate={proposal.conversionRate}
+          conversionRate={proposal.metaData?.financialAndAdministrative?.conversionRate}
           class="text-sm"
         />
       </div>

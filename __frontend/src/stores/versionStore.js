@@ -57,4 +57,4 @@ export async function fetchVersionInfo() {
 
 // Start version checking every minute
 fetchVersionInfo(); // Initial check
-setInterval(fetchVersionInfo, 1000 * 60); // Check every minute
+setInterval(fetchVersionInfo, 1000 * 60 * 5); // Check every 5 minutes

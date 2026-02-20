@@ -1,7 +1,7 @@
 {
-  "name": "ekklesia-budget-module",
+  "name": "ekklesia-proposal-module",
   "version": "0.1.0",
-  "description": "Ekklesia Budget Module",
+  "description": "Ekklesia Proposal Module",
   "main": "server.js",
   "directories": {
     "doc": "docs"
