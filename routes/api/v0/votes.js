@@ -10,31 +10,6 @@ import { Category } from "../../../schema/Category.js";
 import mongoose from "mongoose";
 import { isAuthenticated } from "../../../helper/middleWare.js";
 
-// Helper function to format categories for vote responses (sections 3.1, 3.2)
-// Returns simplified categories with flattened metaData fields
-const formatCategoryForVote = (category) => {
-  const formatted = {
-    _id: category._id,
-    title: category.title,
-    description: category.description,
-  };
-
-  // Flatten metaData fields if they exist (for section 3.2)
-  if (category.metaData) {
-    if (category.metaData.pillar) formatted.pillar = category.metaData.pillar;
-    if (category.metaData.pillarDescription)
-      formatted.pillarDescription = category.metaData.pillarDescription;
-    if (category.metaData.highLevelThematicArea)
-      formatted.highLevelThematicArea = category.metaData.highLevelThematicArea;
-    if (category.metaData.descriptionStrategy)
-      formatted.descriptionStrategy = category.metaData.descriptionStrategy;
-    if (category.metaData.expectedEnhancement)
-      formatted.expectedEnhancement = category.metaData.expectedEnhancement;
-  }
-
-  return formatted;
-};
-
 // Helper function to format categories for categories endpoint (section 3.3)
 // Returns categories with nested metaData structure
 const formatCategoryForCategoriesEndpoint = (category) => {
@@ -78,8 +53,8 @@ router.get("/:voteId/categories", async (req, res) => {
       });
     }
 
-    // Check if vote exists
-    const vote = await Vote.findById(voteId).lean();
+    // Check if vote exists (exclude validationScript; vote not returned)
+    const vote = await Vote.findById(voteId).select("-validationScript").lean();
     if (!vote) {
       return res.status(404).json({
         status: "error",
@@ -111,12 +86,12 @@ router.get("/:voteId/categories", async (req, res) => {
 
 /**
  * @route GET /api/v0/votes/:voteId
- * @description Get a single vote by MongoDB ObjectId. Returns the vote with its categories.
+ * @description Get a single vote by MongoDB ObjectId.
  * @access Public
  *
  * @param {string} voteId - MongoDB ObjectId of the vote cycle
  *
- * @returns {Object} 200 - Vote document including a categories array
+ * @returns {Object} 200 - Vote document
  * @returns {Object} 400 - Invalid voteId format
  * @returns {Object} 404 - Vote not found
  */
@@ -135,8 +110,8 @@ router.get("/:voteId", async (req, res) => {
       });
     }
 
-    // Find vote by ID
-    const vote = await Vote.findById(voteId).lean();
+    // Find vote by ID (exclude validationScript from response)
+    const vote = await Vote.findById(voteId).select("-validationScript").lean();
 
     if (!vote) {
       return res.status(404).json({
@@ -145,21 +120,7 @@ router.get("/:voteId", async (req, res) => {
       });
     }
 
-    // Fetch categories for this vote, sorted by sortOrder
-    const categories = await Category.find({
-      voteId: vote._id,
-    })
-      .sort({ sortOrder: 1 })
-      .lean();
-
-    // Format categories with flattened metaData for vote response (section 3.2)
-    const formattedCategories = categories.map(formatCategoryForVote);
-
-    // Return vote data directly as an object
-    return res.status(200).json({
-      ...vote,
-      categories: formattedCategories,
-    });
+    return res.status(200).json(vote);
   } catch (error) {
     console.error("Error fetching vote by ID:", error);
     return res.status(500).json({
@@ -180,7 +141,7 @@ router.get("/:voteId", async (req, res) => {
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
  *
  * @returns {Object} 200 - Response object containing:
- *   - data: Array of vote documents, each including a categories array
+ *   - data: Array of vote documents
  *   - meta: Object containing:
  *     - page: Current page number
  *     - limit: Number of items per page
@@ -243,9 +204,10 @@ router.get("/", async (req, res) => {
     // Calculate skip value for pagination
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query with pagination
+    // Execute query with pagination (exclude validationScript from response)
     const [votes, totalItems] = await Promise.all([
       Vote.find(query)
+        .select("-validationScript")
         .sort({ createdAt: -1 }) // Sort by newest first
         .skip(skip)
         .limit(limitNum)
@@ -261,44 +223,13 @@ router.get("/", async (req, res) => {
       });
     }
 
-    // Get all vote IDs to fetch their categories
-    const voteIds = votes.map((vote) => vote._id);
-
-    // Fetch all categories for these votes
-    const categories = await Category.find({
-      voteId: { $in: voteIds },
-    }).lean();
-
-    // Group categories by voteId and format them
-    const categoriesByVote = {};
-    categories.forEach((category) => {
-      const voteIdStr = category.voteId.toString();
-      if (!categoriesByVote[voteIdStr]) {
-        categoriesByVote[voteIdStr] = [];
-      }
-      // For list endpoint (3.1), use simplified format (just _id, title, description)
-      categoriesByVote[voteIdStr].push({
-        _id: category._id,
-        title: category.title,
-        description: category.description,
-      });
-    });
-
-    // Attach categories to each vote
-    const votesWithCategories = votes.map((vote) => {
-      return {
-        ...vote,
-        categories: categoriesByVote[vote._id.toString()] || [],
-      };
-    });
-
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / limitNum);
     const hasNextPage = pageNum < totalPages;
     const hasPreviousPage = pageNum > 1;
 
     return res.status(200).json({
-      data: votesWithCategories,
+      data: votes,
       meta: {
         page: pageNum,
         limit: limitNum,
@@ -319,13 +250,13 @@ router.get("/", async (req, res) => {
 
 /**
  * @route GET /api/v0/votes/:slug
- * @description Get a single vote by slug. Returns the vote with its categories.
+ * @description Get a single vote by slug.
  * @access Public
  * @note This route should come after /:voteId routes. Slugs that are 24-character hex strings will match :voteId first.
  *
  * @param {string} slug - The slug of the vote to retrieve
  *
- * @returns {Object} 200 - Vote document including a categories array
+ * @returns {Object} 200 - Vote document
  * @returns {Object} 404 - Vote not found
  */
 router.get("/:slug", async (req, res) => {
@@ -340,8 +271,8 @@ router.get("/:slug", async (req, res) => {
       // This should have matched :voteId route, but if we get here, treat as slug
     }
 
-    // Find vote by slug
-    const vote = await Vote.findOne({ slug }).lean();
+    // Find vote by slug (exclude validationScript from response)
+    const vote = await Vote.findOne({ slug }).select("-validationScript").lean();
 
     if (!vote) {
       return res.status(404).json({
@@ -350,21 +281,7 @@ router.get("/:slug", async (req, res) => {
       });
     }
 
-    // Fetch categories for this vote, sorted by sortOrder
-    const categories = await Category.find({
-      voteId: vote._id,
-    })
-      .sort({ sortOrder: 1 })
-      .lean();
-
-    // Format categories with flattened metaData for vote response
-    const formattedCategories = categories.map(formatCategoryForVote);
-
-    // Return vote data directly as an object
-    return res.status(200).json({
-      ...vote,
-      categories: formattedCategories,
-    });
+    return res.status(200).json(vote);
   } catch (error) {
     console.error("Error fetching vote by slug:", error);
     return res.status(500).json({
