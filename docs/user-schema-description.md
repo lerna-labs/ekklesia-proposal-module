@@ -20,7 +20,7 @@ successful login. The `_id` is the user's Bech32 Cardano address (stake or
 DRep), used as the primary key throughout the system — there is no separate
 surrogate key. Roles (Proposer, DRep, Admin) are not stored on the User
 document; they are derived at request time from the JWT `signType` and from vote
-`adminVoteIds` arrays.
+`admins` arrays.
 
 Implementation: [../schema/User.js](../schema/User.js).
 
@@ -28,13 +28,13 @@ Implementation: [../schema/User.js](../schema/User.js).
 
 ## Top-level (user root)
 
-| Field      | Schema path | Required | Type   | Immutable | Validation / notes                                                                                                                                                                                                     |
-|------------|-------------|----------|--------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ID         | `_id`       | Yes      | String | Yes       | Bech32-encoded Cardano address (`stake1…` or `drep1…`). Set on creation; cannot be changed. Used as the foreign key in Proposal (`proposerId`), Comment (`userId`), CommentLike (`userId`), and Vote (`adminVoteIds`). |
-| Name       | `name`      | No       | String | No        | Display name resolved at login from the DRep registry (for DRep addresses) or ADA handle service (for stake addresses). May be absent if neither service returns a result. Updated on each successful login.           |
-| Last login | `lastLogin` | No       | Date   | No        | Timestamp of the most recent successful authentication. Defaults to `Date.now` on creation; updated on every successful `PUT /session`.                                                                                |
-| Created at | `createdAt` | —        | Date   | Yes       | Set by Mongoose `timestamps: true` on first save. Immutable.                                                                                                                                                           |
-| Updated at | `updatedAt` | —        | Date   | No        | Set by Mongoose `timestamps: true` and updated by a `pre("save")` middleware hook on every save.                                                                                                                       |
+| Field      | Schema path | Required | Type   | Immutable | Validation / notes                                                                                                                                                                                               |
+|------------|-------------|----------|--------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ID         | `_id`       | Yes      | String | Yes       | Bech32-encoded Cardano address (`stake1…` or `drep1…`). Set on creation; cannot be changed. Used as the foreign key in Proposal (`proposerId`), Comment (`userId`), CommentLike (`userId`), and Vote (`admins`). |
+| Name       | `name`      | No       | String | No        | Display name resolved at login from the DRep registry (for DRep addresses) or ADA handle service (for stake addresses). May be absent if neither service returns a result. Updated on each successful login.     |
+| Last login | `lastLogin` | No       | Date   | No        | Timestamp of the most recent successful authentication. Defaults to `Date.now` on creation; updated on every successful `PUT /session`.                                                                          |
+| Created at | `createdAt` | —        | Date   | Yes       | Set by Mongoose `timestamps: true` on first save. Immutable.                                                                                                                                                     |
+| Updated at | `updatedAt` | —        | Date   | No        | Set by Mongoose `timestamps: true` and updated by a `pre("save")` middleware hook on every save.                                                                                                                 |
 
 ---
 
@@ -58,7 +58,7 @@ derived at runtime:
 |--------------|-----------------------------------------------------------------------------------|
 | **Proposer** | Any authenticated user who owns a Proposal (`proposal.proposerId === req.userId`) |
 | **DRep**     | JWT `signType === "drep"`                                                         |
-| **Admin**    | Authenticated user's `_id` appears in `vote.adminVoteIds` for the relevant vote   |
+| **Admin**    | Authenticated user's `_id` appears in `vote.admins` for the relevant vote         |
 | **Viewer**   | Unauthenticated (no JWT)                                                          |
 
 **Display name resolution**

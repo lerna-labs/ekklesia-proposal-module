@@ -26,7 +26,7 @@
       - [Query Parameters](#query-parameters)
       - [Success Response — `200 OK`](#success-response--200-ok)
       - [Error Response — `404 Not Found`](#error-response--404-not-found)
-    - [3.2 `GET /votes/{voteId}`](#32-get-votesvoteid)
+    - [3.2 `GET /votes/{identifier}`](#32-get-votesidentifier)
       - [Path Parameters](#path-parameters)
       - [Success Response — `200 OK`](#success-response--200-ok-1)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request)
@@ -183,8 +183,8 @@ kept up to date as the module evolves.
   24-character hexadecimal strings).
 - **DRep identifiers** – All `drep_id` values use the `drep1…` Bech32 encoding
   defined by CIP-0509.
-- **Admin addresses** – All `adminVoteIds` array entries are Bech32 Cardano
-  stake addresses (`stake1…`).
+- **Admin addresses** – All `admins` array entries are Bech32 Cardano stake
+  addresses (`stake1…`).
 - **Base URL** – All paths below are relative to a versioned base, e.g.
   `https://domain.tld/api/v0`.
 - **Requests** – Request bodies must be `Content-Type: application/json`. The
@@ -213,7 +213,7 @@ information about authentication roles and how they affect endpoint behavior.
   data (e.g., `live` and `withdrawn` proposals/comments).
 - **Proposer** — Authenticated users who own proposals. Can access their own
   proposals in all statuses (`live`, `withdrawn`, `draft`, `archived`).
-- **Admin** — Authenticated users whose address is in a vote's `voteAdmins`
+- **Admin** — Authenticated users whose address is in a vote's `vote.admins`
   array. Can access draft proposals and manage comments for their vote.
 
 Rate limiting applies to all public endpoints (see
@@ -244,6 +244,18 @@ or `_id` (exact match), and filtering by slug (case-sensitive exact match).
     {
       "_id": "a1b2c3d4e5f67890abcdef12",
       "title": "Cardano Governance Budget – Q1 2026",
+      "categories": [
+        {
+          "_id": "a1b2c3d4e5f67890abcdef13",
+          "title": "Core Infrastructure",
+          "description": "Projects that maintain or improve the foundational technical layer of the Cardano network."
+        },
+        {
+          "_id": "a1b2c3d4e5f67890abcdef14",
+          "title": "Developer Ecosystem",
+          "description": "Tools, SDKs, documentation, and programmes that support third-party development on Cardano."
+        }
+      ],
       "description": "Budget cycle for Q1 2026 governance proposals",
       "slug": "cardano-governance-budget-q1-2026",
       "admins": [
@@ -271,7 +283,7 @@ or `_id` (exact match), and filtering by slug (case-sensitive exact match).
 }
 ```
 
-> **Note:** Categories for a vote are available via
+> **Note:** Category details for a vote are available via
 > `GET /votes/{voteId}/categories` (§3.3). Proposals and filters for that vote
 > are scoped to that set.
 
@@ -289,15 +301,27 @@ are found.
 
 ---
 
-### 3.2 `GET /votes/{voteId}`
+### 3.2 `GET /votes/{identifier}`
 
-Returns a single vote cycle by its MongoDB ObjectId.
+Returns a single vote cycle. The {identifier} path segment accepts either a
+MongoDB ObjectId or a slug — the server resolves which lookup to perform based
+on the shape of the value:
+
+- If the value is a valid 24-character hexadecimal string, it is treated as a
+  MongoDB ObjectId and looked up via `_id`.
+- Otherwise, it is treated as a slug and looked up via the `slug` field
+  (case-sensitive exact match).
+
+Both lookups return the same response shape. This mirrors the behavior of the
+`slug` query parameter on `GET /votes` (§3.1), but allows the identifier to be
+expressed directly in the path, which is more convenient for client-side
+navigation where the slug is already in the URL.
 
 #### Path Parameters
 
-| Parameter | Type              | Required | Description                                                           |
-|-----------|-------------------|----------|-----------------------------------------------------------------------|
-| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the vote cycle (24-character hexadecimal string). |
+| Parameter    | Type                      | Required | Description                                                                                                                                               |
+|--------------|---------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `identifier` | string (ObjectId or Slug) | Yes      | Either a MongoDB ObjectId (24-character hexadecimal string) to look up by `_id`, or any other string to look up as a `slug` (case-sensitive exact match). |
 
 #### Success Response — `200 OK`
 
@@ -310,6 +334,18 @@ Returns a single vote cycle by its MongoDB ObjectId.
   "admins": [
     "stake1ux7k...m4p1",
     "stake1ur9m...w6x3"
+  ],
+  "categories": [
+    {
+      "_id": "a1b2c3d4e5f67890abcdef13",
+      "title": "Core Infrastructure",
+      "description": "Projects that maintain or improve the foundational technical layer of the Cardano network."
+    },
+    {
+      "_id": "a1b2c3d4e5f67890abcdef14",
+      "title": "Developer Ecosystem",
+      "description": "Tools, SDKs, documentation, and programmes that support third-party development on Cardano."
+    }
   ],
   "submissionStartDate": "2026-01-15T10:00:00Z",
   "submissionEndDate": "2026-02-15T23:59:59Z",
@@ -327,7 +363,9 @@ Returns a single vote cycle by its MongoDB ObjectId.
 
 #### Error Response — `400 Bad Request`
 
-Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
+Returned only when the identifier is a well-formed 24-character hexadecimal
+string (i.e., recognized as an ObjectId attempt) but fails ObjectId validation.
+A plain slug string that finds no match returns `404 Not Found`, not `400`.
 
 ```json
 {
@@ -338,7 +376,7 @@ Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
 
 #### Error Response — `404 Not Found`
 
-Returned when no vote exists with the provided `voteId`.
+Returned when no vote exists with the provided ObjectId or slug.
 
 ```json
 {
@@ -405,10 +443,9 @@ cache this response for the lifetime of the vote cycle.
 > **Note:** Responses from this endpoint are intended to be cached client-side
 > for the lifetime of the vote cycle. The `updatedAt` field on the parent vote
 > object (available via `GET /votes/{voteId}`) can be used to detect when a
-> cache
-> invalidation is warranted. Categories are returned sorted by their `sortOrder`
-> field in ascending order, which dictates the canonical display order in the
-> UI.
+> cache invalidation is warranted. Categories are returned sorted by their
+> `sortOrder` field in ascending order, which dictates the canonical display
+> order in the UI.
 
 #### Error Response — `400 Bad Request`
 
@@ -442,11 +479,11 @@ returns proposals from all votes.
 
 #### Access by role
 
-| Role         | Allowed proposal statuses                      | Notes                                                                                                                                                                   |
-|--------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | `live`, `withdrawn`                            | Default. No authentication. Use `status` to filter by `live` or `withdrawn`.                                                                                            |
-| **Proposer** | All (`live`, `withdrawn`, `draft`, `archived`) | When authenticated and `proposer` query param matches the authenticated user's ID. Default (no `status` param) returns all statuses for own proposals.                  |
-| **Admin**    | `live`, `withdrawn`, `draft` (for their vote)  | When authenticated and the user's address (JWT) is in the vote's `voteAdmins` array. Must set `vote` and `status=draft` to see draft proposals; default is `live` only. |
+| Role         | Allowed proposal statuses                      | Notes                                                                                                                                                                    |
+|--------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | `live`, `withdrawn`                            | Default. No authentication. Use `status` to filter by `live` or `withdrawn`.                                                                                             |
+| **Proposer** | All (`live`, `withdrawn`, `draft`, `archived`) | When authenticated and `proposer` query param matches the authenticated user's ID. Default (no `status` param) returns all statuses for own proposals.                   |
+| **Admin**    | `live`, `withdrawn`, `draft` (for their vote)  | When authenticated and the user's address (JWT) is in the vote's `vote.admins` array. Must set `vote` and `status=draft` to see draft proposals; default is `live` only. |
 
 List responses include a shortened `metaData` object containing only
 `strategicFocusArea` (category ObjectId), `proposalType`, and `initiativeType`;
@@ -505,7 +542,7 @@ full `metaData` is available only from `GET /proposals/{proposalId}`.
 > the `status` parameter to filter by `live` and/or `withdrawn` (withdrawn
 > includes both `withdrawnByProposer` and `withdrawnByAdmin`). The `status`
 > parameter accepts comma-separated values (e.g. `live,withdrawn`).
-> **Vote admins** (authenticated user in the vote's `adminVoteIds` array) or
+> **Vote admins** (authenticated user in the vote's `admins` array) or
 > callers querying their own proposals (`proposer` = authenticated user ID) may
 > also include `draft` in `status` (e.g. `status=live,withdrawn,draft`).
 > Including `draft`without being a vote admin or the proposal owner returns
@@ -598,11 +635,11 @@ depends on the caller's role.
 
 #### Access by role
 
-| Role         | Can access proposal when                                                                                                                                      |
-|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | Status is `live` or `withdrawn` (anyone).                                                                                                                     |
-| **Proposer** | Status is any (including `draft`, `archived`) when the authenticated user's ID matches the proposal's `proposerId`.                                           |
-| **Admin**    | Status is `draft` when the authenticated user's address (JWT) is in that proposal's vote `adminVoteIds` array; also has public access for `live`/`withdrawn`. |
+| Role         | Can access proposal when                                                                                                                                |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | Status is `live` or `withdrawn` (anyone).                                                                                                               |
+| **Proposer** | Status is any (including `draft`, `archived`) when the authenticated user's ID matches the proposal's `proposerId`.                                     |
+| **Admin**    | Status is `draft` when the authenticated user's address (JWT) is in that proposal's vote `admins` array; also has public access for `live`/`withdrawn`. |
 
 If the proposal exists but the requester is not allowed to see it (e.g., draft
 or archived and not the proposer or a vote admin), the server returns **403
@@ -695,15 +732,13 @@ Returns a paginated list of **top-level comments** (where `parentId` is null)
 for a specific proposal. The proposal is specified via the required query
 parameter `proposal` (the proposal's MongoDB ObjectId). By default, only
 **live** comments are returned; **admins** (authenticated user's address in the
-proposal's vote `adminVoteIds` array) can use the `status` parameter to filter
-by
+proposal's vote `admins` array) can use the `status` parameter to filter by
 `live`, `withdrawn`, or `withdrawnByAdmin`. Sort by `sort` (default `date`, i.e.
 `createdAt`), `replyCount`, or `likeCount`, with `direction` `asc` or `desc`;
 default is newest first (`direction=desc`). Each comment includes a `user`
 object (the comment author; `lastLogin`, `createdAt`, and `updatedAt` are
 excluded; a `type` field is added: `"proposer"` if the commenting user is the
-proposal's proposer, `"admin"` if the commenting user is in the vote's
-`adminVoteIds`
+proposal's proposer, `"admin"` if the commenting user is in the vote's `admins`
 array, otherwise `"user"`), a `replyCount` (number of direct replies to that
 comment), and a `likeCount` (number of likes on that comment).`proposalId`,
 `status`, `parentId`, and `userId` are excluded from each comment.**Comment
@@ -716,7 +751,7 @@ withdrawn by admin).
 |------------|-----------------------------------------------------------------------|---------------------------------------------------------|
 | **Public** | Default `live` only. `status` parameter (if provided) must be `live`. |                                                         |
 | **Author** | Default `live` only. Cannot use `status` parameter.                   | Sees `withdrawalDetails` for own comments when present. |
-| **Admin**  | Can filter by `status`: `live`, `withdrawn`, or `withdrawnByAdmin`.   |                                                         |
+| **Admin**  | Can filter by `status`: `live` or `withdrawnByAdmin`.                 |                                                         |
 
 #### Query Parameters
 
@@ -829,7 +864,7 @@ Returns a single comment by its MongoDB ObjectId. **Public:** only comments with
 `status` = `live` are returned. **Comment authors** (authenticated user's ID
 matches the comment's `userId`) can retrieve their own comments in any status
 and see `withdrawalDetails` (if present), but cannot use the `status` parameter.
-**Admins** (authenticated user's address in the proposal's vote `adminVoteIds`
+**Admins** (authenticated user's address in the proposal's vote `admins`
 array) can retrieve any comment by ID; optional `status` parameter can be used
 to require the comment's status to match (`live`, `withdrawn`, or
 `withdrawnByAdmin`). Response shape matches the comment objects in §3.6 (
@@ -922,12 +957,11 @@ comment's status.
 
 Returns a paginated list of **replies** to a comment (comments where`parentId` =
 `commentId`). Default is **live** replies only; **admins** (authenticated user's
-address in the proposal's vote `adminVoteIds` array) can use the `status`
+address in the proposal's vote `admins` array) can use the `status`
 parameter to filter by `live`, `withdrawn`, or `withdrawnByAdmin`. Ordered by
-`createdAt`
-ascending (oldest first). Same response shape per reply as §3.6. **Reply authors
-** see `withdrawalDetails` (if present) for their own replies. The parent
-comment must exist and be live; otherwise 404 is returned.
+`createdAt` ascending (oldest first). Same response shape per reply as §3.6.
+**Reply authors** see `withdrawalDetails` (if present) for their own replies.
+The parent comment must exist and be live; otherwise 404 is returned.
 
 #### Access by role
 
@@ -935,7 +969,7 @@ comment must exist and be live; otherwise 404 is returned.
 |------------|-----------------------------------------------------------------------|--------------------------------------------------------|
 | **Public** | Default `live` only. `status` parameter (if provided) must be `live`. |                                                        |
 | **Author** | Default `live` only. Cannot use `status` parameter.                   | Sees `withdrawalDetails` for own replies when present. |
-| **Admin**  | Can filter by `status`: `live`, `withdrawn`, or `withdrawnByAdmin`.   |                                                        |
+| **Admin**  | Can filter by `status`: `live` or `withdrawnByAdmin`.                 |                                                        |
 
 #### Path Parameters
 
@@ -1230,11 +1264,11 @@ and (when applicable) the list of vote IDs for which they are an admin.
 }
 ```
 
-| Field          | Type     | Description                                                                                                                                                                                                   |
-|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `userId`       | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                                  |
-| `name`         | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                              |
-| `adminVoteIds` | string[] | **Optional.** Array of vote `_id` values (as strings) for which the authenticated user is in the vote's `adminVoteIds` array. Present only when the user is an admin of at least one vote; omitted otherwise. |
+| Field          | Type     | Description                                                                                                                                                                                             |
+|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `userId`       | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                            |
+| `name`         | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                        |
+| `adminVoteIds` | string[] | **Optional.** Array of vote `_id` values (as strings) for which the authenticated user is in the vote's `admins` array. Present only when the user is an admin of at least one vote; omitted otherwise. |
 
 > **Note:** The `userId` field contains a Bech32-encoded Cardano identifier. It
 > can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`)
@@ -1721,7 +1755,7 @@ of the proposal may be changed; this endpoint only performs the withdrawal.
   `proposerId`. The proposal's status is set to `"withdrawnByProposer"`.
   Withdrawal is allowed until the vote's `feedbackEndDate`.
 - **Vote admin** — Authenticated user's `userId` is in the proposal's vote
-  `adminVoteIds` array. The proposal's status is set to `"withdrawnByAdmin"`.
+  `admins` array. The proposal's status is set to `"withdrawnByAdmin"`.
   Withdrawal is allowed until the vote's `reviewEndDate`.
 
 **Constraints:**
@@ -2192,7 +2226,7 @@ set to `"withdrawnByAdmin"` and the request body is stored in
 **Constraints:**
 
 - Only a vote admin (authenticated user's `userId` is in the comment's proposal
-  vote `adminVoteIds` array) can call this endpoint.
+  vote `admins` array) can call this endpoint.
 - The comment's current status must be `"live"`.
 - Withdrawal is only allowed until the proposal's vote `feedbackEndDate`.
 
@@ -2347,6 +2381,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.1.0   | 2026-02-20 | Some updates to spec to bring alignment with latest deployed changes                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.0.0   | 2026-02-20 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                               |
 | 0.2.7   | 2026-02-20 | Terminology update - Rename "Budget" item to "Vote" to better align future use cases                                                                                                                                                                                                                                                                                                                                                   |
 | 0.2.6   | 2026-02-19 | Updates to grammar and formatting.                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -2357,5 +2392,3 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 | 0.2.1   | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`.                                                                                                                                                                                          |
 | 0.2.0   | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history.                                                                                                                                                                                                                                                                                                                                                    |
 | 0.1.0   | 2026-02-03 | Initial specification: public endpoints (§3), authentication (§4), authenticated write endpoints (§5).                                                                                                                                                                                                                                                                                                                                 |
-
----

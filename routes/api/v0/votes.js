@@ -8,7 +8,6 @@ import { Category } from "../../../schema/Category.js";
 
 // helper imports
 import mongoose from "mongoose";
-import { isAuthenticated } from "../../../helper/middleWare.js";
 
 // Helper function to format categories for vote responses (sections 3.1, 3.2)
 // Returns simplified categories with flattened metaData fields
@@ -172,7 +171,7 @@ router.get("/:voteId", async (req, res) => {
 /**
  * @route GET /api/v0/votes
  * @description Get votes with search and pagination. Supports searching by title (case-insensitive partial match) or _id (exact match), and filtering by slug (case-sensitive exact match).
- * @access Private (requires authentication)
+ * @access Public
  *
  * @query {string} [search] - Search term to match against title (partial, case-insensitive) or _id (exact match)
  * @query {string} [slug] - Filter by slug (exact, case-sensitive match)
@@ -189,7 +188,6 @@ router.get("/:voteId", async (req, res) => {
  *     - hasNextPage: Boolean indicating if there's a next page
  *     - hasPreviousPage: Boolean indicating if there's a previous page
  * @returns {Object} 400 - Error if pagination parameters are invalid
- * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  * @returns {Object} 404 - No votes found when search or slug parameters are provided
  */
 router.get("/", async (req, res) => {
@@ -331,14 +329,6 @@ router.get("/", async (req, res) => {
 router.get("/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-
-    // Skip if this looks like an ObjectId (should have been handled by :voteId route)
-    if (
-      mongoose.Types.ObjectId.isValid(slug) &&
-      slug.length === 24
-    ) {
-      // This should have matched :voteId route, but if we get here, treat as slug
-    }
 
     // Find vote by slug
     const vote = await Vote.findOne({ slug }).lean();
