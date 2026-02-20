@@ -1,10 +1,13 @@
 <script>
+  import { invalidateAll } from "$app/navigation";
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
+  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
   import { user } from "$stores/sessionManager.js";
-  let { proposal, budget, categories = [], class: className } = $props();
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
+  let { proposal, vote, categories = [], showLink = true, class: className } = $props();
 
   const isOwnProposal = $derived(
     $user?.userId &&
@@ -12,9 +15,23 @@
     String(proposal.proposerId).trim() === String($user.userId).trim(),
   );
 
+  const isVoteAdmin = $derived(
+    vote?._id &&
+    $user?.adminVoteIds &&
+    Array.isArray($user.adminVoteIds) &&
+    $user.adminVoteIds.includes(String(vote._id)),
+  );
+
+  const canWithdraw = $derived(
+    (isOwnProposal || isVoteAdmin) &&
+    (proposal?.status === "live" || proposal?.status === "draft"),
+  );
+
+  let withdrawOpen = $state(false);
+
   const proposalHref = $derived(
-    budget && (proposal._id || proposal.id)
-      ? `/budgets/${budget.slug}/${proposal._id || proposal.id}`
+    vote && (proposal._id || proposal.id)
+      ? `/votes/${vote.slug}/${proposal._id || proposal.id}`
       : null,
   );
 
@@ -44,10 +61,6 @@
     {#if proposal.summary}
       <Card.Description class="line-clamp-2">
         {proposal.summary}
-      </Card.Description>
-    {:else if proposal.description}
-      <Card.Description class="line-clamp-2">
-        {proposal.description}
       </Card.Description>
     {/if}
   </Card.Header>
@@ -91,16 +104,37 @@
       </div>
     {/if}
   </Card.Content>
-  {#if proposalHref}
-    <Card.Footer>
-      <Button.Root
-        href={proposalHref}
-        variant="outline"
-        size="sm"
-        class="text-xs"
-      >
-        Read Proposal
-      </Button.Root>
+  {#if showLink && proposalHref || canWithdraw}
+    <Card.Footer class="flex flex-wrap items-center gap-2">
+      {#if showLink && proposalHref}
+        <Button.Root
+          href={proposalHref}
+          variant="outline"
+          size="sm"
+          class="text-xs"
+        >
+          Read Proposal
+        </Button.Root>
+      {/if}
+      {#if canWithdraw}
+        <Button.Root
+          variant="destructive"
+          size="sm"
+          class="text-xs bg-destructive text-white hover:bg-destructive/90"
+          aria-label="Withdraw proposal"
+          title="Withdraw proposal"
+          onclick={() => (withdrawOpen = true)}
+        >
+          <Trash2Icon class="size-4 mr-1" />
+          Withdraw
+        </Button.Root>
+      {/if}
     </Card.Footer>
   {/if}
 </Card.Root>
+
+<ProposalWithdrawal
+  bind:open={withdrawOpen}
+  proposal={proposal}
+  onSuccess={() => invalidateAll()}
+/>

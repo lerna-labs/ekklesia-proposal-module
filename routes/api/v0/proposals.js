@@ -5,13 +5,15 @@ const router = Router();
 // schema import
 import { Proposal } from "../../../schema/Proposal.js";
 import { Category } from "../../../schema/Category.js";
-import { Budget } from "../../../schema/Budget.js";
+import { Vote } from "../../../schema/Vote.js";
 
 // helper imports
 import mongoose from "mongoose";
+import { z } from "zod";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { validateCreateProposalBody } from "../../../validation/proposalCreateSchema.js";
+import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 
 /**
  * Compute total budget (ADA) from metaData.executionRoadmap.workPackages, same logic as FormFinancialSummary.
@@ -39,7 +41,7 @@ function computeTotalBudgetFromMetaData(metaData) {
  * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
  * @access Private (requires valid JWT)
  *
- * @body {string} budgetId - Valid MongoDB ObjectId for the budget cycle (required)
+ * @body {string} voteId - Valid MongoDB ObjectId for the vote cycle (required)
  * @body {string} title - Proposal title (2–100 chars)
  * @body {string} summary - Executive summary (2–2000 chars)
  * @body {string} status - "draft" or "live"
@@ -48,7 +50,7 @@ function computeTotalBudgetFromMetaData(metaData) {
  * @returns {Object} 201 - Created proposal document
  * @returns {Object} 400 - Validation error (Zod errors in body)
  * @returns {Object} 401 - Not authenticated
- * @returns {Object} 404 - Budget not found
+ * @returns {Object} 404 - Vote not found
  * @returns {Object} 500 - Server error
  */
 router.post("/", async (req, res) => {
@@ -63,33 +65,44 @@ router.post("/", async (req, res) => {
 
     const proposerId = tokenResult.userId;
 
-    const validation = validateCreateProposalBody(req.body);
+    const rawVoteId = req.body?.voteId;
+    if (!rawVoteId || !mongoose.Types.ObjectId.isValid(rawVoteId) || String(rawVoteId).length !== 24) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid voteId. Must be a valid ObjectId.",
+      });
+    }
+
+    const voteDoc = await Vote.findById(rawVoteId).lean();
+    if (!voteDoc) {
+      return res.status(404).json({
+        status: "error",
+        message: "Vote not found",
+      });
+    }
+
+    let validation;
+    if (voteDoc.validationScript) {
+      const script = await loadValidationScript(voteDoc.validationScript);
+      if (script) {
+        validation = script.validate(req.body);
+      } else {
+        validation = validateCreateProposalBody(req.body);
+      }
+    } else {
+      validation = validateCreateProposalBody(req.body);
+    }
+
     if (!validation.success) {
-      const errors = validation.error.flatten();
+      const errorTree = z.treeifyError(validation.error);
       return res.status(400).json({
         status: "error",
         message: "Validation failed",
-        errors: errors.fieldErrors ?? {},
-        formErrors: errors.formErrors ?? [],
+        errors: errorTree,
       });
     }
 
-    const { budgetId, title, summary, status, metaData } = validation.data;
-
-    if (!mongoose.Types.ObjectId.isValid(budgetId) || budgetId.length !== 24) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid budgetId. Must be a valid ObjectId.",
-      });
-    }
-
-    const budgetDoc = await Budget.findById(budgetId).lean();
-    if (!budgetDoc) {
-      return res.status(404).json({
-        status: "error",
-        message: "Budget not found",
-      });
-    }
+    const { voteId, title, summary, status, metaData } = validation.data;
 
     // For draft, merge with minimal defaults so Mongoose metaData subfields exist
     const defaultDraftMetaData =
@@ -130,7 +143,7 @@ router.post("/", async (req, res) => {
 
     const doc = {
       proposerId,
-      budgetId: new mongoose.Types.ObjectId(budgetId),
+      voteId: new mongoose.Types.ObjectId(voteId),
       title,
       summary: summary ?? "",
       status,
@@ -145,7 +158,6 @@ router.post("/", async (req, res) => {
 
     const proposal = await Proposal.create(doc);
     const created = proposal.toObject ? proposal.toObject() : proposal;
-
     return res.status(201).json(created);
   } catch (error) {
     if (error.name === "ValidationError" && error.errors) {
@@ -177,8 +189,13 @@ const WITHDRAWAL_CATEGORIES = [
 
 /**
  * @route PUT /api/v0/proposals/:proposalId/withdraw
- * @description Withdraw a live or draft proposal (proposer or budget admin). Request body: { category, comment } (both required).
- * @access Private (proposer or budget admin)
+ * @description Withdraw a live or draft proposal (proposer or vote admin). Only live or draft can be withdrawn;
+ * archived and already-withdrawn proposals return 400. Request body: { category, comment } (both required).
+ * @access Private (proposer or vote admin)
+ * @returns {Object} 200 - Withdrawn proposal (status set to withdrawnByProposer or withdrawnByAdmin)
+ * @returns {Object} 400 - Invalid proposalId/category/comment; or proposal not live/draft (e.g. archived); or date limits exceeded
+ * @returns {Object} 403 - Not the proposer or a vote admin
+ * @returns {Object} 404 - Proposal not found
  */
 router.put("/:proposalId/withdraw", async (req, res) => {
   try {
@@ -234,42 +251,42 @@ router.put("/:proposalId/withdraw", async (req, res) => {
       });
     }
 
-    const budgetDoc = await Budget.findById(proposal.budgetId).lean();
-    if (!budgetDoc) {
+    const voteDoc = await Vote.findById(proposal.voteId).lean();
+    if (!voteDoc) {
       return res.status(400).json({
         status: "error",
-        message: "Proposal budget not found.",
+        message: "Proposal vote not found.",
       });
     }
 
-    // Require: authenticated user must be the proposer or a budget admin
+    // Require: authenticated user must be the proposer or a vote admin
     const authUserId = String(userId ?? "").trim();
     const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
     const isProposer = proposerIdStr && authUserId && proposerIdStr === authUserId;
-    const isBudgetAdmin =
-      Array.isArray(budgetDoc.admins) &&
-      budgetDoc.admins.some((id) => String(id).trim() === authUserId);
+    const isVoteAdmin =
+      Array.isArray(voteDoc.admins) &&
+      voteDoc.admins.some((id) => String(id).trim() === authUserId);
 
-    if (!isProposer && !isBudgetAdmin) {
+    if (!isProposer && !isVoteAdmin) {
       return res.status(403).json({
         status: "error",
-        message: "Only the proposer or a budget admin can withdraw this proposal.",
+        message: "Only the proposer or a vote admin can withdraw this proposal.",
       });
     }
 
     const now = new Date();
     // Date limits apply only to live proposals
     if (proposal.status === "live") {
-      if (isProposer && budgetDoc.feedbackEndDate && now > new Date(budgetDoc.feedbackEndDate)) {
+      if (isProposer && voteDoc.feedbackEndDate && now > new Date(voteDoc.feedbackEndDate)) {
         return res.status(400).json({
           status: "error",
-          message: "Proposer withdrawal is only allowed until the budget feedback end date.",
+          message: "Proposer withdrawal is only allowed until the vote feedback end date.",
         });
       }
-      if (isBudgetAdmin && budgetDoc.reviewEndDate && now > new Date(budgetDoc.reviewEndDate)) {
+      if (isVoteAdmin && voteDoc.reviewEndDate && now > new Date(voteDoc.reviewEndDate)) {
         return res.status(400).json({
           status: "error",
-          message: "Admin withdrawal is only allowed until the budget review end date.",
+          message: "Admin withdrawal is only allowed until the vote review end date.",
         });
       }
     }
@@ -295,9 +312,84 @@ router.put("/:proposalId/withdraw", async (req, res) => {
 });
 
 /**
+ * @route DELETE /api/v0/proposals/:proposalId
+ * @description Delete a proposal. Authenticated users may delete only their own draft proposals.
+ * @access Private (requires valid JWT)
+ * @returns {Object} 200 - { status: "success", message: "Proposal deleted" }
+ * @returns {Object} 400 - Invalid proposalId
+ * @returns {Object} 401 - Not authenticated
+ * @returns {Object} 403 - Not the proposer or proposal is not a draft
+ * @returns {Object} 404 - Proposal not found
+ */
+router.delete("/:proposalId", async (req, res) => {
+  try {
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status !== "success" || !tokenResult.userId) {
+      return res.status(tokenResult.code ?? 401).json({
+        status: "error",
+        message: tokenResult.message ?? "Authentication required",
+      });
+    }
+    const userId = String(tokenResult.userId ?? "").trim();
+    const { proposalId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid proposalId. Must be a valid ObjectId.",
+      });
+    }
+
+    const proposal = await Proposal.findById(proposalId).lean();
+    if (!proposal) {
+      return res.status(404).json({
+        status: "error",
+        message: "Proposal not found",
+      });
+    }
+
+    if (proposal.status !== "draft") {
+      return res.status(403).json({
+        status: "error",
+        message: "Only draft proposals can be deleted.",
+      });
+    }
+
+    const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
+    if (proposerIdStr !== userId) {
+      return res.status(403).json({
+        status: "error",
+        message: "You can only delete your own proposals.",
+      });
+    }
+
+    await Proposal.findByIdAndDelete(proposalId);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Proposal deleted",
+    });
+  } catch (error) {
+    console.error("Error deleting proposal:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+});
+
+/**
  * @route PUT /api/v0/proposals/:proposalId
- * @description Update a proposal (same body as POST). Only proposer or budget admin (draft only). Computes totalBudget from work packages.
- * @access Private (proposer or budget admin for draft)
+ * @description Update a proposal (same body as POST). Only proposer or vote admin (draft only).
+ * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
+ * status is immutable (400 if body tries to change it); updates are locked after the vote's
+ * reviewEndDate (400); the current version is archived (new doc with status "archived") and
+ * a reference is appended to versions before applying the update. Computes totalBudget from work packages.
+ * @access Private (proposer or vote admin for draft only)
+ * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
+ * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
+ * @returns {Object} 403 - Not the proposer or a vote admin for this draft
+ * @returns {Object} 404 - Proposal not found
  */
 router.put("/:proposalId", async (req, res) => {
   try {
@@ -318,17 +410,6 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
-    const validation = validateCreateProposalBody(req.body);
-    if (!validation.success) {
-      const errors = validation.error.flatten();
-      return res.status(400).json({
-        status: "error",
-        message: "Validation failed",
-        errors: errors.fieldErrors ?? {},
-        formErrors: errors.formErrors ?? [],
-      });
-    }
-
     const proposal = await Proposal.findById(proposalId);
     if (!proposal) {
       return res.status(404).json({
@@ -337,22 +418,86 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
-    const isProposer = proposal.proposerId && String(proposal.proposerId).trim() === userId;
-    let isBudgetAdmin = false;
-    if (proposal.budgetId && proposal.status === "draft") {
-      const budgetDoc = await Budget.findById(proposal.budgetId).lean();
-      if (budgetDoc?.admins && Array.isArray(budgetDoc.admins)) {
-        isBudgetAdmin = budgetDoc.admins.some((id) => String(id).trim() === userId);
+    const voteDoc = proposal.voteId
+      ? await Vote.findById(proposal.voteId).lean()
+      : null;
+
+    let validation;
+    if (voteDoc?.validationScript) {
+      const script = await loadValidationScript(voteDoc.validationScript);
+      if (script) {
+        validation = script.validate(req.body);
+      } else {
+        validation = validateCreateProposalBody(req.body);
       }
+    } else {
+      validation = validateCreateProposalBody(req.body);
     }
-    if (!isProposer && !isBudgetAdmin) {
-      return res.status(403).json({
+
+    if (!validation.success) {
+      const errorTree = z.treeifyError(validation.error);
+      return res.status(400).json({
         status: "error",
-        message: "Only the proposer or a budget admin can update this proposal.",
+        message: "Validation failed",
+        errors: errorTree,
       });
     }
 
-    const { budgetId, title, summary, status, metaData } = validation.data;
+    const isProposer = proposal.proposerId && String(proposal.proposerId).trim() === userId;
+    let isVoteAdmin = false;
+    if (proposal.voteId && proposal.status === "draft") {
+      const voteDoc = await Vote.findById(proposal.voteId).lean();
+      if (voteDoc?.admins && Array.isArray(voteDoc.admins)) {
+        isVoteAdmin = voteDoc.admins.some((id) => String(id).trim() === userId);
+      }
+    }
+    if (!isProposer && !isVoteAdmin) {
+      return res.status(403).json({
+        status: "error",
+        message: "Only the proposer or a vote admin can update this proposal.",
+      });
+    }
+
+    // Archived proposals are read-only (no update and no withdraw)
+    if (proposal.status === "archived") {
+      return res.status(400).json({
+        status: "error",
+        message: "Archived proposals cannot be updated.",
+      });
+    }
+
+    const { voteId, title, summary, status, metaData } = validation.data;
+
+    // When proposal is already live: reject status change; enforce reviewEndDate lock; archive current version then apply update
+    if (proposal.status === "live") {
+      if (status !== "live") {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposal status cannot be changed once the proposal is live.",
+        });
+      }
+      const voteDoc = await Vote.findById(proposal.voteId).lean();
+      if (voteDoc?.reviewEndDate && new Date() > new Date(voteDoc.reviewEndDate)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposal cannot be updated after the vote review period has ended (reviewEndDate).",
+        });
+      }
+      // Versioning: copy current document to a new doc with status "archived" (new _id), then append { _id, createdAt } to versions
+      const currentState = proposal.toObject ? proposal.toObject() : { ...proposal };
+      delete currentState._id;
+      delete currentState.createdAt;
+      delete currentState.updatedAt;
+      currentState.status = "archived";
+      currentState.versions = [];
+      const archivedDoc = new Proposal(currentState);
+      await archivedDoc.save();
+      if (!Array.isArray(proposal.versions)) proposal.versions = [];
+      proposal.versions.push({
+        _id: archivedDoc._id,
+        createdAt: archivedDoc.createdAt,
+      });
+    }
 
     let rawMetaData = metaData;
     if (status === "draft") {
@@ -374,7 +519,7 @@ router.put("/:proposalId", async (req, res) => {
 
     const totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
 
-    proposal.budgetId = new mongoose.Types.ObjectId(budgetId);
+    proposal.voteId = new mongoose.Types.ObjectId(voteId);
     proposal.title = title;
     proposal.summary = summary ?? "";
     proposal.status = status;
@@ -409,14 +554,14 @@ router.put("/:proposalId", async (req, res) => {
 
 /**
  * @route GET /api/v0/proposals/:proposalId
- * @description Get a single proposal by ID (full data). Same permission logic as GET /proposals: public can see live/withdrawn; authenticated proposer can see all; budget admin can see draft for their budget.
+ * @description Get a single proposal by ID (full data). Same permission logic as GET /proposals: public can see live/withdrawn; authenticated proposer can see all; vote admin can see draft for their vote.
  * @access Public (visibility depends on proposal status and optional auth)
  *
  * @param {string} proposalId - The ID of the proposal to retrieve (must be valid ObjectId)
  *
  * @returns {Object} 200 - Full proposal document with category (when found)
  * @returns {Object} 400 - Invalid proposalId format
- * @returns {Object} 403 - Proposal exists but requester is not the proposer or a budget admin (draft/archived)
+ * @returns {Object} 403 - Proposal exists but requester is not the proposer or a vote admin (draft/archived)
  * @returns {Object} 404 - Proposal not found (invalid ID or no document)
  */
 router.get("/:proposalId", async (req, res) => {
@@ -449,7 +594,7 @@ router.get("/:proposalId", async (req, res) => {
       status === "withdrawnByAdmin";
 
     if (!isLiveOrWithdrawn) {
-      // Require auth: proposer or (draft and budget admin) can view
+      // Draft/archived: only proposer can view; for draft, vote admin can also view
       let authenticatedUserId = null;
       const tokenResult = verifyToken(req);
       if (tokenResult.status === "success" && tokenResult.userId) {
@@ -464,20 +609,20 @@ router.get("/:proposalId", async (req, res) => {
         proposerIdStr &&
         proposerIdStr === authenticatedUserId;
 
-      let isBudgetAdmin = false;
-      if (authenticatedUserId && proposal.budgetId && status === "draft") {
-        const budgetDoc = await Budget.findById(proposal.budgetId).lean();
+      let isVoteAdmin = false;
+      if (authenticatedUserId && proposal.voteId && status === "draft") {
+        const voteDoc = await Vote.findById(proposal.voteId).lean();
         if (
-          budgetDoc?.admins &&
-          Array.isArray(budgetDoc.admins) &&
-          budgetDoc.admins.some((id) => String(id).trim() === authenticatedUserId)
+          voteDoc?.admins &&
+          Array.isArray(voteDoc.admins) &&
+          voteDoc.admins.some((id) => String(id).trim() === authenticatedUserId)
         ) {
-          isBudgetAdmin = true;
+          isVoteAdmin = true;
         }
       }
 
       const allowed =
-        isProposer || (status === "draft" && isBudgetAdmin);
+        isProposer || (status === "draft" && isVoteAdmin);
       if (!allowed) {
         return res.status(403).json({
           status: "error",
@@ -487,12 +632,11 @@ router.get("/:proposalId", async (req, res) => {
       }
     }
 
-    // Include category when returning a single proposal (omit budgetId and timestamps)
-    const categoryDoc = await Category.findById(proposal.categoryId).lean();
     let payload = proposal;
+    const categoryDoc = await Category.findById(proposal.categoryId).lean();
     if (categoryDoc) {
-      const { budgetId, createdAt, updatedAt, ...category } = categoryDoc;
-      payload = { ...proposal, category };
+      const { voteId, createdAt, updatedAt, ...category } = categoryDoc;
+      payload = { ...payload, category };
     }
 
     return res.status(200).json(payload);
@@ -507,10 +651,10 @@ router.get("/:proposalId", async (req, res) => {
 
 /**
  * @route GET /api/v0/proposals
- * @description Get all Live proposals with pagination. Returns proposals from all budgets by default. Supports filtering by budget and searching by proposalId or title.
+ * @description Get all Live proposals with pagination. Returns proposals from all votes by default. Supports filtering by vote and searching by proposalId or title.
  * @access Public (Authentication optional - provides enhanced access when proposer matches authenticated user's ID)
  *
- * @query {string} [budget] - Filter by budget cycle (exact match, must be valid ObjectId). If provided, validates budget exists.
+ * @query {string} [vote] - Filter by vote cycle (exact match, must be valid ObjectId). If provided, validates vote exists.
  * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where metaData.strategicFocusArea matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.
  * @query {string} [proposalType] - Filter by proposal type (exact match). Valid values: 'Technical (software/IT)', 'Non-technical'.
  * @query {string} [initiativeType] - Filter by initiative type (exact match). Valid values: 'New Initiative', 'Maintenance'.
@@ -526,13 +670,13 @@ router.get("/:proposalId", async (req, res) => {
  *   - data: Array of proposal documents (may include draft/archived when authenticated user queries own proposals)
  *   - meta: Object containing pagination metadata
  * @returns {Object} 400 - Error if query parameters are invalid
- * @returns {Object} 404 - Budget not found (when budget is provided)
+ * @returns {Object} 404 - Vote not found (when vote is provided)
  */
 router.get("/", async (req, res) => {
   try {
     const {
       search,
-      budget,
+      vote: voteParam,
       category,
       proposalType: proposalTypeParam,
       initiativeType: initiativeTypeParam,
@@ -578,45 +722,45 @@ router.get("/", async (req, res) => {
 
     // Build search query - default to Live proposals, or filter by status
     let query = {};
-    let isBudgetAdmin = false;
+    let isVoteAdmin = false;
 
-    // Add budget filter (exact match, must be valid ObjectId)
-    if (budget) {
-      const budgetTerm = budget.trim();
+    // Add vote filter (exact match, must be valid ObjectId)
+    if (voteParam) {
+      const voteTerm = voteParam.trim();
       if (
-        !mongoose.Types.ObjectId.isValid(budgetTerm) ||
-        budgetTerm.length !== 24
+        !mongoose.Types.ObjectId.isValid(voteTerm) ||
+        voteTerm.length !== 24
       ) {
         return res.status(400).json({
           status: "error",
-          message: "Invalid budget parameter. Must be a valid ObjectId.",
+          message: "Invalid vote parameter. Must be a valid ObjectId.",
         });
       }
 
-      // Validate that budget exists
-      const budgetDoc = await Budget.findById(budgetTerm).lean();
-      if (!budgetDoc) {
+      // Validate that vote exists
+      const voteDoc = await Vote.findById(voteTerm).lean();
+      if (!voteDoc) {
         return res.status(404).json({
           status: "error",
-          message: "Budget not found",
+          message: "Vote not found",
         });
       }
 
-      // Check if authenticated user is an admin of this budget
+      // Check if authenticated user is an admin of this vote
       if (
         authenticatedUserId &&
-        budgetDoc.admins &&
-        Array.isArray(budgetDoc.admins) &&
-        budgetDoc.admins.includes(authenticatedUserId)
+        voteDoc.admins &&
+        Array.isArray(voteDoc.admins) &&
+        voteDoc.admins.includes(authenticatedUserId)
       ) {
-        isBudgetAdmin = true;
+        isVoteAdmin = true;
       }
 
-      query.budgetId = new mongoose.Types.ObjectId(budgetTerm);
+      query.voteId = new mongoose.Types.ObjectId(voteTerm);
     }
 
     // Handle status filter (single value or comma-separated: live,withdrawn,draft).
-    // Draft may only be requested by: (1) admins on the given budget, or (2) authenticated users
+    // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
     // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
     // Normalize: accept string "live,draft" or array ["live", "draft"] from query
     const statusStr =
@@ -633,12 +777,12 @@ router.get("/", async (req, res) => {
       const hasLive = statusTerms.includes("live");
       const hasWithdrawn = statusTerms.includes("withdrawn");
       const hasDraft = statusTerms.includes("draft");
-      const mayRequestDraft = isBudgetAdmin || isAuthenticatedUserQueryingOwnProposals;
+      const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
       if (hasDraft && !mayRequestDraft) {
         return res.status(400).json({
           status: "error",
           message:
-            "Invalid status parameter. Draft proposals are only accessible to budget admins or the proposal owner.",
+            "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
         });
       }
       const statusIn = [];
@@ -697,13 +841,13 @@ router.get("/", async (req, res) => {
         });
       }
 
-      // Validate that all categories exist (and belong to this budget when budget filter is set)
+      // Validate that all categories exist (and belong to this vote when vote filter is set)
       const categoryObjectIds = categoryIds.map(
         (id) => new mongoose.Types.ObjectId(id)
       );
       const categoryQuery = { _id: { $in: categoryObjectIds } };
-      if (query.budgetId) {
-        categoryQuery.budgetId = query.budgetId;
+      if (query.voteId) {
+        categoryQuery.voteId = query.voteId;
       }
       const existingCategories = await Category.find(categoryQuery).lean();
 
@@ -714,12 +858,12 @@ router.get("/", async (req, res) => {
         const missingIds = categoryIds.filter(
           (id) => !existingIds.has(id)
         );
-        const hint = query.budgetId
-          ? " Categories must exist and belong to the requested budget."
+        const hint = query.voteId
+          ? " Categories must exist and belong to the requested vote."
           : "";
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following categories were not found or do not belong to this budget: ${missingIds.join(", ")}.${hint}`,
+          message: `Invalid category parameter. The following categories were not found or do not belong to this vote: ${missingIds.join(", ")}.${hint}`,
         });
       }
 
@@ -777,13 +921,12 @@ router.get("/", async (req, res) => {
       query.proposerId = validatedAddress;
     }
 
-    // Add search: match title, description, metaData.contractingParty.legalEntityName (partial, case-insensitive) or _id (exact match)
+    // Add search: title, metaData.contractingParty.legalEntityName (partial, case-insensitive) or _id (exact match)
     if (search) {
       const searchTerm = search.trim();
       if (searchTerm) {
         const searchConditions = [
           { title: { $regex: searchTerm, $options: "i" } },
-          { description: { $regex: searchTerm, $options: "i" } },
           {
             "metaData.contractingParty.legalEntityName": {
               $regex: searchTerm,
@@ -791,14 +934,8 @@ router.get("/", async (req, res) => {
             },
           },
         ];
-        // If search term is a valid ObjectId, also search by _id
-        if (
-          mongoose.Types.ObjectId.isValid(searchTerm) &&
-          searchTerm.length === 24
-        ) {
-          searchConditions.push({
-            _id: new mongoose.Types.ObjectId(searchTerm),
-          });
+        if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
+          searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
         }
         query.$or = searchConditions;
       }
@@ -833,33 +970,16 @@ router.get("/", async (req, res) => {
     }
 
     const sortDirection = directionNorm === "asc" ? 1 : -1;
-    const sortOption = { [sortFieldMap[sortKey]]: sortDirection };
+    const sortField = sortKey === "title" ? "title" : sortFieldMap[sortKey];
+    const sortOption = { [sortField]: sortDirection };
 
-    // Calculate skip value for pagination
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query with pagination
-    const [proposals, totalItems] = await Promise.all([
-      Proposal.find(query)
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limitNum)
-        .lean(), // Use lean() for better performance
-      Proposal.countDocuments(query), // Get total count for pagination
-    ]);
+    const proposals = await Proposal.find(query).sort(sortOption).skip(skip).limit(limitNum).lean();
+    const totalItems = await Proposal.countDocuments(query);
 
-    // Format proposals - include all fields but shorten metaData
     const formattedProposals = proposals.map((proposal) => {
-      const {
-        metaData,
-        withdrawalReason,
-        versions,
-        signature,
-        userId,
-        ...rest
-      } = proposal;
-
-      // Shorten metaData to only include key fields
+      const { metaData, withdrawalReason, versions, signature, userId, ...rest } = proposal;
       const shortenedMetaData = metaData
         ? {
             strategicFocusArea: metaData.strategicFocusArea,
@@ -867,11 +987,7 @@ router.get("/", async (req, res) => {
             initiativeType: metaData.financialAndAdministrative?.initiativeType,
           }
         : null;
-
-      return {
-        ...rest,
-        metaData: shortenedMetaData,
-      };
+      return { ...rest, metaData: shortenedMetaData };
     });
 
     // Calculate pagination metadata

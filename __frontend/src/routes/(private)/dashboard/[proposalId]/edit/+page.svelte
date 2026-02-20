@@ -6,32 +6,36 @@
 
   let { data } = $props();
   let proposal = $derived(data.proposal);
-  let budget = $derived(data.budget);
+  let vote = $derived(data.vote);
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
+  let validationErrors = $state(null);
 
   async function onSave(payload) {
     if (!proposal?._id) return;
-    if (!proposal?.budgetId) {
-      toast.error("Proposal budget is missing.");
+    if (!proposal?.voteId) {
+      toast.error("Proposal vote is missing.");
       return;
     }
     saving = true;
+    validationErrors = null;
     try {
-      const body = { ...payload, budgetId: proposal.budgetId };
+      const body = { ...payload, voteId: proposal.voteId };
       const res = await api.fetch(fetch, `/proposals/${proposal._id}`, {
         method: "PUT",
         body: JSON.stringify(body),
       });
+      const json = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success("Proposal saved.");
         goto("/dashboard");
       } else {
-        const json = await res.json().catch(() => ({}));
+        if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";
         toast.error(msg);
       }
     } catch (err) {
+      if (err?.body?.errors != null) validationErrors = err.body.errors;
       const msg =
         typeof err?.body === "string"
           ? err.body
@@ -47,4 +51,4 @@
   <h1 class="text-2xl font-semibold mb-6">Edit proposal</h1>
 </div>
 
-<Form {budget} {categories} {proposal} {onSave} />
+<Form vote={vote} {categories} {proposal} {onSave} bind:validationErrors />

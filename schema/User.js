@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const userSchema = new Schema(
     {
         _id: {
-            type: String,
+            type: String,  // bech32 stake address or cip129 drep id
             immutable: true,
         },
         name: {
-            type: String,
+            type: String,  // drep name or handle
             required: false,
         },
         lastLogin: {
@@ -30,12 +30,6 @@ const userSchema = new Schema(
         versionKey: false,
     }
 );
-
-// Pre-save middleware to update the updatedAt field
-userSchema.pre("save", function (next) {
-    this.updatedAt = new Date();
-    next();
-});
 
 const User = mongoose.model("User", userSchema);
 export { User };

@@ -85,13 +85,16 @@ export const api = {
 				// Parse error body safely (API may return non-JSON, e.g. HTML or plain text)
 				const text = await response.text();
 				let message = 'An error occurred';
+				let errors = undefined;
 				try {
 					const data = text ? JSON.parse(text) : {};
 					message = data.message ?? message;
+					if (data.errors != null) errors = data.errors;
 				} catch {
 					if (text) message = text;
 				}
-				throw error(response.status, message);
+				const body = errors != null ? { message, errors } : { message };
+				throw error(response.status, body);
 			}
 
 			return response;

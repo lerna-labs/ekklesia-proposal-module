@@ -16,7 +16,6 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import {
     budgetRowSchema,
-    budgetRowInputSchema,
     COST_CATEGORIES_LIST,
   } from "./Schema.js";
   import { formatAda } from "$lib/utils.js";
@@ -26,16 +25,10 @@
   let {
     value = $bindable([]),
     onvaluechange,
-    formSchema,
     class: className,
   } = $props();
 
   const list = $derived(Array.isArray(value) ? value : []);
-  const meta = $derived(formSchema?.shape?.budgetBreakdown?.meta?.() ?? {});
-  const sectionLabel = $derived(meta?.label ?? "Budget");
-  const sectionDescription = $derived(
-    meta?.description ?? "Budget breakdown for this work package.",
-  );
 
   let addDialogOpen = $state(false);
   let selectOpen = $state(false);
@@ -121,13 +114,11 @@
     <Field.Label
       class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit font-medium text-muted-foreground"
     >
-      {sectionLabel}
+      Budget Breakdown
     </Field.Label>
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
-  {#if sectionDescription}
-    <p class="text-xs text-muted-foreground mb-2">{sectionDescription}</p>
-  {/if}
+  <p class="text-xs text-muted-foreground mb-2">Budget breakdown for this work package.</p>
 
   {#if list.length > 0}
     <div class="overflow-x-auto rounded-md border border-input mb-2">
@@ -314,9 +305,9 @@
       <FormTextarea
         id="description"
         bind:value={draft.description}
-        formSchema={z.object({
-          description: budgetRowInputSchema.shape.description,
-        })}
+        label="Item Description"
+        required
+        maxLength={600}
         validationErrors={draftErrors}
       />
     </div>

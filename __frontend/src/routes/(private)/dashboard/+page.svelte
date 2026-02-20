@@ -2,7 +2,7 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
   import { logout } from "$stores/sessionManager.js";
-  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import ProposalDelete from "$lib/ProposalDelete.svelte";
   import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
@@ -17,15 +17,15 @@
   let user = $derived(data.user ?? null);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
-  let budgetSlugs = $derived(data.budgetSlugs ?? {});
-  let budgetTitles = $derived(data.budgetTitles ?? {});
+  let voteSlugs = $derived(data.voteSlugs ?? {});
+  let voteTitles = $derived(data.voteTitles ?? {});
 
-  let withdrawDialogOpen = $state(false);
-  let withdrawProposal = $state(null);
+  let deleteDialogOpen = $state(false);
+  let deleteProposal = $state(null);
 
-  function openWithdrawDialog(proposal) {
-    withdrawProposal = proposal;
-    withdrawDialogOpen = true;
+  function openDeleteDialog(proposal) {
+    deleteProposal = proposal;
+    deleteDialogOpen = true;
   }
 
   function navigatePage(pageNum) {
@@ -51,9 +51,9 @@
   }
 
   function viewHref(proposal) {
-    const slug = budgetSlugs[proposal.budgetId];
+    const slug = voteSlugs[proposal.voteId];
     if (!slug) return null;
-    return `/budgets/${slug}/${proposal._id}`;
+    return `/votes/${slug}/${proposal._id}`;
   }
 </script>
 
@@ -125,7 +125,7 @@
               <thead>
                 <tr class="border-b border-border">
                   <th class="text-left font-medium py-3 pl-0 pr-4">Title</th>
-                  <th class="text-right font-medium py-3 px-4">Budget</th>
+                  <th class="text-right font-medium py-3 px-4">Vote</th>
                   <th class="text-left font-medium py-3 px-4">Last updated</th>
                   <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%]">
                     Actions
@@ -175,17 +175,6 @@
                         >
                           <PencilIcon class="size-4" />
                         </Button.Root>
-                        {#if proposal.status === "live" || proposal.status === "draft"}
-                          <Button.Root
-                            variant="outline"
-                            size="icon"
-                            aria-label="Withdraw"
-                            title="Withdraw"
-                            onclick={() => openWithdrawDialog(proposal)}
-                          >
-                            <Trash2Icon class="size-4 text-black" />
-                          </Button.Root>
-                        {/if}
                         {#if viewUrl}
                           <Button.Root
                             variant="outline"
@@ -202,11 +191,27 @@
                             size="icon"
                             disabled
                             aria-label="View"
-                            title="View (no budget slug)"
+                            title="View (no vote slug)"
                           >
                             <EyeIcon class="size-4" />
                           </Button.Root>
                         {/if}
+                        <Button.Root
+                          variant="outline"
+                          size="icon"
+                          aria-label="Delete draft"
+                          title={proposal.status === "draft"
+                            ? "Delete draft proposal"
+                            : "Only draft proposals can be deleted"}
+                          disabled={proposal.status !== "draft"}
+                          onclick={() => openDeleteDialog(proposal)}
+                        >
+                          <Trash2Icon
+                            class="size-4 {proposal.status === 'draft'
+                              ? 'text-black'
+                              : 'text-muted-foreground'}"
+                          />
+                        </Button.Root>
                       </div>
                     </td>
                   </tr>
@@ -258,8 +263,8 @@
   </div>
 </div>
 
-<ProposalWithdrawal
-  bind:open={withdrawDialogOpen}
-  proposal={withdrawProposal}
+<ProposalDelete
+  bind:open={deleteDialogOpen}
+  proposal={deleteProposal}
   onSuccess={() => invalidateAll()}
 />

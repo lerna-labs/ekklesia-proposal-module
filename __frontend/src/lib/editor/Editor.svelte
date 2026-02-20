@@ -54,6 +54,22 @@
     return () => unregister();
   });
 
+  /** When value is set from outside (e.g. API prefill after mount), show it in the editor if the editor is still empty. */
+  $effect(() => {
+    if (!composer || value == null || String(value).trim() === "") return;
+    const editor = composer.getEditor();
+    const state = editor.getEditorState();
+    if (!state) return;
+    let currentMarkdown = "";
+    state.read(() => {
+      currentMarkdown = convertToMarkdownString(ALL_TRANSFORMERS);
+    });
+    if (currentMarkdown.trim() !== "") return;
+    editor.update(() => {
+      convertFromMarkdownString(value, ALL_TRANSFORMERS);
+    });
+  });
+
   // Use both list transformers - ORDERED_LIST should handle "1. " pattern
   const listTransformers = [UNORDERED_LIST, ORDERED_LIST];
 

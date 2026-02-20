@@ -6,9 +6,9 @@
 
 	const getErrorTitle = () => {
 		if (page.status === 404) {
-			// Check if it's a budget route
-			if (page.url?.pathname?.startsWith('/budget/')) {
-				return 'Budget Not Found';
+			// Check if it's a vote route
+			if (page.url?.pathname?.startsWith('/votes/')) {
+				return 'Vote Not Found';
 			}
 			return 'Page Not Found';
 		}
@@ -20,8 +20,8 @@
 
 	const getErrorMessage = () => {
 		if (page.status === 404) {
-			if (page.url?.pathname?.startsWith('/budget/')) {
-				return 'The budget you are looking for does not exist or has been removed.';
+			if (page.url?.pathname?.startsWith('/votes/')) {
+				return 'The vote you are looking for does not exist or has been removed.';
 			}
 			return 'The page you are looking for does not exist.';
 		}

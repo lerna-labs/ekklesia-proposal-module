@@ -14,29 +14,25 @@
 
 ---
 
-This document lists every Budget field: **schema path**, **required** status,
-**type**, and **validation** notes. Budgets represent funding cycles with
-submission, feedback, and review windows.
-Implementation: [../schema/Budget.js](../schema/Budget.js).
+This document lists every Vote field (formerly Budget): **schema path**, **required** status, **type**, and **validation** notes. Votes represent funding cycles with submission, feedback, and review windows. Implementation: [../schema/Vote.js](../schema/Vote.js). MongoDB collection name remains `budgets` for backward compatibility.
 
 ---
 
-## Top-level (budget root)
+## Top-level (vote root)
 
-| Field            | Schema path              | Required | Type            | Validation / notes                                                                                                                                                                  |
-|------------------|--------------------------|----------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Title            | `title`                  | Yes      | String          | Display name of the budget cycle.                                                                                                                                                   |
-| Description      | `description`            | Yes      | String          | Description of the budget.                                                                                                                                                          |
-| Slug             | `slug`                   | Yes      | String          | URL-friendly identifier; used in `GET /api/v0/budgets/:slug` and frontend routes (e.g. `/budgets/{slug}`). Must be unique; exact match in list filter.                              |
-| Admins           | `admins`                 | Yes      | Array of String | Bech32 addresses (stake/DRep/pool) of users who can administer this budget (e.g. withdraw proposals, manage comments). Used for `GET /session` `adminBudgetIds` and access control. |
-| Submission start | `submissionStartDate`    | Yes      | Date            | ISO 8601. Proposals can be submitted (as live) from this date.                                                                                                                      |
-| Submission end   | `submissionEndDate`      | Yes      | Date            | ISO 8601. No new proposals (including drafts) after this date.                                                                                                                      |
-| Feedback start   | `feedbackStartDate`      | Yes      | Date            | ISO 8601. Start of feedback period (e.g. comments, proposer withdrawal).                                                                                                            |
-| Feedback end     | `feedbackEndDate`        | Yes      | Date            | ISO 8601. End of feedback period; proposer withdrawal and admin comment withdrawal typically allowed only until this date.                                                          |
-| Review start     | `reviewStartDate`        | Yes      | Date            | ISO 8601. Start of review period.                                                                                                                                                   |
-| Review end       | `reviewEndDate`          | Yes      | Date            | ISO 8601. End of review period.                                                                                                                                                     |
-| Voting URL       | `votingUrl`              | Yes      | String          | Root URL of the Ekklesia voting instance for this budget                                                                                                                            |
-| (timestamps)     | `createdAt`, `updatedAt` | —        | Date            | Set by Mongoose `timestamps: true`.                                                                                                                                                 |
+| Field | Schema path | Required | Type | Validation / notes |
+|-------|-------------|----------|------|--------------------|
+| Title | `title` | Yes | String | Display name of the vote cycle. |
+| Description | `description` | Yes | String | Description of the vote. |
+| Slug | `slug` | Yes | String | URL-friendly identifier; used in `GET /api/v0/votes/:slug` and frontend routes (e.g. `/votes/{slug}`). Must be unique; exact match in list filter. |
+| Admins | `admins` | Yes | Array of String | Bech32 addresses (stake/DRep/pool) of users who can administer this vote (e.g. withdraw proposals, manage comments). Used for `GET /session` `adminVoteIds` and access control. |
+| Submission start | `submissionStartDate` | Yes | Date | ISO 8601. Proposals can be submitted (as live) from this date. |
+| Submission end | `submissionEndDate` | Yes | Date | ISO 8601. No new proposals (including drafts) after this date. |
+| Feedback start | `feedbackStartDate` | Yes | Date | ISO 8601. Start of feedback period (e.g. comments, proposer withdrawal). |
+| Feedback end | `feedbackEndDate` | Yes | Date | ISO 8601. End of feedback period; proposer withdrawal and admin comment withdrawal typically allowed only until this date. |
+| Review start | `reviewStartDate` | Yes | Date | ISO 8601. Start of review period. |
+| Review end | `reviewEndDate` | Yes | Date | ISO 8601. End of review period. |
+| (timestamps) | `createdAt`, `updatedAt` | — | Date | Set by Mongoose `timestamps: true`. |
 
 ---
 
@@ -79,14 +75,10 @@ Implementation: [../schema/Budget.js](../schema/Budget.js).
 ## Related docs
 
 - [api-specification.md](api-specification.md)
-    -
-    `GET /budgets` - [API Specification §3.1](api-specification.md#31-get-budgets)
-    -
-    `GET /budgets/{budgetId}` - [API Specification §3.2](api-specification.md#32-get-budgetsbudgetid)
-    -
-    `GET /budgets/{budgetId}/categories` - [API Specification §3.3](api-specification.md#33-get-budgetsbudgetidcategories)
-    -
-    `GET /budgets?slug={slug}` [API Specification §3.1](api-specification.md#31-get-budgets)
+    - `GET /budgets` - [API Specification §3.1](api-specification.md#31-get-budgets)
+    - `GET /budgets/{budgetId}` - [API Specification §3.2](api-specification.md#32-get-budgetsbudgetid)
+    - `GET /budgets/{budgetId}/categories` - [API Specification §3.3](api-specification.md#33-get-budgetsbudgetidcategories)
+    - `GET /budgets?slug={slug}` [API Specification §3.1](api-specification.md#31-get-budgets)
 - Schema implementation: [../schema/Budget.js](../schema/Budget.js).
 
 ---

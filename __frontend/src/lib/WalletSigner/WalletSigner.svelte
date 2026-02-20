@@ -57,7 +57,7 @@
     loggedIn.set(true);
     toast.success("Login successful");
     // get user data
-    const getUser = await api.fetch(fetch, "/dashboard/");
+    const getUser = await api.fetch(fetch, "/session/");
     const userData = await getUser.json();
     user.set(userData);
     goto("/");
@@ -74,7 +74,7 @@
   <AlertDialog.Trigger>
     <Button
       size="sm"
-      class={dark ? "bg-white text-black hover:bg-gray-200" : ""}
+      class={dark ? "bg-white text-black hover:bg-gray-200 text-xs" : "text-xs"}
     >
       {mode == "login" ? "Connect Wallet" : buttonText}
     </Button>

@@ -23,23 +23,23 @@ export async function load({ fetch, params, parent }) {
 	}
 	const proposal = await proposalRes.json();
 
-	const budgetId = proposal.budgetId;
-	if (!budgetId) {
-		error(404, 'Proposal has no budget');
+	const voteId = proposal.voteId;
+	if (!voteId) {
+		error(404, 'Proposal has no vote');
 	}
 
-	const budgetRes = await api.fetch(fetch, `/budgets/${budgetId}`);
-	if (!budgetRes.ok) {
-		error(budgetRes.status, 'Budget not found');
+	const voteRes = await api.fetch(fetch, `/votes/${voteId}`);
+	if (!voteRes.ok) {
+		error(voteRes.status, 'Vote not found');
 	}
-	const budget = await budgetRes.json();
+	const vote = await voteRes.json();
 
-	const catRes = await api.fetch(fetch, `/budgets/${budgetId}/categories`);
+	const catRes = await api.fetch(fetch, `/votes/${voteId}/categories`);
 	if (!catRes.ok) {
 		error(catRes.status, 'Failed to load categories');
 	}
 	const catJson = await catRes.json();
 	const categories = catJson.data ?? [];
 
-	return { proposal, budget, categories };
+	return { proposal, vote, categories };
 }

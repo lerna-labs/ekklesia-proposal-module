@@ -3,9 +3,9 @@ const { Schema } = mongoose;
 
 const categorySchema = new Schema(
     {
-        budgetId: {
+        voteId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Budget",
+            ref: "Vote",
             required: true,
         },
         title: {
@@ -38,7 +38,7 @@ const categorySchema = new Schema(
 );
 
 // Indexes for faster queries
-categorySchema.index({ budgetId: 1 });
+categorySchema.index({ voteId: 1 });
 categorySchema.index({ title: 1 });
 
 const Category = mongoose.model("Category", categorySchema);

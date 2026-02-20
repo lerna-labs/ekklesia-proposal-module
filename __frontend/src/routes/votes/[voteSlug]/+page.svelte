@@ -9,7 +9,7 @@
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
   let { data } = $props();
-  let budget = $derived(data.budget);
+  let vote = $derived(data.vote);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let categories = $derived(data.categories ?? []);
@@ -26,35 +26,35 @@
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
-  <!-- Budget/Ballot Info -->
+  <!-- Vote/Ballot Info -->
   <div class="mb-8">
     <h1 class="text-2xl font-semibold">
-      {budget.name || budget.title || "Budget"}
+      {vote.name || vote.title || "Vote"}
     </h1>
-    {#if budget.description}
-      <p class="text-muted-foreground mt-2">{budget.description}</p>
+    {#if vote.description}
+      <p class="text-muted-foreground mt-2">{vote.description}</p>
     {/if}
     <div class="mt-4 space-y-2">
-      {#if budget.year}
+      {#if vote.year}
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-muted-foreground">Year:</span>
-          <span class="text-sm">{budget.year}</span>
+          <span class="text-sm">{vote.year}</span>
         </div>
       {/if}
-      {#if budget.totalAmount !== undefined}
+      {#if vote.totalAmount !== undefined}
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-muted-foreground">
             Total Amount:
           </span>
           <span class="text-sm font-semibold">
-            ${budget.totalAmount?.toLocaleString() || "0"}
+            ${vote.totalAmount?.toLocaleString() || "0"}
           </span>
         </div>
       {/if}
-      {#if budget.status}
+      {#if vote.status}
         <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-muted-foreground">Status:</span>
-          <span class="text-sm">{budget.status}</span>
+          <span class="text-sm">{vote.status}</span>
         </div>
       {/if}
     </div>
@@ -73,7 +73,7 @@
       </h2>
       <div class="flex items-center gap-2">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
-        <SearchFilter {categories} budgetId={budget._id} />
+        <SearchFilter {categories} voteId={vote._id} />
         <SearchSort bind:sort bind:ascending />
       </div>
     </div>
@@ -82,7 +82,7 @@
       <Card.Root>
         <Card.Content class="py-12 text-center">
           <p class="text-muted-foreground">
-            No proposals found for this budget.
+            No proposals found for this vote.
           </p>
         </Card.Content>
       </Card.Root>
@@ -90,7 +90,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {budget} {categories} />
+          <ProposalCard {proposal} vote={vote} {categories} />
         {/each}
       </div>
 

@@ -13,15 +13,15 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
 
-  /** @type {{ categories?: Array<{ _id: string, title?: string }>, budgetId?: string, class?: string }} */
-  let { categories = [], budgetId = "", class: className = "" } = $props();
+  /** @type {{ categories?: Array<{ _id: string, title?: string }>, voteId?: string, class?: string }} */
+  let { categories = [], voteId = "", class: className = "" } = $props();
 
-  const isBudgetAdmin = $derived(
+  const isVoteAdmin = $derived(
     !!(
-      $user?.adminBudgetIds &&
-      Array.isArray($user.adminBudgetIds) &&
-      budgetId &&
-      $user.adminBudgetIds.includes(String(budgetId))
+      $user?.adminVoteIds &&
+      Array.isArray($user.adminVoteIds) &&
+      voteId &&
+      $user.adminVoteIds.includes(String(voteId))
     )
   );
 
@@ -119,7 +119,7 @@
     const statusParts = [];
     if (pendingLive) statusParts.push(STATUS_LIVE);
     if (pendingWithdrawn) statusParts.push(STATUS_WITHDRAWN);
-    if (pendingDraft && isBudgetAdmin) statusParts.push(STATUS_DRAFT);
+    if (pendingDraft && isVoteAdmin) statusParts.push(STATUS_DRAFT);
     const statusValue =
       statusParts.length === 0 ? STATUS_LIVE : statusParts.join(",");
     searchParams.set("status", statusValue);
@@ -266,7 +266,7 @@
               <Checkbox id="filter-status-withdrawn" bind:checked={pendingWithdrawn} />
               <span class="cursor-pointer font-normal">Withdrawn</span>
             </label>
-            {#if isBudgetAdmin}
+            {#if isVoteAdmin}
               <label
                 for="filter-status-draft"
                 class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
