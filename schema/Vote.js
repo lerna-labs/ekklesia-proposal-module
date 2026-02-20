@@ -48,6 +48,11 @@ const voteSchema = new Schema(
       type: String,
       required: true,
     },
+    /** Optional. URL to the Ekklesia Voting Platform for this Vote **/
+    votingUrl: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
