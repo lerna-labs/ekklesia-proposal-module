@@ -1,13 +1,13 @@
-# Ekklesia Budget Module — User Schema – Field Reference
+# Ekklesia Proposal Module — User Schema – Field Reference
 
 ---
 
 | Field              | Detail                                                                  |
 |--------------------|-------------------------------------------------------------------------|
 | **Document Title** | User Schema – Field Reference                                           |
-| **Version**        | 0.1.0                                                                   |
+| **Version**        | 0.1.1                                                                   |
 | **Created**        | February 19, 2026                                                       |
-| **Last Revised**   | February 19, 2026                                                       |
+| **Last Revised**   | February 20, 2026                                                       |
 | **Companion Doc**  | [Login Flow](login-flow.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>  |
 | **Status**         | Draft                                                                   |
@@ -19,8 +19,8 @@ This document lists every **User** field: **schema path**, **required** status,
 successful login. The `_id` is the user's Bech32 Cardano address (stake or
 DRep), used as the primary key throughout the system — there is no separate
 surrogate key. Roles (Proposer, DRep, Admin) are not stored on the User
-document; they are derived at request time from the JWT `signType` and from
-budget `admins` arrays.
+document; they are derived at request time from the JWT `signType` and from vote
+`adminVoteIds` arrays.
 
 Implementation: [../schema/User.js](../schema/User.js).
 
@@ -28,13 +28,13 @@ Implementation: [../schema/User.js](../schema/User.js).
 
 ## Top-level (user root)
 
-| Field      | Schema path | Required | Type   | Immutable | Validation / notes                                                                                                                                                                                                 |
-|------------|-------------|----------|--------|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ID         | `_id`       | Yes      | String | Yes       | Bech32-encoded Cardano address (`stake1…` or `drep1…`). Set on creation; cannot be changed. Used as the foreign key in Proposal (`proposerId`), Comment (`userId`), CommentLike (`userId`), and Budget (`admins`). |
-| Name       | `name`      | No       | String | No        | Display name resolved at login from the DRep registry (for DRep addresses) or ADA handle service (for stake addresses). May be absent if neither service returns a result. Updated on each successful login.       |
-| Last login | `lastLogin` | No       | Date   | No        | Timestamp of the most recent successful authentication. Defaults to `Date.now` on creation; updated on every successful `PUT /session`.                                                                            |
-| Created at | `createdAt` | —        | Date   | Yes       | Set by Mongoose `timestamps: true` on first save. Immutable.                                                                                                                                                       |
-| Updated at | `updatedAt` | —        | Date   | No        | Set by Mongoose `timestamps: true` and updated by a `pre("save")` middleware hook on every save.                                                                                                                   |
+| Field      | Schema path | Required | Type   | Immutable | Validation / notes                                                                                                                                                                                                     |
+|------------|-------------|----------|--------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ID         | `_id`       | Yes      | String | Yes       | Bech32-encoded Cardano address (`stake1…` or `drep1…`). Set on creation; cannot be changed. Used as the foreign key in Proposal (`proposerId`), Comment (`userId`), CommentLike (`userId`), and Vote (`adminVoteIds`). |
+| Name       | `name`      | No       | String | No        | Display name resolved at login from the DRep registry (for DRep addresses) or ADA handle service (for stake addresses). May be absent if neither service returns a result. Updated on each successful login.           |
+| Last login | `lastLogin` | No       | Date   | No        | Timestamp of the most recent successful authentication. Defaults to `Date.now` on creation; updated on every successful `PUT /session`.                                                                                |
+| Created at | `createdAt` | —        | Date   | Yes       | Set by Mongoose `timestamps: true` on first save. Immutable.                                                                                                                                                           |
+| Updated at | `updatedAt` | —        | Date   | No        | Set by Mongoose `timestamps: true` and updated by a `pre("save")` middleware hook on every save.                                                                                                                       |
 
 ---
 
@@ -58,7 +58,7 @@ derived at runtime:
 |--------------|-----------------------------------------------------------------------------------|
 | **Proposer** | Any authenticated user who owns a Proposal (`proposal.proposerId === req.userId`) |
 | **DRep**     | JWT `signType === "drep"`                                                         |
-| **Admin**    | Authenticated user's `_id` appears in `budget.admins` for the relevant budget     |
+| **Admin**    | Authenticated user's `_id` appears in `vote.adminVoteIds` for the relevant vote   |
 | **Viewer**   | Unauthenticated (no JWT)                                                          |
 
 **Display name resolution**
@@ -125,7 +125,7 @@ which is covered by the primary index.
     - `GET /session` — Returns `userId` and `name` from the User record
     - `PUT /session` — Triggers User upsert after successful signature
       verification
-- [budget-schema-description.md](budget-schema-description.md) — `admins` field
+- [vote-schema-description.md](vote-schema-description.md) — `admins` field
   references User `_id` values
 - [proposal-schema-description.md](proposal-schema-description.md) —
   `proposerId` references User `_id`
@@ -149,4 +149,5 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                       |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.1   | 2026-02-20 | Terminology update, update "Budget" to "Vote" to future-proof for other use cases                                                 |
 | 0.1.0   | 2026-02-19 | Initial schema description: field reference, schema notes on Bech32 _id and role derivation, indexes, examples, and related docs. |

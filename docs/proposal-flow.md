@@ -5,7 +5,7 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Proposal Flow – Draft, Save, and Submit                                                                 |
-| **Version**        | 0.1.3                                                                                                   |
+| **Version**        | 0.1.4                                                                                                   |
 | **Created**        | February 18, 2026                                                                                       |
 | **Last Revised**   | February 19, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
@@ -50,13 +50,13 @@ flowchart TD
 
 ## 2. Proposal statuses
 
-| Status | Meaning |
-|--------|--------|
-| `draft` | Work in progress. Visible only to the proposer (and vote admins for that vote). Can be saved repeatedly without full validation. Can be deleted. |
-| `live` | Submitted for review. Visible publicly. Full validation applied at transition from draft → live. Status is immutable once live (cannot be set back to draft). |
-| `withdrawnByProposer` | Withdrawn by the proposer. |
-| `withdrawnByAdmin` | Withdrawn by a vote admin. |
-| `archived` | Previous version of a live proposal after an update (historical copy). |
+| Status                | Meaning                                                                                                                                                       |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `draft`               | Work in progress. Visible only to the proposer (and vote admins for that vote). Can be saved repeatedly without full validation. Can be deleted.              |
+| `live`                | Submitted for review. Visible publicly. Full validation applied at transition from draft → live. Status is immutable once live (cannot be set back to draft). |
+| `withdrawnByProposer` | Withdrawn by the proposer.                                                                                                                                    |
+| `withdrawnByAdmin`    | Withdrawn by a vote admin.                                                                                                                                    |
+| `archived`            | Previous version of a live proposal after an update (historical copy).                                                                                        |
 
 ```mermaid
 flowchart TD
@@ -97,9 +97,9 @@ sequenceDiagram
     participant Backend
     participant MongoDB
 
-    Proposer->>Frontend: Click "Create Proposal" in budget
-    Frontend->>Backend: POST /proposals<br/>{ budgetId, title, status: "draft" }
-    Backend->>Backend: Validate budgetId exists<br/>Check now < submissionEndDate
+    Proposer->>Frontend: Click "Create Proposal" in vote
+    Frontend->>Backend: POST /proposals<br/>{ voteId, title, status: "draft" }
+    Backend->>Backend: Validate voteId exists<br/>Check now < submissionEndDate
     Backend->>MongoDB: Insert proposal (status: draft)
     MongoDB-->>Backend: { _id, ... }
     Backend-->>Frontend: 201 Created<br/>{ _id, status: "draft", ... }
@@ -354,6 +354,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                   |
 |---------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.4   | 2026-02-20 | Terminology change, modify references to "Budgets" to be "Votes"                                                                                                              |
 | 0.1.3   | 2026-02-19 | Remove the concept/ability to "withdraw" a draft proposal. Draft proposals may be deleted by the author, otherwise only live proposals may be withdrawn by admin or the user. |
 | 0.1.2   | 2026-02-19 | Add sequence diagrams and flowcharts for documenting various state changes of proposals.                                                                                      |
 | 0.1.1   | 2026-02-19 | Grammar, formatting, and minor tweaks and changes.                                                                                                                            |

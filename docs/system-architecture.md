@@ -1,13 +1,13 @@
-# Ekklesia Budget Module — System Architecture
+# Ekklesia Proposal Module — System Architecture
 
 ---
 
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.4                                                                  |
+| **Version**        | 0.1.5                                                                  |
 | **Created**        | February 19, 2026                                                      |
-| **Last Revised**   | February 19, 2026                                                      |
+| **Last Revised**   | February 20, 2026                                                      |
 | **Companion Doc**  | [API Specification](api-specification.md)                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -16,7 +16,7 @@
 
 ## Table of Contents
 
-- [Ekklesia Budget Module — System Architecture](#ekklesia-budget-module--system-architecture)
+- [Ekklesia Proposal Module — System Architecture](#ekklesia-proposal-module--system-architecture)
     - [Table of Contents](#table-of-contents)
     - [1. Purpose \& Scope](#1-purpose--scope)
     - [2. High-Level Component Overview](#2-high-level-component-overview)
@@ -43,20 +43,21 @@
 
 ## 1. Purpose & Scope
 
-This document describes the system architecture for the Ekklesia Budget Module —
-a standalone proposal lifecycle management platform built for Intersect MBO. The
-Budget Module is a separate application stack from the Ekklesia Voting Module (
-`ekklesia.vote`), sharing only the Ekklesia authentication flow (wallet-based
-challenge-response and JWT session management) as a common integration point.
+This document describes the system architecture for the Ekklesia Proposal
+Module — a standalone proposal lifecycle management platform built for Intersect
+MBO. The Proposal Module is a separate application stack from the Ekklesia
+Voting Module (`ekklesia.vote`), sharing only the Ekklesia authentication flow (
+wallet-based challenge-response and JWT session management) as a common
+integration point.
 
-The Budget Module enables:
+The Proposal Module enables:
 
 - Proposers to create, edit, submit, and withdraw funding proposals within
-  defined budget cycles.
+  defined vote cycles.
 - DReps and authenticated users to view proposals and submit comments during
   feedback periods.
-- Budget admins to oversee proposals and moderate comments within their assigned
-  budgets.
+- Vote admins to oversee proposals and moderate comments within their assigned
+  votes.
 - Public (unauthenticated) viewers to browse live proposals and comments.
 
 This document covers the major components, their responsibilities, how they
@@ -67,18 +68,18 @@ the [API Specification](api-specification.md) and the Ekklesia Integration Plan.
 
 ## 2. High-Level Component Overview
 
-The Budget Module is a self-contained application composed of four primary
+The Proposal Module is a self-contained application composed of four primary
 components:
 
 | Component       | Technology                                     | Responsibility                                                 |
 |-----------------|------------------------------------------------|----------------------------------------------------------------|
 | **Frontend**    | SvelteKit + Tailwind CSS + Shadcn              | UI, routing, session management, form validation               |
 | **Backend API** | Node.js + Express                              | Business logic, access control, data validation, JWT issuance  |
-| **Database**    | MongoDB (Mongoose)                             | Persistent storage for all Budget Module data                  |
+| **Database**    | MongoDB (Mongoose)                             | Persistent storage for all Proposal Module data                |
 | **Auth Layer**  | Ekklesia auth (CIP-30 wallet / CLI credential) | Identity verification, nonce challenge-response, JWT lifecycle |
 
 The auth layer is the sole integration point with the Ekklesia ecosystem — the
-Budget Module implements the same wallet-signature challenge-response flow and
+Proposal Module implements the same wallet-signature challenge-response flow and
 JWT session pattern used by the Ekklesia Voting Module, but runs its own
 independent auth endpoints, database, and session store. Two external services
 are called at login time (DRep registry, ADA handle service) to resolve user
@@ -90,12 +91,12 @@ display names.
 
 ### 3.1 Frontend (SvelteKit)
 
-The frontend is a SvelteKit single-page application served from the Budget
+The frontend is a SvelteKit single-page application served from the Proposal
 Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
 
 **Key responsibilities:**
 
-- Rendering proposal list and detail views, budget cycle pages, and category
+- Rendering proposal list and detail views, vote cycle pages, and category
   filters.
 - Hosting the proposal creation and editing form, with draft-save (partial
   validation) and submit (full validation via Zod schema) flows.
@@ -112,23 +113,23 @@ Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
 
 **Routing structure (high level):**
 
-| Route                          | Access              | Description                   |
-|--------------------------------|---------------------|-------------------------------|
-| `/budgets`                     | Public              | Budget cycle listing          |
-| `/budgets/{slug}`              | Public              | Budget detail + proposal list |
-| `/proposals/{proposalId}`      | Public / Role-gated | Proposal detail view          |
-| `/proposals/new`               | Proposer            | Create new proposal           |
-| `/proposals/{proposalId}/edit` | Proposer (owner)    | Edit draft or live proposal   |
-| `/dashboard`                   | Authenticated       | User's own proposals          |
+| Route                          | Access              | Description                 |
+|--------------------------------|---------------------|-----------------------------|
+| `/votes`                       | Public              | Vote cycle listing          |
+| `/votes/{slug}`                | Public              | Vote detail + proposal list |
+| `/proposals/{proposalId}`      | Public / Role-gated | Proposal detail view        |
+| `/proposals/new`               | Proposer            | Create new proposal         |
+| `/proposals/{proposalId}/edit` | Proposer (owner)    | Edit draft or live proposal |
+| `/dashboard`                   | Authenticated       | User's own proposals        |
 
 ### 3.2 Backend API (Node.js / Express)
 
-The backend is a standalone Node.js/Express application serving the Budget
+The backend is a standalone Node.js/Express application serving the Proposal
 Module API under the versioned base path `/api/v0`.
 
 **Key responsibilities:**
 
-- Exposing all public read endpoints (budgets, proposals, comments) with
+- Exposing all public read endpoints (votes, proposals, comments) with
   pagination, filtering, sorting, and search.
 - Enforcing role-based access control on authenticated write endpoints (
   proposals, comments, likes, withdrawals) using `isAuthenticated` middleware
@@ -141,7 +142,7 @@ Module API under the versioned base path `/api/v0`.
 - Applying rate limiting per IP (public endpoints: 200 req/min; auth endpoints:
   5–60 req/min; write endpoints: 10 req/user/min).
 - Applying server-side response caching (30 s TTL) on public read endpoints.
-- Enforcing budget submission windows (`submissionStartDate`,
+- Enforcing vote submission windows (`submissionStartDate`,
   `submissionEndDate`, `feedbackEndDate`, `reviewEndDate`) on all time-gated
   operations.
 
@@ -149,7 +150,7 @@ Module API under the versioned base path `/api/v0`.
 
 | Path prefix                                                        | Section | Description                             |
 |--------------------------------------------------------------------|---------|-----------------------------------------|
-| `GET /budgets[/...]`                                               | §3      | Budget and category reads               |
+| `GET /votes[/...]`                                                 | §3      | Vote and category reads                 |
 | `GET /proposals[/...]`                                             | §3      | Proposal reads (role-filtered)          |
 | `GET /comments[/...]`                                              | §3      | Comment and reply reads (role-filtered) |
 | `POST /session`, `PUT /session`, `GET /session`, `DELETE /session` | §4      | Auth: nonce, verify, validate, logout   |
@@ -174,8 +175,7 @@ collections reside in a single database instance.
 
 | Collection    | Schema/Process doc                                               | Description                                                                                      |
 |---------------|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| `Budget`      | [budget-schema-description.md](budget-schema-description.md)     | Budget cycles with date windows and admin arrays                                                 |
-| `Category`    | _(pending schema doc)_                                           | Categories belonging to a budget; ordered by `sortOrder`                                         |
+| `Vote`        | [vote-schema-description.md](vote-schema-description.md)         | Vote cycles with date windows and admin arrays                                                   |
 | `Proposal`    | [proposal-schema-description.md](proposal-schema-description.md) | Proposal lifecycle documents including versioning, withdrawal, and embedded admin action details |
 | `Comment`     | [comment-schema-description.md](comment-schema-description.md)   | Top-level comments and replies; includes embedded admin withdrawal details                       |
 | `CommentLike` | [comment-schema-description.md](comment-schema-description.md)   | One document per user-comment like; unique index on `(commentId, userId)`                        |
@@ -187,14 +187,14 @@ collections reside in a single database instance.
 - `Session`: TTL index on `createdAt` (auto-expire after 1 hour); index on
   `userId` for nonce lookup.
 - `CommentLike`: Unique compound index on `(commentId, userId)`.
-- `Proposal`: Index on `(budgetId, status)` for filtered list queries; index on
+- `Proposal`: Index on `(voteId, status)` for filtered list queries; index on
   `proposerId` for owner queries.
 - `Comment`: Index on `(proposalId, parentId, status)` for top-level and reply
   fetches.
 
 ### Admin Actions & Audit Trail
 
-The Budget Module does not use a dedicated admin actions collection. Instead,
+The Proposal Module does not use a dedicated admin actions collection. Instead,
 admin moderation actions are recorded as embedded `withdrawalDetails` objects
 directly on the affected `Proposal` or `Comment` document at the time the action
 is taken. This provides a lightweight, queryable audit trail without a separate
@@ -225,7 +225,7 @@ Proposer-initiated withdrawals (`withdrawnByProposer`) also use the
 
 ### 3.4 Authentication Layer
 
-The Budget Module implements the Ekklesia wallet-signature challenge-response
+The Proposal Module implements the Ekklesia wallet-signature challenge-response
 authentication pattern. Users prove ownership of a Cardano address by signing a
 one-time nonce; the server verifies the signature and issues a JWT. No passwords
 are stored.
@@ -256,15 +256,15 @@ after 5 minutes.
 
 ### 3.5 Ekklesia Authentication Integration
 
-The Budget Module is a fully independent application stack — it has its own
+The Proposal Module is a fully independent application stack — it has its own
 frontend, backend, database, and hosting. The sole integration point with the
-Ekklesia ecosystem is the **authentication pattern**: the Budget Module
+Ekklesia ecosystem is the **authentication pattern**: the Proposal Module
 implements the same wallet-signature challenge-response flow, JWT structure, and
 session management approach established by the Ekklesia Voting Module.
 
-This means users authenticating to the Budget Module follow an identical UX to
+This means users authenticating to the Proposal Module follow an identical UX to
 the Ekklesia Voting Module (connect wallet → sign nonce → receive JWT), and the
-same Cardano identity types are supported. However, the Budget Module runs its
+same Cardano identity types are supported. However, the Proposal Module runs its
 own auth endpoints and maintains its own `Session` and `User` collections —
 there is no shared database, no shared process, and no shared session store
 between the two applications.
@@ -297,17 +297,17 @@ gracefully and do not prevent JWT issuance.
 flowchart TD
     subgraph Browser["Client (Browser)"]
         subgraph Frontend["SvelteKit Frontend (Tailwind CSS + Shadcn)"]
-            PV["Public Views<br />/budgets · /proposals"]
+            PV["Public Views<br />/votes · /proposals"]
             PR["Proposer (Private)<br />/dashboard · /proposals/new · /proposals/edit"]
-            AD["Admin (Private)<br />/admin · Budget oversight"]
+            AD["Admin (Private)<br />/admin · Vote oversight"]
             SM["sessionManager.js<br />loggedIn / user / jwt stores"]
             WS["WalletSigner<br />CIP-30 wallet connect + nonce sign"]
         end
     end
 
-    subgraph Backend["Budget Module Backend (Node.js / Express)"]
-        subgraph API["Budget Module API  /api/v0"]
-            PUB["Public Reads §3<br />GET /budgets<br />GET /proposals<br />GET /comments"]
+    subgraph Backend["Proposal Module Backend (Node.js / Express)"]
+        subgraph API["Proposal Module API  /api/v0"]
+            PUB["Public Reads §3<br />GET /votes<br />GET /proposals<br />GET /comments"]
             AUTH["Auth Endpoints §4<br />POST /session<br />PUT /session<br />GET /session<br />DELETE /session"]
             WRITE["Authed Writes §5<br />POST /proposals<br />PUT /proposals<br />POST /comments<br />PUT /comments"]
             MW["Middleware<br />isAuthenticated · verifyToken<br />rate limiters · CORS"]
@@ -315,7 +315,7 @@ flowchart TD
     end
 
     subgraph DB["MongoDB (European region)"]
-        COL["Budget · Category · Proposal<br />Comment · CommentLike · Session · User"]
+        COL["Vote · Category · Proposal<br />Comment · CommentLike · Session · User"]
     end
 
     DREP["DRep Registry<br />(at login)"]
@@ -340,9 +340,9 @@ sequenceDiagram
     participant Backend as Backend API
     participant MongoDB
 
-    Browser->>Frontend: Navigate to /budgets
-    Frontend->>Backend: GET /api/v0/budgets
-    Backend->>MongoDB: query Budget collection
+    Browser->>Frontend: Navigate to /votes
+    Frontend->>Backend: GET /api/v0/votes
+    Backend->>MongoDB: query Vote collection
     MongoDB-->>Backend: results
     Backend-->>Frontend: 200 OK (paginated list)
     Frontend-->>Browser: Rendered page
@@ -383,7 +383,7 @@ sequenceDiagram
     participant MongoDB
 
     Proposer->>Frontend: Fill form · Click "Save Draft"
-    Frontend->>Backend: POST /proposals<br/>{ budgetId, title, status: "draft", ... }
+    Frontend->>Backend: POST /proposals<br/>{ voteId, title, status: "draft", ... }
     Backend->>MongoDB: partial validate · insert Proposal
     MongoDB-->>Backend: ok
     Backend-->>Frontend: 201 Created (draft)
@@ -408,8 +408,8 @@ sequenceDiagram
     participant MongoDB
 
     Admin->>Frontend: View draft proposals
-    Frontend->>Backend: GET /proposals?budget=X&status=draft<br/>Cookie: token=<admin JWT>
-    Backend->>Backend: verify admin in budget.admins
+    Frontend->>Backend: GET /proposals?vote=X&status=draft<br/>Cookie: token=<admin JWT>
+    Backend->>Backend: verify admin in vote.adminVoteIds
     Backend-->>Frontend: 200 OK (drafts visible)
     Frontend-->>Admin: Draft proposal list
 
@@ -427,52 +427,52 @@ sequenceDiagram
 
 Access control is enforced in the backend API on every request. The
 authenticated user's `userId` (from the JWT) is checked against proposal
-`proposerId` fields and budget `admins` arrays to determine role at request
+`proposerId` fields and vote `adminVoteIds` arrays to determine role at request
 time.
 
-| Role         | Identity                                         | Key permissions                                                                                                                                        |
-|--------------|--------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | Unauthenticated                                  | Read `live` and `withdrawn` proposals and comments                                                                                                     |
-| **User**     | Any authenticated wallet                         | Public access + create and manage own comments                                                                                                         |
-| **Proposer** | Authenticated wallet; owns a proposal            | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `feedbackEndDate`                                                |
-| **DRep**     | Authenticated via `drep1…` credential            | Same as User in this MVP (view and comment)                                                                                                            |
-| **Admin**    | Authenticated wallet; address in `budget.admins` | All of the above + view draft proposals for assigned budgets; withdraw live proposals until `reviewEndDate`; withdraw comments until `feedbackEndDate` |
+| Role         | Identity                                             | Key permissions                                                                                                                                      |
+|--------------|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | Unauthenticated                                      | Read `live` and `withdrawn` proposals and comments                                                                                                   |
+| **User**     | Any authenticated wallet                             | Public access + create and manage own comments                                                                                                       |
+| **Proposer** | Authenticated wallet; owns a proposal                | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `feedbackEndDate`                                              |
+| **DRep**     | Authenticated via `drep1…` credential                | Same as User in this MVP (view and comment)                                                                                                          |
+| **Admin**    | Authenticated wallet; address in `vote.adminVoteIds` | All of the above + view draft proposals for assigned votes; withdraw live proposals until `reviewEndDate`; withdraw comments until `feedbackEndDate` |
 
-Admin status is budget-scoped — a user is only an admin for the specific budgets
-in which their address appears in the `admins` array. The `GET /session`
-endpoint returns `adminBudgetIds` to inform the frontend which budgets the user
-can administer.
+Admin status is vote-scoped — a user is only an admin for the specific votes in
+which their address appears in the `adminVoteIds` array. The `GET /session`
+endpoint returns `adminVoteIds` to inform the frontend which votes the user can
+administer.
 
 ---
 
 ## 7. Infrastructure & Deployment
 
-The Budget Module is deployed as a standalone application, fully independent of
-the Ekklesia Voting Module infrastructure. It has its own hosting environment,
-its own database instance, and its own deployment pipeline.
+The Proposal Module is deployed as a standalone application, fully independent
+of the Ekklesia Voting Module infrastructure. It has its own hosting
+environment, its own database instance, and its own deployment pipeline.
 
-| Layer                     | Hosting                                 | Notes                                                                                                   |
-|---------------------------|-----------------------------------------|---------------------------------------------------------------------------------------------------------|
-| **Frontend**              | Budget Module hosting (European region) | SvelteKit app served from its own domain; no shared origin with `ekklesia.vote`                         |
-| **Backend API**           | Budget Module hosting (European region) | Standalone Express process; own environment variables and configuration                                 |
-| **Database**              | MongoDB (European region)               | Dedicated MongoDB instance for the Budget Module; no shared collections with the Ekklesia Voting Module |
-| **Environment variables** | Budget Module `.env`                    | `JWT_SECRET`, `JWT_MAX_AGE`, `FRONTEND_URL`, `MONGO_URI` scoped to this application only                |
+| Layer                     | Hosting                                   | Notes                                                                                                     |
+|---------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| **Frontend**              | Proposal Module hosting (European region) | SvelteKit app served from its own domain; no shared origin with `ekklesia.vote`                           |
+| **Backend API**           | Proposal Module hosting (European region) | Standalone Express process; own environment variables and configuration                                   |
+| **Database**              | MongoDB (European region)                 | Dedicated MongoDB instance for the Proposal Module; no shared collections with the Ekklesia Voting Module |
+| **Environment variables** | Proposal Module `.env`                    | `JWT_SECRET`, `JWT_MAX_AGE`, `FRONTEND_URL`, `MONGO_URI` scoped to this application only                  |
 
 ---
 
 ## 8. Security Considerations
 
-| Concern                      | Mitigation                                                                                                                                                                                                                                                                                                                                                  |
-|------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **CSRF**                     | HTTP-only `token` cookie with `SameSite=Strict` in production                                                                                                                                                                                                                                                                                               |
-| **JWT forgery**              | Signed with `JWT_SECRET`; validated on every authenticated request via `verifyToken`                                                                                                                                                                                                                                                                        |
-| **Brute-force login**        | Nonce endpoint rate-limited to 5/min; verify endpoint to 10/min per IP                                                                                                                                                                                                                                                                                      |
-| **Nonce replay**             | Nonces are single-use; atomically set to `null` on use                                                                                                                                                                                                                                                                                                      |
-| **Nonce flooding**           | Nonces expire after 5 minutes; Session documents TTL-expire after 1 hour                                                                                                                                                                                                                                                                                    |
-| **Unauthorized data access** | Role checks at the route level for all write endpoints; draft proposals return 403 (not 404) to avoid information leakage on existence                                                                                                                                                                                                                      |
-| **Script addresses**         | Standard script addresses are rejected at `POST /session`. Multisig DRep addresses are supported: any single eligible key within the multisig may sign to obtain a session. Full multisig validation remains required for on-chain actions (e.g. vote casting) in the Ekklesia Voting Module, but is not required for Budget Module session authentication. |
-| **Rate limiting (write)**    | Authenticated write endpoints limited to 10 req/user/min                                                                                                                                                                                                                                                                                                    |
-| **Input validation**         | Mongoose schema validation + Joi/Zod validation at the API layer; ObjectId format checked before all DB queries                                                                                                                                                                                                                                             |
+| Concern                      | Mitigation                                                                                                                                                                                                                                                                                                                                                    |
+|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **CSRF**                     | HTTP-only `token` cookie with `SameSite=Strict` in production                                                                                                                                                                                                                                                                                                 |
+| **JWT forgery**              | Signed with `JWT_SECRET`; validated on every authenticated request via `verifyToken`                                                                                                                                                                                                                                                                          |
+| **Brute-force login**        | Nonce endpoint rate-limited to 5/min; verify endpoint to 10/min per IP                                                                                                                                                                                                                                                                                        |
+| **Nonce replay**             | Nonces are single-use; atomically set to `null` on use                                                                                                                                                                                                                                                                                                        |
+| **Nonce flooding**           | Nonces expire after 5 minutes; Session documents TTL-expire after 1 hour                                                                                                                                                                                                                                                                                      |
+| **Unauthorized data access** | Role checks at the route level for all write endpoints; draft proposals return 403 (not 404) to avoid information leakage on existence                                                                                                                                                                                                                        |
+| **Script addresses**         | Standard script addresses are rejected at `POST /session`. Multisig DRep addresses are supported: any single eligible key within the multisig may sign to obtain a session. Full multisig validation remains required for on-chain actions (e.g. vote casting) in the Ekklesia Voting Module, but is not required for Proposal Module session authentication. |
+| **Rate limiting (write)**    | Authenticated write endpoints limited to 10 req/user/min                                                                                                                                                                                                                                                                                                      |
+| **Input validation**         | Mongoose schema validation + Joi/Zod validation at the API layer; ObjectId format checked before all DB queries                                                                                                                                                                                                                                               |
 
 ---
 
@@ -506,6 +506,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                         |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.5   | 2026-02-20 | Terminology update to rename "Budget" to "Vote" to align with future use cases                                                                      |
 | 0.1.4   | 2026-02-19 | Add reference to user-schema-description.md                                                                                                         |
 | 0.1.3   | 2026-02-19 | Correction to remove reference to /admin routes as all displays are handled via the authenticated user's permissions                                |
 | 0.1.2   | 2026-02-19 | Remove some legacy references to stake pool authentication which is out of scope and fix a few formatting errors                                    |

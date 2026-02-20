@@ -1,11 +1,11 @@
-# Ekklesia Budget Module — API Specification
+# Ekklesia Proposal Module — API Specification
 
 ---
 
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.0.0                                                                  |
+| **Version**        | 1.1.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | February 18, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
@@ -17,7 +17,7 @@
 ## Table of Contents
 
 [//]: # (@formatter:off)
-- [Ekklesia Budget Module — API Specification](#ekklesia-budget-module--api-specification)
+- [Ekklesia Proposal Module — API Specification](#ekklesia-proposal-module--api-specification)
   - [Table of Contents](#table-of-contents)
   - [1. Purpose \& Scope](#1-purpose--scope)
   - [2. Conventions \& Notation](#2-conventions--notation)
@@ -165,26 +165,35 @@
 
 ## 1. Purpose & Scope
 
-This document is the API Specification for the Ekklesia Budget Module. It
+This document is the API Specification for the Ekklesia Proposal Module. It
 provides a complete catalogue of every public and authenticated endpoint,
 covering status codes, pagination, and error handling.
 
 Together with the companion Ekklesia Integration Plan, these two documents form
-the authoritative reference for the Budget Module's API surface and should be
+the authoritative reference for the Proposal Module's API surface and should be
 kept up to date as the module evolves.
 
 ---
 
 ## 2. Conventions & Notation
 
-- **`{voteId}` / `{proposalId}`** – Path parameters represented as MongoDB ObjectIds (24-character hexadecimal strings).
-- **`_id` fields** – All `_id` fields in responses are MongoDB ObjectIds (24-character hexadecimal strings).
-- **DRep identifiers** – All `drep_id` values use the `drep1…` bech32 encoding defined by CIP-0509.
-- **Admin addresses** – All `admins` array entries are bech32 Cardano stake addresses (`stake1…`).
-- **Base URL** – All paths below are relative to a versioned base, e.g. `https://domain.tld/api/v0`.
-- **Requests** – Request bodies must be `Content-Type: application/json`. The API returns JSON; clients may send `Accept: application/json`.
-- **Responses** – All responses return **JSON** (except 204 No Content, which has no body).
-- **Pagination** – All paginated list endpoints use the same `meta` shape: `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The list of items is in the `data` array.
+- **`{voteId}` / `{proposalId}`** – Path parameters represented as MongoDB
+  ObjectIds (24-character hexadecimal strings).
+- **`_id` fields** – All `_id` fields in responses are MongoDB ObjectIds (
+  24-character hexadecimal strings).
+- **DRep identifiers** – All `drep_id` values use the `drep1…` Bech32 encoding
+  defined by CIP-0509.
+- **Admin addresses** – All `adminVoteIds` array entries are Bech32 Cardano
+  stake addresses (`stake1…`).
+- **Base URL** – All paths below are relative to a versioned base, e.g.
+  `https://domain.tld/api/v0`.
+- **Requests** – Request bodies must be `Content-Type: application/json`. The
+  API returns JSON; clients may send `Accept: application/json`.
+- **Responses** – All responses return **JSON** (except 204 No Content, which
+  has no body).
+- **Pagination** – All paginated list endpoints use the same `meta` shape:
+  `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The
+  list of items is in the `data` array.
 - All timestamps use **ISO 8601 (UTC)**.
 - Monetary amounts are represented as **unsigned integers** in the smallest
   currency unit to avoid floating-point issues.
@@ -204,8 +213,8 @@ information about authentication roles and how they affect endpoint behavior.
   data (e.g., `live` and `withdrawn` proposals/comments).
 - **Proposer** — Authenticated users who own proposals. Can access their own
   proposals in all statuses (`live`, `withdrawn`, `draft`, `archived`).
-- **Admin** — Authenticated users whose address is in a budget's `admins` array.
-  Can access draft proposals and manage comments for their budget.
+- **Admin** — Authenticated users whose address is in a vote's `voteAdmins`
+  array. Can access draft proposals and manage comments for their vote.
 
 Rate limiting applies to all public endpoints (see
 [Section 6](#6-rate-limiting--caching)).
@@ -214,7 +223,7 @@ Rate limiting applies to all public endpoints (see
 
 ### 3.1 `GET /votes`
 
-Returns a paginated list of all budget cycles that the Budget Module is
+Returns a paginated list of all vote cycles that the Proposal Module is
 currently tracking. Supports searching by title (case-insensitive partial match)
 or `_id` (exact match), and filtering by slug (case-sensitive exact match).
 
@@ -262,11 +271,13 @@ or `_id` (exact match), and filtering by slug (case-sensitive exact match).
 }
 ```
 
-> **Note:** Categories for a budget are available via `GET /votes/{voteId}/categories` (§3.3). Proposals and filters for that budget are scoped to that set.
+> **Note:** Categories for a vote are available via
+> `GET /votes/{voteId}/categories` (§3.3). Proposals and filters for that vote
+> are scoped to that set.
 
 #### Error Response — `404 Not Found`
 
-Returned when `search` or `slug` parameters are provided but no matching budgets
+Returned when `search` or `slug` parameters are provided but no matching votes
 are found.
 
 ```json
@@ -280,13 +291,13 @@ are found.
 
 ### 3.2 `GET /votes/{voteId}`
 
-Returns a single budget cycle by its MongoDB ObjectId.
+Returns a single vote cycle by its MongoDB ObjectId.
 
 #### Path Parameters
 
-| Parameter   | Type          | Required | Description                     |
-|-------------|---------------|----------|---------------------------------|
-| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
+| Parameter | Type              | Required | Description                                                           |
+|-----------|-------------------|----------|-----------------------------------------------------------------------|
+| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the vote cycle (24-character hexadecimal string). |
 
 #### Success Response — `200 OK`
 
@@ -311,7 +322,8 @@ Returns a single budget cycle by its MongoDB ObjectId.
 }
 ```
 
-> **Note:** Categories for this budget are available via `GET /votes/{voteId}/categories` (§3.3).
+> **Note:** Categories for this vote are available via
+`GET /votes/{voteId}/categories` (§3.3).
 
 #### Error Response — `400 Bad Request`
 
@@ -326,7 +338,7 @@ Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
 
 #### Error Response — `404 Not Found`
 
-Returned when no budget exists with the provided `voteId`.
+Returned when no vote exists with the provided `voteId`.
 
 ```json
 {
@@ -341,13 +353,13 @@ Returned when no budget exists with the provided `voteId`.
 
 Returns the full list of categories defined for a specific vote cycle. This is
 the single source of truth for valid category values — clients should fetch and
-cache this response for the lifetime of the budget cycle.
+cache this response for the lifetime of the vote cycle.
 
 #### Path Parameters
 
-| Parameter   | Type          | Required | Description                     |
-|-------------|---------------|----------|---------------------------------|
-| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string). |
+| Parameter | Type              | Required | Description                                                           |
+|-----------|-------------------|----------|-----------------------------------------------------------------------|
+| `voteId`  | string (ObjectId) | Yes      | MongoDB ObjectId of the vote cycle (24-character hexadecimal string). |
 
 #### Success Response — `200 OK`
 
@@ -390,7 +402,13 @@ cache this response for the lifetime of the budget cycle.
 }
 ```
 
-> **Note:** Responses from this endpoint are intended to be cached client-side for the lifetime of the budget cycle. The `updatedAt` field on the parent budget object (available via `GET /votes/{voteId}`) can be used to detect when a cache invalidation is warranted. Categories are returned sorted by their `sortOrder` field in ascending order, which dictates the canonical display order in the UI.
+> **Note:** Responses from this endpoint are intended to be cached client-side
+> for the lifetime of the vote cycle. The `updatedAt` field on the parent vote
+> object (available via `GET /votes/{voteId}`) can be used to detect when a
+> cache
+> invalidation is warranted. Categories are returned sorted by their `sortOrder`
+> field in ascending order, which dictates the canonical display order in the
+> UI.
 
 #### Error Response — `400 Bad Request`
 
@@ -405,7 +423,7 @@ Returned when the `voteId` parameter is not a valid MongoDB ObjectId.
 
 #### Error Response — `404 Not Found`
 
-Returned when no budget exists with the provided `voteId`.
+Returned when no vote exists with the provided `voteId`.
 
 ```json
 {
@@ -424,11 +442,11 @@ returns proposals from all votes.
 
 #### Access by role
 
-| Role         | Allowed proposal statuses                       | Notes                                                                                                                                                                   |
-|--------------|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | `live`, `withdrawn`                             | Default. No authentication. Use `status` to filter by `live` or `withdrawn`.                                                                                            |
-| **Proposer** | All (`live`, `withdrawn`, `draft`, `archived`)  | When authenticated and `proposer` query param matches the authenticated user's ID. Default (no `status` param) returns all statuses for own proposals.                  |
-| **Admin**    | `live`, `withdrawn`, `draft` (for their budget) | When authenticated and the user's address (JWT) is in the budget's `admins` array. Must set `budget` and `status=draft` to see draft proposals; default is `live` only. |
+| Role         | Allowed proposal statuses                      | Notes                                                                                                                                                                   |
+|--------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | `live`, `withdrawn`                            | Default. No authentication. Use `status` to filter by `live` or `withdrawn`.                                                                                            |
+| **Proposer** | All (`live`, `withdrawn`, `draft`, `archived`) | When authenticated and `proposer` query param matches the authenticated user's ID. Default (no `status` param) returns all statuses for own proposals.                  |
+| **Admin**    | `live`, `withdrawn`, `draft` (for their vote)  | When authenticated and the user's address (JWT) is in the vote's `voteAdmins` array. Must set `vote` and `status=draft` to see draft proposals; default is `live` only. |
 
 List responses include a shortened `metaData` object containing only
 `strategicFocusArea` (category ObjectId), `proposalType`, and `initiativeType`;
@@ -436,19 +454,19 @@ full `metaData` is available only from `GET /proposals/{proposalId}`.
 
 #### Query Parameters
 
-| Parameter        | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                    |
-|------------------|---------|---------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `page`           | integer | `1`     | Page index (1-based).                                                                                                                                                                                                                                                                                                                                                                                          |
-| `limit`          | integer | `10`    | Items per page. Max 100.                                                                                                                                                                                                                                                                                                                                                                                       |
-| `budget`         | string  | —       | Filter by budget cycle (exact match, must be valid ObjectId). If provided, only returns proposals for the specified budget.                                                                                                                                                                                                                                                                                    |
-| `category`       | string  | —       | Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where `metaData.strategicFocusArea` matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.                                                                                                                                                      |
-| `proposalType`   | string  | —       | Filter by proposal type (exact match). Valid values: `Technical (software/IT)`, `Non-technical`.                                                                                                                                                                                                                                                                                                               |
-| `initiativeType` | string  | —       | Filter by initiative type (exact match). Valid values: `New Initiative`, `Maintenance`.                                                                                                                                                                                                                                                                                                                        |
-| `proposer`       | string  | —       | Filter by proposer ID (exact match, must be valid User ObjectId). When authenticated and `proposer` matches the authenticated user's ID, all statuses (including `draft`, `archived`) can be returned; use `status` to filter.                                                                                                                                                                                 |
-| `status`         | string  | `live`  | Filter by proposal status. Single value or comma-separated: `live`, `withdrawn` (withdrawn includes both `withdrawnByProposer` and `withdrawnByAdmin`). For **budget admins** or when querying own proposals (`proposer` = authenticated user ID), `draft` may also be included (e.g. `status=live,withdrawn,draft`). Sending `status=draft` without being a budget admin or the proposal owner returns `400`. |
-| `search`         | string  | —       | Search term to match against proposal `_id` (exact match), `title`, `summary`, or `metaData.contractingParty.legalEntityName` (partial, case-insensitive).                                                                                                                                                                                                                                                     |
-| `sort`           | string  | `date`  | Sort field: `title`, `status`, `date` (submittedAt), `updatedAt`, or `totalBudget`. Case-insensitive.                                                                                                                                                                                                                                                                                                          |
-| `direction`      | string  | `desc`  | Sort direction: `asc` or `desc`. Case-insensitive.                                                                                                                                                                                                                                                                                                                                                             |
+| Parameter        | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                |
+|------------------|---------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `page`           | integer | `1`     | Page index (1-based).                                                                                                                                                                                                                                                                                                                                                                                      |
+| `limit`          | integer | `10`    | Items per page. Max 100.                                                                                                                                                                                                                                                                                                                                                                                   |
+| `vote`           | string  | —       | Filter by vote cycle (exact match, must be valid ObjectId). If provided, only returns proposals for the specified vote.                                                                                                                                                                                                                                                                                    |
+| `category`       | string  | —       | Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where `metaData.strategicFocusArea` matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.                                                                                                                                                  |
+| `proposalType`   | string  | —       | Filter by proposal type (exact match). Valid values: `Technical (software/IT)`, `Non-technical`.                                                                                                                                                                                                                                                                                                           |
+| `initiativeType` | string  | —       | Filter by initiative type (exact match). Valid values: `New Initiative`, `Maintenance`.                                                                                                                                                                                                                                                                                                                    |
+| `proposer`       | string  | —       | Filter by proposer ID (exact match, must be valid User ObjectId). When authenticated and `proposer` matches the authenticated user's ID, all statuses (including `draft`, `archived`) can be returned; use `status` to filter.                                                                                                                                                                             |
+| `status`         | string  | `live`  | Filter by proposal status. Single value or comma-separated: `live`, `withdrawn` (withdrawn includes both `withdrawnByProposer` and `withdrawnByAdmin`). For **vote admins** or when querying own proposals (`proposer` = authenticated user ID), `draft` may also be included (e.g. `status=live,withdrawn,draft`). Sending `status=draft` without being a vote admin or the proposal owner returns `400`. |
+| `search`         | string  | —       | Search term to match against proposal `_id` (exact match), `title`, `summary`, or `metaData.contractingParty.legalEntityName` (partial, case-insensitive).                                                                                                                                                                                                                                                 |
+| `sort`           | string  | `date`  | Sort field: `title`, `status`, `date` (submittedAt), `updatedAt`, or `totalBudget`. Case-insensitive.                                                                                                                                                                                                                                                                                                      |
+| `direction`      | string  | `desc`  | Sort direction: `asc` or `desc`. Case-insensitive.                                                                                                                                                                                                                                                                                                                                                         |
 
 #### Success Response — `200 OK`
 
@@ -487,12 +505,12 @@ full `metaData` is available only from `GET /proposals/{proposalId}`.
 > the `status` parameter to filter by `live` and/or `withdrawn` (withdrawn
 > includes both `withdrawnByProposer` and `withdrawnByAdmin`). The `status`
 > parameter accepts comma-separated values (e.g. `live,withdrawn`).
-> **Budget admins** (authenticated user in the budget's `admins` array) or
+> **Vote admins** (authenticated user in the vote's `adminVoteIds` array) or
 > callers querying their own proposals (`proposer` = authenticated user ID) may
 > also include `draft` in `status` (e.g. `status=live,withdrawn,draft`).
-> Including `draft`without being a budget admin or the proposal owner returns
-> `400 Bad Request`. When `budget` is provided, the endpoint validates that the
-> budget exists and returns 404 if it doesn't.
+> Including `draft`without being a vote admin or the proposal owner returns
+> `400 Bad Request`. When `vote` is provided, the endpoint validates that the
+> vote exists and returns 404 if it doesn't.
 
 #### Error Response — `400 Bad Request`
 
@@ -501,7 +519,7 @@ Returned when query parameters are invalid.
 ```json
 {
   "status": "error",
-  "message": "Invalid budget parameter. Must be a valid ObjectId."
+  "message": "Invalid vote parameter. Must be a valid ObjectId."
 }
 ```
 
@@ -510,7 +528,7 @@ Or when `category` parameter is invalid or category not found:
 ```json
 {
   "status": "error",
-  "message": "Invalid category parameter. The following categories were not found or do not belong to this budget: a1b2c3d4e5f67890abcdef99, b2c3d4e5f67890abcdef123"
+  "message": "Invalid category parameter. The following categories were not found or do not belong to this vote: a1b2c3d4e5f67890abcdef99, b2c3d4e5f67890abcdef123"
 }
 ```
 
@@ -541,13 +559,13 @@ Or when `direction` parameter is invalid:
 }
 ```
 
-Or when `status=draft` is sent by a caller who is neither a budget admin nor the
+Or when `status=draft` is sent by a caller who is neither a vote admin nor the
 proposal owner (e.g. `proposer` not set or not matching the authenticated user):
 
 ```json
 {
   "status": "error",
-  "message": "Invalid status parameter. Draft proposals are only accessible to budget admins or the proposal owner."
+  "message": "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner."
 }
 ```
 
@@ -562,7 +580,7 @@ Or when `proposer` parameter is invalid:
 
 #### Error Response — `404 Not Found`
 
-Returned when `budget` is provided but no budget exists with that ID.
+Returned when `vote` is provided but no vote exists with that ID.
 
 ```json
 {
@@ -580,14 +598,14 @@ depends on the caller's role.
 
 #### Access by role
 
-| Role         | Can access proposal when                                                                                                                                  |
-|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | Status is `live` or `withdrawn` (anyone).                                                                                                                 |
-| **Proposer** | Status is any (including `draft`, `archived`) when the authenticated user's ID matches the proposal's `proposerId`.                                       |
-| **Admin**    | Status is `draft` when the authenticated user's address (JWT) is in that proposal's budget `admins` array; also has public access for `live`/`withdrawn`. |
+| Role         | Can access proposal when                                                                                                                                      |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | Status is `live` or `withdrawn` (anyone).                                                                                                                     |
+| **Proposer** | Status is any (including `draft`, `archived`) when the authenticated user's ID matches the proposal's `proposerId`.                                           |
+| **Admin**    | Status is `draft` when the authenticated user's address (JWT) is in that proposal's vote `adminVoteIds` array; also has public access for `live`/`withdrawn`. |
 
 If the proposal exists but the requester is not allowed to see it (e.g., draft
-or archived and not the proposer or a budget admin), the server returns **403
+or archived and not the proposer or a vote admin), the server returns **403
 Forbidden**. If no proposal exists with the given ID, the server returns **404
 Not Found**.
 
@@ -599,7 +617,9 @@ Not Found**.
 
 #### Success Response — `200 OK`
 
-Full proposal document, including full `metaData` and category when available. Category is included as a full category object (excluding `voteId`, `createdAt`, `updatedAt`).
+Full proposal document, including full `metaData` and category when available.
+Category is included as a full category object (excluding `voteId`, `createdAt`,
+`updatedAt`).
 
 ```json
 {
@@ -647,7 +667,7 @@ Returned when `proposalId` is not a valid ObjectId.
 
 Returned when a proposal exists with the given ID but the requester is not
 allowed to see it (e.g., draft or archived and the requester is not the proposer
-or a budget admin for that proposal's budget).
+or a vote admin for that proposal's vote).
 
 ```json
 {
@@ -675,13 +695,15 @@ Returns a paginated list of **top-level comments** (where `parentId` is null)
 for a specific proposal. The proposal is specified via the required query
 parameter `proposal` (the proposal's MongoDB ObjectId). By default, only
 **live** comments are returned; **admins** (authenticated user's address in the
-proposal's budget `admins` array) can use the `status` parameter to filter by
+proposal's vote `adminVoteIds` array) can use the `status` parameter to filter
+by
 `live`, `withdrawn`, or `withdrawnByAdmin`. Sort by `sort` (default `date`, i.e.
 `createdAt`), `replyCount`, or `likeCount`, with `direction` `asc` or `desc`;
 default is newest first (`direction=desc`). Each comment includes a `user`
 object (the comment author; `lastLogin`, `createdAt`, and `updatedAt` are
 excluded; a `type` field is added: `"proposer"` if the commenting user is the
-proposal's proposer, `"admin"` if the commenting user is in the budget's`admins`
+proposal's proposer, `"admin"` if the commenting user is in the vote's
+`adminVoteIds`
 array, otherwise `"user"`), a `replyCount` (number of direct replies to that
 comment), and a `likeCount` (number of likes on that comment).`proposalId`,
 `status`, `parentId`, and `userId` are excluded from each comment.**Comment
@@ -807,9 +829,9 @@ Returns a single comment by its MongoDB ObjectId. **Public:** only comments with
 `status` = `live` are returned. **Comment authors** (authenticated user's ID
 matches the comment's `userId`) can retrieve their own comments in any status
 and see `withdrawalDetails` (if present), but cannot use the `status` parameter.
-**Admins** (authenticated user's address in the proposal's budget `admins`array)
-can retrieve any comment by ID; optional `status` parameter can be used to
-require the comment's status to match (`live`, `withdrawn`, or
+**Admins** (authenticated user's address in the proposal's vote `adminVoteIds`
+array) can retrieve any comment by ID; optional `status` parameter can be used
+to require the comment's status to match (`live`, `withdrawn`, or
 `withdrawnByAdmin`). Response shape matches the comment objects in §3.6 (
 includes `user` with `type`, `replyCount`, `likeCount`; excludes `proposalId`,
 `status`, `parentId`, `userId`). **Comment authors** see `withdrawalDetails` for
@@ -900,8 +922,9 @@ comment's status.
 
 Returns a paginated list of **replies** to a comment (comments where`parentId` =
 `commentId`). Default is **live** replies only; **admins** (authenticated user's
-address in the proposal's budget `admins` array) can use the `status` parameter
-to filter by `live`, `withdrawn`, or `withdrawnByAdmin`. Ordered by `createdAt`
+address in the proposal's vote `adminVoteIds` array) can use the `status`
+parameter to filter by `live`, `withdrawn`, or `withdrawnByAdmin`. Ordered by
+`createdAt`
 ascending (oldest first). Same response shape per reply as §3.6. **Reply authors
 ** see `withdrawalDetails` (if present) for their own replies. The parent
 comment must exist and be live; otherwise 404 is returned.
@@ -1186,7 +1209,7 @@ Returned when the rate limit is exceeded (ten requests per minute per IP).
 
 Validates the JWT token and returns the user's ID and optional profile data.
 Used to check if a user is authenticated and to get their user ID, display name,
-and (when applicable) the list of budget IDs for which they are an admin.
+and (when applicable) the list of vote IDs for which they are an admin.
 
 #### Headers
 
@@ -1207,11 +1230,11 @@ and (when applicable) the list of budget IDs for which they are an admin.
 }
 ```
 
-| Field            | Type     | Description |
-|------------------|----------|-------------|
-| `userId`         | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID). |
-| `name`           | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set. |
-| `adminVoteIds` | string[] | **Optional.** Array of budget `_id` values (as strings) for which the authenticated user is in the budget's `admins` array. Present only when the user is an admin of at least one budget; omitted otherwise. |
+| Field          | Type     | Description                                                                                                                                                                                                   |
+|----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `userId`       | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                                  |
+| `name`         | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                              |
+| `adminVoteIds` | string[] | **Optional.** Array of vote `_id` values (as strings) for which the authenticated user is in the vote's `adminVoteIds` array. Present only when the user is an admin of at least one vote; omitted otherwise. |
 
 > **Note:** The `userId` field contains a Bech32-encoded Cardano identifier. It
 > can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`)
@@ -1279,7 +1302,7 @@ ownership of resources.
 **Access Control:**
 
 - **Proposer** — Can create and manage their own proposals and comments.
-- **Admin** — Can manage proposals and comments within their assigned budgets.
+- **Admin** — Can manage proposals and comments within their assigned votes.
 - **User** — Can create and manage their own comments.
 
 Rate limiting applies to all authenticated endpoints
@@ -1298,8 +1321,8 @@ all legal declarations to be accepted).
 before the vote's `submissionEndDate`. The vote defines`submissionStartDate`
 and `submissionEndDate` (ISO 8601 timestamps). Creating a proposal (with any
 status) is rejected with `400 Bad Request` if the current time is after the
-vote's `submissionEndDate`. Submitting with `status: "live"`is also rejected
-if the current time is before the vote's `submissionStartDate` (the submission
+vote's `submissionEndDate`. Submitting with `status: "live"`is also rejected if
+the current time is before the vote's `submissionStartDate` (the submission
 window has not yet opened). Draft proposals may be created or updated only while
 the current time is before`submissionEndDate`.
 
@@ -1311,31 +1334,38 @@ the current time is before`submissionEndDate`.
 
 #### Request Body
 
-| Field                    | Type    | Required | Description                                                                 |
-|--------------------------|---------|----------|-----------------------------------------------------------------------------|
-| `voteId`               | string  | Yes      | MongoDB ObjectId of the budget cycle (24-character hexadecimal string)      |
-| `title`                  | string  | Yes      | Title of the proposal                                                       |
-| `summary`                | string  | Yes*     | Executive summary. Max 2000 chars. Required when `status` is `"live"`; optional for draft. |
-| `metaData`               | object  | Yes      | Proposal metadata (see structure below)                                    |
-| `status`                 | string  | No       | Proposal status. Defaults to `"draft"`. Valid values: `"draft"`, `"live"`. To submit as `"live"`, all legal declarations must be accepted. Once set to `"live"`, status cannot be changed (see §5.2). |
+| Field      | Type   | Required | Description                                                                                                                                                                                           |
+|------------|--------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `voteId`   | string | Yes      | MongoDB ObjectId of the vote cycle (24-character hexadecimal string)                                                                                                                                  |
+| `title`    | string | Yes      | Title of the proposal                                                                                                                                                                                 |
+| `summary`  | string | Yes*     | Executive summary. Max 2000 chars. Required when `status` is `"live"`; optional for draft.                                                                                                            |
+| `metaData` | object | Yes      | Proposal metadata (see structure below)                                                                                                                                                               |
+| `status`   | string | No       | Proposal status. Defaults to `"draft"`. Valid values: `"draft"`, `"live"`. To submit as `"live"`, all legal declarations must be accepted. Once set to `"live"`, status cannot be changed (see §5.2). |
 
-**Request body shape** is defined by [proposal-schema-description.md](proposal-schema-description.md). For draft, only `voteId`, `title`, and `status` are required; full validation applies when `status` is `"live"`. **Server-set fields (not in request body):** Responses include `_id`, `proposerId` (from JWT), `createdAt`, `updatedAt`, `version`, `versions`, `submittedAt`, `totalBudget`, `signature`, `withdrawalDetails` (when withdrawn). See [schema/Proposal.js](../schema/Proposal.js) for internal tracking and versioning.
+**Request body shape** is defined
+by [proposal-schema-description.md](proposal-schema-description.md). For draft,
+only `voteId`, `title`, and `status` are required; full validation applies when
+`status` is `"live"`. **Server-set fields (not in request body):** Responses
+include `_id`, `proposerId` (from JWT), `createdAt`, `updatedAt`, `version`,
+`versions`, `submittedAt`, `totalBudget`, `signature`, `withdrawalDetails` (when
+withdrawn). See [schema/Proposal.js](../schema/Proposal.js) for internal
+tracking and versioning.
 
 **`metaData` Object Structure:**
 
-| Field                        | Type   | Required (when live) | Description                                                                |
-|------------------------------|--------|----------------------|----------------------------------------------------------------------------|
-| `trackRecord`                | string | No                   | Max 650 chars.                                                             |
-| `strategicFocusArea`         | string | Yes                  | Category ObjectId (24 hex). Must be a Category from the proposal's budget. |
-| `keyPerformanceIndicators`   | array  | Yes (min 1)          | Each: `{ kpi ` (max 400), `contributionStrategy` (max 800) }.              |
-| `executionRoadmap`           | object | Yes                  | `projectStartDate`, `projectEndDate` (ISO 8601), `workPackages` (array).   |
-| `financialAndAdministrative` | object | Yes                  | See below.                                                                 |
-| `contractingParty`           | object | Yes                  | See below.                                                                 |
-| `primaryContact`             | object | Yes                  | See below.                                                                 |
-| `signatoryContact`           | object | Yes                  | See below.                                                                 |
-| `proposalType`               | string | Yes                  | `"Technical (software/IT)"` \| `"Non-technical"`.                          |
-| `kycInfo`                    | object | Yes                  | See below.                                                                 |
-| `legalDeclarations`          | object | Yes when live        | See below.                                                                 |
+| Field                        | Type   | Required (when live) | Description                                                              |
+|------------------------------|--------|----------------------|--------------------------------------------------------------------------|
+| `trackRecord`                | string | No                   | Max 650 chars.                                                           |
+| `strategicFocusArea`         | string | Yes                  | Category ObjectId (24 hex). Must be a Category from the proposal's vote. |
+| `keyPerformanceIndicators`   | array  | Yes (min 1)          | Each: `{ kpi ` (max 400), `contributionStrategy` (max 800) }.            |
+| `executionRoadmap`           | object | Yes                  | `projectStartDate`, `projectEndDate` (ISO 8601), `workPackages` (array). |
+| `financialAndAdministrative` | object | Yes                  | See below.                                                               |
+| `contractingParty`           | object | Yes                  | See below.                                                               |
+| `primaryContact`             | object | Yes                  | See below.                                                               |
+| `signatoryContact`           | object | Yes                  | See below.                                                               |
+| `proposalType`               | string | Yes                  | `"Technical (software/IT)"` \| `"Non-technical"`.                        |
+| `kycInfo`                    | object | Yes                  | See below.                                                               |
+| `legalDeclarations`          | object | Yes when live        | See below.                                                               |
 
 **`contractingParty`:** `legalEntityType` (required): `"company"` or
 `"individual"`. Company: `legalEntityName`, `legalEntityRegistrationNumber`,
@@ -1448,19 +1478,20 @@ Returned when:
 
 - Required fields are missing
 - Invalid field values (e.g., invalid enum values, invalid ObjectId format)
-- Invalid `voteId` (budget does not exist)
-- Invalid `strategicFocusArea` (category does not exist or is not part of the specified budget)
+- Invalid `voteId` (vote does not exist)
+- Invalid `strategicFocusArea` (category does not exist or is not part of the
+  specified vote)
 - `status` is `"live"` but legal declarations are missing or not all `true`
-- The current time is after the budget's `submissionEndDate` (proposals,
-  including drafts, cannot be created after the submission deadline)
-- `status` is `"live"` but the current time is before the budget's
+- The current time is after the vote's `submissionEndDate` (proposals, including
+  drafts, cannot be created after the submission deadline)
+- `status` is `"live"` but the current time is before the vote's
   `submissionStartDate` (the submission window has not yet opened)
 - `status` is not `"draft"` or `"live"` for new proposals
 
 ```json
 {
   "status": "error",
-  "message": "Invalid voteId parameter. Budget not found."
+  "message": "Invalid voteId parameter. Vote not found."
 }
 ```
 
@@ -1473,12 +1504,12 @@ Or when legal declarations are missing for `"live"` status:
 }
 ```
 
-Or when submitting outside the budget's submission window:
+Or when submitting outside the vote's submission window:
 
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be submitted after the budget submission deadline (submissionEndDate)."
+  "message": "Proposals cannot be submitted after the vote submission deadline (submissionEndDate)."
 }
 ```
 
@@ -1487,7 +1518,7 @@ Or when the vote's submission window has not yet opened:
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be submitted before the budget submission window opens (submissionStartDate)."
+  "message": "Proposals cannot be submitted before the vote submission window opens (submissionStartDate)."
 }
 ```
 
@@ -1525,7 +1556,7 @@ Returned when:
 
 Updates an existing proposal. Only the proposal owner (authenticated user's
 `userId` must match the proposal's `proposerId`) can update. Updates are allowed
-until the budget's `reviewEndDate`; after that, the proposal is locked.
+until the vote's `reviewEndDate`; after that, the proposal is locked.
 
 **Versioning when updating a live proposal:** If the proposal's current `status`
 is `"live"`, the server preserves the current version before applying the
@@ -1552,7 +1583,15 @@ previous version can be referenced. For proposals that are not yet live (e.g.
 
 #### Request Body
 
-Same structure as `POST /proposals` (see §5.1). Send the full proposal fields to retain, plus any changes. The `proposerId` and `voteId` cannot be changed. If updating to `status: "live"`, the submission window rules apply (current time must be within `submissionStartDate` and `submissionEndDate`), and all required legal declarations must be present and accepted. **Once a proposal's status is `"live"`, the `status` field cannot be changed at all;** the server must ignore or reject any request that attempts to set a different `status` on a proposal that is already `"live"`. Attempting to change status on a live proposal returns `400 Bad Request`.
+Same structure as `POST /proposals` (see §5.1). Send the full proposal fields to
+retain, plus any changes. The `proposerId` and `voteId` cannot be changed. If
+updating to `status: "live"`, the submission window rules apply (current time
+must be within `submissionStartDate` and `submissionEndDate`), and all required
+legal declarations must be present and accepted. **Once a proposal's status
+is `"live"`, the `status` field cannot be changed at all;** the server must
+ignore or reject any request that attempts to set a different `status` on a
+proposal that is already `"live"`. Attempting to change status on a live
+proposal returns `400 Bad Request`.
 
 #### Success Response — `200 OK`
 
@@ -1593,10 +1632,10 @@ Returned when:
   applicable).
 - The proposal's current status is `"live"` and the request attempts to change
   `status` to any other value (once live, status is immutable).
-- Updating to `status: "live"` outside the budget's submission window (after
+- Updating to `status: "live"` outside the vote's submission window (after
   `submissionEndDate` or before `submissionStartDate`).
 - Updating to `status: "live"` without required legal declarations.
-- Current time is after the budget's `reviewEndDate` (the proposal is locked and
+- Current time is after the vote's `reviewEndDate` (the proposal is locked and
   cannot be updated).
 
 ```json
@@ -1611,7 +1650,7 @@ Or when the proposal is locked after the review period:
 ```json
 {
   "status": "error",
-  "message": "Proposal cannot be updated after the budget review period has ended (reviewEndDate)."
+  "message": "Proposal cannot be updated after the vote review period has ended (reviewEndDate)."
 }
 ```
 
@@ -1672,7 +1711,7 @@ Returned when:
 
 ### 5.3 `PUT /proposals/{proposalId}/withdraw`
 
-Allows the proposal owner (proposer) or a **budget admin** to withdraw a **live
+Allows the proposal owner (proposer) or a **vote admin** to withdraw a **live
 ** proposal. The request body is stored in `withdrawalDetails`. No other fields
 of the proposal may be changed; this endpoint only performs the withdrawal.
 
@@ -1680,18 +1719,18 @@ of the proposal may be changed; this endpoint only performs the withdrawal.
 
 - **Proposer** — Authenticated user's `userId` matches the proposal's
   `proposerId`. The proposal's status is set to `"withdrawnByProposer"`.
-  Withdrawal is allowed until the budget's `feedbackEndDate`.
-- **Budget admin** — Authenticated user's `userId` is in the proposal's budget
-  `admins` array. The proposal's status is set to `"withdrawnByAdmin"`.
-  Withdrawal is allowed until the budget's `reviewEndDate`.
+  Withdrawal is allowed until the vote's `feedbackEndDate`.
+- **Vote admin** — Authenticated user's `userId` is in the proposal's vote
+  `adminVoteIds` array. The proposal's status is set to `"withdrawnByAdmin"`.
+  Withdrawal is allowed until the vote's `reviewEndDate`.
 
 **Constraints:**
 
-- Only the proposer or a budget admin can call this endpoint.
+- Only the proposer or a vote admin can call this endpoint.
 - The proposal's current status must be `"live"`. Draft, already withdrawn, or
   archived proposals cannot be withdrawn via this endpoint.
-- **Proposer:** withdrawal only allowed until the budget's `feedbackEndDate`. *
-  *Budget admin:** withdrawal only allowed until the budget's `reviewEndDate`.
+- **Proposer:** withdrawal only allowed until the vote's `feedbackEndDate`. *
+  *Vote admin:** withdrawal only allowed until the vote's `reviewEndDate`.
 
 #### Headers
 
@@ -1718,8 +1757,8 @@ and `withdrawalDetails.date` to the current time (ISO 8601).
 #### Success Response — `200 OK`
 
 Returns the updated proposal document. The `status` is `"withdrawnByProposer"`
-when the proposer withdrew, or `"withdrawnByAdmin"` when a budget admin
-withdrew. The `withdrawalDetails` object is populated in both cases.
+when the proposer withdrew, or `"withdrawnByAdmin"` when a vote admin withdrew.
+The `withdrawalDetails` object is populated in both cases.
 
 Example (proposer withdrawal):
 
@@ -1743,7 +1782,7 @@ Example (proposer withdrawal):
 }
 ```
 
-When a budget admin withdraws, `status` is `"withdrawnByAdmin"` and
+When a vote admin withdraws, `status` is `"withdrawnByAdmin"` and
 `withdrawalDetails.userId` is the admin's address.
 
 #### Error Response — `400 Bad Request`
@@ -1752,10 +1791,10 @@ Returned when:
 
 - The proposal's current status is not `"live"` (e.g., already withdrawn, or
   still draft).
-- **Proposer** calls after the budget's `feedbackEndDate` (the proposer
-  withdrawal window has closed).
-- **Budget admin** calls after the budget's `reviewEndDate` (the admin
-  withdrawal window has closed).
+- **Proposer** calls after the vote's `feedbackEndDate` (the proposer withdrawal
+  window has closed).
+- **Vote admin** calls after the vote's `reviewEndDate` (the admin withdrawal
+  window has closed).
 - `category` is missing or not one of the allowed values.
 
 ```json
@@ -1770,7 +1809,7 @@ Or when the proposer's withdrawal window has closed:
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be withdrawn by the proposer after the budget feedback period has ended (feedbackEndDate)."
+  "message": "Proposals cannot be withdrawn by the proposer after the vote feedback period has ended (feedbackEndDate)."
 }
 ```
 
@@ -1779,7 +1818,7 @@ Or when the admin's withdrawal window has closed:
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be withdrawn by an admin after the budget review period has ended (reviewEndDate)."
+  "message": "Proposals cannot be withdrawn by an admin after the vote review period has ended (reviewEndDate)."
 }
 ```
 
@@ -1796,8 +1835,8 @@ Returned when the token is missing or invalid or expired.
 
 #### Error Response — `403 Forbidden`
 
-Returned when the authenticated user is neither the proposal owner nor a budget
-admin for the proposal's budget.
+Returned when the authenticated user is neither the proposal owner nor a vote
+admin for the proposal's vote.
 
 ```json
 {
@@ -1919,15 +1958,15 @@ Returned when a database or internal server error occurs.
 
 ### 5.5 `POST /comments`
 
-Creates a new comment on a proposal. Authenticated users and budget admins can
+Creates a new comment on a proposal. Authenticated users and vote admins can
 comment. Comments can only be created on proposals with `status: "live"` and
-only until the budget's `feedbackEndDate`.
+only until the vote's `feedbackEndDate`.
 
 **Constraints:**
 
 - Requires authentication.
 - The proposal must exist and have `status: "live"`.
-- The current time must be before the proposal's budget `feedbackEndDate`.
+- The current time must be before the proposal's vote `feedbackEndDate`.
 - To create a **reply**, set `parentId` to the parent comment's ObjectId; omit
   `parentId` for a top-level comment.
 
@@ -1964,14 +2003,14 @@ Returns the created comment document.
 
 #### Error Response — `400 Bad Request`
 
-Returned when the proposal is not live, the current time is after the budget's
+Returned when the proposal is not live, the current time is after the vote's
 `feedbackEndDate`, or request validation fails (e.g., missing `proposalId` or
 `content`, invalid ObjectId).
 
 ```json
 {
   "status": "error",
-  "message": "Comments can only be added to live proposals before the budget feedback period ends (feedbackEndDate)."
+  "message": "Comments can only be added to live proposals before the vote feedback period ends (feedbackEndDate)."
 }
 ```
 
@@ -2059,7 +2098,7 @@ Toggles a like from the authenticated user on the comment. If the user has not
 already liked the comment, the like is added. If the user has already liked the
 comment, the like is removed. Only **live** comments can be liked (withdrawn
 comments cannot be liked). The comment must belong to a proposal with
-`status: "live"`, and the current time must be before the proposal's budget
+`status: "live"`, and the current time must be before the proposal's vote
 `feedbackEndDate`. At most one like per user per comment.
 
 **Constraints:**
@@ -2067,7 +2106,7 @@ comments cannot be liked). The comment must belong to a proposal with
 - Requires authentication.
 - The comment must exist, have `status: "live"` (only live comments can be
   liked), and its proposal must be `live`.
-- Current time must be before the proposal's budget `feedbackEndDate`.
+- Current time must be before the proposal's vote `feedbackEndDate`.
 
 #### Headers
 
@@ -2117,7 +2156,7 @@ When the like was removed (the user had already liked):
 #### Error Response — `400 Bad Request`
 
 Returned when the comment's status is not `"live"` (e.g., withdrawn by admin),
-the comment's proposal is not live, or the current time is after the budget's
+the comment's proposal is not live, or the current time is after the vote's
 `feedbackEndDate`.
 
 ```json
@@ -2146,16 +2185,16 @@ As per other authenticated endpoints.
 
 ### 5.8 `PUT /comments/{commentId}/withdraw`
 
-Allows a **budget admin** to withdraw a **live** comment. The comment's status
-is set to `"withdrawnByAdmin"` and the request body is stored in
+Allows a **vote admin** to withdraw a **live** comment. The comment's status is
+set to `"withdrawnByAdmin"` and the request body is stored in
 `withdrawalDetails`. No other fields of the comment may be changed.
 
 **Constraints:**
 
-- Only a budget admin (authenticated user's `userId` is in the comment's
-  proposal budget `admins` array) can call this endpoint.
+- Only a vote admin (authenticated user's `userId` is in the comment's proposal
+  vote `adminVoteIds` array) can call this endpoint.
 - The comment's current status must be `"live"`.
-- Withdrawal is only allowed until the proposal's budget `feedbackEndDate`.
+- Withdrawal is only allowed until the proposal's vote `feedbackEndDate`.
 
 #### Headers
 
@@ -2204,7 +2243,7 @@ Returns the updated comment document with `status: "withdrawnByAdmin"` and
 
 #### Error Response — `400 Bad Request`
 
-Returned when the comment is not live, the current time is after the budget's
+Returned when the comment is not live, the current time is after the vote's
 `feedbackEndDate`, or `category` is missing or invalid.
 
 ```json
@@ -2219,7 +2258,7 @@ Or when the withdrawal window has closed:
 ```json
 {
   "status": "error",
-  "message": "Comments cannot be withdrawn by an admin after the budget feedback period has ended (feedbackEndDate)."
+  "message": "Comments cannot be withdrawn by an admin after the vote feedback period has ended (feedbackEndDate)."
 }
 ```
 
@@ -2227,8 +2266,8 @@ Or when the withdrawal window has closed:
 #### Error Response — `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`
 [//]: # (@formatter:on)
 
-As per other authenticated endpoints (403 when the user is not a budget admin
-for the comment's proposal).
+As per other authenticated endpoints (403 when the user is not a vote admin for
+the comment's proposal).
 
 ---
 
@@ -2246,14 +2285,14 @@ must be invalidated when the underlying data changes or when the TTL expires.
 Client-side caching may follow the same TTLs or use `Cache-Control` when
 present; session and write endpoints must not be cached.
 
-| Endpoint / scope | Rate limit | Window | Cache (server) |
-|------------------|------------|--------|-----------------|
-| **Public read (Section 3)** — `GET /votes`, `GET /votes/{voteId}`, `GET /votes/{voteId}/categories`, `GET /proposals`, `GET /proposals/{proposalId}`, `GET /comments`, `GET /comments/{commentId}`, `GET /comments/{commentId}/replies` | 200 per IP | 1 min | 30 s |
-| `POST /session` (request nonce) | 5 per IP | 1 min | — |
-| `PUT /session` (complete sign-in) | 10 per IP | 1 min | — |
-| `GET /session` (check session) | 60 per IP | 1 min | — |
-| `DELETE /session` (logout) | 20 per IP | 1 min | — |
-| **Authenticated write (Section 5)** — `POST /proposals`, `PUT /proposals/{proposalId}`, `PUT /proposals/{proposalId}/withdraw`, `DELETE /proposals/{proposalId}`, `POST /comments`, `PUT /comments/{commentId}`, `POST /comments/{commentId}/like`, `PUT /comments/{commentId}/withdraw` | 10 per user | 1 min | — |
+| Endpoint / scope                                                                                                                                                                                                                                                                         | Rate limit  | Window | Cache (server) |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|--------|----------------|
+| **Public read (Section 3)** — `GET /votes`, `GET /votes/{voteId}`, `GET /votes/{voteId}/categories`, `GET /proposals`, `GET /proposals/{proposalId}`, `GET /comments`, `GET /comments/{commentId}`, `GET /comments/{commentId}/replies`                                                  | 200 per IP  | 1 min  | 30 s           |
+| `POST /session` (request nonce)                                                                                                                                                                                                                                                          | 5 per IP    | 1 min  | —              |
+| `PUT /session` (complete sign-in)                                                                                                                                                                                                                                                        | 10 per IP   | 1 min  | —              |
+| `GET /session` (check session)                                                                                                                                                                                                                                                           | 60 per IP   | 1 min  | —              |
+| `DELETE /session` (logout)                                                                                                                                                                                                                                                               | 20 per IP   | 1 min  | —              |
+| **Authenticated write (Section 5)** — `POST /proposals`, `PUT /proposals/{proposalId}`, `PUT /proposals/{proposalId}/withdraw`, `DELETE /proposals/{proposalId}`, `POST /comments`, `PUT /comments/{commentId}`, `POST /comments/{commentId}/like`, `PUT /comments/{commentId}/withdraw` | 10 per user | 1 min  | —              |
 
 ---
 
@@ -2281,7 +2320,7 @@ validation; clients should not rely on them.
 |-------------------------------|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **400 Bad Request**           | Invalid or disallowed request.      | Invalid path/query/body (e.g. bad ObjectId, missing required field), validation failures, business-rule violations (e.g. submission window closed, live proposal status change, comment not withdrawable). |
 | **401 Unauthorized**          | Authentication required or invalid. | Missing or invalid JWT (cookie), expired session, or unauthenticated access to an endpoint that requires a session.                                                                                        |
-| **403 Forbidden**             | Authenticated but not allowed.      | User is logged in but lacks permission (e.g. not the proposer, not a budget admin) for the requested action.                                                                                               |
+| **403 Forbidden**             | Authenticated but not allowed.      | User is logged in but lacks permission (e.g. not the proposer, not a vote admin) for the requested action.                                                                                                 |
 | **404 Not Found**             | Resource not found.                 | No resource for the given id. For `GET /proposals/{proposalId}`, when the proposal exists but the caller is not allowed to see it, the API returns **403 Forbidden** instead.                              |
 | **429 Too Many Requests**     | Rate limit exceeded.                | Per-IP or per-user limit exceeded (see Section 6).                                                                                                                                                         |
 | **500 Internal Server Error** | Server-side failure.                | Unexpected errors (e.g. database or external service failure). The `message` may be generic; details are not guaranteed.                                                                                   |
@@ -2306,16 +2345,17 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 - **PATCH** — Backwards-compatible fixes and clarifications (e.g., typo
   corrections, clarified wording, no contract change).
 
-| Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                |
-|---------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.0.0   | 2026-02-19 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                                   |
-| 0.2.6   | 2026-02-19 | Updates to grammar and formatting.                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 0.2.5   | 2026-02-18 | `GET /proposals`: `status` parameter documented as accepting comma-separated values (e.g. `live,withdrawn`) to return proposals in any of the given statuses. Note updated accordingly.                                                                                                                                                                                                                                                    |
-| 0.2.4   | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminBudgetIds` (array of budget IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
-| 0.2.3   | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or budget admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly.                                                                                                               |
-| 0.2.2   | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking.                                                                                                 |
-| 0.2.1   | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`.                                                                                                                                                                                              |
-| 0.2.0   | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history.                                                                                                                                                                                                                                                                                                                                                        |
-| 0.1.0   | 2026-02-03 | Initial specification: public endpoints (§3), authentication (§4), authenticated write endpoints (§5).                                                                                                                                                                                                                                                                                                                                     |
+| Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.0.0   | 2026-02-20 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                               |
+| 0.2.7   | 2026-02-20 | Terminology update - Rename "Budget" item to "Vote" to better align future use cases                                                                                                                                                                                                                                                                                                                                                   |
+| 0.2.6   | 2026-02-19 | Updates to grammar and formatting.                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 0.2.5   | 2026-02-18 | `GET /proposals`: `status` parameter documented as accepting comma-separated values (e.g. `live,withdrawn`) to return proposals in any of the given statuses. Note updated accordingly.                                                                                                                                                                                                                                                |
+| 0.2.4   | 2026-02-18 | `GET /session`: success response now includes optional `name` (user display name from User record) and optional `adminVoteIds` (array of vote IDs where the user is an admin; present only when non-empty). `GET /proposals` list: clarified shortened `metaData` (strategicFocusArea, proposalType, initiativeType); list item example uses `summary` and trimmed metaData. `GET /proposals/{proposalId}` example includes `summary`. |
+| 0.2.3   | 2026-02-18 | `GET /proposals/{proposalId}`: when the proposal exists but the requester is not allowed to see it (e.g. draft/archived, not proposer or vote admin), the API returns **403 Forbidden** with a permission message; **404 Not Found** is returned only when no proposal exists with the given ID. §7.2 updated accordingly.                                                                                                             |
+| 0.2.2   | 2026-02-16 | Proposal request/response aligned with [proposal-schema-description.md](proposal-schema-description.md): `summary` (not `description`), full `metaData` structure and max lengths; server-set fields (`_id`, `proposerId`, `version`, `versions`, `submittedAt`, etc.) documented; references to schema/Proposal.js for internal tracking.                                                                                             |
+| 0.2.1   | 2026-02-16 | Legal declarations aligned with CBC Proposal Template PDF: four checkboxes (`dataProtection`, `publicVisibilityConsent`, `authorizationEntity`, `authorizationAttestation`) plus optional `submitterName`, `submitterRole`, `submitterEmail`.                                                                                                                                                                                          |
+| 0.2.0   | 2026-02-04 | Rate limiting & caching (Section 6), Error responses (Section 7), Revision history.                                                                                                                                                                                                                                                                                                                                                    |
+| 0.1.0   | 2026-02-03 | Initial specification: public endpoints (§3), authentication (§4), authenticated write endpoints (§5).                                                                                                                                                                                                                                                                                                                                 |
 
 ---

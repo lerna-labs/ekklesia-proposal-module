@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Proposal Schema – Field Reference                                                                       |
-| **Version**        | 0.1.1                                                                                                   |
+| **Version**        | 0.1.2                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | February 19, 2026                                                                                       |
+| **Last Revised**   | February 20, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -20,25 +20,29 @@ notes. It is based on the CBC Proposal Template FORM Final DRAFT PDF.
 Legend: **\*** = mandatory in PDF; **Not Public** = PDF marks field as not
 public (yellow).
 
-**Draft vs live:** For `status: "draft"`, only `voteId`, `title`, and `status` are required on create; `summary` and most `metaData` are optional. When submitting with `status: "live"`, the API and frontend enforce full validation (see [proposalCreateSchema.js](../validation/proposalCreateSchema.js) and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
+**Draft vs live:** For `status: "draft"`, only `voteId`, `title`, and `status`
+are required on create; `summary` and most `metaData` are optional. When
+submitting with `status: "live"`, the API and frontend enforce full validation (
+see [proposalCreateSchema.js](../validation/proposalCreateSchema.js)
+and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
 
 ---
 
 ## Top-level (proposal root)
 
-| PDF section | PDF field | Schema path | Required | Max length / type | Validation / notes |
-|-------------|-----------|-------------|----------|-------------------|---------------------|
-| — | (proposer) | `proposerId` | Yes | String (ref User) | Set from authenticated user. |
-| — | (budget) | `voteId` | Yes | ObjectId (ref Budget) | Must be valid budget. |
-| 1 | Proposal Title * | `title` | Yes | 2–100 chars | Short text. |
-| 1 | Executive Summary * | `summary` | Yes (when live) | 2–2000 chars | Text area; optional for draft. |
-| — | (status) | `status` | Yes | enum | `draft`, `live`, `withdrawnByProposer`, `withdrawnByAdmin`, `archived`. |
-| — | (submitted at) | `submittedAt` | No | Date | Set on submit. |
-| — | (total budget) | `totalBudget` | No | Number | Computed or stored. |
-| — | (signature) | `signature` | No | String | Optional. |
-| — | (version) | `version` | No | Number, default 1 | Incremented on save. |
-| — | (withdrawal) | `withdrawalDetails` | No | Object | See below. |
-| — | (versions) | `versions` | No | Array | References to archived versions. |
+| PDF section | PDF field           | Schema path         | Required        | Max length / type   | Validation / notes                                                      |
+|-------------|---------------------|---------------------|-----------------|---------------------|-------------------------------------------------------------------------|
+| —           | (proposer)          | `proposerId`        | Yes             | String (ref User)   | Set from authenticated user.                                            |
+| —           | (vote)              | `voteId`            | Yes             | ObjectId (ref Vote) | Must be valid vote.                                                     |
+| 1           | Proposal Title *    | `title`             | Yes             | 2–100 chars         | Short text.                                                             |
+| 1           | Executive Summary * | `summary`           | Yes (when live) | 2–2000 chars        | Text area; optional for draft.                                          |
+| —           | (status)            | `status`            | Yes             | enum                | `draft`, `live`, `withdrawnByProposer`, `withdrawnByAdmin`, `archived`. |
+| —           | (submitted at)      | `submittedAt`       | No              | Date                | Set on submit.                                                          |
+| —           | (total budget)      | `totalBudget`       | No              | Number              | Computed or stored.                                                     |
+| —           | (signature)         | `signature`         | No              | String              | Optional.                                                               |
+| —           | (version)           | `version`           | No              | Number, default 1   | Incremented on save.                                                    |
+| —           | (withdrawal)        | `withdrawalDetails` | No              | Object              | See below.                                                              |
+| —           | (versions)          | `versions`          | No              | Array               | References to archived versions.                                        |
 
 ### withdrawalDetails (when present)
 
@@ -63,7 +67,7 @@ public (yellow).
 
 | PDF field                         | Schema path                         | Required | Max length / type            | Validation / notes                                               |
 |-----------------------------------|-------------------------------------|----------|------------------------------|------------------------------------------------------------------|
-| Strategic Focus Area *            | `metaData.strategicFocusArea`       | Yes      | ObjectId (ref Category)      | Select one; must be category from budget.                        |
+| Strategic Focus Area *            | `metaData.strategicFocusArea`       | Yes      | ObjectId (ref Category)      | Select one; must be category from vote.                          |
 | Key Performance Indicators *      | `metaData.keyPerformanceIndicators` | Yes      | Array (min 1)                | Each item below.                                                 |
 | — (per KPI)                       | `[].kpi`                            | Yes      | String (KPI title or custom) | Pre-filled from category or custom; custom max 400 chars in PDF. |
 | Contribution Strategy * (per KPI) | `[].contributionStrategy`           | Yes      | 800 chars                    | Text area per KPI.                                               |
@@ -242,8 +246,6 @@ Audits*, *Legal & Compliance*, *Engagement & Ecosystem support*, *Research*,
 
 ## Related docs
 
-- [proposal-schema-gap-analysis.md](proposal-schema-gap-analysis.md) – Gap
-  analysis vs CBC template and improvement list.
 - [api-specification.md](api-specification.md) – API request/response for
   proposals.
 - Schema implementation: [../schema/Proposal.js](../schema/Proposal.js).
@@ -268,5 +270,6 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                       |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.2   | 2026-02-20 | Update references to "Budget" item to be renamed "Votes"                                                                                                                                                                          |
 | 0.1.1   | 2026-02-19 | Grammar corrections and formatting tweaks                                                                                                                                                                                         |
 | 0.1.0   | 2026-02-18 | Document metadata block and Revision history. Content aligned with implementation: draft vs live requirements, cost categories source, link titles 1–255 chars, quantity &gt; 0, treasury/prior-funding optional-for-draft notes. |

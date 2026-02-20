@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Login Flow (Frontend & Backend)                                                                         |
-| **Version**        | 0.1.1                                                                                                   |
+| **Version**        | 0.1.2                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | February 19, 2026                                                                                       |
+| **Last Revised**   | February 20, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -62,7 +62,7 @@ wallet.
 
 **Response (200):** `{ dataHex, userId, userIdHex, signerAddressHex }`
 
-Nonces are single-use, expire after five minutes, and are rate-limited. Session
+Nonce are single-use, expire after five minutes, and are rate-limited. Session
 documents are cleaned up by a TTL index (e.g., one hour) and by explicit cleanup
 after successful login.
 
@@ -117,10 +117,10 @@ API.
 1. `verifyToken(req)` validates `req.cookies.token`: signature, expiry, and
    presence of `userId`.
 2. On success, `req.userId` and `req.signType` are set; handler loads `User`
-   name and budgets where the user is admin.
-3. Returns `{ userId, name?, adminBudgetIds? }`.
+   name and votes where the user is admin.
+3. Returns `{ userId, name?, adminVoteIds? }`.
 
-**Response (200):** `{ userId, name?, adminBudgetIds? }`  
+**Response (200):** `{ userId, name?, adminVoteIds? }`  
 **Response (401):** Missing or invalid token (handled by `isAuthenticated`).
 
 ### 4. Logout — `DELETE /api/v0/session`
@@ -255,7 +255,7 @@ sequenceDiagram
   origin (e.g. `FRONTEND_URL`).
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
   Cookie and `localStorage` use is environment-aware (secure, sameSite).
-- Nonces are stored in MongoDB (`Session`), single-use and short-lived; sessions
+- Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
   are cleaned up by TTL and after successful login. Script/multisig addresses
   use a separate multisig flow (not detailed here).
 
@@ -285,5 +285,6 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                         |
 |---------|------------|-----------------------------------------------------|
+| 0.1.2   | 2026-02-20 | Update to rename "Budget" to "Vote"                 |
 | 0.1.1   | 2026-02-19 | Grammar and formatting updates.                     |
 | 0.1.0   | 2026-02-18 | Document metadata block and Revision history added. |
