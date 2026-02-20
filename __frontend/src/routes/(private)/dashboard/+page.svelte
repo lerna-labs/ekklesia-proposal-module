@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import { logout } from "$stores/sessionManager.js";
   import ProposalDelete from "$lib/ProposalDelete.svelte";
+  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
   import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
@@ -22,10 +23,17 @@
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
+  let withdrawDialogOpen = $state(false);
+  let withdrawProposal = $state(null);
 
   function openDeleteDialog(proposal) {
     deleteProposal = proposal;
     deleteDialogOpen = true;
+  }
+
+  function openWithdrawDialog(proposal) {
+    withdrawProposal = proposal;
+    withdrawDialogOpen = true;
   }
 
   function navigatePage(pageNum) {
@@ -171,7 +179,8 @@
                           variant="outline"
                           size="icon"
                           href={editHref}
-                          aria-label="Edit"
+                          aria-label="Edit proposal"
+                          title="Edit proposal"
                         >
                           <PencilIcon class="size-4" />
                         </Button.Root>
@@ -180,8 +189,8 @@
                             variant="outline"
                             size="icon"
                             href={viewUrl}
-                            aria-label="View"
-                            title="View"
+                            aria-label="View proposal"
+                            title="View proposal"
                           >
                             <EyeIcon class="size-4" />
                           </Button.Root>
@@ -190,28 +199,33 @@
                             variant="outline"
                             size="icon"
                             disabled
-                            aria-label="View"
-                            title="View (no vote slug)"
+                            aria-label="View proposal"
+                            title="View proposal (no vote slug)"
                           >
                             <EyeIcon class="size-4" />
                           </Button.Root>
                         {/if}
-                        <Button.Root
-                          variant="outline"
-                          size="icon"
-                          aria-label="Delete draft"
-                          title={proposal.status === "draft"
-                            ? "Delete draft proposal"
-                            : "Only draft proposals can be deleted"}
-                          disabled={proposal.status !== "draft"}
-                          onclick={() => openDeleteDialog(proposal)}
-                        >
-                          <Trash2Icon
-                            class="size-4 {proposal.status === 'draft'
-                              ? 'text-black'
-                              : 'text-muted-foreground'}"
-                          />
-                        </Button.Root>
+                        {#if proposal.status === "draft"}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            aria-label="Delete draft"
+                            title="Delete draft proposal"
+                            onclick={() => openDeleteDialog(proposal)}
+                          >
+                            <Trash2Icon class="size-4 text-black" />
+                          </Button.Root>
+                        {:else if proposal.status === "live"}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            aria-label="Withdraw proposal"
+                            title="Withdraw proposal"
+                            onclick={() => openWithdrawDialog(proposal)}
+                          >
+                            <Trash2Icon class="size-4 text-black" />
+                          </Button.Root>
+                        {/if}
                       </div>
                     </td>
                   </tr>
@@ -266,5 +280,10 @@
 <ProposalDelete
   bind:open={deleteDialogOpen}
   proposal={deleteProposal}
+  onSuccess={() => invalidateAll()}
+/>
+<ProposalWithdrawal
+  bind:open={withdrawDialogOpen}
+  proposal={withdrawProposal}
   onSuccess={() => invalidateAll()}
 />
