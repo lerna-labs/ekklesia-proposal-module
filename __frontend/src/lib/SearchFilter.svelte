@@ -22,7 +22,7 @@
       Array.isArray($user.adminVoteIds) &&
       voteId &&
       $user.adminVoteIds.includes(String(voteId))
-    )
+    ),
   );
 
   const ALL_VALUE = "__all__";
@@ -62,19 +62,6 @@
     if (pt.trim()) return true;
     if (it.trim()) return true;
     return false;
-  });
-
-  /** Group categories by pillar for the dropdown; pillars sorted, uncategorized last */
-  const categoriesByPillar = $derived.by(() => {
-    const map = new Map();
-    for (const cat of categories) {
-      const pillar = cat?.metaData?.pillar ?? "";
-      const key = pillar || "\uFFFF"; // sort empty last
-      if (!map.has(key)) map.set(key, { pillar: pillar || "Other", items: [] });
-      map.get(key).items.push(cat);
-    }
-    const entries = [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
-    return entries.map(([, g]) => g);
   });
 
   $effect(() => {
@@ -133,11 +120,16 @@
     } else {
       searchParams.delete("initiativeType");
     }
-    // Use literal comma in URL for status (live,draft) instead of encoded %2C
+    // Use literal commas in URL for status and category instead of encoded %2C
     let qs = searchParams.toString();
-    const statusMatch = qs.match(/\bstatus=([^&]*)/);
-    if (statusMatch) {
-      qs = qs.replace(/\bstatus=[^&]*/, "status=" + decodeURIComponent(statusMatch[1]));
+    for (const key of ["status", "category"]) {
+      const match = qs.match(new RegExp(`\\b${key}=([^&]*)`));
+      if (match) {
+        qs = qs.replace(
+          new RegExp(`\\b${key}=[^&]*`),
+          key + "=" + decodeURIComponent(match[1]),
+        );
+      }
     }
     const url = `${page.url.pathname}?${qs}`;
     goto(url);
@@ -180,48 +172,40 @@
       <Separator.Root class="mb-3" />
       <div class="space-y-4">
         <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">
-            Category
-          </Label>
+          <Label class="text-xs text-muted-foreground">Category</Label>
           <Select.Root type="multiple" bind:value={pendingCategories}>
-            <Select.Trigger class="w-full" aria-label="Category">
-              {categoryTriggerLabel}
+            <Select.Trigger class="w-full min-w-0" aria-label="Category">
+              <span class="truncate block min-w-0">{categoryTriggerLabel}</span>
             </Select.Trigger>
             <Select.Content>
-              <Select.Group>
+              <Select.Group aria-label="Categories">
                 <Select.Item
                   value={ALL_CATEGORIES_VALUE}
                   label="All Categories"
                 >
                   All Categories
                 </Select.Item>
+                {#each categories as cat (cat._id)}
+                  <Select.Item
+                    value={String(cat._id)}
+                    label={cat.title ?? String(cat._id)}
+                  >
+                    {cat.title ?? cat._id}
+                  </Select.Item>
+                {/each}
               </Select.Group>
-              {#each categoriesByPillar as group (group.pillar)}
-                <Select.Group>
-                  <Select.GroupHeading>{group.pillar}</Select.GroupHeading>
-                  {#each group.items as cat (cat._id)}
-                    <Select.Item
-                      value={String(cat._id)}
-                      label={cat.title ?? String(cat._id)}
-                      class="pl-3"
-                    >
-                      {cat.title ?? cat._id}
-                    </Select.Item>
-                  {/each}
-                </Select.Group>
-              {/each}
             </Select.Content>
           </Select.Root>
         </div>
         <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">
-            Proposal type
-          </Label>
+          <Label class="text-xs text-muted-foreground">Proposal type</Label>
           <Select.Root type="single" bind:value={pendingProposalType}>
-            <Select.Trigger class="w-full" aria-label="Proposal type">
-              {pendingProposalType === ALL_VALUE
-                ? "All types"
-                : pendingProposalType}
+            <Select.Trigger class="w-full min-w-0" aria-label="Proposal type">
+              <span class="truncate block min-w-0">
+                {pendingProposalType === ALL_VALUE
+                  ? "All types"
+                  : pendingProposalType}
+              </span>
             </Select.Trigger>
             <Select.Content>
               <Select.Item value={ALL_VALUE}>All types</Select.Item>
@@ -232,14 +216,14 @@
           </Select.Root>
         </div>
         <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">
-            Initiative type
-          </Label>
+          <Label class="text-xs text-muted-foreground">Initiative type</Label>
           <Select.Root type="single" bind:value={pendingInitiativeType}>
-            <Select.Trigger class="w-full" aria-label="Initiative type">
-              {pendingInitiativeType === ALL_VALUE
-                ? "All initiative types"
-                : pendingInitiativeType}
+            <Select.Trigger class="w-full min-w-0" aria-label="Initiative type">
+              <span class="truncate block min-w-0">
+                {pendingInitiativeType === ALL_VALUE
+                  ? "All initiative types"
+                  : pendingInitiativeType}
+              </span>
             </Select.Trigger>
             <Select.Content>
               <Select.Item value={ALL_VALUE}>All initiative types</Select.Item>
@@ -263,7 +247,10 @@
               for="filter-status-withdrawn"
               class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
             >
-              <Checkbox id="filter-status-withdrawn" bind:checked={pendingWithdrawn} />
+              <Checkbox
+                id="filter-status-withdrawn"
+                bind:checked={pendingWithdrawn}
+              />
               <span class="cursor-pointer font-normal">Withdrawn</span>
             </label>
             {#if isVoteAdmin}
@@ -271,7 +258,10 @@
                 for="filter-status-draft"
                 class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
               >
-                <Checkbox id="filter-status-draft" bind:checked={pendingDraft} />
+                <Checkbox
+                  id="filter-status-draft"
+                  bind:checked={pendingDraft}
+                />
                 <span class="cursor-pointer font-normal">Draft</span>
               </label>
             {/if}
