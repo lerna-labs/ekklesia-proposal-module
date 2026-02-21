@@ -147,22 +147,28 @@ const legalDeclarationsSchema = z.object({
   submitterEmail: z.string().trim().min(1, "Email is required").max(100).email("Enter a valid email"),
 });
 
+const strategyFrameworkSchema = z.object({
+  pillars: z
+    .array(
+      z
+        .string()
+        .length(24, "Please choose at least one pillar")
+        .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
+    )
+    .min(1, "Please choose at least one pillar"),
+  pillarRationale: z
+    .string()
+    .min(1, "Rationale for your selection is required")
+    .max(150000),
+  kpiAlignment: z
+    .string()
+    .min(1, "Alignment to KPIs is required")
+    .max(100000),
+});
+
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
-  strategicFocusArea: z
-    .string()
-    .min(1, "Please choose a strategic focus area")
-    .length(24, "Please choose a strategic focus area")
-    .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId"),
-  keyPerformanceIndicators: z
-    .array(
-      z.object({
-        kpi: z.string().min(1, "KPI is required").max(400),
-        contributionStrategy: z.string().min(1, "Contribution strategy is required").max(800),
-      })
-    )
-    .min(1, "At least one KPI is required")
-    .default([]),
+  strategyFramework: strategyFrameworkSchema,
   executionRoadmap: executionRoadmapSchema.optional().default({ workPackages: [] }),
   financialAndAdministrative: financialAndAdministrativeSchema.optional().default({}),
   contractingParty: contractingPartySchema.optional().default({}),
