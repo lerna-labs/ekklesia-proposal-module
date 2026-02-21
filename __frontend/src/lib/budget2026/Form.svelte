@@ -4,8 +4,7 @@
   import Input from "$lib/form/Input.svelte";
   import Textarea from "$lib/form/Textarea.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
-  import FormFocusArea from "./FormFocusArea.svelte";
-  import FormFocusAreaKPI from "./FormFocusAreaKPI.svelte";
+  import FormStrategyFramework from "./FormStrategyFramework.svelte";
   import FormTimeline from "./FormTimeline.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import FormAdministrative from "./FormAdministrative.svelte";
@@ -110,8 +109,7 @@
     status: "draft",
     metaData: {
       trackRecord: "",
-      strategicFocusArea: "",
-      keyPerformanceIndicators: [],
+      strategyFramework: { pillars: [], pillarRationale: "", kpiAlignment: "" },
       executionRoadmap: {
         projectStartDate: undefined,
         projectEndDate: undefined,
@@ -332,37 +330,18 @@
       <Card.Root>
         <Card.Header>
           <Card.Title class="text-2xl font-medium">
-            2. Strategic Roadmap Alignment
+            2. Alignment to Strategy framework
           </Card.Title>
         </Card.Header>
         <Card.Content class="space-y-4">
-          <FormFocusArea
-            id="strategicFocusArea"
-            {categories}
+          <FormStrategyFramework
             validationErrors={validationErrors?.properties?.metaData}
-            bind:value={formData.metaData.strategicFocusArea}
-            hasKpis={(formData.metaData.keyPerformanceIndicators?.length ?? 0) >
-              0}
-            onUpdate={(newCategory) => {
-              formData.metaData.strategicFocusArea = newCategory;
-              formData.metaData.keyPerformanceIndicators = [];
-            }}
+            bind:pillars={formData.metaData.strategyFramework.pillars}
+            bind:pillarRationale={
+              formData.metaData.strategyFramework.pillarRationale
+            }
+            bind:kpiAlignment={formData.metaData.strategyFramework.kpiAlignment}
           />
-          {#if formData.metaData.strategicFocusArea}
-            {#key formData.metaData.strategicFocusArea}
-              <FormFocusAreaKPI
-                id="keyPerformanceIndicators"
-                {categories}
-                validationErrors={validationErrors?.properties?.metaData}
-                category={formData.metaData.strategicFocusArea}
-                bind:value={formData.metaData.keyPerformanceIndicators}
-                class="mt-4"
-                onUpdate={(kpis) => {
-                  formData.metaData.keyPerformanceIndicators = kpis;
-                }}
-              />
-            {/key}
-          {/if}
         </Card.Content>
       </Card.Root>
     </div>
@@ -390,8 +369,8 @@
 
           {#if (formData.metaData.executionRoadmap.workPackages?.length ?? 0) > 0}
             <FormFinancialSummary
-              validationErrors={validationErrors?.properties?.metaData?.properties
-                ?.financialAndAdministrative}
+              validationErrors={validationErrors?.properties?.metaData
+                ?.properties?.financialAndAdministrative}
               formData={formData.metaData}
             />
           {/if}
