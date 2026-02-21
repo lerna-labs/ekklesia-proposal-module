@@ -12,7 +12,6 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
-import { validateCreateProposalBody } from "../../../validation/proposalCreateSchema.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 
 /**
@@ -81,17 +80,14 @@ router.post("/", async (req, res) => {
       });
     }
 
-    let validation;
-    if (voteDoc.validationScript) {
-      const script = await loadValidationScript(voteDoc.validationScript);
-      if (script) {
-        validation = script.validate(req.body);
-      } else {
-        validation = validateCreateProposalBody(req.body);
-      }
-    } else {
-      validation = validateCreateProposalBody(req.body);
+    const script = await loadValidationScript(voteDoc.validationScript);
+    if (!script) {
+      return res.status(503).json({
+        status: "error",
+        message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
+      });
     }
+    const validation = script.validate(req.body);
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
@@ -423,16 +419,20 @@ router.put("/:proposalId", async (req, res) => {
       : null;
 
     let validation;
-    if (voteDoc?.validationScript) {
-      const script = await loadValidationScript(voteDoc.validationScript);
-      if (script) {
-        validation = script.validate(req.body);
-      } else {
-        validation = validateCreateProposalBody(req.body);
-      }
-    } else {
-      validation = validateCreateProposalBody(req.body);
+    if (!voteDoc) {
+      return res.status(400).json({
+        status: "error",
+        message: "Proposal has no associated vote.",
+      });
     }
+    const script = await loadValidationScript(voteDoc.validationScript);
+    if (!script) {
+      return res.status(503).json({
+        status: "error",
+        message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
+      });
+    }
+    validation = script.validate(req.body);
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
