@@ -1,7 +1,6 @@
 <script>
   import * as Button from "$lib/components/ui/button";
   import ProposalCard from "$lib/ProposalCard.svelte";
-  import PillarInfo from "$lib/PillarInfo.svelte";
   let { data } = $props();
 
   let { vote, proposal, categories = [] } = $derived(data);
