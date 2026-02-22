@@ -69,7 +69,7 @@
       {/if}
     </Card.Title>
     {#if proposal.summary}
-      <Card.Description class="line-clamp-20">
+      <Card.Description class="line-clamp-20 pb-2">
         <Markdown content={proposal.summary} />
       </Card.Description>
     {/if}

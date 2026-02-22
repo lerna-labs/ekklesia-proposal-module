@@ -54,7 +54,7 @@
 {#if html}
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events -->
   <div
-    class="markdown prose prose-sm max-w-none dark:prose-invert {className}"
+    class="markdown max-w-none {className}"
     data-slot="markdown"
     role="article"
     onclick={handleContainerClick}
@@ -63,7 +63,10 @@
         const anchor = e.target.closest("a");
         if (anchor?.href) {
           e.preventDefault();
-          pendingLink = { href: anchor.href, title: anchor.title || anchor.textContent?.trim() || anchor.href };
+          pendingLink = {
+            href: anchor.href,
+            title: anchor.title || anchor.textContent?.trim() || anchor.href,
+          };
           linkDialogOpen = true;
         }
       }
@@ -100,16 +103,41 @@
             </InputGroup.Addon>
           </InputGroup.Root>
         {/if}
-        Exercise caution and verify the website's authenticity before sharing personal information. To proceed, click 'Continue' otherwise click 'Cancel'.
+        Exercise caution and verify the website's authenticity before sharing personal
+        information. To proceed, click 'Continue' otherwise click 'Cancel'.
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer class="gap-2">
       <Button.Root variant="outline" onclick={cancelOpenLink}>
         Cancel
       </Button.Root>
-      <Button.Root onclick={confirmOpenLink}>
-        Continue
-      </Button.Root>
+      <Button.Root onclick={confirmOpenLink}>Continue</Button.Root>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
+
+<style>
+  :global(div.markdown a) {
+    color: var(--mbo-electric-blue) !important;
+    text-decoration: none !important;
+    border-bottom: 1px dashed var(--mbo-electric-blue) !important;
+    padding-bottom: 2px;
+  }
+
+  :global(div.markdown a:hover) {
+    color: var(--mbo-cardano-blue) !important;
+    border-bottom: 1px dashed var(--mbo-cardano-blue) !important;
+  }
+
+  :global(div.markdown ul) {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  :global(div.markdown ol) {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+</style>
