@@ -18,7 +18,7 @@ export async function load({ fetch, url, parent }) {
 	const sort = VALID_SORT.has(url.searchParams.get('sort') || '') ? url.searchParams.get('sort') : 'date';
 	const direction = VALID_DIRECTION.has(url.searchParams.get('direction') || '') ? url.searchParams.get('direction') : 'desc';
 
-	const proposalsUrl = `/proposals?proposer=${encodeURIComponent(userId)}&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;
+	const proposalsUrl = `/proposals?proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;
 	const proposalsResponse = await api.fetch(fetch, proposalsUrl);
 	const json = await proposalsResponse.json();
 	const meta = json.meta ?? {};
