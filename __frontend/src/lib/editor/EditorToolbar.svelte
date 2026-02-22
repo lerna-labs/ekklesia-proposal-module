@@ -3,6 +3,7 @@
     BoldButton,
     ItalicButton,
     UnderlineButton,
+    InsertLink,
     Divider,
     Toolbar,
     UndoButton,
@@ -45,6 +46,10 @@
     >
       <i class="icon numbered-list"></i>
     </button>
+
+    <Divider />
+    <InsertLink />
+
     {#if quote}
       <Divider />
       <button

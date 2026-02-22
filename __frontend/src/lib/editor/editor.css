@@ -41,3 +41,15 @@
     padding-left: 0.5em;
     margin-left: 0.5em;
   }
+
+  .svelte-lexical a {
+    color: var(--mbo-electric-blue);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--mbo-electric-blue);
+    padding-bottom: 2px;
+  }
+
+  .svelte-lexical a:hover {
+    color: var(--mbo-cardano-blue);
+    border-bottom: 1px dashed var(--mbo-cardano-blue);
+  }
