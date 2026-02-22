@@ -5,15 +5,26 @@
     RichTextPlugin,
     HistoryPlugin,
     ListPlugin,
+    LinkPlugin,
+    FloatingLinkEditorPlugin,
     MarkdownShortcutPlugin,
     convertToMarkdownString,
     ALL_TRANSFORMERS,
     UNORDERED_LIST,
     ORDERED_LIST,
+    LINK,
     convertFromMarkdownString,
   } from "svelte-lexical";
-  import { ListNode, ListItemNode, QuoteNode } from "svelte-lexical";
+  import { ListNode, ListItemNode, QuoteNode, LinkNode } from "svelte-lexical";
   import { theme } from "svelte-lexical/dist/themes/default";
+  import {
+    $getSelection as getSelection,
+    $isRangeSelection as isRangeSelection,
+    CLICK_COMMAND,
+    COMMAND_PRIORITY_HIGH,
+  } from "lexical";
+  import { $isLinkNode as isLinkNode } from "@lexical/link";
+  import { $findMatchingParent as findMatchingParent } from "@lexical/utils";
   import EditorToolbar from "./EditorToolbar.svelte";
   import "./editor.css";
   /** When true, the quote formatting option is shown in the toolbar. Default false. */
@@ -21,7 +32,7 @@
 
   const initialConfig = {
     theme: theme,
-    nodes: [ListNode, ListItemNode, QuoteNode],
+    nodes: [ListNode, ListItemNode, QuoteNode, LinkNode],
     onError: (error) => {
       throw error;
     },
@@ -42,16 +53,39 @@
   };
 
   let composer = $state(Composer);
+  let editorScroller = $state(null);
 
   $effect(() => {
     if (!composer) return;
     const editor = composer.getEditor();
-    const unregister = editor.registerUpdateListener(() => {
+    const unregisterUpdate = editor.registerUpdateListener(() => {
       editor.read(() => {
         value = convertToMarkdownString(ALL_TRANSFORMERS);
       });
     });
-    return () => unregister();
+    const unregisterClick = editor.registerCommand(
+      CLICK_COMMAND,
+      (event) => {
+        const selection = getSelection();
+        if (!isRangeSelection(selection)) return false;
+        const node = selection.anchor.getNode();
+        const link = findMatchingParent(node, isLinkNode);
+        if (link && isLinkNode(link)) {
+          const url = link.getURL?.();
+          if (url) {
+            event?.preventDefault?.();
+            window.open(url, "_blank", "noopener,noreferrer");
+            return true;
+          }
+        }
+        return false;
+      },
+      COMMAND_PRIORITY_HIGH
+    );
+    return () => {
+      unregisterUpdate();
+      unregisterClick();
+    };
   });
 
   /** When value is set from outside (e.g. API prefill after mount), show it in the editor if the editor is still empty. */
@@ -70,8 +104,8 @@
     });
   });
 
-  // Use both list transformers - ORDERED_LIST should handle "1. " pattern
-  const listTransformers = [UNORDERED_LIST, ORDERED_LIST];
+  // List and link transformers for markdown shortcuts (e.g. "1. ", "- ", [text](url))
+  const markdownTransformers = [UNORDERED_LIST, ORDERED_LIST, LINK];
 
   let isSaving = $state(false);
 
@@ -94,7 +128,7 @@
   <div class="editor-shell svelte-lexical">
     <EditorToolbar {quote} />
     <div class="editor-container">
-      <div class="editor-scroller">
+      <div class="editor-scroller" bind:this={editorScroller}>
         <div class="editor">
           <ContentEditable />
         </div>
@@ -102,7 +136,11 @@
       <RichTextPlugin />
       <HistoryPlugin />
       <ListPlugin />
-      <MarkdownShortcutPlugin transformers={listTransformers} />
+      <LinkPlugin />
+      {#if editorScroller}
+        <FloatingLinkEditorPlugin anchorElem={editorScroller} />
+      {/if}
+      <MarkdownShortcutPlugin transformers={markdownTransformers} />
     </div>
   </div>
 </Composer>
