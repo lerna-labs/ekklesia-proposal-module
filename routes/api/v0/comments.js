@@ -72,6 +72,7 @@ async function formatComment(comment, proposal, vote, authenticatedUserId = null
     _id: comment._id,
     userType: type,
     userId: comment.userId,
+    parentId: comment.parentId ?? null,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
