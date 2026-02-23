@@ -1,6 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
+  import { shortenString } from "$lib/utils.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import { Heart, MessageSquare, MessagesSquare } from "lucide-svelte";
@@ -13,7 +14,13 @@
     canLike = false,
     isVoteAdmin = false,
     repliesData = [],
-    authorLabel = (c) => c?.user?.name ?? "Anonymous",
+    authorLabel = (c) => {
+      const u = c?.user;
+      const name = u?.name && String(u.name).trim();
+      if (name) return name;
+      const id = u?._id ?? c?.userId ?? "";
+      return shortenString(id, 12, true) || "—";
+    },
     canEditComment = () => false,
     onToggleLike,
     onToggleReplies,
@@ -22,7 +29,7 @@
     onWithdraw,
   } = $props();
 
-  const isOwn = $derived(currentUserId && comment?.user?._id === currentUserId);
+  const isOwn = $derived(currentUserId && (comment?.user?._id ?? comment?.userId) === currentUserId);
 </script>
 
 <Card.Root class="mb-4 {isReply ? 'ml-4' : ''}">
