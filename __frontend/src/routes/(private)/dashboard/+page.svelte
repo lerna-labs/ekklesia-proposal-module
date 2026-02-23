@@ -8,6 +8,7 @@
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
   import * as Button from "$lib/components/ui/button";
+  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -25,6 +26,13 @@
   let deleteProposal = $state(null);
   let withdrawDialogOpen = $state(false);
   let withdrawProposal = $state(null);
+  let withdrawalDetailsDialogProposal = $state(null);
+  let withdrawalDetailsDialogOpen = $state(false);
+
+  function openWithdrawalDetailsDialog(proposal) {
+    withdrawalDetailsDialogProposal = proposal;
+    withdrawalDetailsDialogOpen = true;
+  }
 
   function openDeleteDialog(proposal) {
     deleteProposal = proposal;
@@ -132,10 +140,10 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-border">
-                  <th class="text-left font-medium py-3 pl-0 pr-4">Title</th>
-                  <th class="text-right font-medium py-3 px-4">Vote</th>
-                  <th class="text-left font-medium py-3 px-4">Last updated</th>
-                  <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%]">
+                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top">Title</th>
+                  <th class="text-right font-medium py-3 px-4 whitespace-nowrap align-top">Total Budget</th>
+                  <th class="text-left font-medium py-3 px-4 whitespace-nowrap align-top">Last updated</th>
+                  <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-top">
                     Actions
                   </th>
                 </tr>
@@ -145,45 +153,77 @@
                   {@const editHref = `/dashboard/${proposal._id}/edit`}
                   {@const viewUrl = viewHref(proposal)}
                   {@const isLastRow = i === proposals.length - 1}
+                  {@const isWithdrawn = proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
                   <tr
                     class="border-b hover:bg-muted/50 {isLastRow
                       ? 'border-border'
                       : 'border-border/50'}"
                   >
-                    <td class="py-3 pl-0 pr-4 text-left">
+                    <td class="py-3 pl-0 pr-4 text-left align-top">
                       <div class="flex flex-wrap items-center gap-2">
-                        <a
-                          href={editHref}
-                          class="text-primary hover:underline font-medium"
-                        >
-                          {proposal.title ?? proposal._id}
-                        </a>
-                        <span
-                          class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
-                        >
-                          {formatStatus(proposal.status)}
-                        </span>
+                        {#if isWithdrawn}
+                          <span class="font-medium">
+                            {proposal.title ?? proposal._id}
+                          </span>
+                        {:else}
+                          <a
+                            href={editHref}
+                            class="text-primary hover:underline font-medium"
+                          >
+                            {proposal.title ?? proposal._id}
+                          </a>
+                        {/if}
+                        {#if isWithdrawn}
+                          <button
+                            type="button"
+                            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-destructive text-white cursor-pointer hover:bg-destructive/90"
+                            aria-label="View withdrawal details"
+                            onclick={() => openWithdrawalDetailsDialog(proposal)}
+                          >
+                            {proposal.status === "withdrawnByAdmin"
+                              ? "Withdrawn by Admin"
+                              : "Withdrawn"}
+                          </button>
+                        {:else}
+                          <span
+                            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+                          >
+                            {formatStatus(proposal.status)}
+                          </span>
+                        {/if}
                       </div>
                     </td>
-                    <td class="py-3 px-4 text-right tabular-nums">
+                    <td class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-top">
                       {proposal.totalBudget != null
                         ? `${formatAda(proposal.totalBudget)} ADA`
                         : "—"}
                     </td>
-                    <td class="py-3 px-4 text-muted-foreground">
+                    <td class="py-3 px-4 text-muted-foreground whitespace-nowrap align-top">
                       {formatUpdatedAt(proposal.updatedAt)}
                     </td>
-                    <td class="py-3 pr-0 pl-4 text-right">
+                    <td class="py-3 pr-0 pl-4 text-right align-top">
                       <div class="flex items-center justify-end gap-1">
-                        <Button.Root
-                          variant="outline"
-                          size="icon"
-                          href={editHref}
-                          aria-label="Edit proposal"
-                          title="Edit proposal"
-                        >
-                          <PencilIcon class="size-4" />
-                        </Button.Root>
+                        {#if isWithdrawn}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            disabled
+                            aria-label="Edit proposal"
+                            title="Cannot edit withdrawn proposal"
+                          >
+                            <PencilIcon class="size-4" />
+                          </Button.Root>
+                        {:else}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            href={editHref}
+                            aria-label="Edit proposal"
+                            title="Edit proposal"
+                          >
+                            <PencilIcon class="size-4" />
+                          </Button.Root>
+                        {/if}
                         {#if viewUrl}
                           <Button.Root
                             variant="outline"
@@ -222,6 +262,16 @@
                             aria-label="Withdraw proposal"
                             title="Withdraw proposal"
                             onclick={() => openWithdrawDialog(proposal)}
+                          >
+                            <Trash2Icon class="size-4 text-black" />
+                          </Button.Root>
+                        {:else if isWithdrawn}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            disabled
+                            aria-label="Delete"
+                            title="Cannot delete withdrawn proposal"
                           >
                             <Trash2Icon class="size-4 text-black" />
                           </Button.Root>
@@ -286,4 +336,9 @@
   bind:open={withdrawDialogOpen}
   proposal={withdrawProposal}
   onSuccess={() => invalidateAll()}
+/>
+
+<ProposalWithdrawn
+  bind:open={withdrawalDetailsDialogOpen}
+  proposal={withdrawalDetailsDialogProposal}
 />

@@ -5,6 +5,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "$lib/base/Markdown.svelte";
@@ -35,6 +36,7 @@
   );
 
   let withdrawOpen = $state(false);
+  let withdrawalDetailsDialogOpen = $state(false);
 
   const proposalHref = $derived(
     vote && (proposal._id || proposal.id)
@@ -51,7 +53,13 @@
   );
 </script>
 
-<Card.Root class="hover:shadow-md transition-shadow {className || ''}">
+<Card.Root
+  class="hover:shadow-md transition-shadow {className ||
+    ''} {proposal?.status === 'withdrawnByProposer' ||
+  proposal?.status === 'withdrawnByAdmin'
+    ? 'bg-muted/50'
+    : ''}"
+>
   <Card.Header>
     <Card.Title class="text-lg flex flex-wrap items-center gap-1">
       <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
@@ -63,9 +71,22 @@
         </Badge>
       {/if}
       {#if proposal.status}
-        <Badge class="bg-black text-white uppercase text-xs">
-          {proposal.status}
-        </Badge>
+        {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium uppercase bg-destructive text-white cursor-pointer hover:bg-destructive/90 border-0"
+            aria-label="View withdrawal details"
+            onclick={() => (withdrawalDetailsDialogOpen = true)}
+          >
+            {proposal.status === "withdrawnByAdmin"
+              ? "Withdrawn by Admin"
+              : "Withdrawn"}
+          </button>
+        {:else}
+          <Badge class="uppercase text-xs bg-black text-white">
+            {proposal.status}
+          </Badge>
+        {/if}
       {/if}
     </Card.Title>
     {#if proposal.summary}
@@ -153,3 +174,7 @@
   {proposal}
   onSuccess={() => invalidateAll()}
 />
+
+{#if proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"}
+  <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
+{/if}
