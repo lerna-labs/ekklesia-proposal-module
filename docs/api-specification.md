@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.1.0                                                                  |
+| **Version**        | 1.2.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 18, 2026                                                      |
+| **Last Revised**   | February 23, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -735,12 +735,11 @@ parameter `proposal` (the proposal's MongoDB ObjectId). By default, only
 proposal's vote `admins` array) can use the `status` parameter to filter by
 `live`, `withdrawn`, or `withdrawnByAdmin`. Sort by `sort` (default `date`, i.e.
 `createdAt`), `replyCount`, or `likeCount`, with `direction` `asc` or `desc`;
-default is newest first (`direction=desc`). Each comment includes a `user`
+default is newest first (`direction=desc`). Each comment includes an `author`
 object (the comment author; `lastLogin`, `createdAt`, and `updatedAt` are
-excluded; a `type` field is added: `"proposer"` if the commenting user is the
-proposal's proposer, `"admin"` if the commenting user is in the vote's `admins`
-array, otherwise `"user"`), a `replyCount` (number of direct replies to that
-comment), and a `likeCount` (number of likes on that comment).`proposalId`,
+excluded; a `type` field is added: `"proposer"` if the author is the proposal's
+proposer, `"admin"` if the author is in the vote's `admins`
+array, otherwise `"user"`), `replyCount`, and `likeCount`. `proposalId`,
 `status`, `parentId`, and `userId` are excluded from each comment.**Comment
 authors** see `withdrawalDetails` (if present) for their own comments (e.g. when
 withdrawn by admin).
@@ -771,13 +770,12 @@ withdrawn by admin).
   "data": [
     {
       "_id": "c1d2e3f4a5b67890cdef1234",
-      "userType": "user",
       "content": "This proposal aligns well with the roadmap.",
       "createdAt": "2026-01-22T14:00:00Z",
       "updatedAt": "2026-01-22T14:00:00Z",
       "replyCount": 3,
       "likeCount": 5,
-      "user": {
+      "author": {
         "_id": "a1b2c3d4e5f67890abcdef12",
         "name": "Alice",
         "type": "user"
@@ -868,7 +866,7 @@ and see `withdrawalDetails` (if present), but cannot use the `status` parameter.
 array) can retrieve any comment by ID; optional `status` parameter can be used
 to require the comment's status to match (`live`, `withdrawn`, or
 `withdrawnByAdmin`). Response shape matches the comment objects in §3.6 (
-includes `user` with `type`, `replyCount`, `likeCount`; excludes `proposalId`,
+includes `author` with `type`, `replyCount`, `likeCount`; excludes `proposalId`,
 `status`, `parentId`, `userId`). **Comment authors** see `withdrawalDetails` for
 their own comments.
 
@@ -897,13 +895,12 @@ their own comments.
 ```json
 {
   "_id": "c1d2e3f4a5b67890cdef1234",
-  "userType": "user",
   "content": "This proposal aligns well with the roadmap.",
   "createdAt": "2026-01-22T14:00:00Z",
   "updatedAt": "2026-01-22T14:00:00Z",
   "replyCount": 3,
   "likeCount": 5,
-  "user": {
+  "author": {
     "_id": "a1b2c3d4e5f67890abcdef12",
     "name": "Alice",
     "type": "user"
@@ -992,13 +989,12 @@ The parent comment must exist and be live; otherwise 404 is returned.
   "data": [
     {
       "_id": "d2e3f4a5b67890cdef12345",
-      "userType": "user",
       "content": "I agree with this point.",
       "createdAt": "2026-01-22T15:00:00Z",
       "updatedAt": "2026-01-22T15:00:00Z",
       "replyCount": 0,
       "likeCount": 1,
-      "user": {
+      "author": {
         "_id": "b2c3d4e5f67890abcdef123",
         "name": "Bob",
         "type": "user"
@@ -2381,6 +2377,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.2.0   | 2026-02-23 | Comment response: `user` renamed to `author`; top-level `userId` and `authorType` removed. Withdrawn comments visible to admin and comment author; `excludeWithdrawn` query param for comments and replies. Replies to withdrawn comments rejected with 400. `withdrawalDetails._id` excluded from response. |
 | 1.1.0   | 2026-02-20 | Some updates to spec to bring alignment with latest deployed changes                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.0.0   | 2026-02-20 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                               |
 | 0.2.7   | 2026-02-20 | Terminology update - Rename "Budget" item to "Vote" to better align future use cases                                                                                                                                                                                                                                                                                                                                                   |
