@@ -223,7 +223,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       { $set: { nonce: null } }, // Mark as used immediately
       {
         sort: { createdAt: -1 },
-        new: false, // Return the document before update
+        returnDocument: "before",
       }
     );
   } catch (error) {
