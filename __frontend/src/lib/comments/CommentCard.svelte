@@ -16,10 +16,10 @@
     isVoteAdmin = false,
     repliesData = [],
     authorLabel = (c) => {
-      const u = c?.user;
-      const name = u?.name && String(u.name).trim();
+      const a = c?.author;
+      const name = a?.name && String(a.name).trim();
       if (name) return name;
-      const id = u?._id ?? c?.userId ?? "";
+      const id = a?._id ?? "";
       return shortenString(id, 12, true) || "—";
     },
     canEditComment = () => false,
@@ -30,22 +30,22 @@
     onWithdraw,
   } = $props();
 
-  const isOwn = $derived(currentUserId && (comment?.user?._id ?? comment?.userId) === currentUserId);
+  const isOwn = $derived(currentUserId && comment?.author?._id === currentUserId);
 </script>
 
-<Card.Root class="mb-4 {isReply ? 'ml-4' : ''}">
+<Card.Root class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-muted/50' : ''}">
   <Card.Header>
     <Card.Title class="flex flex-wrap justify-between items-start gap-2 pb-0">
       <div class="flex flex-wrap items-center gap-1.5 font-medium text-sm">
         {authorLabel(comment)}
-        {#if (comment?.user?.type ?? comment?.userType) === "admin"}
+        {#if comment?.author?.type === "admin"}
           <Badge variant="secondary" class="text-xs bg-(--mbo-orange) text-white">Admin</Badge>
         {/if}
-        {#if (comment?.user?.type ?? comment?.userType) === "proposer"}
+        {#if comment?.author?.type === "proposer"}
           <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Proposer</Badge>
         {/if}
-        {#if comment?.user?._id?.startsWith?.("drep")}
-          <Badge variant="secondary" class="text-xs">DRep</Badge>
+        {#if comment?.author?._id?.startsWith?.("drep")}
+          <Badge variant="secondary" class="text-xs bg-black text-white">DRep</Badge>
         {/if}
         {#if isOwn}
           <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Your Comment</Badge>
@@ -61,24 +61,17 @@
   </Card.Header>
   <Card.Content class="text-sm">
     {#if comment?.withdrawalDetails}
-      <p class="text-muted-foreground italic">
-        {#if isReply}
-          This comment was withdrawn.
-          {#if isOwn}
-            Reason: {comment.withdrawalDetails.category}
-            {#if comment.withdrawalDetails.comment}
-              — {comment.withdrawalDetails.comment}
-            {/if}
+      <div class="space-y-2">
+        <div class="text-muted-foreground line-through">
+          <Markdown content={comment?.content ?? ""} class="text-sm" />
+        </div>
+        <p class="text-muted-foreground italic">
+          Withdrawn. Reason: {comment.withdrawalDetails.category}
+          {#if comment.withdrawalDetails.comment}
+            — {comment.withdrawalDetails.comment}
           {/if}
-        {:else}
-          This comment was withdrawn. {#if isOwn}
-            Reason: {comment.withdrawalDetails.category}
-            {#if comment.withdrawalDetails.comment}
-              — {comment.withdrawalDetails.comment}
-            {/if}
-          {/if}
-        {/if}
-      </p>
+        </p>
+      </div>
     {:else}
       <Markdown content={comment?.content ?? ""} class="text-sm" />
     {/if}
@@ -124,7 +117,7 @@
           <span class="ml-1">Reply</span>
         </Button>
       {/if}
-      {#if canEditComment(comment)}
+      {#if canEditComment(comment) && !comment?.withdrawalDetails}
         <Button
           variant="secondary"
           size="sm"

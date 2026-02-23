@@ -1,5 +1,6 @@
 /**
- * Create dummy data: 1 vote, import categories for it, 1 live proposal, 1 draft proposal, 10 comments (including replies).
+ * Create dummy data: 1 vote, import categories for it, 2 live proposals, 1 draft proposal.
+ * Each live proposal gets one comment per COMMENT_USERS user, plus one withdrawn comment.
  * Uses current schemas: Vote, Category, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
@@ -40,6 +41,13 @@ const LEGAL_TRUE = {
 
 const ADMINS = [
     "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf",
+];
+
+const COMMENT_USERS = [
+    "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf",
+    "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m",
+    "stake_test1urv58h0er3ara4sezax8hdff90q4mzj74tmahpthvxzhqnq2ethrx",
+    "drep1ytlf69wakmx78jja8rp6gusx2yprnqvp4zmw3lfwqqednhqnkkjag"
 ];
 
 async function createDummyData() {
@@ -87,7 +95,7 @@ async function createDummyData() {
         }
         console.log(`Imported ${categories.length} categories.`);
 
-        // 3. Create a user for the proposer
+        // 3. Create users: proposer, admins, and stake_test proposer
         const proposerId = "dummy-proposer-001";
         await User.findOneAndUpdate(
             { _id: proposerId },
@@ -96,9 +104,41 @@ async function createDummyData() {
         );
         console.log("Proposer user ensured:", proposerId);
 
+        for (let i = 0; i < ADMINS.length; i++) {
+            await User.findOneAndUpdate(
+                { _id: ADMINS[i] },
+                { $set: { name: `Test Admin ${i + 1}`, lastLogin: now, updatedAt: now } },
+                { upsert: true }
+            );
+            console.log("Admin user ensured:", ADMINS[i]);
+        }
+
+        const STAKE_TEST_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
+        await User.findOneAndUpdate(
+            { _id: STAKE_TEST_PROPOSER_ID },
+            { $set: { name: "Stake Test Proposer", lastLogin: now, updatedAt: now } },
+            { upsert: true }
+        );
+        console.log("Stake test proposer user ensured:", STAKE_TEST_PROPOSER_ID);
+
+        const COMMENTER_ID = "stake_test1urv58h0er3ara4sezax8hdff90q4mzj74tmahpthvxzhqnq2ethrx";
+        await User.findOneAndUpdate(
+            { _id: COMMENTER_ID },
+            { $set: { name: "", lastLogin: now, updatedAt: now } },
+            { upsert: true }
+        );
+        console.log("Commenter user ensured:", COMMENTER_ID);
+
+        const DREP_ID = "drep1ytlf69wakmx78jja8rp6gusx2yprnqvp4zmw3lfwqqednhqnkkjag";
+        await User.findOneAndUpdate(
+            { _id: DREP_ID },
+            { $set: { name: "Test DRep", lastLogin: now, updatedAt: now } },
+            { upsert: true }
+        );
+        console.log("DRep user ensured:", DREP_ID);
+
         // 4. Create one live proposal and one draft proposal
         const categoryId = categories[0]._id;
-        const DRAFT_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
 
         console.log("Creating live proposal...");
         const proposal = await Proposal.create({
@@ -180,12 +220,6 @@ async function createDummyData() {
         console.log(`Live proposal created: ${proposal._id}`);
 
         // 4b. Create one live proposal for stake_test1... user (all required data)
-        const STAKE_TEST_PROPOSER_ID = "stake_test1uz22g9jd408t8zq8g3dw8p60qla49qjgvhh7z74kjpvuyrctlwf4m";
-        await User.findOneAndUpdate(
-            { _id: STAKE_TEST_PROPOSER_ID },
-            { $set: { name: "Stake Test Proposer", lastLogin: now, updatedAt: now } },
-            { upsert: true }
-        );
         console.log("Creating live proposal for stake_test user...");
         const liveProposalStakeTest = await Proposal.create({
             proposerId: STAKE_TEST_PROPOSER_ID,
@@ -269,7 +303,7 @@ async function createDummyData() {
 
         console.log("Creating draft proposal...");
         const draftProposal = await Proposal.create({
-            proposerId: DRAFT_PROPOSER_ID,
+            proposerId: STAKE_TEST_PROPOSER_ID,
             voteId: vote._id,
             title: "Draft proposal (in progress)",
             summary: "",
@@ -314,74 +348,56 @@ async function createDummyData() {
                 kycInfo: {},
             },
         });
-        console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
+        console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
 
-        // 5. Create 10 comments (including replies): e.g. 5 top-level, 3 replies, 2 nested replies
+        // 5. Create comments: one from each COMMENT_USERS user per live proposal, plus one withdrawn comment
         const commentBodies = [
             "This looks like a great proposal! I fully support this initiative.",
             "I have some concerns about the budget allocation. Can we discuss?",
             "Excellent work. The community will benefit greatly.",
             "I think we need more details on the implementation timeline.",
             "This aligns perfectly with our long-term goals.",
-            "Thanks for your feedback! I'll address that in the next update.",
-            "Good point! I've added more details to address this.",
-            "I appreciate your support. Here's a clarification...",
-            "That's a valid concern. Here's what I'm thinking...",
-            "I'll include that in the next revision.",
         ];
-        const userIds = [proposerId, "dummy-commenter-002", "dummy-commenter-003"];
-
+        const liveProposals = [proposal, liveProposalStakeTest];
         const createdComments = [];
-        // Top-level comments (5)
-        for (let i = 0; i < 5; i++) {
-            const c = await Comment.create({
-                proposalId: proposal._id,
-                parentId: null,
-                userId: userIds[i % userIds.length],
-                content: commentBodies[i],
-                status: "live",
-            });
-            createdComments.push(c);
-        }
-        // Replies (3) to first three top-level
-        for (let i = 0; i < 3; i++) {
-            const c = await Comment.create({
-                proposalId: proposal._id,
-                parentId: createdComments[i]._id,
-                userId: userIds[(i + 1) % userIds.length],
-                content: commentBodies[5 + i],
-                status: "live",
-            });
-            createdComments.push(c);
-        }
-        // Nested replies (2) to first two replies
-        const firstReply = createdComments[5];
-        const secondReply = createdComments[6];
-        const nested1 = await Comment.create({
-            proposalId: proposal._id,
-            parentId: firstReply._id,
-            userId: userIds[0],
-            content: commentBodies[8],
-            status: "live",
-        });
-        createdComments.push(nested1);
-        const nested2 = await Comment.create({
-            proposalId: proposal._id,
-            parentId: secondReply._id,
-            userId: userIds[2],
-            content: commentBodies[9],
-            status: "live",
-        });
-        createdComments.push(nested2);
 
-        console.log(`Created ${createdComments.length} comments (5 top-level, 3 replies, 2 nested).`);
+        for (const liveProposal of liveProposals) {
+            for (let i = 0; i < COMMENT_USERS.length; i++) {
+                const c = await Comment.create({
+                    proposalId: liveProposal._id,
+                    parentId: null,
+                    userId: COMMENT_USERS[i],
+                    content: commentBodies[i % commentBodies.length],
+                    status: "live",
+                });
+                createdComments.push(c);
+            }
+        }
+
+        // One withdrawn comment (on first live proposal), from stake_test user, withdrawn by admin
+        const withdrawnComment = await Comment.create({
+            proposalId: proposal._id,
+            parentId: null,
+            userId: STAKE_TEST_PROPOSER_ID,
+            content: "This comment was withdrawn by the admin.",
+            status: "withdrawnByAdmin",
+            withdrawalDetails: {
+                category: "Spam",
+                userId: "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf",
+                comment: "Duplicate content posted multiple times.",
+                date: now,
+            },
+        });
+        createdComments.push(withdrawnComment);
+
+        console.log(`Created ${createdComments.length} comments (${COMMENT_USERS.length} per live proposal × ${liveProposals.length} proposals + 1 withdrawn).`);
 
         console.log("\n✅ Dummy data created successfully.");
         console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
         console.log(`  Categories: ${categories.length}`);
         console.log(`  Live proposal: ${proposal._id}`);
         console.log(`  Live proposal (stake_test user): ${liveProposalStakeTest._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
-        console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${DRAFT_PROPOSER_ID})`);
+        console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
         console.log(`  Comments: ${createdComments.length}`);
     } catch (error) {
         console.error("Error creating dummy data:", error);

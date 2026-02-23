@@ -1,6 +1,19 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+const withdrawalDetailsSchema = new Schema(
+    {
+        category: {
+            type: String,
+            enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"],
+        },
+        userId: String,
+        comment: String,
+        date: Date,
+    },
+    { _id: false }
+);
+
 const commentSchema = new Schema(
     {
         proposalId: {
@@ -29,15 +42,7 @@ const commentSchema = new Schema(
             enum: ["live", "withdrawnByAdmin"],
         },
         withdrawalDetails: {
-            type: {
-                category: {
-                    type: String,
-                    enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate", "Other"],
-                },
-                userId: String,
-                comment: String,
-                date: Date,
-            },
+            type: withdrawalDetailsSchema,
             required: false,
         },
     },

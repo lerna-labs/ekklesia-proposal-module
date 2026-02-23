@@ -22,7 +22,7 @@ import { Comment } from "../schema/Comment.js";
 
 // wipe database
 await Vote.deleteMany({});
-// await Category.deleteMany({});
+await Category.deleteMany({});
 await Proposal.deleteMany({});
 await Comment.deleteMany({});
 
