@@ -16,17 +16,17 @@
   "type": "module",
   "dependencies": {
     "@emurgo/cardano-serialization-lib-nodejs": "^15.0.3",
-    "@meshsdk/core": "^1.9.0-beta.98",
+    "@meshsdk/core": "^1.9.0-beta.99",
     "bech32": "^2.0.0",
     "cbor": "^10.0.11",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dayjs": "^1.11.19",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.1.5",
+    "mongoose": "^9.2.1",
     "validator": "^13.15.26",
     "zod": "^4.3.6"
   }

@@ -565,7 +565,7 @@ router.put("/:commentId/withdraw", async (req, res) => {
           date: new Date(),
         },
       },
-      { new: true }
+      { returnDocument: "after" }
     ).lean();
 
     return res.status(200).json({
@@ -687,7 +687,7 @@ router.put("/:commentId", async (req, res) => {
     const updated = await Comment.findByIdAndUpdate(
       commentId,
       { content: typeof content === "string" ? content.trim() : String(content) },
-      { new: true }
+      { returnDocument: "after" }
     ).lean();
 
     return res.status(200).json({

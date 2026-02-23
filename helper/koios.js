@@ -113,6 +113,19 @@ export async function fetchDrepName(drepId) {
  * console.log(handle); // "bob"
  */
 export async function fetchHandle(address) {
+    const API_URL = process.env.API_URL;
+    const API_TOKEN = process.env.API_TOKEN;
+
+    if (!API_URL) {
+        console.error("API_URL is not set in the environment variables.");
+        throw new Error("API URL is not set!");
+    }
+
+    if (!API_TOKEN) {
+        console.error("API_TOKEN is not set in the environment variables.");
+        throw new Error("API Token is not set!");
+    }
+
     const handlePolicyId = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
     let endpoint;
     let body;
