@@ -45,7 +45,7 @@
           <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Proposer</Badge>
         {/if}
         {#if comment?.user?._id?.startsWith?.("drep")}
-          <Badge variant="secondary" class="text-xs">DRep</Badge>
+          <Badge variant="secondary" class="text-xs bg-black text-white">DRep</Badge>
         {/if}
         {#if isOwn}
           <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Your Comment</Badge>
