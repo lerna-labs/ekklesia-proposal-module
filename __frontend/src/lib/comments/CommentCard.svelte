@@ -4,7 +4,8 @@
   import { shortenString } from "$lib/utils.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
-  import { Heart, MessageSquare, MessagesSquare } from "lucide-svelte";
+  import Timestamp from "$lib/base/Timestamp.svelte";
+  import { Heart, MessageSquare, MessagesSquare, Pencil } from "lucide-svelte";
 
   let {
     comment,
@@ -54,7 +55,7 @@
         {/if}
       </div>
       <span class="text-muted-foreground font-normal shrink-0 text-xs">
-        {new Date(comment?.createdAt).toLocaleString()}
+        <Timestamp value={comment?.createdAt} />
       </span>
     </Card.Title>
   </Card.Header>
@@ -82,13 +83,14 @@
       <Markdown content={comment?.content ?? ""} class="text-sm" />
     {/if}
   </Card.Content>
-  {#if !isReply}
-    <Card.Footer class="flex flex-wrap items-center gap-2">
+  <Card.Footer class="flex flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       {#if canLike && !comment?.withdrawalDetails}
         <Button
           variant="outline"
           size="sm"
           class="text-xs"
+          disabled={isOwn}
           onclick={() => onToggleLike?.(comment)}
         >
           <Heart
@@ -98,7 +100,6 @@
         </Button>
       {/if}
       {#if (comment?.replyCount ?? 0) > 0}
-        {@const rc = comment.replyCount ?? 0}
         <Button
           variant="outline"
           size="sm"
@@ -106,20 +107,17 @@
           onclick={() => onToggleReplies?.(comment)}
         >
           <MessagesSquare class="size-3.5" />
-          <span class="ml-1">
-            {#if repliesData?.length}
-              Hide {rc} {rc === 1 ? "reply" : "replies"}
-            {:else}
-              View {rc} {rc === 1 ? "reply" : "replies"}
-            {/if}
-          </span>
+          <span class="ml-1">{comment?.replyCount ?? 0}</span>
         </Button>
       {/if}
+    </div>
+    <div class="flex flex-wrap items-center gap-2 ml-auto">
       {#if canComment && !comment?.withdrawalDetails}
         <Button
           variant="secondary"
           size="sm"
           class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          disabled={isOwn}
           onclick={() => onReply?.(comment)}
         >
           <MessageSquare class="size-3.5" />
@@ -127,8 +125,14 @@
         </Button>
       {/if}
       {#if canEditComment(comment)}
-        <Button variant="ghost" size="sm" class="text-xs" onclick={() => onEdit?.(comment)}>
-          Edit
+        <Button
+          variant="secondary"
+          size="sm"
+          class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          onclick={() => onEdit?.(comment)}
+        >
+          <Pencil class="size-3.5" />
+          <span class="ml-1">Edit</span>
         </Button>
       {/if}
       {#if isVoteAdmin && !comment?.withdrawalDetails}
@@ -141,6 +145,6 @@
           Withdraw
         </Button>
       {/if}
-    </Card.Footer>
-  {/if}
+    </div>
+  </Card.Footer>
 </Card.Root>

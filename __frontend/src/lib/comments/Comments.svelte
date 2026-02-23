@@ -12,6 +12,7 @@
   import CommentsEditDialog from "./CommentsEditDialog.svelte";
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
+  import CommentThread from "./CommentThread.svelte";
 
   let { proposalId, proposal, vote } = $props();
 
@@ -97,8 +98,9 @@
   }
 
   function canEditComment(c) {
-    if (!currentUserId || !c?.user?._id) return false;
-    if (c.user._id !== currentUserId) return false;
+    const authorId = c?.user?._id ?? c?.userId;
+    if (!currentUserId || !authorId) return false;
+    if (authorId !== currentUserId) return false;
     const createdAt = c.createdAt ? new Date(c.createdAt).getTime() : 0;
     return Date.now() - createdAt <= 15 * 60 * 1000;
   }
@@ -168,9 +170,9 @@
     loadComments();
   }
 
-  async function loadReplies(commentId) {
+  async function loadReplies(commentId, force = false) {
     const existing = repliesByParent[commentId];
-    if (existing?.data?.length || existing?.loading) return;
+    if (!force && (existing?.data?.length || existing?.loading)) return;
     repliesByParent = { ...repliesByParent, [commentId]: { loading: true, error: null, data: [], meta: null } };
     try {
       const { ok, json } = await fetchJson(`/comments/${commentId}/replies?page=1&limit=20`);
@@ -255,8 +257,8 @@
     replyTo = null;
     commentValue = "";
     await loadComments();
-    if (parentId && repliesByParent[parentId]) {
-      loadReplies(parentId);
+    if (parentId) {
+      loadReplies(parentId, true);
     }
   }
 
@@ -274,14 +276,30 @@
       toast.error(json?.message ?? "Failed to update like");
       return;
     }
-    commentsState = {
-      ...commentsState,
-      data: commentsState.data.map((x) =>
-        x._id === c._id
-          ? { ...x, likeCount: json.likeCount ?? x.likeCount, userLiked: json.liked ?? false }
-          : x
-      ),
-    };
+    const updated = { ...c, likeCount: json.likeCount ?? c.likeCount, userLiked: json.liked ?? false };
+    const idx = commentsState.data.findIndex((x) => x._id === c._id);
+    if (idx >= 0) {
+      commentsState = {
+        ...commentsState,
+        data: commentsState.data.map((x) => (x._id === c._id ? updated : x)),
+      };
+      return;
+    }
+    for (const parentId of Object.keys(repliesByParent)) {
+      const entry = repliesByParent[parentId];
+      if (!entry?.data?.length) continue;
+      const i = entry.data.findIndex((x) => x._id === c._id);
+      if (i >= 0) {
+        repliesByParent = {
+          ...repliesByParent,
+          [parentId]: {
+            ...entry,
+            data: entry.data.map((x) => (x._id === c._id ? updated : x)),
+          },
+        };
+        return;
+      }
+    }
   }
 
   function openEdit(c) {
@@ -311,9 +329,11 @@
       return;
     }
     toast.success("Comment updated");
+    const parentId = editComment?.parentId;
     editComment = null;
     editValue = "";
     await loadComments();
+    if (parentId) loadReplies(parentId, true);
   }
 
   function closeEdit() {
@@ -345,12 +365,12 @@
       return;
     }
     toast.success("Comment withdrawn");
-    const parentId = withdrawComment.parentId ?? withdrawComment._id;
+    const parentId = withdrawComment.parentId;
     withdrawComment = null;
     withdrawCategory = "";
     withdrawReason = "";
     await loadComments();
-    if (parentId && repliesByParent[parentId]) loadReplies(parentId);
+    if (parentId) loadReplies(parentId, true);
   }
 
   function closeWithdraw() {
@@ -387,14 +407,14 @@
   {:else}
     <div class="space-y-4">
       {#each commentsState.data as comment (comment._id)}
-        <CommentCard
+        <CommentThread
           {comment}
           isReply={false}
+          repliesByParent={repliesByParent}
           {currentUserId}
           {canComment}
           {canLike}
           {isVoteAdmin}
-          repliesData={repliesByParent[comment._id]?.data ?? []}
           {authorLabel}
           {canEditComment}
           onToggleLike={toggleLike}
@@ -403,28 +423,6 @@
           onEdit={openEdit}
           onWithdraw={openWithdraw}
         />
-
-        {#if (comment.replyCount ?? 0) > 0 && repliesByParent[comment._id]}
-          {@const replyState = repliesByParent[comment._id]}
-          {#if replyState.error}
-            <div class="ml-6 mb-4 pl-4 border-l-2 border-muted text-sm text-destructive">
-              {replyState.error}
-            </div>
-          {:else if replyState.loading}
-            <CommentsReplyLoading loading={replyState.loading} />
-          {:else if replyState.data?.length}
-            <div class="ml-6 mb-4 space-y-3">
-              {#each replyState.data as reply (reply._id)}
-                <CommentCard
-                  comment={reply}
-                  isReply={true}
-                  {currentUserId}
-                  {authorLabel}
-                />
-              {/each}
-            </div>
-          {/if}
-        {/if}
       {/each}
     </div>
 
@@ -443,7 +441,7 @@
     {/if}
 
     {#if canComment}
-      <Button variant="outline" class="mt-4" onclick={() => openAddDialog()}>
+      <Button variant="default" class="mt-4 cursor-pointer" onclick={() => openAddDialog()}>
         Add Comment
       </Button>
     {/if}

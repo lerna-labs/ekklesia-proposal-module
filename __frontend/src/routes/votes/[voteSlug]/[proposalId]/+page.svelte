@@ -21,7 +21,7 @@
 
   <ProposalCard {proposal} {vote} {categories} showLink={false} />
 
-  {#if proposal}
+  {#if proposal && proposal.status !== "draft"}
     <Comments proposalId={proposal._id} {proposal} {vote} />
   {/if}
 </div>

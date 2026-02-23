@@ -62,7 +62,7 @@
         {/if}
       </Popover.Trigger>
       <Popover.Content align="start" class="w-56 p-3">
-        <h3 class="text-sm font-medium mb-2">Sort comments</h3>
+        <h3 class="text-sm font-medium mb-2">Sort</h3>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           <div class="space-y-2">
@@ -127,9 +127,9 @@
         {/if}
       </Popover.Trigger>
       <Popover.Content align="start" class="w-56 p-3">
-        <h3 class="text-sm font-medium mb-2">Filter by user type</h3>
+        <h3 class="text-sm font-medium mb-2">Filter</h3>
         <Separator.Root class="mb-3" />
-        <div class="space-y-2">
+        <div class="flex flex-col gap-0">
           <label
             for="comment-filter-proposer"
             class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
