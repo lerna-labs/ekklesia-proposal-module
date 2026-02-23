@@ -13,6 +13,7 @@ import { z } from "zod";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
+import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
 
 /**
  * Compute total budget (ADA) from metaData.executionRoadmap.workPackages, same logic as FormFinancialSummary.
@@ -593,34 +594,36 @@ router.get("/:proposalId", async (req, res) => {
       status === "withdrawnByProposer" ||
       status === "withdrawnByAdmin";
 
+    // Resolve auth for both access control (draft/archived) and field exclusion
+    let authenticatedUserId = null;
+    const tokenResult = verifyToken(req);
+    if (tokenResult.status === "success" && tokenResult.userId) {
+      authenticatedUserId = String(tokenResult.userId ?? "").trim();
+    }
+
+    const proposerIdStr = proposal.proposerId
+      ? String(proposal.proposerId).trim()
+      : "";
+    const isProposer =
+      authenticatedUserId &&
+      proposerIdStr &&
+      proposerIdStr === authenticatedUserId;
+
+    let voteDoc = proposal.voteId
+      ? await Vote.findById(proposal.voteId).lean()
+      : null;
+    let isVoteAdmin = false;
+    if (
+      authenticatedUserId &&
+      voteDoc?.admins &&
+      Array.isArray(voteDoc.admins)
+    ) {
+      isVoteAdmin = voteDoc.admins.some(
+        (id) => String(id).trim() === authenticatedUserId
+      );
+    }
+
     if (!isLiveOrWithdrawn) {
-      // Draft/archived: only proposer can view; for draft, vote admin can also view
-      let authenticatedUserId = null;
-      const tokenResult = verifyToken(req);
-      if (tokenResult.status === "success" && tokenResult.userId) {
-        authenticatedUserId = String(tokenResult.userId ?? "").trim();
-      }
-
-      const proposerIdStr = proposal.proposerId
-        ? String(proposal.proposerId).trim()
-        : "";
-      const isProposer =
-        authenticatedUserId &&
-        proposerIdStr &&
-        proposerIdStr === authenticatedUserId;
-
-      let isVoteAdmin = false;
-      if (authenticatedUserId && proposal.voteId && status === "draft") {
-        const voteDoc = await Vote.findById(proposal.voteId).lean();
-        if (
-          voteDoc?.admins &&
-          Array.isArray(voteDoc.admins) &&
-          voteDoc.admins.some((id) => String(id).trim() === authenticatedUserId)
-        ) {
-          isVoteAdmin = true;
-        }
-      }
-
       const allowed =
         isProposer || (status === "draft" && isVoteAdmin);
       if (!allowed) {
@@ -633,6 +636,18 @@ router.get("/:proposalId", async (req, res) => {
     }
 
     let payload = proposal;
+
+    // Apply exclude script: remove non-public fields unless proposer or vote admin
+    if (voteDoc?.excludeScript) {
+      const excludeMod = await loadExcludeScript(voteDoc.excludeScript);
+      if (excludeMod?.excludeNonPublicFields) {
+        payload = excludeMod.excludeNonPublicFields(payload, {
+          isProposer,
+          isAdmin: isVoteAdmin,
+        });
+      }
+    }
+
     const categoryDoc = await Category.findById(proposal.categoryId).lean();
     if (categoryDoc) {
       const { voteId, createdAt, updatedAt, ...category } = categoryDoc;

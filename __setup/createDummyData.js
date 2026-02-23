@@ -71,6 +71,7 @@ async function createDummyData() {
             reviewStartDate: reviewStart,
             reviewEndDate: reviewEnd,
             validationScript: "budget2026/validationScript.js",
+            excludeScript: "budget2026/excludeScript.js",
         });
         console.log(`Vote created: ${vote._id}`);
 

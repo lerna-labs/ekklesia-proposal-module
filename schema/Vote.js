@@ -48,6 +48,11 @@ const voteSchema = new Schema(
       type: String,
       required: true,
     },
+    /** Optional Script to exclude fields from the public API */
+    excludeScript: {
+      type: String,
+      required: false,
+    },
     /** Optional. URL to the Ekklesia Voting Platform for this Vote **/
     votingUrl: {
       type: String,
