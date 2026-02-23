@@ -5,6 +5,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import BudgetConversion from "$lib/BudgetConversion.svelte";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "$lib/base/Markdown.svelte";
@@ -35,6 +36,7 @@
   );
 
   let withdrawOpen = $state(false);
+  let withdrawalDetailsDialogOpen = $state(false);
 
   const proposalHref = $derived(
     vote && (proposal._id || proposal.id)
@@ -69,18 +71,22 @@
         </Badge>
       {/if}
       {#if proposal.status}
-        <Badge
-          class="uppercase text-xs {proposal.status === 'withdrawnByAdmin' ||
-          proposal.status === 'withdrawnByProposer'
-            ? 'bg-destructive text-white'
-            : 'bg-black text-white'}"
-        >
-          {proposal.status === "withdrawnByAdmin"
-            ? "Withdrawn by Admin"
-            : proposal.status === "withdrawnByProposer"
-              ? "Withdrawn"
-              : proposal.status}
-        </Badge>
+        {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium uppercase bg-destructive text-white cursor-pointer hover:bg-destructive/90 border-0"
+            aria-label="View withdrawal details"
+            onclick={() => (withdrawalDetailsDialogOpen = true)}
+          >
+            {proposal.status === "withdrawnByAdmin"
+              ? "Withdrawn by Admin"
+              : "Withdrawn"}
+          </button>
+        {:else}
+          <Badge class="uppercase text-xs bg-black text-white">
+            {proposal.status}
+          </Badge>
+        {/if}
       {/if}
     </Card.Title>
     {#if proposal.summary}
@@ -133,36 +139,6 @@
         <span class="text-sm">{proposal.metaData.initiativeType}</span>
       </div>
     {/if}
-
-    {#if proposal?.withdrawalDetails}
-      {@const wd = proposal.withdrawalDetails}
-      {@const withdrawalDate = wd.date
-        ? new Date(wd.date).toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })
-        : ""}
-      <Card.Root class="mt-4 bg-white">
-        <Card.Header>
-          <Card.Title class="text-sm font-medium">
-            {proposal.status === "withdrawnByAdmin"
-              ? "Proposal Withdrawn by Admin"
-              : "Proposal Withdrawn by Proposer"}
-          </Card.Title>
-          <Card.Description class="text-sm text-muted-foreground">
-            This proposal was withdrawn on {withdrawalDate} by {proposal.status ===
-            "withdrawnByAdmin"
-              ? "Admin"
-              : "Proposer"}
-          </Card.Description>
-        </Card.Header>
-        <Card.Content class="text-sm space-y-1">
-          {#if wd.comment}
-            <p>Reason: {wd.comment}</p>
-          {/if}
-        </Card.Content>
-      </Card.Root>
-    {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw}
     <Card.Footer class="flex flex-wrap items-center gap-2">
@@ -198,3 +174,7 @@
   {proposal}
   onSuccess={() => invalidateAll()}
 />
+
+{#if proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"}
+  <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
+{/if}
