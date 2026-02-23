@@ -44,11 +44,11 @@
 
   const categoryTriggerLabel = $derived(
     pendingCategories.length === 0
-      ? "All categories"
+      ? "All Categories"
       : pendingCategories.length === 1
         ? (categories.find((c) => String(c._id) === pendingCategories[0])
             ?.title ?? pendingCategories[0])
-        : `${pendingCategories.length} categories`,
+        : `${pendingCategories.length} Categories`,
   );
 
   /** True when any filter param is present (category, status, proposalType, initiativeType) */
@@ -174,7 +174,10 @@
         <div class="space-y-2">
           <Label class="text-xs text-muted-foreground">Category</Label>
           <Select.Root type="multiple" bind:value={pendingCategories}>
-            <Select.Trigger class="w-full min-w-0" aria-label="Category">
+            <Select.Trigger
+              class="w-full min-w-0 text-foreground data-[placeholder]:text-foreground"
+              aria-label="Category"
+            >
               <span class="truncate block min-w-0">{categoryTriggerLabel}</span>
             </Select.Trigger>
             <Select.Content>
@@ -235,7 +238,7 @@
         </div>
         <div class="space-y-2">
           <Label class="text-xs text-muted-foreground">Status</Label>
-          <div class="space-y-1">
+          <div class="space-y-0">
             <label
               for="filter-status-live"
               class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"

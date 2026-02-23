@@ -51,7 +51,13 @@
   );
 </script>
 
-<Card.Root class="hover:shadow-md transition-shadow {className || ''}">
+<Card.Root
+  class="hover:shadow-md transition-shadow {className ||
+    ''} {proposal?.status === 'withdrawnByProposer' ||
+  proposal?.status === 'withdrawnByAdmin'
+    ? 'bg-muted/50'
+    : ''}"
+>
   <Card.Header>
     <Card.Title class="text-lg flex flex-wrap items-center gap-1">
       <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
@@ -63,8 +69,17 @@
         </Badge>
       {/if}
       {#if proposal.status}
-        <Badge class="bg-black text-white uppercase text-xs">
-          {proposal.status}
+        <Badge
+          class="uppercase text-xs {proposal.status === 'withdrawnByAdmin' ||
+          proposal.status === 'withdrawnByProposer'
+            ? 'bg-destructive text-white'
+            : 'bg-black text-white'}"
+        >
+          {proposal.status === "withdrawnByAdmin"
+            ? "Withdrawn by Admin"
+            : proposal.status === "withdrawnByProposer"
+              ? "Withdrawn"
+              : proposal.status}
         </Badge>
       {/if}
     </Card.Title>
@@ -117,6 +132,36 @@
         </span>
         <span class="text-sm">{proposal.metaData.initiativeType}</span>
       </div>
+    {/if}
+
+    {#if proposal?.withdrawalDetails}
+      {@const wd = proposal.withdrawalDetails}
+      {@const withdrawalDate = wd.date
+        ? new Date(wd.date).toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : ""}
+      <Card.Root class="mt-4 bg-white">
+        <Card.Header>
+          <Card.Title class="text-sm font-medium">
+            {proposal.status === "withdrawnByAdmin"
+              ? "Proposal Withdrawn by Admin"
+              : "Proposal Withdrawn by Proposer"}
+          </Card.Title>
+          <Card.Description class="text-sm text-muted-foreground">
+            This proposal was withdrawn on {withdrawalDate} by {proposal.status ===
+            "withdrawnByAdmin"
+              ? "Admin"
+              : "Proposer"}
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="text-sm space-y-1">
+          {#if wd.comment}
+            <p>Reason: {wd.comment}</p>
+          {/if}
+        </Card.Content>
+      </Card.Root>
     {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw}
