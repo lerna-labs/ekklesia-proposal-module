@@ -3,7 +3,7 @@ const path = require("path");
 module.exports = {
   apps: [
     {
-      name: "preprod-budget-module",
+      name: "preprod-proposal-module",
       script: path.resolve(__dirname, "server.js"),
       watch: true,
       ignore_watch: ["node_modules", "logs", "backup", "scripts", "public", "preprod-logs", "mainnet-logs", ".git", ".DS_Store", "__frontend", "__setup"],
@@ -19,8 +19,8 @@ module.exports = {
       max_restarts: 10,
       restart_delay: 3000,
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: path.resolve(__dirname, "logs/preprod-budget-module-error.log"),
-      out_file: path.resolve(__dirname, "logs/preprod-budget-module-output.log"),
+      error_file: path.resolve(__dirname, "logs/preprod-proposal-module-error.log"),
+      out_file: path.resolve(__dirname, "logs/preprod-proposal-module-output.log"),
       combine_logs: true,
       merge_logs: true,
       time: true,
