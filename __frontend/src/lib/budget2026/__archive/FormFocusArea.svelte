@@ -5,7 +5,7 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import PillarInfo from "$lib/PillarInfo.svelte";
+  import PillarInfo from "$lib/budget2026/__archive/PillarInfo.svelte";
   let {
     id,
     description,
@@ -105,7 +105,9 @@
       Strategic Focus Area
       <span class="text-(--mbo-electric-blue)">*</span>
     </Field.Label>
-    <ToolTip content="Primary Cardano strategic pillar (e.g. L1, DeFi, RWA). Options come from the budget categories." />
+    <ToolTip
+      content="Primary Cardano strategic pillar (e.g. L1, DeFi, RWA). Options come from the budget categories."
+    />
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
   </div>
   <div
@@ -127,9 +129,9 @@
           value={displayValue}
           oninput={(e) => (searchQuery = e.currentTarget.value)}
           onfocus={() => {
-          if (justClosedConfirm) justClosedConfirm = false;
-          else open = true;
-        }}
+            if (justClosedConfirm) justClosedConfirm = false;
+            else open = true;
+          }}
           class="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 font-medium"
         />
         <ChevronDownIcon class="size-4 shrink-0 opacity-50" />
@@ -137,7 +139,7 @@
     {/snippet}
     <Select.Root
       type="single"
-      value={value}
+      {value}
       onValueChange={handleValueChange}
       bind:open
     >
@@ -190,7 +192,10 @@
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
-      <AlertDialog.Cancel class="cursor-pointer" onclick={cancelChangeFocusArea}>
+      <AlertDialog.Cancel
+        class="cursor-pointer"
+        onclick={cancelChangeFocusArea}
+      >
         Cancel
       </AlertDialog.Cancel>
       <AlertDialog.Action

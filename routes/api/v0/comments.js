@@ -63,16 +63,22 @@ async function formatComment(comment, proposal, vote, authenticatedUserId = null
   else if (vote?.admins && Array.isArray(vote.admins) && user?._id != null && vote.admins.includes(String(user._id))) type = "admin";
   const replyCount = await Comment.countDocuments({ parentId: comment._id, status: "live" });
   const likeCount = await CommentLike.countDocuments({ commentId: comment._id });
+  const userLiked =
+    authenticatedUserId &&
+    (await CommentLike.exists({ commentId: comment._id, userId: authenticatedUserId }));
   const userWithType = user ? { ...user, type } : null;
   const isAuthor = authenticatedUserId && user && user._id === authenticatedUserId;
   const result = {
     _id: comment._id,
     userType: type,
+    userId: comment.userId,
+    parentId: comment.parentId ?? null,
     content: comment.content,
     createdAt: comment.createdAt,
     updatedAt: comment.updatedAt,
     replyCount,
     likeCount,
+    userLiked: !!userLiked,
     user: userWithType,
   };
   if (isAuthor && comment.withdrawalDetails) {
@@ -92,6 +98,7 @@ router.get("/", async (req, res) => {
     const statusParam = req.query.status;
     const sortParam = (req.query.sort || "date").toString().trim().toLowerCase();
     const direction = (req.query.direction || "desc").toString().trim().toLowerCase();
+    const userTypeParam = (req.query.userType || "").toString().trim().toLowerCase();
     const page = parseInt(req.query.page, 10) || 1;
     const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
 
@@ -166,10 +173,46 @@ router.get("/", async (req, res) => {
     const sortDirection = direction === "asc" ? 1 : -1;
     const skip = (page - 1) * limit;
 
+    const VALID_USER_TYPES = ["proposer", "admin", "drep"];
+    const userTypeFilter =
+      userTypeParam.length > 0
+        ? userTypeParam
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter((s) => VALID_USER_TYPES.includes(s))
+        : null;
+
+    const proposalProposerId = proposal?.proposerId ? String(proposal.proposerId) : "";
+    const voteAdmins = vote?.admins && Array.isArray(vote.admins) ? vote.admins.map(String) : [];
+
     const matchCondition = { proposalId: proposalObjectId, parentId: null, ...statusFilter };
+
+    const userTypeExpr = {
+      $cond: {
+        if: { $and: [{ $ne: [proposalProposerId, ""] }, { $eq: [{ $toString: "$userId" }, proposalProposerId] }] },
+        then: "proposer",
+        else: {
+          $cond: {
+            if: { $in: [{ $toString: "$userId" }, voteAdmins] },
+            then: "admin",
+            else: {
+              $cond: {
+                if: { $regexMatch: { input: { $toString: "$userId" }, regex: "^drep" } },
+                then: "drep",
+                else: "user",
+              },
+            },
+          },
+        },
+      },
+    };
 
     const pipeline = [
       { $match: matchCondition },
+      { $addFields: { userType: userTypeExpr } },
+      ...(userTypeFilter && userTypeFilter.length > 0
+        ? [{ $match: { userType: { $in: userTypeFilter } } }]
+        : []),
       {
         $lookup: {
           from: "comments",
@@ -232,10 +275,9 @@ router.get("/", async (req, res) => {
                           input: { $objectToArray: { $arrayElemAt: ["$userArr", 0] } },
                           as: "kv",
                           cond: {
-                            $notIn: [
-                              "$$kv.k",
-                              ["lastLogin", "createdAt", "updatedAt"],
-                            ],
+                            $not: {
+                              $in: ["$$kv.k", ["lastLogin", "createdAt", "updatedAt"]],
+                            },
                           },
                         },
                       },
@@ -289,12 +331,13 @@ router.get("/", async (req, res) => {
 /**
  * POST /comments
  * API spec §5.5 — Create a comment on a live proposal. Auth required. Before vote feedbackEndDate. Body: proposalId, content, optional parentId.
+ * Only authenticated users can create comments; userId is taken exclusively from the verified token, never from the request body.
  */
 router.post("/", async (req, res) => {
   try {
     const tokenResult = verifyToken(req);
     if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "No token provided" });
+      return res.status(401).json({ status: "error", message: "Authentication required to create comments" });
     }
     const userId = tokenResult.userId.toString();
 
@@ -304,6 +347,13 @@ router.post("/", async (req, res) => {
     }
     if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
       return res.status(400).json({ status: "error", message: "content is required." });
+    }
+    const contentStr = typeof content === "string" ? content.trim() : String(content).trim();
+    if (!contentStr) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
+    if (contentStr.length > 2000) {
+      return res.status(400).json({ status: "error", message: "Comment content must be at most 2000 characters." });
     }
 
     const proposalIdTrim = proposalId.trim();
@@ -349,7 +399,7 @@ router.post("/", async (req, res) => {
     const doc = {
       proposalId: new mongoose.Types.ObjectId(proposalIdTrim),
       userId,
-      content: typeof content === "string" ? content.trim() : String(content),
+      content: contentStr,
       status: "live",
     };
     if (parentId != null && parentId !== "") {
@@ -662,6 +712,13 @@ router.put("/:commentId", async (req, res) => {
     if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
       return res.status(400).json({ status: "error", message: "content is required." });
     }
+    const contentStr = typeof content === "string" ? content.trim() : String(content).trim();
+    if (!contentStr) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
+    if (contentStr.length > 2000) {
+      return res.status(400).json({ status: "error", message: "Comment content must be at most 2000 characters." });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
       return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
@@ -686,7 +743,7 @@ router.put("/:commentId", async (req, res) => {
 
     const updated = await Comment.findByIdAndUpdate(
       commentId,
-      { content: typeof content === "string" ? content.trim() : String(content) },
+      { content: contentStr },
       { returnDocument: "after" }
     ).lean();
 

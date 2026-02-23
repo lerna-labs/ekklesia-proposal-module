@@ -21,6 +21,7 @@ const commentSchema = new Schema(
         content: {
             type: String,
             required: true,
+            maxlength: 2000,
         },
         status: {
             type: String,

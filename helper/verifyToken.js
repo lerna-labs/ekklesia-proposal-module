@@ -55,8 +55,14 @@ export function verifyToken(req) {
     };
   }
 
-  // Get token cookie from request
-  const token = req.cookies?.token;
+  // Get token from cookie (preferred) or Authorization header
+  let token = req.cookies?.token;
+  if (!token) {
+    const auth = req.headers?.authorization;
+    if (auth && typeof auth === "string" && auth.startsWith("Bearer ")) {
+      token = auth.slice(7).trim();
+    }
+  }
 
   // Return early if no token found
   if (!token) {
