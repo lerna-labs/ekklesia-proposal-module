@@ -20,6 +20,7 @@
     pendingProposer = $bindable(false),
     pendingDrep = $bindable(false),
     pendingAdmin = $bindable(false),
+    pendingExcludeWithdrawn = $bindable(false),
     userTypeFilter = [],
     hasActiveSort,
     hasActiveFilter,
@@ -129,28 +130,43 @@
       <Popover.Content align="start" class="w-56 p-3">
         <h3 class="text-sm font-medium mb-2">Filter</h3>
         <Separator.Root class="mb-3" />
-        <div class="flex flex-col gap-0">
-          <label
-            for="comment-filter-proposer"
-            class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-          >
-            <Checkbox id="comment-filter-proposer" bind:checked={pendingProposer} />
-            <span class="font-normal">Proposer</span>
-          </label>
-          <label
-            for="comment-filter-drep"
-            class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-          >
-            <Checkbox id="comment-filter-drep" bind:checked={pendingDrep} />
-            <span class="font-normal">DRep</span>
-          </label>
-          <label
-            for="comment-filter-admin"
-            class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-          >
-            <Checkbox id="comment-filter-admin" bind:checked={pendingAdmin} />
-            <span class="font-normal">Admin</span>
-          </label>
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Author Type</Label>
+            <div class="flex flex-col gap-0">
+              <label
+                for="comment-filter-proposer"
+                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+              >
+                <Checkbox id="comment-filter-proposer" bind:checked={pendingProposer} />
+                <span class="font-normal">Proposer</span>
+              </label>
+              <label
+                for="comment-filter-drep"
+                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+              >
+                <Checkbox id="comment-filter-drep" bind:checked={pendingDrep} />
+                <span class="font-normal">DRep</span>
+              </label>
+              <label
+                for="comment-filter-admin"
+                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+              >
+                <Checkbox id="comment-filter-admin" bind:checked={pendingAdmin} />
+                <span class="font-normal">Admin</span>
+              </label>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Status</Label>
+            <label
+              for="comment-filter-withdrawn"
+              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+            >
+              <Checkbox id="comment-filter-withdrawn" bind:checked={pendingExcludeWithdrawn} />
+              <span class="font-normal">Exclude withdrawn</span>
+            </label>
+          </div>
         </div>
         <div class="border-t pt-3 flex gap-1 mt-3">
           {#if hasActiveFilter}

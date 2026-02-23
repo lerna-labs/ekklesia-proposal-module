@@ -9,7 +9,7 @@
     value = $bindable(""),
     submitError = $bindable(null),
     isSubmitting = false,
-    authorLabel = (c) => c?.user?.name ?? "Anonymous",
+    authorLabel = (c) => c?.author?.name ?? "Anonymous",
     onClose,
     onSubmit,
   } = $props();
