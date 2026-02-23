@@ -346,7 +346,10 @@ router.post("/", async (req, res) => {
     if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
       return res.status(400).json({ status: "error", message: "content is required." });
     }
-    const contentStr = typeof content === "string" ? content.trim() : String(content);
+    const contentStr = typeof content === "string" ? content.trim() : String(content).trim();
+    if (!contentStr) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
     if (contentStr.length > 2000) {
       return res.status(400).json({ status: "error", message: "Comment content must be at most 2000 characters." });
     }
@@ -707,7 +710,10 @@ router.put("/:commentId", async (req, res) => {
     if (content === undefined || content === null || (typeof content === "string" && !content.trim())) {
       return res.status(400).json({ status: "error", message: "content is required." });
     }
-    const contentStr = typeof content === "string" ? content.trim() : String(content);
+    const contentStr = typeof content === "string" ? content.trim() : String(content).trim();
+    if (!contentStr) {
+      return res.status(400).json({ status: "error", message: "content is required." });
+    }
     if (contentStr.length > 2000) {
       return res.status(400).json({ status: "error", message: "Comment content must be at most 2000 characters." });
     }
