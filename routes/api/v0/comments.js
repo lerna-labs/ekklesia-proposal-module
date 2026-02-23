@@ -330,12 +330,13 @@ router.get("/", async (req, res) => {
 /**
  * POST /comments
  * API spec §5.5 — Create a comment on a live proposal. Auth required. Before vote feedbackEndDate. Body: proposalId, content, optional parentId.
+ * Only authenticated users can create comments; userId is taken exclusively from the verified token, never from the request body.
  */
 router.post("/", async (req, res) => {
   try {
     const tokenResult = verifyToken(req);
     if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "No token provided" });
+      return res.status(401).json({ status: "error", message: "Authentication required to create comments" });
     }
     const userId = tokenResult.userId.toString();
 
