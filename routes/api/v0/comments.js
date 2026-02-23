@@ -50,28 +50,46 @@ function getCommentStatusFilter(statusParam, isAdmin) {
   return { error: true, message: "Invalid status parameter. Must be: live, withdrawn, or withdrawnByAdmin." };
 }
 
-/** Build comment response shape: user with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches comment.userId. */
+/**
+ * Status condition when no status param: include withdrawn comments for admin and for comment author.
+ * Public: live only. Admin: live + withdrawn. Authenticated (not admin): live + own withdrawn.
+ * When excludeWithdrawn is true, only live comments (ignores admin/author).
+ */
+function getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn = false) {
+  if (excludeWithdrawn) return { status: "live" };
+  if (statusParam && typeof statusParam === "string" && statusParam.trim()) {
+    const result = getCommentStatusFilter(statusParam.trim(), isAdmin);
+    if (result.error) return result;
+    return result;
+  }
+  if (!userId) return { status: "live" };
+  if (isAdmin) return { $or: [{ status: "live" }, { status: "withdrawnByAdmin" }] };
+  return { $or: [{ status: "live" }, { status: "withdrawnByAdmin", userId }] };
+}
+
+/** Build comment response shape: author with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches author or user is vote admin. */
 async function formatComment(comment, proposal, vote, authenticatedUserId = null) {
-  // User._id is a String (bech32 address), and comment.userId is now also String
-  const user = comment.userId
-    ? await User.findById(comment.userId)
-        .select("-lastLogin -createdAt -updatedAt")
-        .lean()
+  const userId = comment.userId;
+  const userDoc = userId
+    ? await User.findById(userId).select("-lastLogin -createdAt -updatedAt").lean()
     : null;
   let type = "user";
-  if (proposal?.proposerId && comment.userId === proposal.proposerId) type = "proposer";
-  else if (vote?.admins && Array.isArray(vote.admins) && user?._id != null && vote.admins.includes(String(user._id))) type = "admin";
+  if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
+  else if (vote?.admins && Array.isArray(vote.admins) && userDoc?._id != null && vote.admins.includes(String(userDoc._id))) type = "admin";
   const replyCount = await Comment.countDocuments({ parentId: comment._id, status: "live" });
   const likeCount = await CommentLike.countDocuments({ commentId: comment._id });
   const userLiked =
     authenticatedUserId &&
     (await CommentLike.exists({ commentId: comment._id, userId: authenticatedUserId }));
-  const userWithType = user ? { ...user, type } : null;
-  const isAuthor = authenticatedUserId && user && user._id === authenticatedUserId;
+  const author = userDoc
+    ? { ...userDoc, type }
+    : userId
+      ? { _id: userId, name: null, type }
+      : null;
+  const isAuthor = authenticatedUserId && author && author._id === authenticatedUserId;
+  const isAdmin = isVoteAdmin(proposal, vote, authenticatedUserId);
   const result = {
     _id: comment._id,
-    userType: type,
-    userId: comment.userId,
     parentId: comment.parentId ?? null,
     content: comment.content,
     createdAt: comment.createdAt,
@@ -79,10 +97,11 @@ async function formatComment(comment, proposal, vote, authenticatedUserId = null
     replyCount,
     likeCount,
     userLiked: !!userLiked,
-    user: userWithType,
+    author,
   };
-  if (isAuthor && comment.withdrawalDetails) {
-    result.withdrawalDetails = comment.withdrawalDetails;
+  if ((isAuthor || isAdmin) && comment.withdrawalDetails) {
+    const { _id, ...wd } = comment.withdrawalDetails;
+    result.withdrawalDetails = wd;
   }
   return result;
 }
@@ -96,6 +115,7 @@ router.get("/", async (req, res) => {
   try {
     const proposalId = req.query.proposal;
     const statusParam = req.query.status;
+    const excludeWithdrawn = req.query.excludeWithdrawn === "true" || req.query.excludeWithdrawn === "1";
     const sortParam = (req.query.sort || "date").toString().trim().toLowerCase();
     const direction = (req.query.direction || "desc").toString().trim().toLowerCase();
     const userTypeParam = (req.query.userType || "").toString().trim().toLowerCase();
@@ -164,7 +184,7 @@ router.get("/", async (req, res) => {
 
     const userId = getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
-    const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
+    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
     }
@@ -394,6 +414,12 @@ router.post("/", async (req, res) => {
       if (!parentComment) {
         return res.status(404).json({ status: "error", message: "Parent comment not found" });
       }
+      if (parentComment.status !== "live") {
+        return res.status(400).json({
+          status: "error",
+          message: "Replies cannot be added to withdrawn comments.",
+        });
+      }
     }
 
     const doc = {
@@ -431,6 +457,7 @@ router.get("/:commentId/replies", async (req, res) => {
   try {
     const { commentId } = req.params;
     const statusParam = req.query.status;
+    const excludeWithdrawn = req.query.excludeWithdrawn === "true" || req.query.excludeWithdrawn === "1";
     const page = parseInt(req.query.page, 10) || 1;
     const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
 
@@ -455,7 +482,7 @@ router.get("/:commentId/replies", async (req, res) => {
     const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
     const userId = getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
-    const statusFilter = getCommentStatusFilter(statusParam, isAdmin);
+    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
     }
