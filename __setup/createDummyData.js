@@ -38,6 +38,10 @@ const LEGAL_TRUE = {
     noGuarantee: true,
 };
 
+const ADMINS = [
+    "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf",
+];
+
 async function createDummyData() {
     try {
         console.log("Connecting to database...");
@@ -63,7 +67,7 @@ async function createDummyData() {
             title: "Test Budget 2026",
             description: "A test vote for demonstration with one proposal and comments.",
             slug: "test-budget-2026",
-            admins: ["stake1ux7kxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxm4p1", "stake1ur9mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw6x3"],
+            admins: ADMINS,
             submissionStartDate: submissionStart,
             submissionEndDate: submissionEnd,
             feedbackStartDate: feedbackStart,
