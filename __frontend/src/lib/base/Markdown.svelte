@@ -140,4 +140,20 @@
     padding-left: 1.5rem;
     margin: 0.5rem 0;
   }
+
+  :global(div.markdown blockquote) {
+    border-left: 3px solid lightgrey;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+    color: var(--mbo-text-gray);
+  }
+
+  :global(div.markdown blockquote p) {
+    margin: 0.25rem 0;
+  }
+
+  :global(div.markdown blockquote p:first-child),
+  :global(div.markdown blockquote p:last-child) {
+    margin: 0;
+  }
 </style>

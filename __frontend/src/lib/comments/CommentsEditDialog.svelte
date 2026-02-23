@@ -1,0 +1,50 @@
+<script>
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Button } from "$lib/components/ui/button";
+  import Textarea from "$lib/form/Textarea.svelte";
+
+  let {
+    comment = null,
+    value = $bindable(""),
+    validationErrors = null,
+    onClose,
+    onSave,
+  } = $props();
+
+  const open = $derived(!!comment);
+</script>
+
+<Dialog.Root
+  {open}
+  onOpenChange={(isOpen) => {
+    if (!isOpen) onClose?.();
+  }}
+>
+    <Dialog.Content class="sm:max-w-[500px]">
+      <form
+        onsubmit={(e) => {
+          e.preventDefault();
+          onSave?.();
+        }}
+      >
+        <Dialog.Header>
+          <Dialog.Title>Edit Comment</Dialog.Title>
+        </Dialog.Header>
+        <div class="py-4">
+          <Textarea
+            id="edit-content"
+            label="Comment"
+            bind:value
+            {validationErrors}
+            maxLength={2000}
+          />
+        </div>
+        <Dialog.Footer>
+          <Button type="button" variant="outline" size="sm" onclick={() => onClose?.()}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm">Save</Button>
+        </Dialog.Footer>
+      </form>
+    </Dialog.Content>
+</Dialog.Root>

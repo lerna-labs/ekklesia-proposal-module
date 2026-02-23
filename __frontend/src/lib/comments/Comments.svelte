@@ -1,0 +1,479 @@
+<script>
+  import { Button } from "$lib/components/ui/button";
+  import { toast } from "svelte-sonner";
+  import { untrack } from "svelte";
+  import { get } from "svelte/store";
+  import { user } from "$stores/sessionManager.js";
+  import { fetchJson } from "./fetchJson.js";
+  import { shortenString } from "$lib/utils.js";
+  import CommentsHeader from "./CommentsHeader.svelte";
+  import CommentCard from "./CommentCard.svelte";
+  import CommentsAddReplyDialog from "./CommentsAddReplyDialog.svelte";
+  import CommentsEditDialog from "./CommentsEditDialog.svelte";
+  import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
+  import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
+
+  let { proposalId, proposal, vote } = $props();
+
+  let currentUserId = $derived(get(user)?.userId ?? null);
+
+  let commentsState = $state({ data: [], meta: {}, loading: true, error: null });
+  let sort = $state("date");
+  let direction = $state("desc");
+  let userTypeFilter = $state([]);
+  let page = $state(1);
+  let sortPopoverOpen = $state(false);
+  let filterPopoverOpen = $state(false);
+  let pendingSort = $state("date");
+  let pendingDescending = $state(true);
+  let pendingProposer = $state(false);
+  let pendingDrep = $state(false);
+  let pendingAdmin = $state(false);
+
+  let repliesByParent = $state({});
+  let addDialogOpen = $state(false);
+  let replyTo = $state(null);
+  let commentValue = $state("");
+  let submitError = $state(null);
+  let isSubmitting = $state(false);
+  let editComment = $state(null);
+  let editValue = $state("");
+  let editValidationErrors = $state(null);
+  let withdrawComment = $state(null);
+  let withdrawCategory = $state("");
+  let withdrawReason = $state("");
+  let withdrawError = $state(null);
+
+  const canComment = $derived(
+    currentUserId &&
+    proposal?.status === "live" &&
+    vote?.feedbackEndDate &&
+    new Date() < new Date(vote.feedbackEndDate)
+  );
+
+  const canLike = $derived(
+    currentUserId &&
+    proposal?.status === "live" &&
+    vote?.feedbackEndDate &&
+    new Date() < new Date(vote.feedbackEndDate)
+  );
+
+  const isVoteAdmin = $derived(
+    currentUserId &&
+    vote?.admins &&
+    Array.isArray(vote.admins) &&
+    vote.admins.includes(currentUserId)
+  );
+
+  const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
+  const hasActiveFilter = $derived(userTypeFilter.length > 0);
+
+  $effect(() => {
+    if (sortPopoverOpen) {
+      pendingSort = sort;
+      pendingDescending = direction === "desc";
+    }
+    if (filterPopoverOpen) {
+      pendingProposer = userTypeFilter.includes("proposer");
+      pendingDrep = userTypeFilter.includes("drep");
+      pendingAdmin = userTypeFilter.includes("admin");
+    }
+  });
+
+  $effect(() => {
+    if (!addDialogOpen) {
+      replyTo = null;
+      commentValue = "";
+      submitError = null;
+    }
+  });
+
+  function authorLabel(c) {
+    const u = c?.user;
+    const name = u?.name && String(u.name).trim();
+    if (name) return name;
+    const id = u?._id ?? c?.userId ?? "";
+    return shortenString(id, 12, true) || "—";
+  }
+
+  function canEditComment(c) {
+    if (!currentUserId || !c?.user?._id) return false;
+    if (c.user._id !== currentUserId) return false;
+    const createdAt = c.createdAt ? new Date(c.createdAt).getTime() : 0;
+    return Date.now() - createdAt <= 15 * 60 * 1000;
+  }
+
+  async function loadComments() {
+    commentsState = { ...untrack(() => commentsState), loading: true, error: null };
+    try {
+      const userTypeParam =
+        userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
+      const { ok, status, json } = await fetchJson(
+        `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}`
+      );
+      if (!ok) {
+        const msg = json?.message ?? `Error ${status}`;
+        commentsState = { data: [], meta: {}, loading: false, error: msg };
+        toast.error(msg);
+        return;
+      }
+      commentsState = { data: json.data ?? [], meta: json.meta ?? {}, loading: false, error: null };
+    } catch (err) {
+      const msg = err?.message ?? "Failed to load comments";
+      commentsState = { data: [], meta: {}, loading: false, error: msg };
+      toast.error(msg);
+    }
+  }
+
+  $effect(() => {
+    if (proposalId) untrack(() => loadComments());
+  });
+
+  function applySort() {
+    sort = pendingSort;
+    direction = pendingDescending ? "desc" : "asc";
+    page = 1;
+    sortPopoverOpen = false;
+    loadComments();
+  }
+
+  function resetSort() {
+    pendingSort = "date";
+    pendingDescending = true;
+    sort = "date";
+    direction = "desc";
+    page = 1;
+    sortPopoverOpen = false;
+    loadComments();
+  }
+
+  function applyFilter() {
+    userTypeFilter = [
+      ...(pendingProposer ? ["proposer"] : []),
+      ...(pendingDrep ? ["drep"] : []),
+      ...(pendingAdmin ? ["admin"] : []),
+    ];
+    page = 1;
+    filterPopoverOpen = false;
+    loadComments();
+  }
+
+  function resetFilter() {
+    pendingProposer = false;
+    pendingDrep = false;
+    pendingAdmin = false;
+    userTypeFilter = [];
+    page = 1;
+    filterPopoverOpen = false;
+    loadComments();
+  }
+
+  async function loadReplies(commentId) {
+    const existing = repliesByParent[commentId];
+    if (existing?.data?.length || existing?.loading) return;
+    repliesByParent = { ...repliesByParent, [commentId]: { loading: true, error: null, data: [], meta: null } };
+    try {
+      const { ok, json } = await fetchJson(`/comments/${commentId}/replies?page=1&limit=20`);
+      if (!ok) {
+        const msg = json?.message ?? "Failed to load replies";
+        repliesByParent = {
+          ...repliesByParent,
+          [commentId]: { loading: false, error: msg, data: [], meta: null },
+        };
+        toast.error(msg);
+        return;
+      }
+      repliesByParent = {
+        ...repliesByParent,
+        [commentId]: {
+          loading: false,
+          error: null,
+          data: json.data ?? [],
+          meta: json.meta ?? {},
+        },
+      };
+    } catch (err) {
+      const msg = err?.message ?? "Failed to load replies";
+      repliesByParent = {
+        ...repliesByParent,
+        [commentId]: { loading: false, error: msg, data: [], meta: null },
+      };
+      toast.error(msg);
+    }
+  }
+
+  function toggleReplies(c) {
+    const id = c._id;
+    const state = repliesByParent[id];
+    if (state?.data?.length) {
+      const next = { ...repliesByParent };
+      delete next[id];
+      repliesByParent = next;
+    } else {
+      loadReplies(id);
+    }
+  }
+
+  function openAddDialog(replyingTo = null) {
+    replyTo = replyingTo;
+    commentValue = replyingTo
+      ? (replyingTo.content ?? "")
+          .split("\n")
+          .map((l) => `> ${l}`)
+          .join("\n")
+      : "";
+    submitError = null;
+    addDialogOpen = true;
+  }
+
+  async function submitComment() {
+    const content = String(commentValue ?? "").trim();
+    if (!content) {
+      submitError = "Comment cannot be empty.";
+      toast.error("Comment cannot be empty.");
+      return;
+    }
+    if (content.length > 2000) {
+      submitError = "Comment must be at most 2000 characters.";
+      toast.error("Comment must be at most 2000 characters.");
+      return;
+    }
+    isSubmitting = true;
+    submitError = null;
+    const body = { proposalId, content };
+    if (replyTo) body.parentId = replyTo._id;
+    const { ok, json } = await fetchJson("/comments", { method: "POST", body: JSON.stringify(body) });
+    isSubmitting = false;
+    if (!ok) {
+      submitError = json?.message ?? "Failed to post comment.";
+      toast.error(json?.message ?? "Failed to post comment.");
+      return;
+    }
+    toast.success(replyTo ? "Reply posted" : "Comment posted");
+    const parentId = replyTo?._id;
+    addDialogOpen = false;
+    replyTo = null;
+    commentValue = "";
+    await loadComments();
+    if (parentId && repliesByParent[parentId]) {
+      loadReplies(parentId);
+    }
+  }
+
+  function closeAddDialog() {
+    addDialogOpen = false;
+    replyTo = null;
+    commentValue = "";
+    submitError = null;
+  }
+
+  async function toggleLike(c) {
+    if (!canLike) return;
+    const { ok, json } = await fetchJson(`/comments/${c._id}/like`, { method: "POST" });
+    if (!ok) {
+      toast.error(json?.message ?? "Failed to update like");
+      return;
+    }
+    commentsState = {
+      ...commentsState,
+      data: commentsState.data.map((x) =>
+        x._id === c._id
+          ? { ...x, likeCount: json.likeCount ?? x.likeCount, userLiked: json.liked ?? false }
+          : x
+      ),
+    };
+  }
+
+  function openEdit(c) {
+    editComment = c;
+    editValue = c.content ?? "";
+    editValidationErrors = null;
+  }
+
+  async function saveEdit() {
+    if (!editComment) return;
+    const content = String(editValue ?? "").trim();
+    if (!content) {
+      editValidationErrors = { properties: { "edit-content": { errors: ["Comment cannot be empty."] } } };
+      return;
+    }
+    if (content.length > 2000) {
+      editValidationErrors = { properties: { "edit-content": { errors: ["Comment must be at most 2000 characters."] } } };
+      return;
+    }
+    editValidationErrors = null;
+    const { ok, json } = await fetchJson(`/comments/${editComment._id}`, {
+      method: "PUT",
+      body: JSON.stringify({ content }),
+    });
+    if (!ok) {
+      toast.error(json?.message ?? "Failed to update comment");
+      return;
+    }
+    toast.success("Comment updated");
+    editComment = null;
+    editValue = "";
+    await loadComments();
+  }
+
+  function closeEdit() {
+    editComment = null;
+    editValue = "";
+    editValidationErrors = null;
+  }
+
+  function openWithdraw(c) {
+    withdrawComment = c;
+    withdrawCategory = "";
+    withdrawReason = "";
+    withdrawError = null;
+  }
+
+  async function submitWithdraw() {
+    if (!withdrawComment || !withdrawCategory) {
+      withdrawError = "Please select a category.";
+      toast.error("Please select a category.");
+      return;
+    }
+    const { ok, json } = await fetchJson(`/comments/${withdrawComment._id}/withdraw`, {
+      method: "PUT",
+      body: JSON.stringify({ category: withdrawCategory, comment: withdrawReason || undefined }),
+    });
+    if (!ok) {
+      withdrawError = json?.message ?? "Failed to withdraw.";
+      toast.error(json?.message ?? "Failed to withdraw comment");
+      return;
+    }
+    toast.success("Comment withdrawn");
+    const parentId = withdrawComment.parentId ?? withdrawComment._id;
+    withdrawComment = null;
+    withdrawCategory = "";
+    withdrawReason = "";
+    await loadComments();
+    if (parentId && repliesByParent[parentId]) loadReplies(parentId);
+  }
+
+  function closeWithdraw() {
+    withdrawComment = null;
+    withdrawCategory = "";
+    withdrawReason = "";
+    withdrawError = null;
+  }
+</script>
+
+<section class="mt-8" id="comments">
+  <CommentsHeader
+    total={commentsState.meta?.total}
+    bind:sortPopoverOpen
+    bind:filterPopoverOpen
+    bind:pendingSort
+    bind:pendingDescending
+    bind:pendingProposer
+    bind:pendingDrep
+    bind:pendingAdmin
+    userTypeFilter={userTypeFilter}
+    {hasActiveSort}
+    {hasActiveFilter}
+    onApplySort={applySort}
+    onResetSort={resetSort}
+    onApplyFilter={applyFilter}
+    onResetFilter={resetFilter}
+  />
+
+  {#if commentsState.loading}
+    <p class="text-sm text-muted-foreground">Loading comments…</p>
+  {:else if commentsState.error}
+    <p class="text-sm text-destructive">{commentsState.error}</p>
+  {:else}
+    <div class="space-y-4">
+      {#each commentsState.data as comment (comment._id)}
+        <CommentCard
+          {comment}
+          isReply={false}
+          {currentUserId}
+          {canComment}
+          {canLike}
+          {isVoteAdmin}
+          repliesData={repliesByParent[comment._id]?.data ?? []}
+          {authorLabel}
+          {canEditComment}
+          onToggleLike={toggleLike}
+          onToggleReplies={toggleReplies}
+          onReply={openAddDialog}
+          onEdit={openEdit}
+          onWithdraw={openWithdraw}
+        />
+
+        {#if (comment.replyCount ?? 0) > 0 && repliesByParent[comment._id]}
+          {@const replyState = repliesByParent[comment._id]}
+          {#if replyState.error}
+            <div class="ml-6 mb-4 pl-4 border-l-2 border-muted text-sm text-destructive">
+              {replyState.error}
+            </div>
+          {:else if replyState.loading}
+            <CommentsReplyLoading loading={replyState.loading} />
+          {:else if replyState.data?.length}
+            <div class="ml-6 mb-4 space-y-3">
+              {#each replyState.data as reply (reply._id)}
+                <CommentCard
+                  comment={reply}
+                  isReply={true}
+                  {currentUserId}
+                  {authorLabel}
+                />
+              {/each}
+            </div>
+          {/if}
+        {/if}
+      {/each}
+    </div>
+
+    {#if commentsState.meta?.hasNextPage}
+      <Button
+        variant="outline"
+        size="sm"
+        class="mt-4"
+        onclick={() => {
+          page++;
+          loadComments();
+        }}
+      >
+        Load more
+      </Button>
+    {/if}
+
+    {#if canComment}
+      <Button variant="outline" class="mt-4" onclick={() => openAddDialog()}>
+        Add Comment
+      </Button>
+    {/if}
+  {/if}
+</section>
+
+<CommentsAddReplyDialog
+  bind:open={addDialogOpen}
+  replyTo={replyTo}
+  bind:value={commentValue}
+  bind:submitError
+  isSubmitting={isSubmitting}
+  {authorLabel}
+  onClose={closeAddDialog}
+  onSubmit={submitComment}
+/>
+
+<CommentsEditDialog
+  comment={editComment}
+  bind:value={editValue}
+  validationErrors={editValidationErrors}
+  onClose={closeEdit}
+  onSave={saveEdit}
+/>
+
+<CommentsWithdrawDialog
+  comment={withdrawComment}
+  bind:category={withdrawCategory}
+  bind:reason={withdrawReason}
+  bind:error={withdrawError}
+  onClose={closeWithdraw}
+  onSubmit={submitWithdraw}
+/>
