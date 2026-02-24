@@ -40,7 +40,8 @@ const LEGAL_TRUE = {
 };
 
 const ADMINS = [
-    "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf",
+    "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf", // MAD 
+    "stake_test1uqvx67glm2hdjcfp9pg0d59x0595n372k8sh437vk3hda0gukg9fa" // ADAM - Hydra Voter DRep #0
 ];
 
 const COMMENT_USERS = [
