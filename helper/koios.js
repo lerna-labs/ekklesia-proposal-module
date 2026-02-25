@@ -5,6 +5,19 @@
  * @module helper/koios
  */
 
+const API_URL = process.env.API_URL;
+const API_TOKEN = process.env.API_TOKEN;
+
+if (!API_URL) {
+    console.error("API_URL is not set in the environment variables.");
+    throw new Error("API URL is not set!");
+}
+
+if (!API_TOKEN) {
+    console.error("API_TOKEN is not set in the environment variables.");
+    throw new Error("API Token is not set!");
+}
+
 /**
  * Fetches the DRep name for a given DRep ID from the Koios API.
  * 
@@ -28,18 +41,6 @@
  * console.log(name); // "Maureen"
  */
 export async function fetchDrepName(drepId) {
-    const API_URL = process.env.API_URL;
-    const API_TOKEN = process.env.API_TOKEN;
-
-    if (!API_URL) {
-        console.error("API_URL is not set in the environment variables.");
-        throw new Error("API URL is not set!");
-    }
-
-    if (!API_TOKEN) {
-        console.error("API_TOKEN is not set in the environment variables.");
-        throw new Error("API Token is not set!");
-    }
     try {
         const response = await fetch(`${API_URL}/drep_info?registered=eq.true`,
             {
@@ -104,6 +105,38 @@ export async function fetchDrepName(drepId) {
 }
 
 /**
+ * Validates that a DRep ID is registered with the Koios API.
+ *
+ * @param {string} drepId - The DRep ID (e.g. CIP129 Bech32 "drep1...")
+ * @returns {Promise<boolean>} True if the DRep is registered (drep_info returns at least one result), false otherwise or on error.
+ */
+export async function validateDrep(drepId) {
+    try {
+        const response = await fetch(`${API_URL}/drep_info?registered=eq.true`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    "_drep_ids": [drepId],
+                }),
+            }
+        );
+        const data = await response.json();
+        if (data.length === 0) {
+            console.log("No DRep found");
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.error("Error validating DRep:", error);
+        return false;
+    }
+}
+
+/**
  * Fetches the Cardano handle (asset name) for a given address from the Koios API.
  * 
  * @description
@@ -131,19 +164,6 @@ export async function fetchDrepName(drepId) {
  * console.log(handle); // "bob"
  */
 export async function fetchHandle(address) {
-    const API_URL = process.env.API_URL;
-    const API_TOKEN = process.env.API_TOKEN;
-
-    if (!API_URL) {
-        console.error("API_URL is not set in the environment variables.");
-        throw new Error("API URL is not set!");
-    }
-
-    if (!API_TOKEN) {
-        console.error("API_TOKEN is not set in the environment variables.");
-        throw new Error("API Token is not set!");
-    }
-
     const handlePolicyId = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
     let endpoint;
     let body;
@@ -223,20 +243,6 @@ export async function fetchHandle(address) {
  * }
  */
 export async function getScript(scriptHash) {
-    const API_URL = process.env.API_URL;
-    const API_TOKEN = process.env.API_TOKEN;
-
-    // Validate that API configuration is set
-    if (!API_URL) {
-        console.error("API_URL is not set in the environment variables.");
-        throw new Error("API URL is not set!");
-    }
-
-    if (!API_TOKEN) {
-        console.error("API_TOKEN is not set in the environment variables.");
-        throw new Error("API Token is not set!");
-    }
-
     // FIXME: Disabled because this throws an error for some reason
     // Validate and parse the script hash format
     // let script_hash;
