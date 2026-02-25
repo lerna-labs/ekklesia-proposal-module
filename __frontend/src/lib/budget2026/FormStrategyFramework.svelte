@@ -22,6 +22,18 @@
 </script>
 
 <Field.Set class="space-y-2">
+  <div>
+    <h2 class="text-lg font-medium">
+      To which strategic pillar does your proposal align the most?
+    </h2>
+
+    <p>
+      Looking at the strategy pillars supported by DReps in this info action,
+      which one does your proposal support or relate to the most. Before
+      selecting read the whole strategy framework and review the pillars
+      details. Select one or more
+    </p>
+  </div>
   <Field.Field class="gap-2">
     <div class="flex items-center gap-1 w-full">
       <Field.Label class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
