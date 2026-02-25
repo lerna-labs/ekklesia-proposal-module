@@ -112,7 +112,6 @@
     if (multiSigCheck) {
       url += "/multisig";
     }
-    console.log(signer);
     const submitResponse = await submitSignature(
       url,
       payload.userId,

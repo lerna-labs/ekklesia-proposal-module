@@ -110,7 +110,7 @@
     </AlertDialog.Header>
 
     <Tabs.Root class="w-full" bind:value={selected}>
-      <Tabs.List class="mb-2 flex w-full justify-evenly">
+      <Tabs.List class="flex w-full justify-evenly">
         <Tabs.Trigger value="wallet" disabled={noWallets}>
           Connect Wallet
         </Tabs.Trigger>
