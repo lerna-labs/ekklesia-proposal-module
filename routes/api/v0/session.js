@@ -18,7 +18,7 @@ import {
   isPartyToScript,
 } from "../../../helper/verifySignature.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
-import { fetchDrepName, fetchHandle } from "../../../helper/koios.js";
+import { fetchDrepName, fetchHandle, validateDrep } from "../../../helper/koios.js";
 
 // enable dayjs duration plugin
 dayjs.extend(duration);
@@ -318,6 +318,16 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       });
     }
 
+    if (signType === "drep") {
+      const drepValid = await validateDrep(validatedScriptAddress);
+      if (!drepValid) {
+        return res.status(400).json({
+          status: "error",
+          message: "DRep is not registered or validation failed",
+        });
+      }
+    }
+
     let token;
     try {
       token = jwt.sign(
@@ -384,6 +394,16 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
   }
   if (signatureVerification?.error || !signatureVerification) {
     return res.status(400).json({ status: "error", message: AUTH_ERROR_MESSAGE });
+  }
+
+  if (signType === "drep") {
+    const drepValid = await validateDrep(addressBech32);
+    if (!drepValid) {
+      return res.status(400).json({
+        status: "error",
+        message: "DRep is not registered or validation failed",
+      });
+    }
   }
 
   let token;
