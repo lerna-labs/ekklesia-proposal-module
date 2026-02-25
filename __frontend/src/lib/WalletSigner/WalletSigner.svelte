@@ -80,10 +80,10 @@
     </Button>
   </AlertDialog.Trigger>
   <AlertDialog.Content
-    class="max-h-full max-w-[320px] overflow-y-auto overflow-x-hidden p-4"
+    class="max-h-[85vh] max-w-[320px] flex flex-col overflow-hidden p-4"
     interactOutsideBehavior="close"
   >
-    <AlertDialog.Header class="mb-1">
+    <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
         <div class="flex items-center gap-2">
@@ -109,100 +109,101 @@
       </AlertDialog.Description>
     </AlertDialog.Header>
 
-    <Tabs.Root class="w-full" bind:value={selected}>
-      <Tabs.List class="flex w-full justify-evenly">
-        <Tabs.Trigger value="wallet" disabled={noWallets}>
-          Connect Wallet
-        </Tabs.Trigger>
-        <Tabs.Trigger value="signer">Use CardanoSigner</Tabs.Trigger>
-      </Tabs.List>
+    <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+      <Tabs.Root class="w-full" bind:value={selected}>
+        <Tabs.List class="flex w-full justify-evenly">
+          <Tabs.Trigger value="wallet" disabled={noWallets}>
+            Connect Wallet
+          </Tabs.Trigger>
+          <Tabs.Trigger value="signer">Use CardanoSigner</Tabs.Trigger>
+        </Tabs.List>
 
-      {#if multiSig}
-        {#if !$loggedIn}
-          <!-- MULTISIG ADDRESS -->
-          <Input
-            type="text"
-            bind:value={scriptAddress}
-            class="mb-2"
-            placeholder="Enter MultiSig DRep-ID"
-          />
-          <!-- SELECT SIGNTYPE -->
-          <SelectSignType
-            value={signType}
-            mode={selected}
-            on:change={(e) => (signType = e.detail)}
-          />
-        {:else}
-          <!-- display VoterId -->
-          <Input type="text" value={$user.userId} disabled class="mb-2" />
-          <!-- SELECT SIGNTYPE -->
-          <SelectSignType
-            value={signType}
-            mode={selected}
-            on:change={(e) => (signType = e.detail)}
-          />
-        {/if}
-      {/if}
-
-      {#if !multiSig}
-        {#if !$loggedIn}
-          <!-- SELECT SIGNTYPE -->
-          <SelectSignType
-            value={signType}
-            mode={selected}
-            on:change={(e) => (signType = e.detail)}
-          />
-          <!-- ENTER POOL ID -->
-          {#if signType === "pool" && selected === "wallet"}
+        {#if multiSig}
+          {#if !$loggedIn}
+            <!-- MULTISIG ADDRESS -->
             <Input
               type="text"
-              placeholder="Please enter your Pool ID"
-              class="mb-2"
-              bind:value={poolId}
+              bind:value={scriptAddress}
+              placeholder="Enter MultiSig DRep-ID"
+            />
+            <!-- SELECT SIGNTYPE -->
+            <SelectSignType
+              value={signType}
+              mode={selected}
+              on:change={(e) => (signType = e.detail)}
+            />
+          {:else}
+            <!-- display VoterId -->
+            <Input type="text" value={$user.userId} disabled class="mb-2" />
+            <!-- SELECT SIGNTYPE -->
+            <SelectSignType
+              value={signType}
+              mode={selected}
+              on:change={(e) => (signType = e.detail)}
             />
           {/if}
-        {:else}
-          <!-- display VoterId -->
-          {#if selected === "wallet"}
-            <Input type="text" value={$user.userId} disabled />
+        {/if}
+
+        {#if !multiSig}
+          {#if !$loggedIn}
+            <!-- SELECT SIGNTYPE -->
+            <SelectSignType
+              value={signType}
+              mode={selected}
+              on:change={(e) => (signType = e.detail)}
+            />
+            <!-- ENTER POOL ID -->
+            {#if signType === "pool" && selected === "wallet"}
+              <Input
+                type="text"
+                placeholder="Please enter your Pool ID"
+                class="mb-2"
+                bind:value={poolId}
+              />
+            {/if}
+          {:else}
+            <!-- display userId -->
+            {#if selected === "wallet"}
+              <Input type="text" value={$user.userId} disabled />
+            {/if}
           {/if}
         {/if}
-      {/if}
 
-      <!-- CONNECT WALLET -->
-      <Tabs.Content value="wallet">
-        <Wallet
-          {signType}
-          {mode}
-          {ballot}
-          {multiSig}
-          {scriptAddress}
-          {tx}
-          {poolId}
-          on:success={submitSuccess}
-          on:login={storeToken}
-          on:nowallets={() => {
-            noWallets = true;
-            selected = "signer";
-          }}
-          on:cancel={close}
-        />
-      </Tabs.Content>
+        <!-- CONNECT WALLET -->
+        <Tabs.Content value="wallet">
+          <Wallet
+            {signType}
+            {mode}
+            {ballot}
+            {multiSig}
+            {scriptAddress}
+            {tx}
+            {poolId}
+            on:success={submitSuccess}
+            on:login={storeToken}
+            on:nowallets={() => {
+              noWallets = true;
+              selected = "signer";
+            }}
+            on:cancel={close}
+          />
+        </Tabs.Content>
 
-      <!-- CARDANO SIGNER -->
-      <Tabs.Content value="signer">
-        <CardanoSigner
-          {signType}
-          {mode}
-          {ballot}
-          {multiSig}
-          {scriptAddress}
-          {tx}
-          on:login={storeToken}
-          on:success={submitSuccess}
-          on:cancel={close}
-        />
-      </Tabs.Content>
-    </Tabs.Root>
+        <!-- CARDANO SIGNER -->
+        <Tabs.Content value="signer">
+          <CardanoSigner
+            {signType}
+            {mode}
+            {ballot}
+            {multiSig}
+            {scriptAddress}
+            {tx}
+            on:login={storeToken}
+            on:success={submitSuccess}
+            on:cancel={close}
+          />
+        </Tabs.Content>
+      </Tabs.Root>
+    </div>
   </AlertDialog.Content>
 </AlertDialog.Root>

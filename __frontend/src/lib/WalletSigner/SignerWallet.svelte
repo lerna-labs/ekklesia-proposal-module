@@ -60,11 +60,7 @@
   // Request login payload for signing
   async function login() {
     loading = true;
-    let payload;
-    let url = "/session";
-    if (multiSigCheck) {
-      url = "/session/multisig";
-    }
+    const url = "/session";
 
     // replace connected wallet address with pool id
     if (signType === "pool" && poolId) {
@@ -109,7 +105,7 @@
     }
     let url =
       mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
-    if (multiSigCheck) {
+    if (mode !== "login" && multiSigCheck) {
       url += "/multisig";
     }
     const submitResponse = await submitSignature(
