@@ -28,6 +28,18 @@
  * console.log(name); // "Maureen"
  */
 export async function fetchDrepName(drepId) {
+    const API_URL = process.env.API_URL;
+    const API_TOKEN = process.env.API_TOKEN;
+
+    if (!API_URL) {
+        console.error("API_URL is not set in the environment variables.");
+        throw new Error("API URL is not set!");
+    }
+
+    if (!API_TOKEN) {
+        console.error("API_TOKEN is not set in the environment variables.");
+        throw new Error("API Token is not set!");
+    }
     try {
         const response = await fetch(`${API_URL}/drep_info?registered=eq.true`,
             {
@@ -46,6 +58,12 @@ export async function fetchDrepName(drepId) {
         if (data.length === 0) {
             console.log("No DRep found");
             return null;
+        }
+
+        // check if drep meta url is present
+        if (!data[0].meta_url) {
+            console.log("No DRep metadata URL found");
+            return undefined;
         }
 
         // fetch drep metadata
@@ -219,14 +237,16 @@ export async function getScript(scriptHash) {
         throw new Error("API Token is not set!");
     }
 
+    // FIXME: Disabled because this throws an error for some reason
     // Validate and parse the script hash format
-    let script_hash;
-    try {
-        script_hash = ScriptHash.from_hex(scriptHash);
-    } catch (error) {
-        console.error(`Not a valid script hash: ${script_hash}`);
-        throw new Error("Not a valid script hash");
-    }
+    // let script_hash;
+    // try {
+    //     console.log("Parsing script hash:", scriptHash);
+    //     script_hash = ScriptHash.from_hex(scriptHash);
+    // } catch (error) {
+    //     console.error(`Not a valid script hash: ${script_hash}`);
+    //     throw new Error("Not a valid script hash");
+    // }
 
     try {
         // Make authenticated POST request to Koios script_info endpoint

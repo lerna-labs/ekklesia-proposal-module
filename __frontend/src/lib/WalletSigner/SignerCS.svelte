@@ -42,7 +42,7 @@
     loading = true;
     let url =
       mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
-    if (multiSig) {
+    if (mode !== "login" && multiSig) {
       url += "/multisig";
     }
     if (tx) {
@@ -81,7 +81,7 @@
     }
     let url =
       mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
-    if (multiSig) {
+    if (mode !== "login" && multiSig) {
       url += "/multisig";
     }
     try {
@@ -122,12 +122,7 @@
 </script>
 
 {#if !receivedPayload}
-  <Input
-    type="text"
-    {placeholder}
-    class="mt-2 w-full"
-    bind:value={signerAddress}
-  />
+  <Input type="text" {placeholder} class="w-full" bind:value={signerAddress} />
 
   <Button
     class="mt-2 w-full"
@@ -157,7 +152,7 @@
 
   <Textarea
     placeholder="Paste the JSON payload here"
-    class="mt-2 w-full text-xs"
+    class="mt-2 w-full text-xs max-h-[200px] min-h-[80px] resize-none overflow-y-auto"
     bind:value={signatureJSON}
     disabled={!signerAddress}
     rows={4}

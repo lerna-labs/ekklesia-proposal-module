@@ -21,7 +21,7 @@
   {disabled}
   class="w-full"
 >
-  <Select.Trigger class="mb-2 w-full">
+  <Select.Trigger class="w-full">
     {#if value}
       {#if value === "drep"}
         Sign with DRep Key
