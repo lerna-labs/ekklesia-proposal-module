@@ -365,9 +365,12 @@
             id="estimatedDuration"
             bind:value={formData.metaData.estimatedDuration}
             label="Estimated Duration"
-            description="Estimated duration from the start of the work to completion. Or if your proposal covers ongoing operations or services, specify the number of months this budget is intended to support."
-            placeholder="Enter Estimated Duration Here"
+            type="number"
+            min={1}
+            description="Estimated duration of the project proposal in months"
+            placeholder="Enter Duration in Months"
             required
+            class="sm: w-1/4"
           />
         </Card.Content>
       </Card.Root>
