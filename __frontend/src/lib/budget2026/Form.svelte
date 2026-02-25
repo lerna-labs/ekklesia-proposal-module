@@ -371,6 +371,7 @@
             placeholder="Enter Duration in Months"
             required
             class="sm: w-1/4"
+            validationErrors={validationErrors?.properties?.metaData}
           />
         </Card.Content>
       </Card.Root>
