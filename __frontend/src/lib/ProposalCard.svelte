@@ -58,7 +58,7 @@
   class="hover:shadow-md transition-shadow {className ||
     ''} {proposal?.status === 'withdrawnByProposer' ||
   proposal?.status === 'withdrawnByAdmin'
-    ? 'bg-muted/50'
+    ? 'bg-red-100/50'
     : ''}"
 >
   <Card.Header>
@@ -148,6 +148,42 @@
         </span>
         <span class="text-sm">{proposal.metaData.initiativeType}</span>
       </div>
+    {/if}
+
+    {#if proposal.withdrawalDetails}
+      {@const wd = proposal.withdrawalDetails}
+      {@const withdrawalDate = wd?.date
+        ? new Date(wd.date).toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : "—"}
+      <Card.Root class="bg-white mt-8">
+        <Card.Header>
+          <Card.Title>
+            {proposal.status === "withdrawnByAdmin"
+              ? "Proposal Withdrawn by Admin"
+              : "Proposal Withdrawn by Proposer"}
+
+            <span
+              class="ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+            >
+              {wd.category}
+            </span>
+          </Card.Title>
+          <Card.Description>
+            This proposal was withdrawn on {withdrawalDate}
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-1 text-sm">
+          {#if wd.comment}
+            <div>
+              <span class="font-medium text-muted-foreground">Comment:</span>
+              <Markdown content={wd.comment} class="text-sm mt-0.5" />
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
     {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw}
