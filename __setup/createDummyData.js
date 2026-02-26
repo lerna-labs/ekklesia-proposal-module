@@ -1,6 +1,6 @@
 /**
- * Create dummy data: 1 vote, import categories for it, 2 live proposals, 1 draft proposal.
- * Each live proposal gets one comment per COMMENT_USERS user, plus one withdrawn comment.
+ * Create dummy data: 1 vote, import categories, 10 live proposals (same proposer), 1 draft.
+ * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Category, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
@@ -41,7 +41,8 @@ const LEGAL_TRUE = {
 
 const ADMINS = [
     "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf", // MAD 
-    "stake_test1uqvx67glm2hdjcfp9pg0d59x0595n372k8sh437vk3hda0gukg9fa" // ADAM - Hydra Voter DRep #0
+    "stake_test1uqvx67glm2hdjcfp9pg0d59x0595n372k8sh437vk3hda0gukg9fa", // ADAM - Hydra Voter DRep #0
+    "stake_test1ury4vups5rm3dahv3vht7lp83kdpxc0assfgwulm2z4rn4qe9ceqz" // SIMO 
 ];
 
 const COMMENT_USERS = [
@@ -138,169 +139,103 @@ async function createDummyData() {
         );
         console.log("DRep user ensured:", DREP_ID);
 
-        // 4. Create one live proposal and one draft proposal
+        // 4. Create 10 live proposals (all proposer: STAKE_TEST_PROPOSER_ID), then one draft
         const categoryId = categories[0]._id;
+        const COMMENT_TEST_PROPOSAL_TITLE = "Comment test proposal";
 
-        console.log("Creating live proposal...");
-        const proposal = await Proposal.create({
-            proposerId,
-            voteId: vote._id,
-            title: "Community Website and Documentation Hub",
-            summary: "A single proposal to build a community website and documentation hub.",
-            status: "live",
-            submittedAt: now,
-            totalBudget: 150000,
-            metaData: {
-                trackRecord: "Previous community projects delivered on time.",
-                contractingParty: {
-                    legalEntityName: "Test Community Ltd",
-                    legalEntityType: "company",
-                    legalEntityRegistrationNumber: "12345",
-                    legalEntityCountry: "GB",
-                    legalEntityAddress: "1 Test Street",
-                },
-                primaryContact: {
-                    name: "Test Proposer",
-                    title: "Lead",
-                    email: "test@example.com",
-                    socialMedia: "@testproposer",
-                },
-                signatoryContact: {
-                    name: "Test Proposer",
-                    title: "Lead",
-                    email: "test@example.com",
-                    authorization: true,
-                },
-                proposalType: "Technical (software/IT)",
-                kycInfo: { submitted: true, email: "test@example.com" },
-                strategicFocusArea: categoryId,
-                keyPerformanceIndicators: [
-                    { kpi: "Documentation pages", contributionStrategy: "Monthly updates" },
-                ],
-                executionRoadmap: {
-                    projectStartDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-                    projectEndDate: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
-                    workPackages: [
-                        {
-                            title: "WP1 Website and Docs",
-                            scope: "Build community site and documentation.",
-                            supportingDocuments: [{ title: "Design doc", url: "https://example.com/design.pdf" }],
-                            estimatedDuration: "3 months",
-                            coreObjectives: ["Launch community site", "Publish initial docs"],
-                            expectedValue: "Central hub for community and developers.",
-                            metric: "Site live, 50+ doc pages.",
-                            milestones: [
-                                {
-                                    milestoneName: "M1 – Design approval",
-                                    deliverables: "Design doc and mockups",
-                                    acceptanceCriteria: "Approved by stakeholder",
-                                    duration: "2 weeks",
-                                },
-                            ],
-                            budgetBreakdown: [
-                                { costCategory: "Development", description: "Backend and frontend", quantity: 1, unitPrice: 50000, total: 50000 },
-                            ],
-                        },
-                    ],
-                },
-                financialAndAdministrative: {
-                    conversionRate: 0.4,
-                    intersectAdministrator: true,
-                    otherAdministrators: "",
-                    initiativeType: "New Initiative",
-                    priorFunding: "None",
-                    treasuryRepayment: false,
-                    treasuryRepaymentCondition: "",
-                    treasuryDonationHash: "abc123def456",
-                    thirdPartyAssurers: "",
-                    supportingDocuments: [{ title: "Project plan", url: "https://example.com/plan.pdf" }],
-                },
-                legalDeclarations: LEGAL_TRUE,
-            },
-        });
-        console.log(`Live proposal created: ${proposal._id}`);
+        const LIVE_PROPOSAL_TEMPLATES = [
+            { title: COMMENT_TEST_PROPOSAL_TITLE, summary: "Proposal used to test comments (one per user + withdrawn).", totalBudget: 50000, legalName: "Comment Test Ltd", contactName: "Comment Test Proposer" },
+            { title: "Community Website and Documentation Hub", summary: "Build a community website and documentation hub.", totalBudget: 150000, legalName: "Test Community Ltd", contactName: "Test Proposer" },
+            { title: "Open-Source Tooling and Developer Experience", summary: "Improve developer experience and maintain open-source tooling.", totalBudget: 85000, legalName: "Stake Test Community", contactName: "Stake Test Proposer" },
+            { title: "Governance Dashboard and Analytics", summary: "Deliver a governance dashboard with analytics and reporting.", totalBudget: 120000, legalName: "Gov Analytics Ltd", contactName: "Gov Lead" },
+            { title: "Security Audits and Best Practices", summary: "Fund security audits and publish best-practice guides.", totalBudget: 95000, legalName: "Security First Ltd", contactName: "Security Lead" },
+            { title: "Education and Onboarding Program", summary: "Create an education and onboarding program for new contributors.", totalBudget: 78000, legalName: "Edu Community CIC", contactName: "Education Lead" },
+            { title: "Research and Standards Working Group", summary: "Run a research and standards working group with quarterly reports.", totalBudget: 110000, legalName: "Research Collective", contactName: "Research Lead" },
+            { title: "Infrastructure and DevOps Support", summary: "Provide infrastructure and DevOps support for core projects.", totalBudget: 135000, legalName: "Infra Ops Ltd", contactName: "DevOps Lead" },
+            { title: "Community Events and Meetups", summary: "Organise community events, meetups and hackathons over 12 months.", totalBudget: 65000, legalName: "Events Community", contactName: "Events Lead" },
+            { title: "Multilingual Documentation and Localisation", summary: "Expand documentation and localise key resources.", totalBudget: 88000, legalName: "Localise Ltd", contactName: "Localisation Lead" },
+        ];
 
-        // 4b. Create one live proposal for stake_test1... user (all required data)
-        console.log("Creating live proposal for stake_test user...");
-        const liveProposalStakeTest = await Proposal.create({
-            proposerId: STAKE_TEST_PROPOSER_ID,
-            voteId: vote._id,
-            title: "Open-Source Tooling and Developer Experience",
-            summary: "Improve developer experience and maintain open-source tooling for the ecosystem.",
-            status: "live",
-            submittedAt: now,
-            totalBudget: 85000,
-            metaData: {
-                trackRecord: "Maintained open-source libraries and CLI tools for 2+ years.",
-                contractingParty: {
-                    legalEntityName: "Stake Test Community",
-                    legalEntityType: "company",
-                    legalEntityRegistrationNumber: "67890",
-                    legalEntityCountry: "GB",
-                    legalEntityAddress: "2 Dev Lane",
-                },
-                primaryContact: {
-                    name: "Stake Test Proposer",
-                    title: "Maintainer",
-                    email: "stake-test@example.com",
-                    socialMedia: "@staketest",
-                },
-                signatoryContact: {
-                    name: "Stake Test Proposer",
-                    title: "Maintainer",
-                    email: "stake-test@example.com",
-                    authorization: true,
-                },
-                proposalType: "Technical (software/IT)",
-                kycInfo: { submitted: true, email: "stake-test@example.com" },
-                strategicFocusArea: categoryId,
-                keyPerformanceIndicators: [
-                    { kpi: "CLI downloads", contributionStrategy: "Monthly releases" },
-                    { kpi: "Documentation coverage", contributionStrategy: "Keep docs in sync" },
-                ],
-                executionRoadmap: {
-                    projectStartDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
-                    projectEndDate: new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000),
-                    workPackages: [
-                        {
-                            title: "WP1 Tooling",
-                            scope: "Maintain and improve CLI and SDK.",
-                            supportingDocuments: [{ title: "Roadmap", url: "https://example.com/roadmap.pdf" }],
-                            estimatedDuration: "4 months",
-                            coreObjectives: ["Stable releases", "Documentation"],
-                            expectedValue: "Better DX for developers.",
-                            metric: "10k+ monthly downloads.",
-                            milestones: [
-                                {
-                                    milestoneName: "M1 – Beta",
-                                    deliverables: "Beta release",
-                                    acceptanceCriteria: "Feature-complete",
-                                    duration: "4 weeks",
-                                },
-                            ],
-                            budgetBreakdown: [
-                                { costCategory: "Development", description: "Tooling", quantity: 1, unitPrice: 45000, total: 45000 },
-                                { costCategory: "Documentation", description: "Docs site", quantity: 1, unitPrice: 40000, total: 40000 },
-                            ],
-                        },
+        const liveProposals = [];
+        for (let i = 0; i < LIVE_PROPOSAL_TEMPLATES.length; i++) {
+            const t = LIVE_PROPOSAL_TEMPLATES[i];
+            console.log(`Creating live proposal ${i + 1}/10: ${t.title}...`);
+            const p = await Proposal.create({
+                proposerId: STAKE_TEST_PROPOSER_ID,
+                voteId: vote._id,
+                title: t.title,
+                summary: t.summary,
+                status: "live",
+                submittedAt: now,
+                totalBudget: t.totalBudget,
+                metaData: {
+                    trackRecord: "Previous community projects delivered on time.",
+                    contractingParty: {
+                        legalEntityName: t.legalName,
+                        legalEntityType: "company",
+                        legalEntityRegistrationNumber: String(10000 + i),
+                        legalEntityCountry: "GB",
+                        legalEntityAddress: `${i + 1} Test Street`,
+                    },
+                    primaryContact: {
+                        name: t.contactName,
+                        title: "Lead",
+                        email: `proposal-${i + 1}@example.com`,
+                        socialMedia: `@proposal${i + 1}`,
+                    },
+                    signatoryContact: {
+                        name: t.contactName,
+                        title: "Lead",
+                        email: `proposal-${i + 1}@example.com`,
+                        authorization: true,
+                    },
+                    proposalType: "Technical (software/IT)",
+                    kycInfo: { submitted: true, email: `proposal-${i + 1}@example.com` },
+                    strategicFocusArea: categoryId,
+                    keyPerformanceIndicators: [
+                        { kpi: "Deliverables", contributionStrategy: "Monthly updates" },
                     ],
+                    executionRoadmap: {
+                        projectStartDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+                        projectEndDate: new Date(now.getTime() + (120 + i * 10) * 24 * 60 * 60 * 1000),
+                        workPackages: [
+                            {
+                                title: `WP1 – ${t.title.slice(0, 30)}`,
+                                scope: t.summary,
+                                supportingDocuments: [{ title: "Design doc", url: "https://example.com/design.pdf" }],
+                                estimatedDuration: `${3 + (i % 4)} months`,
+                                coreObjectives: ["Deliver scope", "Report progress"],
+                                expectedValue: "Value for community.",
+                                metric: "On-time delivery.",
+                                milestones: [
+                                    { milestoneName: "M1 – Kickoff", deliverables: "Plan and approval", acceptanceCriteria: "Approved", duration: "2 weeks" },
+                                ],
+                                budgetBreakdown: [
+                                    { costCategory: "Development", description: "Core work", quantity: 1, unitPrice: Math.floor(t.totalBudget * 0.6), total: Math.floor(t.totalBudget * 0.6) },
+                                ],
+                            },
+                        ],
+                    },
+                    financialAndAdministrative: {
+                        conversionRate: 0.4,
+                        intersectAdministrator: true,
+                        otherAdministrators: "",
+                        initiativeType: "New Initiative",
+                        priorFunding: "None",
+                        treasuryRepayment: false,
+                        treasuryRepaymentCondition: "",
+                        treasuryDonationHash: "abc123def456",
+                        thirdPartyAssurers: "",
+                        supportingDocuments: [{ title: "Project plan", url: "https://example.com/plan.pdf" }],
+                    },
+                    legalDeclarations: LEGAL_TRUE,
                 },
-                financialAndAdministrative: {
-                    conversionRate: 0.45,
-                    intersectAdministrator: true,
-                    otherAdministrators: "",
-                    initiativeType: "Maintenance",
-                    priorFunding: "Prior round 2025",
-                    treasuryRepayment: false,
-                    treasuryRepaymentCondition: "",
-                    treasuryDonationHash: "hash789",
-                    thirdPartyAssurers: "",
-                    supportingDocuments: [{ title: "Budget breakdown", url: "https://example.com/budget.pdf" }],
-                },
-                legalDeclarations: LEGAL_TRUE,
-            },
-        });
-        console.log(`Live proposal (stake_test user) created: ${liveProposalStakeTest._id}`);
+            });
+            liveProposals.push(p);
+            console.log(`  Created: ${p._id}`);
+        }
+
+        const commentTestProposal = liveProposals.find((p) => p.title === COMMENT_TEST_PROPOSAL_TITLE);
 
         console.log("Creating draft proposal...");
         const draftProposal = await Proposal.create({
@@ -351,7 +286,7 @@ async function createDummyData() {
         });
         console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
 
-        // 5. Create comments: one from each COMMENT_USERS user per live proposal, plus one withdrawn comment
+        // 5. Create comments only on "Comment test proposal": one per COMMENT_USERS user + one withdrawn
         const commentBodies = [
             "This looks like a great proposal! I fully support this initiative.",
             "I have some concerns about the budget allocation. Can we discuss?",
@@ -359,25 +294,21 @@ async function createDummyData() {
             "I think we need more details on the implementation timeline.",
             "This aligns perfectly with our long-term goals.",
         ];
-        const liveProposals = [proposal, liveProposalStakeTest];
         const createdComments = [];
 
-        for (const liveProposal of liveProposals) {
-            for (let i = 0; i < COMMENT_USERS.length; i++) {
-                const c = await Comment.create({
-                    proposalId: liveProposal._id,
-                    parentId: null,
-                    userId: COMMENT_USERS[i],
-                    content: commentBodies[i % commentBodies.length],
-                    status: "live",
-                });
-                createdComments.push(c);
-            }
+        for (let i = 0; i < COMMENT_USERS.length; i++) {
+            const c = await Comment.create({
+                proposalId: commentTestProposal._id,
+                parentId: null,
+                userId: COMMENT_USERS[i],
+                content: commentBodies[i % commentBodies.length],
+                status: "live",
+            });
+            createdComments.push(c);
         }
 
-        // One withdrawn comment (on first live proposal), from stake_test user, withdrawn by admin
         const withdrawnComment = await Comment.create({
-            proposalId: proposal._id,
+            proposalId: commentTestProposal._id,
             parentId: null,
             userId: STAKE_TEST_PROPOSER_ID,
             content: "This comment was withdrawn by the admin.",
@@ -391,15 +322,16 @@ async function createDummyData() {
         });
         createdComments.push(withdrawnComment);
 
-        console.log(`Created ${createdComments.length} comments (${COMMENT_USERS.length} per live proposal × ${liveProposals.length} proposals + 1 withdrawn).`);
+        console.log(`Created ${createdComments.length} comments on "${COMMENT_TEST_PROPOSAL_TITLE}" (${COMMENT_USERS.length} live + 1 withdrawn).`);
 
         console.log("\n✅ Dummy data created successfully.");
         console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
         console.log(`  Categories: ${categories.length}`);
-        console.log(`  Live proposal: ${proposal._id}`);
-        console.log(`  Live proposal (stake_test user): ${liveProposalStakeTest._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
+        console.log(`  Live proposals: 10 (all proposerId: ${STAKE_TEST_PROPOSER_ID})`);
+        liveProposals.forEach((p, i) => console.log(`    ${i + 1}. ${p.title}: ${p._id}`));
+        console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${STAKE_TEST_PROPOSER_ID})`);
-        console.log(`  Comments: ${createdComments.length}`);
+        console.log(`  Comments: ${createdComments.length} (on "${COMMENT_TEST_PROPOSAL_TITLE}" only)`);
     } catch (error) {
         console.error("Error creating dummy data:", error);
         throw error;
