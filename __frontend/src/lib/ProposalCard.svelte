@@ -9,6 +9,7 @@
   import { user } from "$stores/sessionManager.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "$lib/base/Markdown.svelte";
+  import { shortenString } from "$lib/utils.js";
   let {
     proposal,
     vote,
@@ -96,6 +97,15 @@
     {/if}
   </Card.Header>
   <Card.Content class="space-y-2">
+    {#if proposal.proposerId}
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium text-muted-foreground">Proposer:</span>
+        <span class="text-sm font-semibold">
+          {shortenString(proposal.proposerId, 24, true)}
+        </span>
+      </div>
+    {/if}
+
     {#if proposal.amount !== undefined}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Amount:</span>
