@@ -201,7 +201,6 @@ router.post("/", nonceRequestLimiter, validateSessionRequest, async (req, res) =
   // Multisig branch: scriptAddress present in body
   if (scriptAddressBody) {
     const scriptValidation = validateScriptAddress(scriptAddressBody);
-    console.log("scriptValidation", scriptValidation);
     if (scriptValidation.error) {
       return res.status(400).json({
         status: "error",
