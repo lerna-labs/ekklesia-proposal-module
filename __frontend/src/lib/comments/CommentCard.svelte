@@ -5,7 +5,13 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import Timestamp from "$lib/base/Timestamp.svelte";
-  import { Heart, MessageSquare, MessagesSquare, Pencil } from "lucide-svelte";
+  import {
+    Heart,
+    MessageSquare,
+    MessagesSquare,
+    Pencil,
+    Trash2Icon,
+  } from "lucide-svelte";
 
   let {
     comment,
@@ -30,25 +36,48 @@
     onWithdraw,
   } = $props();
 
-  const isOwn = $derived(currentUserId && comment?.author?._id === currentUserId);
+  const isOwn = $derived(
+    currentUserId && comment?.author?._id === currentUserId,
+  );
 </script>
 
-<Card.Root class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-muted/50' : ''}">
+<Card.Root
+  class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails
+    ? 'bg-muted/50'
+    : ''}"
+>
   <Card.Header>
     <Card.Title class="flex flex-wrap justify-between items-start gap-2 pb-0">
       <div class="flex flex-wrap items-center gap-1.5 font-medium text-sm">
         {authorLabel(comment)}
         {#if comment?.author?.type === "admin"}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-orange) text-white">Admin</Badge>
+          <Badge
+            variant="secondary"
+            class="text-xs bg-(--mbo-orange) text-white"
+          >
+            Admin
+          </Badge>
         {/if}
         {#if comment?.author?.type === "proposer"}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Proposer</Badge>
+          <Badge
+            variant="secondary"
+            class="text-xs bg-(--mbo-electric-blue) text-white"
+          >
+            Proposer
+          </Badge>
         {/if}
         {#if comment?.author?._id?.startsWith?.("drep")}
-          <Badge variant="secondary" class="text-xs bg-black text-white">DRep</Badge>
+          <Badge variant="secondary" class="text-xs bg-black text-white">
+            DRep
+          </Badge>
         {/if}
         {#if isOwn}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Your Comment</Badge>
+          <Badge
+            variant="secondary"
+            class="text-xs bg-(--mbo-electric-blue) text-white"
+          >
+            Your Comment
+          </Badge>
         {/if}
         {#if comment?.withdrawalDetails}
           <Badge variant="destructive" class="text-xs">Withdrawn</Badge>
@@ -87,7 +116,9 @@
           onclick={() => onToggleLike?.(comment)}
         >
           <Heart
-            class="size-3.5 {comment?.userLiked ? 'fill-current text-destructive' : ''}"
+            class="size-3.5 {comment?.userLiked
+              ? 'fill-current text-destructive'
+              : ''}"
           />
           <span class="ml-1">{comment?.likeCount ?? 0}</span>
         </Button>
@@ -130,12 +161,15 @@
       {/if}
       {#if isVoteAdmin && !comment?.withdrawalDetails}
         <Button
-          variant="ghost"
+          variant="destructive"
           size="sm"
-          class="text-xs text-destructive"
+          class="text-xs bg-destructive text-white hover:bg-destructive/90"
+          aria-label="Withdraw comment"
+          title="Withdraw comment"
           onclick={() => onWithdraw?.(comment)}
         >
-          Withdraw
+          <Trash2Icon class="size-4 mr-1" />
+          Withdraw Comment
         </Button>
       {/if}
     </div>

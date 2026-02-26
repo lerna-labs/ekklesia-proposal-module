@@ -48,7 +48,7 @@ const workPackageSchema = z.object({
   title: z.string().min(1, "Work Package name is required").max(100),
   scope: z.string().min(1, "Scope of Work is required").max(2000),
   supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-  estimatedDuration: z.string().max(200).optional(),
+  estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
   coreObjectives: z.array(z.string().min(1).max(400)),
   expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
   metric: z.string().min(1, "Metric is required").max(600),
@@ -168,6 +168,7 @@ const strategyFrameworkSchema = z.object({
 
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
+  estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
   strategyFramework: strategyFrameworkSchema,
   executionRoadmap: executionRoadmapSchema.optional().default({ workPackages: [] }),
   financialAndAdministrative: financialAndAdministrativeSchema.optional().default({}),

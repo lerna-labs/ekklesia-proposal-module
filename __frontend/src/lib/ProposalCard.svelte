@@ -9,6 +9,7 @@
   import { user } from "$stores/sessionManager.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "$lib/base/Markdown.svelte";
+  import { shortenString } from "$lib/utils.js";
   let {
     proposal,
     vote,
@@ -57,7 +58,7 @@
   class="hover:shadow-md transition-shadow {className ||
     ''} {proposal?.status === 'withdrawnByProposer' ||
   proposal?.status === 'withdrawnByAdmin'
-    ? 'bg-muted/50'
+    ? 'bg-red-100/50'
     : ''}"
 >
   <Card.Header>
@@ -96,6 +97,15 @@
     {/if}
   </Card.Header>
   <Card.Content class="space-y-2">
+    {#if proposal.proposerId}
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium text-muted-foreground">Proposer:</span>
+        <span class="text-sm font-semibold">
+          {shortenString(proposal.proposerId, 24, true)}
+        </span>
+      </div>
+    {/if}
+
     {#if proposal.amount !== undefined}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Amount:</span>
@@ -139,6 +149,42 @@
         <span class="text-sm">{proposal.metaData.initiativeType}</span>
       </div>
     {/if}
+
+    {#if proposal.withdrawalDetails}
+      {@const wd = proposal.withdrawalDetails}
+      {@const withdrawalDate = wd?.date
+        ? new Date(wd.date).toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : "—"}
+      <Card.Root class="bg-white mt-8">
+        <Card.Header>
+          <Card.Title>
+            {proposal.status === "withdrawnByAdmin"
+              ? "Proposal Withdrawn by Admin"
+              : "Proposal Withdrawn by Proposer"}
+
+            <span
+              class="ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+            >
+              {wd.category}
+            </span>
+          </Card.Title>
+          <Card.Description>
+            This proposal was withdrawn on {withdrawalDate}
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-1 text-sm">
+          {#if wd.comment}
+            <div>
+              <span class="font-medium text-muted-foreground">Comment:</span>
+              <Markdown content={wd.comment} class="text-sm mt-0.5" />
+            </div>
+          {/if}
+        </Card.Content>
+      </Card.Root>
+    {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw}
     <Card.Footer class="flex flex-wrap items-center gap-2">
@@ -162,7 +208,7 @@
           onclick={() => (withdrawOpen = true)}
         >
           <Trash2Icon class="size-4 mr-1" />
-          Withdraw
+          Withdraw Proposal
         </Button.Root>
       {/if}
     </Card.Footer>

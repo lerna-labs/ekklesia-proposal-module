@@ -14,6 +14,9 @@
     required = false,
     maxLength,
     type = "text",
+    min,
+    max,
+    step,
     class: className,
   } = $props();
 
@@ -47,6 +50,9 @@
     bind:value
     {placeholder}
     maxlength={maxLength}
+    {min}
+    {max}
+    {step}
     aria-invalid={schemaError ? true : false}
     class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
   />
