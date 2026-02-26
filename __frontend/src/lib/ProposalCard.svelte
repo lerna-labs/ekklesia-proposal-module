@@ -208,7 +208,7 @@
           onclick={() => (withdrawOpen = true)}
         >
           <Trash2Icon class="size-4 mr-1" />
-          Withdraw
+          Withdraw Proposal
         </Button.Root>
       {/if}
     </Card.Footer>
