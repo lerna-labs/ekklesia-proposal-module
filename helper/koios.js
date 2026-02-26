@@ -1,7 +1,7 @@
 /**
  * @fileoverview Helper functions for interacting with the Koios API.
  * Provides utilities for fetching DRep names and Cardano handles.
- * 
+ *
  * @module helper/koios
  */
 
@@ -19,23 +19,45 @@ if (!API_TOKEN) {
 }
 
 /**
+ * @typedef {Object} DrepInfo
+ * @property {string} drep_id - DRep ID in bech32 format
+ * @property {string} hex - DRep ID in hex format
+ * @property {boolean} has_script - Whether the DRep is script-based
+ * @property {boolean} registered - Whether the DRep is currently registered
+ * @property {string} deposit - DRep deposit amount (lovelace as string)
+ * @property {boolean} active - Whether the DRep is currently active
+ * @property {number} expires_epoch_no - Epoch number when the DRep registration expires
+ * @property {string} amount - Delegated voting power (lovelace as string)
+ * @property {string|null} meta_url - URL to the DRep's CIP-119 metadata JSON
+ * @property {string|null} meta_hash - Hash of the metadata file
+ */
+
+/**
+ * @typedef {Object} DrepMetadata
+ * @property {Object} body - Metadata body
+ * @property {Object} [body.dRepName] - DRep name object
+ * @property {string} [body.dRepName.@value] - DRep display name
+ * @property {string} [body.givenName] - Fallback given name
+ */
+
+/**
  * Fetches the DRep name for a given DRep ID from the Koios API.
- * 
+ *
  * @description
  * This function queries the Koios API to get DRep information, then fetches the metadata
  * URL to retrieve the DRep's name. It attempts to return the name from the dRepName field's
  * @value property, falling back to givenName if dRepName is not available.
- * 
+ *
  * @param {string} drepId - The DRep ID (e.g., "drep1y22hlaj8wuyygpnjy5cf96tg9tgvjrz39kxvqgv898uj9scfc55t7")
- * 
+ *
  * @returns {Promise<string|undefined|null>} Returns:
  *   - The DRep name string from dRepName["@value"] if available
  *   - The givenName string as fallback if dRepName is not available
  *   - undefined if neither name field is found in metadata
  *   - null if no DRep is found or if an error occurs during the initial API call
- * 
+ *
  * @throws {Error} Logs errors to console but does not throw - returns null or undefined on error
- * 
+ *
  * @example
  * const name = await fetchDrepName("drep1y22hlaj8wuyygpnjy5cf96tg9tgvjrz39kxvqgv898uj9scfc55t7");
  * console.log(name); // "Maureen"
@@ -54,7 +76,7 @@ export async function fetchDrepName(drepId) {
                 }),
             }
         );
-        const data = await response.json();
+        const /** @type {DrepInfo[]} */ data = await response.json();
 
         if (data.length === 0) {
             console.log("No DRep found");
@@ -78,7 +100,7 @@ export async function fetchDrepName(drepId) {
                     },
                 }
             );
-            const drepMetadata = await drepMetadataResponse.json();
+            const /** @type {DrepMetadata} */ drepMetadata = await drepMetadataResponse.json();
 
             // Return the @value property from dRepName if it exists
             if (drepMetadata.body?.dRepName?.["@value"]) {
@@ -137,33 +159,48 @@ export async function validateDrep(drepId) {
 }
 
 /**
- * Fetches the Cardano handle (asset name) for a given address from the Koios API.
- * 
- * @description
- * This function determines the appropriate Koios endpoint based on the address type:
- * - Stake addresses (starting with "stake") use the 'account_assets' endpoint
- * - Payment addresses (starting with "addr") use the 'address_assets' endpoint
- * It then queries for assets with the handle policy ID and retrieves the ASCII asset name.
- * 
- * @param {string} address - The Cardano address (stake address or payment address)
- *   - Stake address format: "stake1..."
- *   - Payment address format: "addr1..." or "addr_test1..."
- * 
- * @returns {Promise<string|null>} Returns:
- *   - The handle name as a string (asset_name_ascii) if found
- *   - null if no handle is found, invalid address format, or if an error occurs
- * 
- * @throws {Error} Logs errors to console but does not throw - returns null on error
- * 
- * @example
- * const handle = await fetchHandle("stake1ux3g2c9dx2nhhehybrzy0k0x4mdwvc7vt0l3v8qy3v3q4q5q6q7q8q");
- * console.log(handle); // "alice"
- * 
- * @example
- * const handle = await fetchHandle("addr1q8q25anxdp5hsmukxm99h7fh95rcuxed4ryk4jwzwhj7rpl8y7qqf0xuarfnjyljdqa2szayfdev9ytselvy47jh8aaq06gp78");
- * console.log(handle); // "bob"
+ * @typedef {Object} HandleHolder
+ * @property {number} total_handles
+ * @property {string} address
+ * @property {"wallet"|"script"|"enterprise"|"other"} type
+ * @property {string} known_owner_name
+ * @property {string} default_handle
+ * @property {boolean} manually_set
+ * @property {string[]} [handles]
  */
-export async function fetchHandle(address) {
+
+/**
+ * Fetches the Cardano handle for a given address from the Handle.me API.
+ * Throws on network errors or unexpected status codes so the caller can fall back.
+ *
+ * @param {string} address - The Cardano address (stake, payment, enterprise, or script address)
+ * @returns {Promise<string|null>} The default handle name if found, null if address has no handle
+ * @throws {Error} If the API is unreachable or returns an unexpected status
+ */
+async function fetchHandleMe(address) {
+    const baseUrl = process.env.NETWORK_NAME === "mainnet"
+        ? "https://api.handle.me"
+        : "https://preprod.api.handle.me";
+    const response = await fetch(`${baseUrl}/holders/${address}`);
+    if (response.status === 200 || response.status === 202) {
+        const /** @type {HandleHolder} */ data = await response.json();
+        return data.default_handle || null;
+    }
+    if (response.status === 404) {
+        return null;
+    }
+    throw new Error(`Handle.me returned unexpected status ${response.status}`);
+}
+
+/**
+ * Fetches the Cardano handle (asset name) for a given address from the Koios API.
+ *
+ * @deprecated Use fetchHandleMe instead. Retained as fallback in case the Handle.me
+ * preprod API is no longer operational.
+ * @param {string} address - The Cardano address (stake address or payment address)
+ * @returns {Promise<string|null>} The handle name if found, null otherwise
+ */
+async function fetchHandleKoios(address) {
     const handlePolicyId = "f0ff48bbb7bbe9d59a40f1ce90e9e9d0ff5002ec48f232b49ca0fb9a"
     let endpoint;
     let body;
@@ -225,6 +262,21 @@ export async function fetchHandle(address) {
     }
 }
 
+/**
+ * Fetches the Cardano handle for a given address.
+ * Tries Handle.me API first, falls back to Koios if Handle.me is unavailable.
+ *
+ * @param {string} address - The Cardano address (stake address or payment address)
+ * @returns {Promise<string|null>} The handle name if found, null otherwise
+ */
+export async function fetchHandle(address) {
+    try {
+        return await fetchHandleMe(address);
+    } catch (error) {
+        console.error("Handle.me unavailable, falling back to Koios:", error.message);
+        return fetchHandleKoios(address);
+    }
+}
 
 /**
  * Fetches script information from the Koios API for a given script hash.
@@ -243,19 +295,8 @@ export async function fetchHandle(address) {
  * }
  */
 export async function getScript(scriptHash) {
-    // FIXME: Disabled because this throws an error for some reason
-    // Validate and parse the script hash format
-    // let script_hash;
-    // try {
-    //     console.log("Parsing script hash:", scriptHash);
-    //     script_hash = ScriptHash.from_hex(scriptHash);
-    // } catch (error) {
-    //     console.error(`Not a valid script hash: ${script_hash}`);
-    //     throw new Error("Not a valid script hash");
-    // }
-
     try {
-        // Make authenticated POST request to Koios script_info endpoint
+        // Make an authenticated POST request to Koios script_info endpoint
         const scripts = await fetch(API_URL + "/script_info", {
             method: "POST",
             headers: {
@@ -281,4 +322,45 @@ export async function getScript(scriptHash) {
     }
 
     return false;
+}
+
+/**
+ * @typedef {Object} CalidusKey
+ * @property {string} pool_id_bech32 - Pool ID in bech32 format
+ * @property {string} pool_status - Pool registration status ("registered", "retired", "unregistered")
+ * @property {number} calidus_nonce - Calidus certificate nonce
+ * @property {string} calidus_pub_key - Calidus public key (hex)
+ * @property {string} calidus_id_bech32 - Calidus ID in bech32 format
+ * @property {string} tx_hash - Transaction hash of the certificate (hex)
+ * @property {number} epoch_no - Epoch number of the certificate
+ * @property {number} block_height - Block height of the certificate
+ * @property {number} block_time - Block time as Unix timestamp
+ */
+
+/**
+ * Fetches the latest Calidus key for a given stake pool from the Koios API.
+ *
+ * @param {string} poolBech32 - The pool ID in bech32 format (e.g., "pool1...")
+ * @returns {Promise<CalidusKey|null>} The Calidus key record if found, null otherwise or on error
+ */
+export async function fetchCalidusKey(poolBech32) {
+    try {
+        const response = await fetch(
+            `${API_URL}/pool_calidus_keys?pool_id_bech32=eq.${poolBech32}`,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${API_TOKEN}`,
+                },
+            }
+        );
+        const data = await response.json();
+        if (data.length === 0) {
+            return null;
+        }
+        return data[0];
+    } catch (error) {
+        console.error("Error fetching Calidus key:", error);
+        return null;
+    }
 }
