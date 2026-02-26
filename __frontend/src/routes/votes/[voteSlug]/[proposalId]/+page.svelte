@@ -4,7 +4,14 @@
   import Comments from "$lib/Comments.svelte";
   let { data } = $props();
 
-  let { vote, proposal, categories = [] } = $derived(data);
+  let { vote, proposal, categories = [], commentCount } = $derived(data);
+
+  const isWithdrawn = $derived(
+    proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"
+  );
+  const showComments = $derived(
+    proposal && proposal.status !== "draft" && (!isWithdrawn || (commentCount ?? 0) > 0)
+  );
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
@@ -21,7 +28,7 @@
 
   <ProposalCard {proposal} {vote} {categories} showLink={false} />
 
-  {#if proposal && proposal.status !== "draft"}
+  {#if showComments}
     <Comments proposalId={proposal._id} {proposal} {vote} />
   {/if}
 </div>

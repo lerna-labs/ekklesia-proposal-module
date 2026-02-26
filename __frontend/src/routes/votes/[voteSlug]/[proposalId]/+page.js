@@ -35,9 +35,23 @@ export async function load({ params, fetch }) {
 		categories = catJson.data ?? [];
 	}
 
+	let commentCount;
+	const isWithdrawn =
+		proposalData?.status === 'withdrawnByAdmin' || proposalData?.status === 'withdrawnByProposer';
+	if (isWithdrawn) {
+		const commentsRes = await api.fetch(fetch, `/comments?proposal=${proposalId}&page=1&limit=1`);
+		if (commentsRes.ok) {
+			const commentsJson = await commentsRes.json();
+			commentCount = commentsJson.meta?.total ?? 0;
+		} else {
+			commentCount = 0;
+		}
+	}
+
 	return {
 		vote: voteData,
 		proposal: proposalData,
 		categories,
+		commentCount: commentCount,
 	};
 }
