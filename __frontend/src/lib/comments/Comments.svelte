@@ -2,8 +2,7 @@
   import { Button } from "$lib/components/ui/button";
   import { toast } from "svelte-sonner";
   import { untrack } from "svelte";
-  import { get } from "svelte/store";
-  import { user } from "$stores/sessionManager.js";
+  import { user, showLogin, pendingCommentAction } from "$stores/sessionManager.js";
   import { fetchJson } from "./fetchJson.js";
   import { shortenString } from "$lib/utils.js";
   import CommentsHeader from "./CommentsHeader.svelte";
@@ -16,7 +15,7 @@
 
   let { proposalId, proposal, vote } = $props();
 
-  let currentUserId = $derived(get(user)?.userId ?? null);
+  let currentUserId = $derived($user?.userId ?? null);
 
   let commentsState = $state({
     data: [],
@@ -59,6 +58,12 @@
       new Date() < new Date(vote.feedbackEndDate),
   );
 
+  const showAddCommentButton = $derived(
+    proposal?.status === "live" &&
+      vote?.feedbackEndDate &&
+      new Date() < new Date(vote.feedbackEndDate),
+  );
+
   const canLike = $derived(
     currentUserId &&
       proposal?.status === "live" &&
@@ -97,6 +102,23 @@
       commentValue = "";
       submitError = null;
     }
+  });
+
+  // After successful login, open add/reply dialog if guest had clicked Add Comment or Reply
+  $effect(() => {
+    const pending = $pendingCommentAction;
+    if (!currentUserId || !pending) return;
+    pendingCommentAction.set(null);
+    const replyToComment = pending.replyTo ?? null;
+    const isOwnComment =
+      replyToComment &&
+      replyToComment.author?._id != null &&
+      replyToComment.author._id === currentUserId;
+    if (isOwnComment) {
+      toast.info("You can't reply to your own comment.");
+      return;
+    }
+    queueMicrotask(() => openAddDialog(replyToComment));
   });
 
   function authorLabel(c) {
@@ -247,7 +269,18 @@
     }
   }
 
+  function requestLoginModal() {
+    showLogin.set(false);
+    queueMicrotask(() => showLogin.set(true));
+  }
+
   function openAddDialog(replyingTo = null) {
+    if (!currentUserId) {
+      pendingCommentAction.set({ replyTo: replyingTo });
+      requestLoginModal();
+      toast.info("Please log in to comment or reply.");
+      return;
+    }
     replyTo = replyingTo;
     commentValue = replyingTo
       ? (replyingTo.content ?? "")
@@ -304,6 +337,11 @@
   }
 
   async function toggleLike(c) {
+    if (!currentUserId) {
+      requestLoginModal();
+      toast.info("Please log in to like.");
+      return;
+    }
     if (!canLike) return;
     const { ok, json } = await fetchJson(`/comments/${c._id}/like`, {
       method: "POST",
@@ -470,6 +508,9 @@
           {repliesByParent}
           {currentUserId}
           {canComment}
+          showReplyButton={showAddCommentButton}
+          showLikeButton={showAddCommentButton}
+          showReplyCountButton={showAddCommentButton}
           {canLike}
           {isVoteAdmin}
           {authorLabel}
@@ -497,7 +538,7 @@
       </Button>
     {/if}
 
-    {#if canComment}
+    {#if showAddCommentButton}
       <Button
         variant="default"
         class="mt-4 cursor-pointer"

@@ -1,7 +1,7 @@
 <script>
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
-  import { api, loggedIn, user, setJWT } from "$stores/sessionManager.js";
+  import { api, loggedIn, user, setJWT, showLogin, pendingCommentAction } from "$stores/sessionManager.js";
   import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
   import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
   import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
@@ -41,6 +41,14 @@
     else if ($user?.userId.startsWith("addr")) signType = "addr";
   });
 
+  // Sync with showLogin store so the dialog can be opened programmatically (e.g. from Comments)
+  $effect(() => {
+    if ($showLogin) open = true;
+  });
+  $effect(() => {
+    if (open) showLogin.set(true);
+  });
+
   // success
   async function submitSuccess(event) {
     toast.success(event.detail.message);
@@ -48,6 +56,7 @@
     // $user.lastTransaction = event.detail.transaction;
     await invalidateAll();
     open = false;
+    showLogin.set(false);
   }
 
   // store token
@@ -62,11 +71,14 @@
     user.set(userData);
     await invalidateAll();
     open = false;
+    showLogin.set(false);
   }
 
   function close() {
     noWallets = false;
     open = false;
+    showLogin.set(false);
+    pendingCommentAction.set(null);
   }
 </script>
 
