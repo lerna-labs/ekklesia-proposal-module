@@ -29,6 +29,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+
+// Trust first proxy (e.g. nginx) so req.ip and rate-limit use X-Forwarded-For
+app.set("trust proxy", 1);
+
 const PORT = process.env.SERVER_PORT || 3000;
 
 // Middleware
