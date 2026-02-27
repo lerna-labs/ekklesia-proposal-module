@@ -50,6 +50,11 @@
   const commentCount = $derived(
     proposal?.commentCount != null ? Number(proposal.commentCount) : null,
   );
+  const proposerHref = $derived(
+    vote?.slug && proposal?.proposerId
+      ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
+      : null,
+  );
 
   const categoryId = $derived(proposal?.metaData?.strategicFocusArea ?? null);
   const categoryLabel = $derived(
@@ -106,9 +111,19 @@
     {#if proposal.proposerId}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Proposer:</span>
-        <span class="text-sm font-semibold">
-          {shortenString(proposal.proposerId, 24, true)}
-        </span>
+        {#if proposerHref}
+          <a
+            href={proposerHref}
+            class="text-sm font-semibold text-(--mbo-electric-blue) hover:underline cursor-pointer"
+            title="Show all proposals by this proposer"
+          >
+            {shortenString(proposal.proposerId, 24, true)}
+          </a>
+        {:else}
+          <span class="text-sm font-semibold">
+            {shortenString(proposal.proposerId, 24, true)}
+          </span>
+        {/if}
       </div>
     {/if}
 
