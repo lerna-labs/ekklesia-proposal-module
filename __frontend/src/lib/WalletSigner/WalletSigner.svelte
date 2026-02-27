@@ -21,7 +21,7 @@
   let open = $state(false);
   let selected = $state("wallet");
   let noWallets = $state(false);
-  let signType = $state("drep");
+  let signType = $state("");
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
   let scriptAddress = $derived.by(() => {
