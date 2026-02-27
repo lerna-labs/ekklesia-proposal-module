@@ -19,6 +19,8 @@
   import { theme } from "svelte-lexical/dist/themes/default";
   import {
     $getSelection as getSelection,
+    $getRoot as getRoot,
+    $createParagraphNode as createParagraphNode,
     $isRangeSelection as isRangeSelection,
     CLICK_COMMAND,
     COMMAND_PRIORITY_HIGH,
@@ -80,7 +82,7 @@
         }
         return false;
       },
-      COMMAND_PRIORITY_HIGH
+      COMMAND_PRIORITY_HIGH,
     );
     return () => {
       unregisterUpdate();
@@ -102,6 +104,32 @@
     editor.update(() => {
       convertFromMarkdownString(value, ALL_TRANSFORMERS);
     });
+  });
+
+  /** When content looks like a reply (starts with ">"), ensure a paragraph after the quote and move cursor there so the user types after the quote. */
+  let hasMovedCursorToEnd = $state(false);
+  $effect(() => {
+    const val = value ?? "";
+    if (val.trim() === "") {
+      hasMovedCursorToEnd = false;
+      return;
+    }
+    const isReplyWithQuote = /^>/m.test(val);
+    if (!isReplyWithQuote || hasMovedCursorToEnd || !composer) return;
+    const editor = composer.getEditor();
+    const id = setTimeout(() => {
+      editor.update(() => {
+        const root = getRoot();
+        const last = root.getLastChild();
+        if (last && last.getType() === "quote") {
+          root.append(createParagraphNode());
+        }
+        root.selectEnd();
+      });
+      editor.focus();
+      hasMovedCursorToEnd = true;
+    }, 150);
+    return () => clearTimeout(id);
   });
 
   // List and link transformers for markdown shortcuts (e.g. "1. ", "- ", [text](url))
