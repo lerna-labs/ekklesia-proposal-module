@@ -53,10 +53,8 @@ function getCommentStatusFilter(statusParam, isAdmin) {
 /**
  * Status condition when no status param: include withdrawn comments for admin and for comment author.
  * Public: live only. Admin: live + withdrawn. Authenticated (not admin): live + own withdrawn.
- * When excludeWithdrawn is true, only live comments (ignores admin/author).
  */
-function getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn = false) {
-  if (excludeWithdrawn) return { status: "live" };
+function getCommentStatusCondition(statusParam, isAdmin, userId) {
   if (statusParam && typeof statusParam === "string" && statusParam.trim()) {
     const result = getCommentStatusFilter(statusParam.trim(), isAdmin);
     if (result.error) return result;
@@ -72,8 +70,7 @@ async function formatComment(
   comment,
   proposal,
   vote,
-  authenticatedUserId = null,
-  excludeWithdrawn = false
+  authenticatedUserId = null
 ) {
   const userId = comment.userId;
   const userDoc = userId
@@ -83,16 +80,8 @@ async function formatComment(
   if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
   else if (vote?.admins && Array.isArray(vote.admins) && userDoc?._id != null && vote.admins.includes(String(userDoc._id))) type = "admin";
   const isAdmin = isVoteAdmin(proposal, vote, authenticatedUserId);
-  // Reply count respects same visibility rules as top-level comments:
-  // - Public: live only
-  // - Admin: live + all withdrawn
-  // - Authenticated non-admin: live + own withdrawn
-  const replyStatusCondition = getCommentStatusCondition(
-    null,
-    isAdmin,
-    authenticatedUserId,
-    excludeWithdrawn
-  );
+  // Reply count respects same visibility rules as top-level comments
+  const replyStatusCondition = getCommentStatusCondition(null, isAdmin, authenticatedUserId);
   const replyQuery =
     replyStatusCondition && !replyStatusCondition.error
       ? { parentId: comment._id, ...replyStatusCondition }
@@ -135,7 +124,6 @@ router.get("/", async (req, res) => {
   try {
     const proposalId = req.query.proposal;
     const statusParam = req.query.status;
-    const excludeWithdrawn = req.query.excludeWithdrawn === "true" || req.query.excludeWithdrawn === "1";
     const sortParam = (req.query.sort || "date").toString().trim().toLowerCase();
     const direction = (req.query.direction || "desc").toString().trim().toLowerCase();
     const userTypeParam = (req.query.userType || "").toString().trim().toLowerCase();
@@ -204,7 +192,7 @@ router.get("/", async (req, res) => {
 
     const userId = getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
-    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn);
+    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
     }
@@ -346,7 +334,7 @@ router.get("/", async (req, res) => {
     const total = result?.total?.[0]?.n ?? 0;
     const items = result?.items ?? [];
     const data = await Promise.all(
-      items.map((doc) => formatComment(doc, proposal, vote, userId, excludeWithdrawn))
+      items.map((doc) => formatComment(doc, proposal, vote, userId))
     );
 
     const totalPages = Math.ceil(total / limit);
@@ -479,7 +467,6 @@ router.get("/:commentId/replies", async (req, res) => {
   try {
     const { commentId } = req.params;
     const statusParam = req.query.status;
-    const excludeWithdrawn = req.query.excludeWithdrawn === "true" || req.query.excludeWithdrawn === "1";
     const page = parseInt(req.query.page, 10) || 1;
     const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
 
@@ -504,7 +491,7 @@ router.get("/:commentId/replies", async (req, res) => {
     const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
     const userId = getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
-    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdrawn);
+    const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId);
     if (statusFilter.error) {
       return res.status(400).json({ status: "error", message: statusFilter.message });
     }
@@ -522,7 +509,7 @@ router.get("/:commentId/replies", async (req, res) => {
     ]);
 
     const data = await Promise.all(
-      replies.map((r) => formatComment(r, proposal, vote, userId, excludeWithdrawn))
+      replies.map((r) => formatComment(r, proposal, vote, userId))
     );
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({

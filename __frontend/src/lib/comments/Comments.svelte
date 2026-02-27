@@ -34,8 +34,6 @@
   let pendingProposer = $state(false);
   let pendingDrep = $state(false);
   let pendingAdmin = $state(false);
-  let excludeWithdrawn = $state(false);
-  let pendingExcludeWithdrawn = $state(false);
 
   let repliesByParent = $state({});
   let addDialogOpen = $state(false);
@@ -79,9 +77,7 @@
   );
 
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
-  const hasActiveFilter = $derived(
-    userTypeFilter.length > 0 || excludeWithdrawn,
-  );
+  const hasActiveFilter = $derived(userTypeFilter.length > 0);
 
   $effect(() => {
     if (sortPopoverOpen) {
@@ -92,7 +88,6 @@
       pendingProposer = userTypeFilter.includes("proposer");
       pendingDrep = userTypeFilter.includes("drep");
       pendingAdmin = userTypeFilter.includes("admin");
-      pendingExcludeWithdrawn = excludeWithdrawn;
     }
   });
 
@@ -148,9 +143,8 @@
         userTypeFilter.length > 0
           ? `&userType=${userTypeFilter.join(",")}`
           : "";
-      const excludeParam = excludeWithdrawn ? "&excludeWithdrawn=true" : "";
       const { ok, status, json } = await fetchJson(
-        `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}${excludeParam}`,
+        `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}`,
       );
       if (!ok) {
         const msg = json?.message ?? `Error ${status}`;
@@ -199,7 +193,6 @@
       ...(pendingDrep ? ["drep"] : []),
       ...(pendingAdmin ? ["admin"] : []),
     ];
-    excludeWithdrawn = pendingExcludeWithdrawn;
     page = 1;
     filterPopoverOpen = false;
     loadComments();
@@ -209,9 +202,7 @@
     pendingProposer = false;
     pendingDrep = false;
     pendingAdmin = false;
-    pendingExcludeWithdrawn = false;
     userTypeFilter = [];
-    excludeWithdrawn = false;
     page = 1;
     filterPopoverOpen = false;
     loadComments();
@@ -225,9 +216,8 @@
       [commentId]: { loading: true, error: null, data: [], meta: null },
     };
     try {
-      const excludeParam = excludeWithdrawn ? "&excludeWithdrawn=true" : "";
       const { ok, json } = await fetchJson(
-        `/comments/${commentId}/replies?page=1&limit=20${excludeParam}`,
+        `/comments/${commentId}/replies?page=1&limit=20`,
       );
       if (!ok) {
         const msg = json?.message ?? "Failed to load replies";
@@ -485,7 +475,6 @@
     bind:pendingProposer
     bind:pendingDrep
     bind:pendingAdmin
-    bind:pendingExcludeWithdrawn
     {userTypeFilter}
     {hasActiveSort}
     {hasActiveFilter}
