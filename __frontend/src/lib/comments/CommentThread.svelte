@@ -9,6 +9,9 @@
     repliesByParent = {},
     currentUserId = null,
     canComment = false,
+    showReplyButton = false,
+    showLikeButton = false,
+    showReplyCountButton = false,
     canLike = false,
     isVoteAdmin = false,
     authorLabel,
@@ -26,6 +29,9 @@
   {isReply}
   {currentUserId}
   {canComment}
+  {showReplyButton}
+  {showLikeButton}
+  {showReplyCountButton}
   {canLike}
   {isVoteAdmin}
   repliesData={repliesByParent[comment._id]?.data ?? []}
@@ -55,6 +61,9 @@
           {repliesByParent}
           {currentUserId}
           {canComment}
+          {showReplyButton}
+          {showLikeButton}
+          {showReplyCountButton}
           {canLike}
           {isVoteAdmin}
           {authorLabel}

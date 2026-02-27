@@ -18,6 +18,9 @@
     isReply = false,
     currentUserId = null,
     canComment = false,
+    showReplyButton = false,
+    showLikeButton = false,
+    showReplyCountButton = false,
     canLike = false,
     isVoteAdmin = false,
     repliesData = [],
@@ -107,7 +110,7 @@
   </Card.Content>
   <Card.Footer class="flex flex-wrap items-center justify-between gap-2">
     <div class="flex flex-wrap items-center gap-2">
-      {#if canLike && !comment?.withdrawalDetails}
+      {#if showLikeButton && !comment?.withdrawalDetails}
         <Button
           variant="outline"
           size="sm"
@@ -123,7 +126,7 @@
           <span class="ml-1">{comment?.likeCount ?? 0}</span>
         </Button>
       {/if}
-      {#if (comment?.replyCount ?? 0) > 0}
+      {#if showReplyCountButton && (comment?.replyCount ?? 0) > 0}
         <Button
           variant="outline"
           size="sm"
@@ -136,7 +139,7 @@
       {/if}
     </div>
     <div class="flex flex-wrap items-center gap-2 ml-auto">
-      {#if canComment && !comment?.withdrawalDetails}
+      {#if showReplyButton && !comment?.withdrawalDetails}
         <Button
           variant="secondary"
           size="sm"

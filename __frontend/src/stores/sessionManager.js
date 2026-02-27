@@ -7,6 +7,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 // Create a writable store to manage the session
 export const loggedIn = writable(false);
 export const showLogin = writable(false);
+/** When set, Comments will open add/reply dialog after login. Shape: { replyTo: comment | null }. Cleared when dialog opens or login is closed. */
+export const pendingCommentAction = writable(null);
 export const user = writable(null);
 export const jwt = writable(null);
 
