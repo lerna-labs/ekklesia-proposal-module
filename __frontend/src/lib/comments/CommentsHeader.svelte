@@ -20,7 +20,6 @@
     pendingProposer = $bindable(false),
     pendingDrep = $bindable(false),
     pendingAdmin = $bindable(false),
-    pendingExcludeWithdrawn = $bindable(false),
     userTypeFilter = [],
     hasActiveSort,
     hasActiveFilter,
@@ -91,16 +90,6 @@
                 <span class="font-normal">Admin</span>
               </label>
             </div>
-          </div>
-          <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Status</Label>
-            <label
-              for="comment-filter-withdrawn"
-              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-            >
-              <Checkbox id="comment-filter-withdrawn" bind:checked={pendingExcludeWithdrawn} />
-              <span class="font-normal">Exclude withdrawn</span>
-            </label>
           </div>
         </div>
         <div class="border-t pt-3 flex gap-1 mt-3">
