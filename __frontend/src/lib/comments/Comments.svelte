@@ -18,7 +18,12 @@
 
   let currentUserId = $derived(get(user)?.userId ?? null);
 
-  let commentsState = $state({ data: [], meta: {}, loading: true, error: null });
+  let commentsState = $state({
+    data: [],
+    meta: {},
+    loading: true,
+    error: null,
+  });
   let sort = $state("date");
   let direction = $state("desc");
   let userTypeFilter = $state([]);
@@ -49,27 +54,29 @@
 
   const canComment = $derived(
     currentUserId &&
-    proposal?.status === "live" &&
-    vote?.feedbackEndDate &&
-    new Date() < new Date(vote.feedbackEndDate)
+      proposal?.status === "live" &&
+      vote?.feedbackEndDate &&
+      new Date() < new Date(vote.feedbackEndDate),
   );
 
   const canLike = $derived(
     currentUserId &&
-    proposal?.status === "live" &&
-    vote?.feedbackEndDate &&
-    new Date() < new Date(vote.feedbackEndDate)
+      proposal?.status === "live" &&
+      vote?.feedbackEndDate &&
+      new Date() < new Date(vote.feedbackEndDate),
   );
 
   const isVoteAdmin = $derived(
     currentUserId &&
-    vote?.admins &&
-    Array.isArray(vote.admins) &&
-    vote.admins.includes(currentUserId)
+      vote?.admins &&
+      Array.isArray(vote.admins) &&
+      vote.admins.includes(currentUserId),
   );
 
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
-  const hasActiveFilter = $derived(userTypeFilter.length > 0 || excludeWithdrawn);
+  const hasActiveFilter = $derived(
+    userTypeFilter.length > 0 || excludeWithdrawn,
+  );
 
   $effect(() => {
     if (sortPopoverOpen) {
@@ -109,13 +116,19 @@
   }
 
   async function loadComments() {
-    commentsState = { ...untrack(() => commentsState), loading: true, error: null };
+    commentsState = {
+      ...untrack(() => commentsState),
+      loading: true,
+      error: null,
+    };
     try {
       const userTypeParam =
-        userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
+        userTypeFilter.length > 0
+          ? `&userType=${userTypeFilter.join(",")}`
+          : "";
       const excludeParam = excludeWithdrawn ? "&excludeWithdrawn=true" : "";
       const { ok, status, json } = await fetchJson(
-        `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}${excludeParam}`
+        `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}${excludeParam}`,
       );
       if (!ok) {
         const msg = json?.message ?? `Error ${status}`;
@@ -123,7 +136,12 @@
         toast.error(msg);
         return;
       }
-      commentsState = { data: json.data ?? [], meta: json.meta ?? {}, loading: false, error: null };
+      commentsState = {
+        data: json.data ?? [],
+        meta: json.meta ?? {},
+        loading: false,
+        error: null,
+      };
     } catch (err) {
       const msg = err?.message ?? "Failed to load comments";
       commentsState = { data: [], meta: {}, loading: false, error: msg };
@@ -180,10 +198,15 @@
   async function loadReplies(commentId, force = false) {
     const existing = repliesByParent[commentId];
     if (!force && (existing?.data?.length || existing?.loading)) return;
-    repliesByParent = { ...repliesByParent, [commentId]: { loading: true, error: null, data: [], meta: null } };
+    repliesByParent = {
+      ...repliesByParent,
+      [commentId]: { loading: true, error: null, data: [], meta: null },
+    };
     try {
       const excludeParam = excludeWithdrawn ? "&excludeWithdrawn=true" : "";
-      const { ok, json } = await fetchJson(`/comments/${commentId}/replies?page=1&limit=20${excludeParam}`);
+      const { ok, json } = await fetchJson(
+        `/comments/${commentId}/replies?page=1&limit=20${excludeParam}`,
+      );
       if (!ok) {
         const msg = json?.message ?? "Failed to load replies";
         repliesByParent = {
@@ -252,7 +275,10 @@
     submitError = null;
     const body = { proposalId, content };
     if (replyTo) body.parentId = replyTo._id;
-    const { ok, json } = await fetchJson("/comments", { method: "POST", body: JSON.stringify(body) });
+    const { ok, json } = await fetchJson("/comments", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
     isSubmitting = false;
     if (!ok) {
       submitError = json?.message ?? "Failed to post comment.";
@@ -279,12 +305,18 @@
 
   async function toggleLike(c) {
     if (!canLike) return;
-    const { ok, json } = await fetchJson(`/comments/${c._id}/like`, { method: "POST" });
+    const { ok, json } = await fetchJson(`/comments/${c._id}/like`, {
+      method: "POST",
+    });
     if (!ok) {
       toast.error(json?.message ?? "Failed to update like");
       return;
     }
-    const updated = { ...c, likeCount: json.likeCount ?? c.likeCount, userLiked: json.liked ?? false };
+    const updated = {
+      ...c,
+      likeCount: json.likeCount ?? c.likeCount,
+      userLiked: json.liked ?? false,
+    };
     const idx = commentsState.data.findIndex((x) => x._id === c._id);
     if (idx >= 0) {
       commentsState = {
@@ -320,11 +352,21 @@
     if (!editComment) return;
     const content = String(editValue ?? "").trim();
     if (!content) {
-      editValidationErrors = { properties: { "edit-content": { errors: ["Comment cannot be empty."] } } };
+      editValidationErrors = {
+        properties: {
+          "edit-content": { errors: ["Comment cannot be empty."] },
+        },
+      };
       return;
     }
     if (content.length > 2000) {
-      editValidationErrors = { properties: { "edit-content": { errors: ["Comment must be at most 2000 characters."] } } };
+      editValidationErrors = {
+        properties: {
+          "edit-content": {
+            errors: ["Comment must be at most 2000 characters."],
+          },
+        },
+      };
       return;
     }
     editValidationErrors = null;
@@ -363,10 +405,16 @@
       toast.error("Please select a category.");
       return;
     }
-    const { ok, json } = await fetchJson(`/comments/${withdrawComment._id}/withdraw`, {
-      method: "PUT",
-      body: JSON.stringify({ category: withdrawCategory, comment: withdrawReason || undefined }),
-    });
+    const { ok, json } = await fetchJson(
+      `/comments/${withdrawComment._id}/withdraw`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          category: withdrawCategory,
+          comment: withdrawReason || undefined,
+        }),
+      },
+    );
     if (!ok) {
       withdrawError = json?.message ?? "Failed to withdraw.";
       toast.error(json?.message ?? "Failed to withdraw comment");
@@ -391,7 +439,7 @@
 
 <section class="mt-8" id="comments">
   <CommentsHeader
-    total={commentsState.meta?.total}
+    total={proposal?.commentCount ?? commentsState.meta?.total}
     bind:sortPopoverOpen
     bind:filterPopoverOpen
     bind:pendingSort
@@ -400,7 +448,7 @@
     bind:pendingDrep
     bind:pendingAdmin
     bind:pendingExcludeWithdrawn
-    userTypeFilter={userTypeFilter}
+    {userTypeFilter}
     {hasActiveSort}
     {hasActiveFilter}
     onApplySort={applySort}
@@ -419,7 +467,7 @@
         <CommentThread
           {comment}
           isReply={false}
-          repliesByParent={repliesByParent}
+          {repliesByParent}
           {currentUserId}
           {canComment}
           {canLike}
@@ -450,7 +498,11 @@
     {/if}
 
     {#if canComment}
-      <Button variant="default" class="mt-4 cursor-pointer" onclick={() => openAddDialog()}>
+      <Button
+        variant="default"
+        class="mt-4 cursor-pointer"
+        onclick={() => openAddDialog()}
+      >
         Add Comment
       </Button>
     {/if}
@@ -459,10 +511,10 @@
 
 <CommentsAddReplyDialog
   bind:open={addDialogOpen}
-  replyTo={replyTo}
+  {replyTo}
   bind:value={commentValue}
   bind:submitError
-  isSubmitting={isSubmitting}
+  {isSubmitting}
   {authorLabel}
   onClose={closeAddDialog}
   onSubmit={submitComment}

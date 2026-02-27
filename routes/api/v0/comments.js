@@ -68,7 +68,13 @@ function getCommentStatusCondition(statusParam, isAdmin, userId, excludeWithdraw
 }
 
 /** Build comment response shape: author with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches author or user is vote admin. */
-async function formatComment(comment, proposal, vote, authenticatedUserId = null) {
+async function formatComment(
+  comment,
+  proposal,
+  vote,
+  authenticatedUserId = null,
+  excludeWithdrawn = false
+) {
   const userId = comment.userId;
   const userDoc = userId
     ? await User.findById(userId).select("-lastLogin -createdAt -updatedAt").lean()
@@ -76,7 +82,22 @@ async function formatComment(comment, proposal, vote, authenticatedUserId = null
   let type = "user";
   if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
   else if (vote?.admins && Array.isArray(vote.admins) && userDoc?._id != null && vote.admins.includes(String(userDoc._id))) type = "admin";
-  const replyCount = await Comment.countDocuments({ parentId: comment._id, status: "live" });
+  const isAdmin = isVoteAdmin(proposal, vote, authenticatedUserId);
+  // Reply count respects same visibility rules as top-level comments:
+  // - Public: live only
+  // - Admin: live + all withdrawn
+  // - Authenticated non-admin: live + own withdrawn
+  const replyStatusCondition = getCommentStatusCondition(
+    null,
+    isAdmin,
+    authenticatedUserId,
+    excludeWithdrawn
+  );
+  const replyQuery =
+    replyStatusCondition && !replyStatusCondition.error
+      ? { parentId: comment._id, ...replyStatusCondition }
+      : { parentId: comment._id, status: "live" };
+  const replyCount = await Comment.countDocuments(replyQuery);
   const likeCount = await CommentLike.countDocuments({ commentId: comment._id });
   const userLiked =
     authenticatedUserId &&
@@ -87,7 +108,6 @@ async function formatComment(comment, proposal, vote, authenticatedUserId = null
       ? { _id: userId, name: null, type }
       : null;
   const isAuthor = authenticatedUserId && author && author._id === authenticatedUserId;
-  const isAdmin = isVoteAdmin(proposal, vote, authenticatedUserId);
   const result = {
     _id: comment._id,
     parentId: comment.parentId ?? null,
@@ -325,7 +345,9 @@ router.get("/", async (req, res) => {
     const [result] = await Comment.aggregate(pipeline);
     const total = result?.total?.[0]?.n ?? 0;
     const items = result?.items ?? [];
-    const data = await Promise.all(items.map((doc) => formatComment(doc, proposal, vote, userId)));
+    const data = await Promise.all(
+      items.map((doc) => formatComment(doc, proposal, vote, userId, excludeWithdrawn))
+    );
 
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({
@@ -499,7 +521,9 @@ router.get("/:commentId/replies", async (req, res) => {
       Comment.countDocuments(replyQuery),
     ]);
 
-    const data = await Promise.all(replies.map((r) => formatComment(r, proposal, vote, userId)));
+    const data = await Promise.all(
+      replies.map((r) => formatComment(r, proposal, vote, userId, excludeWithdrawn))
+    );
     const totalPages = Math.ceil(total / limit);
     return res.status(200).json({
       data,

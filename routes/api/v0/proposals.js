@@ -6,6 +6,7 @@ const router = Router();
 import { Proposal } from "../../../schema/Proposal.js";
 import { Category } from "../../../schema/Category.js";
 import { Vote } from "../../../schema/Vote.js";
+import { Comment } from "../../../schema/Comment.js";
 
 // helper imports
 import mongoose from "mongoose";
@@ -654,6 +655,13 @@ router.get("/:proposalId", async (req, res) => {
       payload = { ...payload, category };
     }
 
+    // commentCount: total number of comments and replies on this proposal (excluding withdrawn)
+    const commentCount = await Comment.countDocuments({
+      proposalId: proposal._id,
+      status: "live",
+    });
+    payload = { ...payload, commentCount };
+
     return res.status(200).json(payload);
   } catch (error) {
     console.error("Error fetching proposal by ID:", error);
@@ -675,8 +683,8 @@ router.get("/:proposalId", async (req, res) => {
  * @query {string} [initiativeType] - Filter by initiative type (exact match). Valid values: 'New Initiative', 'Maintenance'.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
- * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, or metaData.contractingParty.legalEntityName (partial, case-insensitive)
- * @query {string} [sort=date] - Sort field: title, status, date (submittedAt), updatedAt, or totalBudget
+ * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
+ * @query {string} [sort=date] - Sort field: title, status, date (submittedAt), updatedAt, totalBudget, or commentCount
  * @query {string} [direction=desc] - Sort direction: asc or desc
  * @query {number} [page=1] - Page number for pagination (default: 1)
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
@@ -936,7 +944,7 @@ router.get("/", async (req, res) => {
       query.proposerId = validatedAddress;
     }
 
-    // Add search: title, metaData.contractingParty.legalEntityName (partial, case-insensitive) or _id (exact match)
+    // Add search: title, metaData.contractingParty.legalEntityName, proposerId (partial, case-insensitive) or _id (exact match)
     if (search) {
       const searchTerm = search.trim();
       if (searchTerm) {
@@ -948,6 +956,7 @@ router.get("/", async (req, res) => {
               $options: "i",
             },
           },
+          { proposerId: { $regex: searchTerm, $options: "i" } },
         ];
         if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
           searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
@@ -956,13 +965,14 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // Map sort parameter to schema field
+    // Map sort parameter to schema field (commentCount resolved via aggregation)
     const sortFieldMap = {
       title: "title",
       status: "status",
       date: "submittedAt",
       updatedAt: "updatedAt",
       totalBudget: "totalBudget",
+      commentCount: "commentCount",
     };
     const sortParamNorm = sortParam ? sortParam.trim().toLowerCase() : "date";
     const sortKey = Object.keys(sortFieldMap).find(
@@ -989,12 +999,76 @@ router.get("/", async (req, res) => {
     const sortOption = { [sortField]: sortDirection };
 
     const skip = (pageNum - 1) * limitNum;
-
-    const proposals = await Proposal.find(query).sort(sortOption).skip(skip).limit(limitNum).lean();
     const totalItems = await Proposal.countDocuments(query);
 
+    let proposals;
+    if (sortKey === "commentCount") {
+      const pipeline = [
+        { $match: query },
+        {
+          $lookup: {
+            from: "comments",
+            let: { pid: "$_id" },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ["$proposalId", "$$pid"] },
+                  status: "live",
+                },
+              },
+              { $count: "count" },
+            ],
+            as: "commentCountArr",
+          },
+        },
+        {
+          $addFields: {
+            commentCount: {
+              $ifNull: [{ $arrayElemAt: ["$commentCountArr.count", 0] }, 0],
+            },
+          },
+        },
+        { $sort: { commentCount: sortDirection } },
+        { $skip: skip },
+        { $limit: limitNum },
+      ];
+      proposals = await Proposal.aggregate(pipeline);
+      proposals = proposals.map((p) => ({ ...p, commentCount: p.commentCount ?? 0 }));
+    } else {
+      proposals = await Proposal.find(query)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+      const proposalIds = proposals.map((p) => p._id).filter(Boolean);
+      let commentCountsById = new Map();
+      if (proposalIds.length > 0) {
+        const commentCounts = await Comment.aggregate([
+          {
+            $match: {
+              proposalId: { $in: proposalIds },
+              status: "live",
+            },
+          },
+          {
+            $group: {
+              _id: "$proposalId",
+              count: { $sum: 1 },
+            },
+          },
+        ]);
+        commentCountsById = new Map(
+          commentCounts.map((doc) => [String(doc._id), doc.count ?? 0]),
+        );
+      }
+      proposals = proposals.map((p) => ({
+        ...p,
+        commentCount: commentCountsById.get(String(p._id)) ?? 0,
+      }));
+    }
+
     const formattedProposals = proposals.map((proposal) => {
-      const { metaData, withdrawalReason, versions, signature, userId, ...rest } = proposal;
+      const { metaData, withdrawalReason, versions, signature, userId, commentCount, ...rest } = proposal;
       const shortenedMetaData = metaData
         ? {
             strategicFocusArea: metaData.strategicFocusArea,
@@ -1002,7 +1076,7 @@ router.get("/", async (req, res) => {
             initiativeType: metaData.financialAndAdministrative?.initiativeType,
           }
         : null;
-      return { ...rest, metaData: shortenedMetaData };
+      return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };
     });
 
     // Calculate pagination metadata

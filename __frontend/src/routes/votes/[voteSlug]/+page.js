@@ -10,6 +10,7 @@ export async function load({ params, url, fetch }) {
 	const direction = url.searchParams.get('direction') || 'asc';
 	const category = url.searchParams.get('category') || '';
 	const status = url.searchParams.get('status') || 'live';
+	const proposer = url.searchParams.get('proposer') || '';
 	const proposalType = url.searchParams.get('proposalType') || '';
 	const initiativeType = url.searchParams.get('initiativeType') || '';
 
@@ -37,6 +38,7 @@ export async function load({ params, url, fetch }) {
 	if (search) proposalsSearchParams.set('search', search);
 	if (category) proposalsSearchParams.set('category', category);
 	if (status) proposalsSearchParams.set('status', status);
+	if (proposer) proposalsSearchParams.set('proposer', proposer);
 	if (proposalType) proposalsSearchParams.set('proposalType', proposalType);
 	if (initiativeType) proposalsSearchParams.set('initiativeType', initiativeType);
 	const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;

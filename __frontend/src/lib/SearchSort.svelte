@@ -17,6 +17,7 @@
     { value: "totalBudget", label: "Total Budget" },
     { value: "date", label: "Submission Date" },
     { value: "updatedAt", label: "Last Updated" },
+    { value: "commentCount", label: "Comments" },
   ];
 
   const VALID_SORT = new Set(SORT_OPTIONS.map((o) => o.value));
@@ -101,9 +102,17 @@
           <Label class="text-xs text-muted-foreground">Sort by</Label>
           <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
             {#each SORT_OPTIONS as option (option.value)}
-              <div class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50">
-                <RadioGroup.Item value={option.value} id="sort-{option.value}" />
-                <Label for="sort-{option.value}" class="cursor-pointer font-normal">
+              <div
+                class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+              >
+                <RadioGroup.Item
+                  value={option.value}
+                  id="sort-{option.value}"
+                />
+                <Label
+                  for="sort-{option.value}"
+                  class="cursor-pointer font-normal"
+                >
                   {option.label}
                 </Label>
               </div>

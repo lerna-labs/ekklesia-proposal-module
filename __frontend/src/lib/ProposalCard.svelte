@@ -8,6 +8,8 @@
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
+  import MessageSquareIcon from "@lucide/svelte/icons/message-square";
+  import FileTextIcon from "@lucide/svelte/icons/file-text";
   import Markdown from "$lib/base/Markdown.svelte";
   import { shortenString } from "$lib/utils.js";
   let {
@@ -42,6 +44,15 @@
   const proposalHref = $derived(
     vote && (proposal._id || proposal.id)
       ? `/votes/${vote.slug}/${proposal._id || proposal.id}`
+      : null,
+  );
+  const commentsHref = $derived(proposalHref ? `${proposalHref}#comments` : null);
+  const commentCount = $derived(
+    proposal?.commentCount != null ? Number(proposal.commentCount) : null,
+  );
+  const proposerHref = $derived(
+    vote?.slug && proposal?.proposerId
+      ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
       : null,
   );
 
@@ -100,9 +111,19 @@
     {#if proposal.proposerId}
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted-foreground">Proposer:</span>
-        <span class="text-sm font-semibold">
-          {shortenString(proposal.proposerId, 24, true)}
-        </span>
+        {#if proposerHref}
+          <a
+            href={proposerHref}
+            class="text-sm font-semibold text-(--mbo-electric-blue) hover:underline cursor-pointer"
+            title="Show all proposals by this proposer"
+          >
+            {shortenString(proposal.proposerId, 24, true)}
+          </a>
+        {:else}
+          <span class="text-sm font-semibold">
+            {shortenString(proposal.proposerId, 24, true)}
+          </span>
+        {/if}
       </div>
     {/if}
 
@@ -186,23 +207,40 @@
       </Card.Root>
     {/if}
   </Card.Content>
-  {#if (showLink && proposalHref) || canWithdraw}
-    <Card.Footer class="flex flex-wrap items-center gap-2">
-      {#if showLink && proposalHref}
-        <Button.Root
-          href={proposalHref}
-          variant="outline"
-          size="sm"
-          class="text-xs"
-        >
-          Read Proposal
-        </Button.Root>
-      {/if}
+  {#if (showLink && proposalHref) || canWithdraw || commentsHref}
+    <Card.Footer class="flex flex-wrap items-center gap-2 justify-between">
+      <div class="flex flex-wrap items-center gap-2">
+        {#if showLink && proposalHref}
+          <Button.Root
+            href={proposalHref}
+            variant="secondary"
+            size="sm"
+            class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          >
+            <FileTextIcon class="size-4 mr-1" />
+            Read Proposal
+          </Button.Root>
+        {/if}
+        {#if commentsHref}
+          <Button.Root
+            href={commentsHref}
+            variant="secondary"
+            size="sm"
+            class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+            aria-label={commentCount != null
+              ? `${commentCount} comment${commentCount === 1 ? "" : "s"}`
+              : "View comments"}
+          >
+            <MessageSquareIcon class="size-4 mr-1" />
+            {commentCount != null ? commentCount : "—"} comment{commentCount === 1 ? "" : "s"}
+          </Button.Root>
+        {/if}
+      </div>
       {#if canWithdraw}
         <Button.Root
           variant="destructive"
           size="sm"
-          class="text-xs bg-destructive text-white hover:bg-destructive/90"
+          class="ml-auto text-xs bg-destructive text-white hover:bg-destructive/90"
           aria-label="Withdraw proposal"
           title="Withdraw proposal"
           onclick={() => (withdrawOpen = true)}
