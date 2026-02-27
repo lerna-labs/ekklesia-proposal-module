@@ -71,6 +71,19 @@
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
   const hasActiveFilter = $derived(userTypeFilter.length > 0 || excludeWithdrawn);
 
+  function getVisibleCommentCount() {
+    const topLevel = Array.isArray(commentsState.data)
+      ? commentsState.data.filter((c) => !c?.withdrawalDetails).length
+      : 0;
+    const repliesTotal = Object.values(repliesByParent ?? {}).reduce((sum, entry) => {
+      const arr = entry?.data ?? [];
+      return sum + arr.filter((c) => !c?.withdrawalDetails).length;
+    }, 0);
+    return topLevel + repliesTotal;
+  }
+
+  const visibleCommentCount = $derived(getVisibleCommentCount());
+
   $effect(() => {
     if (sortPopoverOpen) {
       pendingSort = sort;
@@ -391,7 +404,7 @@
 
 <section class="mt-8" id="comments">
   <CommentsHeader
-    total={commentsState.meta?.total}
+    total={visibleCommentCount}
     bind:sortPopoverOpen
     bind:filterPopoverOpen
     bind:pendingSort
