@@ -34,8 +34,7 @@
   );
 
   const canWithdraw = $derived(
-    (isOwnProposal || isVoteAdmin) &&
-      (proposal?.status === "live" || proposal?.status === "draft"),
+    (isOwnProposal || isVoteAdmin) && proposal?.status === "live",
   );
 
   let withdrawOpen = $state(false);

@@ -242,10 +242,10 @@ router.put("/:proposalId/withdraw", async (req, res) => {
       });
     }
 
-    if (proposal.status !== "live" && proposal.status !== "draft") {
+    if (proposal.status !== "live") {
       return res.status(400).json({
         status: "error",
-        message: "Only live or draft proposals can be withdrawn.",
+        message: "Only live proposals can be withdrawn. Draft proposals can be deleted.",
       });
     }
 

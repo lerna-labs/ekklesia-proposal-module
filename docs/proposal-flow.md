@@ -216,9 +216,9 @@ sequenceDiagram
 
 ### 3.5 Withdraw proposal
 
-- **User (proposer or vote admin):** Withdraws a **live or draft** proposal.
+- **User (proposer or vote admin):** Withdraws a **live** proposal.
 - **API:** `PUT /proposals/{proposalId}/withdraw` with `category` and `comment` (both required). See [api-specification.md §5.3](api-specification.md#53-put-proposalsproposalidwithdraw).
-- **Constraints:** For **live** proposals, proposer can withdraw until the vote’s `feedbackEndDate`, admin until `reviewEndDate`. Draft proposals can be withdrawn by proposer or admin without date restriction.
+- **Constraints:** Only **live** proposals can be withdrawn. Proposer can withdraw until the vote’s `feedbackEndDate`, admin until `reviewEndDate`. Draft proposals cannot be withdrawn; use **Delete proposal** (§3.6) instead.
 
 ```mermaid
 sequenceDiagram
