@@ -1,6 +1,6 @@
 <script>
   import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import Textarea from "$lib/form/Textarea.svelte";
 
   let {
@@ -51,9 +51,14 @@
         {/if}
       </div>
       <Dialog.Footer>
-        <Dialog.Close class={buttonVariants({ variant: "outline", size: "sm" })}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onclick={() => onClose?.()}
+        >
           Cancel
-        </Dialog.Close>
+        </Button>
         <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : "Save Comment"}
         </Button>
