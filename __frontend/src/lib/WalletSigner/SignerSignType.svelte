@@ -1,7 +1,7 @@
 <script>
-  import * as Select from "$lib/components/ui/select/index.js";
-  import { user } from "$stores/sessionManager";
+  import { Button } from "$lib/components/ui/button";
   import { createEventDispatcher } from "svelte";
+
   const dispatch = createEventDispatcher();
   let { value = undefined, disabled = false, mode = "signer" } = $props();
 
@@ -13,41 +13,64 @@
   }
 </script>
 
-<!-- SELECT SIGNTYPE -->
-<Select.Root
-  type="single"
-  {value}
-  onValueChange={handleValueChange}
-  {disabled}
-  class="w-full"
->
-  <Select.Trigger class="w-full">
-    {#if value}
-      {#if value === "drep"}
-        Sign with DRep Key
-      {:else if value === "stake"}
-        Sign with Stake Key
-      {:else if value === "pool"}
-        Sign with Calidus Key
-      {:else if value === "addr"}
-        Sign with Payment Key
-      {/if}
-    {:else}
-      Select how to sign
-    {/if}
-  </Select.Trigger>
-  <Select.Content>
-    {#if userTypes.includes("drep")}
-      <Select.Item value="drep">Sign with DRep Key</Select.Item>
-    {/if}
-    {#if userTypes.includes("stake")}
-      <Select.Item value="stake">Sign with Stake Key</Select.Item>
-    {/if}
-    {#if userTypes.includes("pool")}
-      <Select.Item value="pool">Sign with Calidus Key</Select.Item>
-    {/if}
-    {#if userTypes.includes("addr")}
-      <Select.Item value="addr">Sign with Payment Key</Select.Item>
-    {/if}
-  </Select.Content>
-</Select.Root>
+<div class="flex gap-1 w-full">
+  {#if userTypes.includes("drep")}
+    <Button
+      type="button"
+      variant={value === "drep" ? "default" : "outline"}
+      size="sm"
+      class={value === "drep"
+        ? "flex-1 text-xs bg-black text-white border-black hover:bg-black"
+        : "flex-1 text-xs text-black"}
+      {disabled}
+      onclick={() => handleValueChange("drep")}
+    >
+      Use DRep Key
+    </Button>
+  {/if}
+
+  {#if userTypes.includes("stake")}
+    <Button
+      type="button"
+      variant={value === "stake" ? "default" : "outline"}
+      size="sm"
+      class={value === "stake"
+        ? "flex-1 text-xs bg-black text-white border-black hover:bg-black"
+        : "flex-1 text-xs text-black"}
+      {disabled}
+      onclick={() => handleValueChange("stake")}
+    >
+      Use Stake Key
+    </Button>
+  {/if}
+
+  {#if userTypes.includes("pool")}
+    <Button
+      type="button"
+      variant={value === "pool" ? "default" : "outline"}
+      size="sm"
+      class={value === "pool"
+        ? "flex-1 text-xs bg-black text-white border-black hover:bg-black"
+        : "flex-1 text-xs text-black"}
+      {disabled}
+      onclick={() => handleValueChange("pool")}
+    >
+      Use Calidus Key
+    </Button>
+  {/if}
+
+  {#if userTypes.includes("addr")}
+    <Button
+      type="button"
+      variant={value === "addr" ? "default" : "outline"}
+      size="sm"
+      class={value === "addr"
+        ? "flex-1 text-xs bg-black text-white border-black hover:bg-black"
+        : "flex-1 text-xs text-black"}
+      {disabled}
+      onclick={() => handleValueChange("addr")}
+    >
+      Use Payment Address
+    </Button>
+  {/if}
+</div>

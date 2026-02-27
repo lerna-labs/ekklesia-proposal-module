@@ -10,7 +10,7 @@
   import { toast } from "svelte-sonner";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { invalidateAll } from "$app/navigation";
   let {
     ballot = false,
     mode,
@@ -21,7 +21,7 @@
   let open = $state(false);
   let selected = $state("wallet");
   let noWallets = $state(false);
-  let signType = $state("drep");
+  let signType = $state("");
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
   let scriptAddress = $derived.by(() => {
@@ -60,7 +60,7 @@
     const getUser = await api.fetch(fetch, "/session/");
     const userData = await getUser.json();
     user.set(userData);
-    goto("/");
+    await invalidateAll();
     open = false;
   }
 
