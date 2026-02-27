@@ -45,71 +45,6 @@
     {/if}
   </h2>
   <div class="flex items-center gap-1 ml-auto">
-    <Popover.Root bind:open={sortPopoverOpen}>
-      <Popover.Trigger
-        class={buttonVariants({
-          variant: "outline",
-          size: "icon",
-          class: "cursor-pointer relative size-8",
-        })}
-        aria-label="Sort comments"
-      >
-        <ArrowUpDownIcon class="size-4" />
-        {#if hasActiveSort}
-          <span
-            class="absolute top-1 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
-            aria-hidden="true"
-          ></span>
-        {/if}
-      </Popover.Trigger>
-      <Popover.Content align="start" class="w-56 p-3">
-        <h3 class="text-sm font-medium mb-2">Sort</h3>
-        <Separator.Root class="mb-3" />
-        <div class="space-y-4">
-          <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Sort by</Label>
-            <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
-              {#each SORT_OPTIONS as option (option.value)}
-                <div class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50">
-                  <RadioGroup.Item value={option.value} id="comment-sort-{option.value}" />
-                  <Label for="comment-sort-{option.value}" class="cursor-pointer font-normal">
-                    {option.label}
-                  </Label>
-                </div>
-              {/each}
-            </RadioGroup.Root>
-          </div>
-          <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Direction</Label>
-            <div class="flex items-center gap-2">
-              <Switch id="comment-sort-dir" bind:checked={pendingDescending} />
-              <Label for="comment-sort-dir" class="cursor-pointer text-sm font-normal">
-                {pendingDescending ? "Descending" : "Ascending"}
-              </Label>
-            </div>
-          </div>
-          <div class="border-t pt-3 flex gap-1">
-            {#if hasActiveSort}
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                class="flex-1 text-xs text-white"
-                aria-label="Reset sort"
-                onclick={onResetSort}
-              >
-                <Trash2Icon class="size-4" />
-                Reset
-              </Button>
-            {/if}
-            <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplySort}>
-              <CheckIcon class="size-4" />
-              Apply
-            </Button>
-          </div>
-        </div>
-      </Popover.Content>
-    </Popover.Root>
     <Popover.Root bind:open={filterPopoverOpen}>
       <Popover.Trigger
         class={buttonVariants({
@@ -186,6 +121,71 @@
             <CheckIcon class="size-4" />
             Apply
           </Button>
+        </div>
+      </Popover.Content>
+    </Popover.Root>
+    <Popover.Root bind:open={sortPopoverOpen}>
+      <Popover.Trigger
+        class={buttonVariants({
+          variant: "outline",
+          size: "icon",
+          class: "cursor-pointer relative size-8",
+        })}
+        aria-label="Sort comments"
+      >
+        <ArrowUpDownIcon class="size-4" />
+        {#if hasActiveSort}
+          <span
+            class="absolute top-1 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            aria-hidden="true"
+          ></span>
+        {/if}
+      </Popover.Trigger>
+      <Popover.Content align="start" class="w-56 p-3">
+        <h3 class="text-sm font-medium mb-2">Sort</h3>
+        <Separator.Root class="mb-3" />
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Sort by</Label>
+            <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
+              {#each SORT_OPTIONS as option (option.value)}
+                <div class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50">
+                  <RadioGroup.Item value={option.value} id="comment-sort-{option.value}" />
+                  <Label for="comment-sort-{option.value}" class="cursor-pointer font-normal">
+                    {option.label}
+                  </Label>
+                </div>
+              {/each}
+            </RadioGroup.Root>
+          </div>
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Direction</Label>
+            <div class="flex items-center gap-2">
+              <Switch id="comment-sort-dir" bind:checked={pendingDescending} />
+              <Label for="comment-sort-dir" class="cursor-pointer text-sm font-normal">
+                {pendingDescending ? "Descending" : "Ascending"}
+              </Label>
+            </div>
+          </div>
+          <div class="border-t pt-3 flex gap-1">
+            {#if hasActiveSort}
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                class="flex-1 text-xs text-white"
+                aria-label="Reset sort"
+                onclick={onResetSort}
+              >
+                <Trash2Icon class="size-4" />
+                Reset
+              </Button>
+            {/if}
+            <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplySort}>
+              <CheckIcon class="size-4" />
+              Apply
+            </Button>
+          </div>
         </div>
       </Popover.Content>
     </Popover.Root>

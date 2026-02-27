@@ -38,14 +38,16 @@
         </Dialog.Title>
       </Dialog.Header>
       <div class="py-4">
-        <Textarea
-          id="comment-content"
-          label="Comment"
-          bind:value
-          placeholder="Write your comment (markdown supported)"
-          required
-          maxLength={2000}
-        />
+        {#key open && replyTo ? replyTo._id : (open ? "add" : "closed")}
+          <Textarea
+            id="comment-content"
+            label="Comment"
+            bind:value
+            placeholder="Write your comment (markdown supported)"
+            required
+            maxLength={2000}
+          />
+        {/key}
         {#if submitError}
           <p class="text-sm text-destructive mt-2">{submitError}</p>
         {/if}
