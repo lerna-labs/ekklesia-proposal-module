@@ -34,10 +34,7 @@ if (!API_TOKEN) {
 
 /**
  * @typedef {Object} DrepMetadata
- * @property {Object} body - Metadata body
- * @property {Object} [body.dRepName] - DRep name object
- * @property {string} [body.dRepName.@value] - DRep display name
- * @property {string} [body.givenName] - Fallback given name
+ * @property {{dRepName?: {"@value"?: string}, givenName?: string}} body - Metadata body
  */
 
 /**
@@ -106,7 +103,7 @@ export async function fetchDrepName(drepId) {
             if (drepMetadata.body?.dRepName?.["@value"]) {
                 return drepMetadata.body.dRepName["@value"];
             }
-            // Fallback to givenName if dRepName doesn't have @value
+            // Fallback to the givenName if dRepName doesn't have @value
             else if (drepMetadata.body?.givenName) {
                 return drepMetadata.body.givenName;
             }
@@ -129,7 +126,7 @@ export async function fetchDrepName(drepId) {
 /**
  * Validates that a DRep ID is registered with the Koios API.
  *
- * @param {string} drepId - The DRep ID (e.g. CIP129 Bech32 "drep1...")
+ * @param {string} drepId - The DRep ID (e.g., CIP129 Bech32 "drep1...")
  * @returns {Promise<boolean>} True if the DRep is registered (drep_info returns at least one result), false otherwise or on error.
  */
 export async function validateDrep(drepId) {
@@ -231,7 +228,7 @@ async function fetchHandleKoios(address) {
                 body: JSON.stringify(body),
             }
         );
-        const data = await response.json();
+        const /** @type {{policy_id: string, asset_name: string}[]} */ data = await response.json();
         if (data.length === 0) {
             console.log("No handle found");
             return null;
@@ -249,7 +246,7 @@ async function fetchHandleKoios(address) {
                     }),
                 }
             );
-            const getHandleMetadata = await getHandleMetadataResponse.json();
+            const /** @type {{asset_name_ascii: string}[]} */ getHandleMetadata = await getHandleMetadataResponse.json();
             return getHandleMetadata[0].asset_name_ascii;
         } catch (error) {
             console.error("Error fetching handle metadata:", error);
@@ -324,6 +321,75 @@ export async function getScript(scriptHash) {
     return false;
 }
 
+
+
+/**
+ * @typedef {Object} TxPaymentAddr
+ * @property {string} cred - Payment credential hash (hex)
+ * @property {string} bech32 - Payment address in bech32 format
+ */
+
+/**
+ * @typedef {Object} TxIO
+ * @property {string} value - Amount in lovelace (as string)
+ * @property {string} tx_hash - Transaction hash (hex)
+ * @property {number} tx_index - Output index
+ * @property {string|null} stake_addr - Stake address associated with the UTxO (bech32)
+ * @property {TxPaymentAddr} payment_addr - Payment address details
+ */
+
+/**
+ * @typedef {Object} TxInfo
+ * @property {string} tx_hash - Transaction hash (hex)
+ * @property {string} block_hash - Block hash (hex)
+ * @property {number} block_height - Block height
+ * @property {number} epoch_no - Epoch number
+ * @property {number} tx_timestamp - Unix timestamp
+ * @property {string} total_output - Total output in lovelace (as string)
+ * @property {string} fee - Transaction fee in lovelace (as string)
+ * @property {string|null} treasury_donation - Treasury donation in lovelace (as string) or null
+ * @property {string} deposit - Deposit amount in lovelace (as string)
+ * @property {TxIO[]} inputs - Transaction inputs
+ * @property {TxIO[]} outputs - Transaction outputs
+ */
+
+/**
+ * Fetches transaction information from the Koios API.
+ *
+ * @param {string} txHash - Transaction hash in hex format
+ * @returns {Promise<TxInfo|null>} The transaction data object if found, null otherwise or on error
+ */
+export async function fetchTxInfo(txHash) {
+    try {
+        const response = await fetch(`${API_URL}/tx_info`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                authorization: `Bearer ${API_TOKEN}`,
+            },
+            body: JSON.stringify({
+                _tx_hashes: [txHash],
+                _inputs: true,
+                _metadata: false,
+                _assets: false,
+                _withdrawals: false,
+                _certs: false,
+                _scripts: false,
+                _bytecode: false,
+                _governance: false,
+            }),
+        });
+        const data = await response.json();
+        if (data.length === 0) {
+            return null;
+        }
+        return data[0];
+    } catch (error) {
+        console.error("Error fetching tx info:", error);
+        return null;
+    }
+}
+
 /**
  * @typedef {Object} CalidusKey
  * @property {string} pool_id_bech32 - Pool ID in bech32 format
@@ -335,9 +401,7 @@ export async function getScript(scriptHash) {
  * @property {number} epoch_no - Epoch number of the certificate
  * @property {number} block_height - Block height of the certificate
  * @property {number} block_time - Block time as Unix timestamp
- */
-
-/**
+ *
  * Fetches the latest Calidus key for a given stake pool from the Koios API.
  *
  * @param {string} poolBech32 - The pool ID in bech32 format (e.g., "pool1...")
