@@ -1,6 +1,5 @@
 // express router
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
 const router = Router();
 
 // schema import
@@ -19,6 +18,10 @@ import {
 } from "../../../helper/verifySignature.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { fetchDrepName, fetchHandle, validateDrep } from "../../../helper/koios.js";
+import {
+  nonceRequestLimiter,
+  sessionVerificationLimiter,
+} from "../../../helper/rateLimiters.js";
 
 // enable dayjs duration plugin
 dayjs.extend(duration);
@@ -40,29 +43,6 @@ if (!JWT_MAX_AGE.match(/^\d+[smhd]$/) && !JWT_MAX_AGE.match(/^\d+$/)) {
   JWT_MAX_AGE = "1d";
   process.env.JWT_MAX_AGE = "1d";
 }
-
-// Rate limiters for authentication endpoints
-const nonceRequestLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, // 5 requests per minute per IP
-  message: {
-    status: "error",
-    message: "Too many nonce requests. Please try again later.",
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-
-const sessionVerificationLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute per IP
-  message: {
-    status: "error",
-    message: "Too many authentication attempts. Please try again later.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
 
 const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
