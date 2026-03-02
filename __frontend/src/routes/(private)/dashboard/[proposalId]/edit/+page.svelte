@@ -1,7 +1,7 @@
 <script>
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import Form from "$lib/budget2026/Form.svelte";
+  import { getFormForVote } from "$lib/forms/registry.js";
   import { api } from "$stores/sessionManager.js";
 
   let { data } = $props();
@@ -10,6 +10,7 @@
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
+  let FormComponent = $derived(getFormForVote(vote));
 
   async function onSave(payload) {
     if (!proposal?._id) return;
@@ -51,4 +52,10 @@
   <h1 class="text-2xl font-semibold mb-6">Edit proposal</h1>
 </div>
 
-<Form vote={vote} {categories} {proposal} {onSave} bind:validationErrors />
+<FormComponent
+  {vote}
+  {categories}
+  {proposal}
+  {onSave}
+  bind:validationErrors
+/>
