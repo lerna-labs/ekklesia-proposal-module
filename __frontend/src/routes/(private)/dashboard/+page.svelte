@@ -157,10 +157,22 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-border">
-                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top">Title</th>
-                  <th class="text-right font-medium py-3 px-4 whitespace-nowrap align-top">Total Budget</th>
-                  <th class="text-left font-medium py-3 px-4 whitespace-nowrap align-top">Last updated</th>
-                  <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-top">
+                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top">
+                    Title
+                  </th>
+                  <th
+                    class="text-right font-medium py-3 px-4 whitespace-nowrap align-top"
+                  >
+                    Total Budget
+                  </th>
+                  <th
+                    class="text-left font-medium py-3 px-4 whitespace-nowrap align-top"
+                  >
+                    Last updated
+                  </th>
+                  <th
+                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-top"
+                  >
                     Actions
                   </th>
                 </tr>
@@ -168,10 +180,14 @@
               <tbody>
                 {#each proposals as proposal, i (proposal._id)}
                   {@const slug = voteSlugs[proposal.voteId]}
-                  {@const editHref = slug ? `/dashboard/${slug}/${proposal._id}` : null}
+                  {@const editHref = slug
+                    ? `/dashboard/${slug}/${proposal._id}`
+                    : null}
                   {@const viewUrl = viewHref(proposal)}
                   {@const isLastRow = i === proposals.length - 1}
-                  {@const isWithdrawn = proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
+                  {@const isWithdrawn =
+                    proposal.status === "withdrawnByProposer" ||
+                    proposal.status === "withdrawnByAdmin"}
                   <tr
                     class="border-b hover:bg-muted/50 {isLastRow
                       ? 'border-border'
@@ -200,7 +216,8 @@
                             type="button"
                             class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-destructive text-white cursor-pointer hover:bg-destructive/90"
                             aria-label="View withdrawal details"
-                            onclick={() => openWithdrawalDetailsDialog(proposal)}
+                            onclick={() =>
+                              openWithdrawalDetailsDialog(proposal)}
                           >
                             {proposal.status === "withdrawnByAdmin"
                               ? "Withdrawn by Admin"
@@ -215,12 +232,16 @@
                         {/if}
                       </div>
                     </td>
-                    <td class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-top">
+                    <td
+                      class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-top"
+                    >
                       {proposal.totalBudget != null
                         ? `${formatAda(proposal.totalBudget)} ADA`
                         : "—"}
                     </td>
-                    <td class="py-3 px-4 text-muted-foreground whitespace-nowrap align-top">
+                    <td
+                      class="py-3 px-4 text-muted-foreground whitespace-nowrap align-top"
+                    >
                       {formatUpdatedAt(proposal.updatedAt)}
                     </td>
                     <td class="py-3 pr-0 pl-4 text-right align-top">
@@ -317,7 +338,7 @@
           </div>
 
           {#if proposalPagination.totalPages > 1}
-            <div class="px-6 pb-6">
+            <div class="px-6 pb-6 mt-8">
               <Pagination.Root
                 count={proposalPagination.totalItems}
                 page={proposalPagination.currentPage}
