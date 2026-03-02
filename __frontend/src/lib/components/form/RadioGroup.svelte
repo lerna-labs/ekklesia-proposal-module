@@ -1,8 +1,8 @@
 <script>
   import * as Field from "$lib/components/ui/field/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
-  import ToolTip from "$lib/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
+  import ToolTip from "./ToolTip.svelte";
+  import PrivateFieldIndicator from "./PrivateFieldIndicator.svelte";
   let {
     id,
     label = "",
