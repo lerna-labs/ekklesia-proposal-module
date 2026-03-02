@@ -73,7 +73,11 @@ const voteSchema = new Schema(
         required: true,
       },
     },
-
+    /** Folder name of the proposal form components (e.g. "default", "budget2026"). Used by the frontend to load the correct form. */
+    form: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
