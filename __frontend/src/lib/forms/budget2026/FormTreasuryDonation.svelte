@@ -1,4 +1,5 @@
 <script>
+  /** @see __frontend/docs/budget2026/form-treasury-donation.md Version: 1.0.0 */
   import * as Card from "$lib/components/ui/card/index.js";
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
