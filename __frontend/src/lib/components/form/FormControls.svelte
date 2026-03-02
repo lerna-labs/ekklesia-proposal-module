@@ -3,22 +3,107 @@
   import * as Switch from "$lib/components/ui/switch/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
-  import { toast } from "svelte-sonner";
 
-  let { formData, onSave, autoSaveEnabled } = $props();
+  let {
+    formData,
+    getPayload,
+    onSave,
+    autoSaveEnabled = $bindable(false),
+  } = $props();
 
-  function saveDraft() {
-    if (onSave) {
-      const payload = formDataToApiPayload({ ...formData, status: "draft" });
-      Promise.resolve(onSave(payload))
-        .then(() => {
-          initialSnapshot = formDataSnapshot;
-        })
-        .catch(() => {});
-    }
+  const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  /** Snapshot of current form data for dirty check (serialized payload). */
+  let formDataSnapshot = $derived(
+    getPayload ? JSON.stringify(getPayload(formData.status)) : "",
+  );
+
+  let initialSnapshot = $state(null);
+
+  $effect(() => {
+    if (initialSnapshot !== null) return;
+    initialSnapshot = formDataSnapshot;
+  });
+
+  let isDirty = $derived(
+    initialSnapshot !== null && formDataSnapshot !== initialSnapshot,
+  );
+
+  const dirtyRef = { current: false };
+  $effect(() => {
+    dirtyRef.current = isDirty;
+  });
+
+  /** Leave-confirm: intercept in-app navigation when dirty. */
+  let leaveConfirmOpen = $state(false);
+  let pendingNavigateUrl = $state(null);
+
+  beforeNavigate(({ to, cancel }) => {
+    if (!to || !dirtyRef.current) return;
+    cancel();
+    pendingNavigateUrl = to.url.href;
+    leaveConfirmOpen = true;
+  });
+
+  $effect(() => {
+    if (!isDirty) return;
+    const handler = (e) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  });
+
+  function stayOnPage() {
+    leaveConfirmOpen = false;
+    pendingNavigateUrl = null;
   }
 
-  let leaveConfirmOpen = $state(false);
+  function confirmLeave() {
+    const url = pendingNavigateUrl;
+    leaveConfirmOpen = false;
+    pendingNavigateUrl = null;
+    if (!url) return;
+    dirtyRef.current = false;
+    initialSnapshot = formDataSnapshot;
+    goto(url);
+  }
+
+  function saveDraft() {
+    if (!getPayload || !onSave) return;
+    const payload = getPayload("draft");
+    Promise.resolve(onSave(payload))
+      .then(() => {
+        initialSnapshot = formDataSnapshot;
+      })
+      .catch(() => {});
+  }
+
+  function submitLive() {
+    if (!getPayload || !onSave) return;
+    const payload = getPayload("live");
+    Promise.resolve(onSave(payload))
+      .then(() => {
+        initialSnapshot = formDataSnapshot;
+      })
+      .catch(() => {});
+  }
+
+  /** Exposed for parent form onsubmit (e.g. Enter key). */
+  export function submit() {
+    submitLive();
+  }
+
+  /** Auto-save draft at interval when enabled. */
+  $effect(() => {
+    if (!autoSaveEnabled || formData.status !== "draft" || !onSave || !getPayload)
+      return;
+    const id = setInterval(() => {
+      const payload = getPayload("draft");
+      Promise.resolve(onSave(payload)).catch(() => {});
+    }, AUTO_SAVE_INTERVAL_MS);
+    return () => clearInterval(id);
+  });
 </script>
 
 <section
@@ -31,10 +116,10 @@
         Save Draft
       </Button>
     {/if}
-    <Button type="submit" class="cursor-pointer">
+    <Button type="button" class="cursor-pointer" onclick={submitLive}>
       {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
     </Button>
-    {#if formData.status === "draft" && onSave}
+    {#if formData.status === "draft" && onSave && getPayload}
       <label
         class="ml-auto flex h-9 items-center gap-2 rounded-md border bg-white px-4 py-2 shadow-xs cursor-pointer select-none text-sm font-medium"
       >

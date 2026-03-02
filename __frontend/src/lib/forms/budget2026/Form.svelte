@@ -15,25 +15,37 @@
   let formData = $state({
     status: "draft",
     title: "",
-    metaData: {},
+    summary: "",
+    metaData: {
+      trackRecord: "",
+      estimatedDuration: "",
+      treasuryDonationTxHash: "",
+      treasuryDonationConfirmed: false,
+    },
   });
 
   let autoSaveEnabled = $state(false);
+  let formControlsRef = $state(null);
+
+  function getPayload(status) {
+    return { ...formData, status };
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
+    formControlsRef?.submit?.();
   }
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col form">
-  <Accordion.Root type="single" class="w-full" value="section-1">
+  <Accordion.Root type="multiple" class="w-full">
     <Accordion.Item
       value="section-1"
       id="treasury-donation"
-      class="bg-slate-100 border-0 shadow-none"
+      class="bg-slate-500/5 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Treasury donation
+        Treasury Donation
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormTreasuryDonation
@@ -49,10 +61,10 @@
     <Accordion.Item
       value="section-2"
       id="project-definition"
-      class="bg-slate-200 border-0 shadow-none"
+      class="bg-slate-500/10 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Project definition
+        Project Definition
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormProjectDefinition
@@ -68,7 +80,7 @@
     <Accordion.Item
       value="section-3"
       id="strategy-framework"
-      class="bg-slate-100 border-0 shadow-none"
+      class="bg-slate-500/15 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
         Strategy framework
@@ -87,7 +99,7 @@
     <Accordion.Item
       value="section-4"
       id="proposal-details"
-      class="bg-slate-200 border-0 shadow-none"
+      class="bg-slate-500/20 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
         Proposal details
@@ -106,7 +118,7 @@
     <Accordion.Item
       value="section-5"
       id="budget-summary"
-      class="bg-slate-100 border-0 shadow-none"
+      class="bg-slate-500/25 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
         Budget summary
@@ -125,7 +137,7 @@
     <Accordion.Item
       value="section-6"
       id="proposer-details"
-      class="bg-slate-200 border-0 shadow-none"
+      class="bg-slate-500/30 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
         Proposer details
@@ -144,7 +156,7 @@
     <Accordion.Item
       value="section-7"
       id="budget-administration"
-      class="bg-slate-100 border-0 shadow-none"
+      class="bg-slate-500/35 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
         Budget administration
@@ -163,11 +175,9 @@
     <Accordion.Item
       value="section-8"
       id="other-info"
-      class="bg-slate-200 border-0 shadow-none"
+      class="bg-slate-500/40 border-0 shadow-none"
     >
-      <Accordion.Trigger class="section-title">
-        Other info
-      </Accordion.Trigger>
+      <Accordion.Trigger class="section-title">Other info</Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormOtherInfo
           {formData}
@@ -180,5 +190,11 @@
     </Accordion.Item>
   </Accordion.Root>
 
-  <FormControls {formData} {onSave} {autoSaveEnabled} />
+  <FormControls
+    bind:this={formControlsRef}
+    {formData}
+    getPayload={getPayload}
+    {onSave}
+    bind:autoSaveEnabled
+  />
 </form>
