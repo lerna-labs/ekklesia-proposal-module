@@ -1,3 +1,4 @@
+import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 const VALID_SORT = new Set(['title', 'status', 'date', 'amount']);
@@ -31,6 +32,15 @@ export async function load({ fetch, url, parent }) {
 			itemsPerPage: meta.limit ?? 10,
 		},
 	};
+
+	// If current page is empty but there are still proposals (e.g. after deletions), redirect to page 1
+	const totalItems = proposals.pagination.totalItems ?? 0;
+	const currentPage = proposals.pagination.currentPage ?? 1;
+	if (proposals.data.length === 0 && totalItems > 0 && currentPage > 1) {
+		const params = new URLSearchParams(url.searchParams);
+		params.set('page', '1');
+		throw redirect(302, `${url.pathname}?${params.toString()}`);
+	}
 
 	// Resolve vote titles and slugs for unique voteIds (parallel fetches)
 	const voteIds = [...new Set((proposals.data || []).map((p) => p.voteId).filter(Boolean))];
