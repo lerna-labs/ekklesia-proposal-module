@@ -9,7 +9,7 @@ export async function load({ fetch, url, parent }) {
 	const user = parentData?.user;
 	const userId = user?.userId;
 	if (!userId) {
-		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, voteTitles: {}, voteSlugs: {} };
+		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, voteTitles: {}, voteSlugs: {}, votes: [] };
 	}
 
 	// URL params with defaults and validation
@@ -54,10 +54,16 @@ export async function load({ fetch, url, parent }) {
 		if (r.slug) voteSlugs[r.voteId] = r.slug;
 	}
 
+	// Load all votes for "New proposal" links (each vote → /dashboard/[slug]/new)
+	const votesRes = await api.fetch(fetch, '/votes?limit=50');
+	const votesJson = await votesRes.json();
+	const votes = votesJson.data ?? [];
+
 	return {
 		user,
 		proposals,
 		voteTitles,
 		voteSlugs,
+		votes,
 	};
 }

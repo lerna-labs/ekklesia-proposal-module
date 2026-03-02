@@ -4,13 +4,12 @@ import { api } from '$stores/sessionManager.js';
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
 	await parent();
-	const { proposalId } = params;
+	const { proposalId, budgetSlug } = params;
 
 	let proposalRes;
 	try {
 		proposalRes = await api.fetch(fetch, `/proposals/${proposalId}`);
 	} catch (err) {
-		// API returned 403 (not owner) or 404 (not found) – show a clear message
 		const status = err?.status ?? 500;
 		const bodyMsg = typeof err?.body === 'string' ? err.body : err?.body?.message;
 		const message =
@@ -33,6 +32,11 @@ export async function load({ fetch, params, parent }) {
 		error(voteRes.status, 'Vote not found');
 	}
 	const vote = await voteRes.json();
+
+	// Ensure URL slug matches this proposal's vote
+	if (vote.slug && vote.slug !== budgetSlug) {
+		error(404, 'Proposal does not belong to this vote');
+	}
 
 	const catRes = await api.fetch(fetch, `/votes/${voteId}/categories`);
 	if (!catRes.ok) {

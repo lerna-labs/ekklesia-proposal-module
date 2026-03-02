@@ -1,8 +1,14 @@
 <script>
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import { getFormForVote } from "$lib/forms/registry.js";
+  import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
+  import DefaultForm from "$lib/forms/default/Form.svelte";
   import { api } from "$stores/sessionManager.js";
+
+  const FORM_MAP = {
+    budget2026: Budget2026Form,
+    default: DefaultForm,
+  };
 
   let { data } = $props();
   let proposal = $derived(data.proposal);
@@ -10,7 +16,7 @@
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
-  let FormComponent = $derived(getFormForVote(vote));
+  let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
   async function onSave(payload) {
     if (!proposal?._id) return;

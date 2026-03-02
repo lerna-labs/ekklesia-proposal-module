@@ -21,6 +21,7 @@
   let proposalPagination = $derived(data.proposals.pagination);
   let voteSlugs = $derived(data.voteSlugs ?? {});
   let voteTitles = $derived(data.voteTitles ?? {});
+  let votes = $derived(data.votes ?? []);
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
@@ -119,16 +120,32 @@
             ({proposalPagination.totalItems})
           </span>
         </Card.Title>
-        <Button.Root
-          variant="outline"
-          class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
-          href="/dashboard/new"
-          aria-label="New proposal"
-          size="sm"
-        >
-          <PlusIcon class="size-4" />
-          New proposal
-        </Button.Root>
+        {#if votes.length === 1}
+          <Button.Root
+            variant="outline"
+            class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+            href="/dashboard/{votes[0].slug}/new"
+            aria-label="New proposal"
+            size="sm"
+          >
+            <PlusIcon class="size-4" />
+            New proposal
+          </Button.Root>
+        {:else if votes.length > 1}
+          <div class="flex items-center gap-1">
+            <Button.Root
+              variant="outline"
+              class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+              href="/dashboard/{votes[0].slug}/new"
+              aria-label="New proposal"
+              size="sm"
+            >
+              <PlusIcon class="size-4" />
+              New proposal
+            </Button.Root>
+            <!-- TODO: dropdown for other votes -->
+          </div>
+        {/if}
       </Card.Header>
       <Card.Content>
         {#if !proposals || proposals.length === 0}
@@ -150,7 +167,8 @@
               </thead>
               <tbody>
                 {#each proposals as proposal, i (proposal._id)}
-                  {@const editHref = `/dashboard/${proposal._id}/edit`}
+                  {@const slug = voteSlugs[proposal.voteId]}
+                  {@const editHref = slug ? `/dashboard/${slug}/${proposal._id}` : null}
                   {@const viewUrl = viewHref(proposal)}
                   {@const isLastRow = i === proposals.length - 1}
                   {@const isWithdrawn = proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
@@ -165,13 +183,17 @@
                           <span class="font-medium">
                             {proposal.title ?? proposal._id}
                           </span>
-                        {:else}
+                        {:else if editHref}
                           <a
                             href={editHref}
                             class="text-primary hover:underline font-medium"
                           >
                             {proposal.title ?? proposal._id}
                           </a>
+                        {:else}
+                          <span class="font-medium">
+                            {proposal.title ?? proposal._id}
+                          </span>
                         {/if}
                         {#if isWithdrawn}
                           <button
@@ -213,13 +235,23 @@
                           >
                             <PencilIcon class="size-4" />
                           </Button.Root>
-                        {:else}
+                        {:else if editHref}
                           <Button.Root
                             variant="outline"
                             size="icon"
                             href={editHref}
                             aria-label="Edit proposal"
                             title="Edit proposal"
+                          >
+                            <PencilIcon class="size-4" />
+                          </Button.Root>
+                        {:else}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            disabled
+                            aria-label="Edit proposal"
+                            title="Edit (vote slug unknown)"
                           >
                             <PencilIcon class="size-4" />
                           </Button.Root>

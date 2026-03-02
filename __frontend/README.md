@@ -17,8 +17,8 @@ SvelteKit frontend for the Ekklesia budget/vote module. It talks to the backend 
   - **`/votes/[voteSlug]`** — proposals for a vote (filters, search, pagination)
   - **`/votes/[voteSlug]/[proposalId]`** — proposal detail
   - **`/(private)/dashboard`** — auth required; my proposals, new/edit
-  - **`/(private)/dashboard/new`** — new proposal (requires `?vote=<voteId>`)
-  - **`/(private)/dashboard/[proposalId]/edit`** — edit proposal
+  - **`/(private)/dashboard/[budgetSlug]/new`** — new proposal for the vote with slug `[budgetSlug]`
+  - **`/(private)/dashboard/[budgetSlug]/[proposalId]`** — edit proposal
 - **`src/lib/`** — shared code:
   - **`budget2026/`** — proposal form (Form.svelte, work packages, legal declarations, etc.) and schema/config for the 2026 validation script
   - **`form/`** — reusable form primitives (Input, Textarea, DatePicker, etc.)
