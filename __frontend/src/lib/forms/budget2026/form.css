@@ -1,0 +1,55 @@
+@reference "$lib/css/layout.css";
+
+form .section-title {
+  @apply text-xl font-medium cursor-pointer max-w-4xl mx-auto px-4;
+}
+
+form .section-title:hover {
+  @apply no-underline;
+}
+
+/* Larger chevron for this form only (does not modify ui components) */
+form .section-title svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  color: black;
+}
+
+form h2 {
+  @apply text-2xl font-medium mb-2;
+}
+
+form h3 {
+  @apply text-lg font-medium mb-2;
+}
+
+form h4 {
+  @apply text-base font-medium mb-2;
+}
+
+form p {
+  @apply text-sm mb-4;
+}
+
+form strong {
+  @apply font-medium;
+}
+
+form ul {
+  @apply list-disc mb-4 pl-6 space-y-2;
+  list-style-type: square;
+}
+
+form ul li {
+  @apply text-sm;
+}
+
+form ol {
+  @apply list-decimal mb-4 pl-6 space-y-2;
+}
+
+form ol li {
+  @apply text-sm;
+}
