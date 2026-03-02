@@ -11,5 +11,7 @@
       strokeWidth={2}
     />
   </Popover.Trigger>
-  <Popover.Content class="text-xs p-2">{content}</Popover.Content>
+  <Popover.Content class="text-xs p-2 max-w-[300px] min-w-0 w-fit">
+    {content}
+  </Popover.Content>
 </Popover.Root>
