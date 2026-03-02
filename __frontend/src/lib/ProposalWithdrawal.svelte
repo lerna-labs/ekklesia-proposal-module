@@ -7,7 +7,7 @@
   import * as Select from "$lib/components/ui/select";
   import * as Button from "$lib/components/ui/button";
   import * as Field from "$lib/components/ui/field";
-  import Textarea from "$lib/form/Textarea.svelte";
+  import Textarea from "$lib/components/form/Textarea.svelte";
 
   let {
     open = $bindable(false),
@@ -50,9 +50,7 @@
       .meta({ label: "Comment", required: true }),
   });
 
-  const triggerContent = $derived(
-    category || "Select Reason for Withdrawal",
-  );
+  const triggerContent = $derived(category || "Select Reason for Withdrawal");
 
   $effect(() => {
     if (open && proposal) {
