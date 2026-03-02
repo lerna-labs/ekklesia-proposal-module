@@ -1,6 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card/index.js";
   import Input from "$lib/components/form/Input.svelte";
+  import Checkbox from "$lib/components/form/Checkbox.svelte";
   let { formData, vote, categories, proposal, validationErrors } = $props();
 </script>
 
@@ -63,12 +64,24 @@
 </Card.Root>
 
 <Input
-  id="title"
-  bind:value={formData.title}
-  label="Proposal Title"
-  description="The official name of your project as it will appear in governance voting."
-  placeholder="Enter Title Here"
+  id="treasuryDonationTxHash"
+  bind:value={formData.metaData.treasuryDonationTxHash}
+  label="Treasury Donation Verification Hash"
+  description="The transaction hash confirming the required 1000 ada donation to the Cardano Treasury. This serves as proof of wallet control and commitment."
+  placeholder="Transaction hash"
   required
-  maxLength={100}
+  maxLength={64}
   {validationErrors}
+  class="mt-4"
+/>
+
+<p class="mt-4 font-medium">Before you continue, please confirm</p>
+
+<Checkbox
+  id="treasuryDonationConfirmed"
+  bind:value={formData.metaData.treasuryDonationConfirmed}
+  label="I confirm that I have made the required 1,000 ADA non-refundable donation to the Cardano Treasury, understand that this donation is required only to participate in the process and does not guarantee proposal approval, funding, or execution, and confirm that I am submitting this proposal using the same wallet that made the donation."
+  required
+  {validationErrors}
+  class="mt-4"
 />
