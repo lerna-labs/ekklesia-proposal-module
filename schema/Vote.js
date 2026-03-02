@@ -58,6 +58,22 @@ const voteSchema = new Schema(
       type: String,
       required: false,
     },
+    /* donationOptions to track treasury donation and mandatory wallet deposits */
+    depositOptions: {
+      treasuryDonation: {
+        type: Number, // mint donation amount in lovelace
+        required: true,
+      },
+      depositAddress: {
+        type: String, // bech32 address or empty string for no deposit
+        required: true,
+      },
+      depositAmount: {
+        type: Number, // min deposit amount in lovelace or zero for no deposit needed
+        required: true,
+      },
+    },
+
   },
   {
     timestamps: true,
