@@ -1,8 +1,8 @@
 <script>
   import * as Field from "$lib/components/ui/field/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-  import ToolTip from "$lib/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
+  import ToolTip from "./ToolTip.svelte";
+  import PrivateFieldIndicator from "./PrivateFieldIndicator.svelte";
   let {
     id,
     label = "",
