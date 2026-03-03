@@ -51,17 +51,65 @@ export const milestoneSchema = z.object({
   duration: z.string().min(1, "Duration is required").max(100),
 });
 
-/** Single work package schema. Matches FormWorkPackages.svelte (metaData.executionRoadmap.workPackages[]). */
-export const workPackageSchema = z.object({
-  name: z.string().min(1, "Work Package name is required").max(100),
-  summary: z.string().min(1, "Work Package summary is required").max(10000),
-  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-  estimatedDuration: z.string().max(200).optional().default(""),
-  coreObjectives: z.array(z.string().max(1000)).optional().default([]),
-  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
-  metric: z.string().min(1, "Metric is required").max(600),
-  milestones: z.array(milestoneSchema).optional().default([]),
-  budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
-});
+/** Single work package schema. Matches FormWorkPackages.svelte (metaData.proposalDetails.workPackages[]). */
+export const workPackageSchema = z
+  .object({
+    name: z.string().min(1, "Work Package name is required").max(100),
+    summary: z.string().min(1, "Work Package summary is required").max(10000),
+    initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
+        return;
+      }
+      if (val !== "New Initiative" && val !== "Maintenance") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Initiative type must be New Initiative or Maintenance",
+        });
+      }
+    }),
+    proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
+        return;
+      }
+      if (val !== "Technical (software/IT)" && val !== "Non-technical") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Type of proposal must be Technical (software/IT) or Non-technical",
+        });
+      }
+    }),
+    supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
+    estimatedDuration: z.string().max(200).optional().default(""),
+    coreObjectives: z.array(z.string().max(1000)).optional().default([]),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
+    metric: z.string().min(1, "Metric is required").max(600),
+    milestones: z.array(milestoneSchema).optional().default([]),
+    budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
+    noMilestonesBreakdown: z.boolean().optional().default(false),
+    milestoneAlternative: z.string().max(4000).optional().default(""),
+  })
+  .superRefine((data, ctx) => {
+    if (data.noMilestonesBreakdown) {
+      const alt = (data.milestoneAlternative ?? "").trim();
+      if (alt.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Milestone alternative is required when not using milestones",
+          path: ["milestoneAlternative"],
+        });
+      }
+    } else {
+      const list = data.milestones ?? [];
+      if (!Array.isArray(list) || list.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "At least one milestone is required",
+          path: ["milestones"],
+        });
+      }
+    }
+  });
 
 export default workPackageSchema;
