@@ -261,7 +261,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormProjectDefinition
           bind:formData
           {vote}
@@ -283,7 +283,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormStrategyFramework
           bind:formData
           {vote}
@@ -305,7 +305,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormProposalDetails
           bind:formData
           {vote}
@@ -327,7 +327,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormBudgetSummary
           bind:formData
           {vote}
@@ -349,7 +349,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormProposerDetails
           bind:formData
           {vote}
@@ -371,7 +371,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormBudgetAdministration
           bind:formData
           {vote}
@@ -393,7 +393,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormOtherInfo
           bind:formData
           {vote}
