@@ -182,31 +182,31 @@ const metaDataSchema = z.object({
   primaryContact: primaryContactSchema.optional().default({}),
   signatoryContact: signatoryContactSchema.optional().default({}),
   /** Other Info section (FormOtherInfo): initiative type, proposal type, supporting links.
-   * Uses Zod 4 pattern: z.string({ error }) for undefined, .min(1) for empty string, .refine() for allowed values — one error per field. */
-  initiativeType: z
-    .string({
-      error: (iss) =>
-        iss.input === undefined
-          ? "Initiative Type is required"
-          : "Initiative Type must be New Initiative or Maintenance",
-    })
-    .min(1, "Initiative Type is required")
-    .refine(
-      (val) => val === "New Initiative" || val === "Maintenance",
-      { error: "Initiative Type must be New Initiative or Maintenance" }
-    ),
-  proposalType: z
-    .string({
-      error: (iss) =>
-        iss.input === undefined
-          ? "Type of Proposal is required"
-          : "Type of Proposal must be Technical (software/IT) or Non-technical",
-    })
-    .min(1, "Type of Proposal is required")
-    .refine(
-      (val) => val === "Technical (software/IT)" || val === "Non-technical",
-      { error: "Type of Proposal must be Technical (software/IT) or Non-technical" }
-    ),
+   * superRefine adds exactly one issue per field so the frontend shows one error per radio group. */
+  initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+    if (val === "" || val === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
+      return;
+    }
+    if (val !== "New Initiative" && val !== "Maintenance") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Initiative type must be New Initiative or Maintenance",
+      });
+    }
+  }),
+  proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+    if (val === "" || val === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
+      return;
+    }
+    if (val !== "Technical (software/IT)" && val !== "Non-technical") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Type of proposal must be Technical (software/IT) or Non-technical",
+      });
+    }
+  }),
   supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
   kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: legalDeclarationsSchema.optional(),
