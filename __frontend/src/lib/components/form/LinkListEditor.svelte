@@ -129,7 +129,7 @@
   }
 </script>
 
-<Card.Root class={className + "gap-2 space-y-0"}>
+<Card.Root class={[className, "gap-2 space-y-0"].filter(Boolean).join(" ")}>
   {#if label || notPublic || description}
     <Card.Header class="flex flex-row items-center gap-1 pb-2">
       {#if label}
