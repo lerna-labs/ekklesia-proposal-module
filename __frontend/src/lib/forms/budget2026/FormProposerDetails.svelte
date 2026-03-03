@@ -1,5 +1,5 @@
 <script>
-  /** @see __frontend/docs/budget2026/form-proposer-details.md Version: 1.0.0 */
+  /** @see __frontend/docs/budget2026/form-proposer-details.md Version: 1.1.0 */
   import Input from "$lib/components/form/Input.svelte";
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
   let {
@@ -23,7 +23,7 @@
 </script>
 
 <!-- Proposer details – content to be added -->
-<h2>What's the display name of the proposer?</h2>
+<h3>What's the display name of the proposer?</h3>
 
 <p>
   Depending if you are submitting this proposal as an individual or a company,
@@ -35,6 +35,7 @@
   bind:value={formData.metaData.proposerDetails.name}
   label="Proposer Public Name"
   description="This name will be public on your proposal page"
+  placeholder="Enter Name"
   required
   maxLength={100}
   validationErrors={nameErrors}
@@ -65,4 +66,6 @@
   type="email"
   validationErrors={emailErrors}
   class="mb-8"
+  placeholder="Enter Email"
+  notPublic
 />
