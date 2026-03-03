@@ -8,11 +8,14 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import FormWorkPackagesMilestones from "./FormWorkPackagesMilestones.svelte";
+  import FormWorkPackagesBudget from "./FormWorkPackagesBudget.svelte";
 
   let {
     name = "",
     milestones = [],
     onMilestonesChange,
+    budgetBreakdown = [],
+    onBudgetBreakdownChange,
     onEdit,
     onDelete,
   } = $props();
@@ -21,7 +24,7 @@
 </script>
 
 <Card.Root class="py-2 pb-0 bg-slate-50">
-  <Card.Header class="flex flex-row items-center gap-2 py-1 pl-4 pr-3 text-sm">
+  <Card.Header class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm">
     <button
       type="button"
       class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
@@ -79,6 +82,11 @@
         sure to provide context so DReps can understand why each item is added
         and how it is calculated.
       </p>
+
+      <FormWorkPackagesBudget
+        value={budgetBreakdown}
+        onvaluechange={onBudgetBreakdownChange}
+      />
     </section>
   </Card.Content>
 </Card.Root>

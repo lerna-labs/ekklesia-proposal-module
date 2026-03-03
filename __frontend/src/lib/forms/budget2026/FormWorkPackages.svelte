@@ -148,6 +148,12 @@
     );
   }
 
+  function updatePackageBudgetBreakdown(pkgIndex, newBudgetBreakdown) {
+    value = packages.map((p, i) =>
+      i === pkgIndex ? { ...p, budgetBreakdown: newBudgetBreakdown ?? [] } : p,
+    );
+  }
+
   function deleteFromDialog() {
     if (editingIndex != null) {
       indexToDelete = editingIndex;
@@ -199,6 +205,9 @@
               milestones={pkg.milestones ?? []}
               onMilestonesChange={(milestones) =>
                 updatePackageMilestones(index, milestones)}
+              budgetBreakdown={pkg.budgetBreakdown ?? []}
+              onBudgetBreakdownChange={(budgetBreakdown) =>
+                updatePackageBudgetBreakdown(index, budgetBreakdown)}
               onEdit={() => openAddDialog(index)}
               onDelete={() => requestDelete(index)}
             />
