@@ -62,7 +62,11 @@
     ],
     "section-3": [["metaData", "strategyFramework"]],
     "section-4": [],
-    "section-5": [],
+    "section-5": [
+      ["metaData", "treasuryRepayment"],
+      ["metaData", "treasuryRepaymentCircumstances"],
+      ["metaData", "priorFunding"],
+    ],
     "section-6": [
       ["metaData", "proposerDetails", "name"],
       ["metaData", "proposerDetails", "email"],
@@ -109,6 +113,9 @@
       initiativeType: "",
       proposalType: "",
       supportingInfoLinks: [],
+      treasuryRepayment: "",
+      treasuryRepaymentCircumstances: "",
+      priorFunding: "",
       proposerDetails: {
         name: "",
         email: "",
@@ -156,6 +163,14 @@
             url: link?.url ?? "",
           }));
       }
+      if (p.metaData.treasuryRepayment != null)
+        formData.metaData.treasuryRepayment =
+          p.metaData.treasuryRepayment ?? "";
+      if (p.metaData.treasuryRepaymentCircumstances != null)
+        formData.metaData.treasuryRepaymentCircumstances =
+          p.metaData.treasuryRepaymentCircumstances ?? "";
+      if (p.metaData.priorFunding != null)
+        formData.metaData.priorFunding = p.metaData.priorFunding ?? "";
       const pd = p.metaData.proposerDetails;
       if (pd && typeof pd === "object") {
         formData.metaData.proposerDetails = {
@@ -212,17 +227,6 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col form">
-  <div class="mb-2">
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      class="text-muted-foreground"
-      onclick={() => (openLegalDialog = true)}
-    >
-      Show legal declarations (test)
-    </Button>
-  </div>
   <Accordion.Root type="multiple" class="w-full">
     <Accordion.Item
       value="section-1"
