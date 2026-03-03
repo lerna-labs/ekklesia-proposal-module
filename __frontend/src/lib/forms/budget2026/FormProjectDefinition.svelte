@@ -23,7 +23,7 @@
   class="mb-8"
 />
 
-<h2 class="!text-lg">Please describe your whole proposal at high level</h2>
+<h2 class="text-lg!">Please describe your whole proposal at high level</h2>
 
 <p>
   Provide an high-level overview of the problem, proposed solution and value

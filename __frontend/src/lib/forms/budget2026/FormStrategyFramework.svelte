@@ -4,7 +4,13 @@
   import Textarea from "$lib/components/form/Textarea.svelte";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
 
-  let { formData = $bindable(), vote, categories, proposal, validationErrors } = $props();
+  let {
+    formData = $bindable(),
+    vote,
+    categories,
+    proposal,
+    validationErrors,
+  } = $props();
 
   let sfErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.strategyFramework ??
@@ -21,7 +27,7 @@
 
 <Field.Set class="space-y-2">
   <div>
-    <h2 class="text-lg font-medium">
+    <h2 class="text-lg! font-medium">
       To which strategic pillar does your proposal align the most?
     </h2>
 
