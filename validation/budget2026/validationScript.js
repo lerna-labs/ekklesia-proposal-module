@@ -94,6 +94,31 @@ const signatoryContactSchema = z.object({
   authorization: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
 });
 
+/** Proposer details (FormProposerDetails): public name, contact email, social/media links. */
+const proposerDetailsSchema = z.object({
+  name: z.string().min(1, "Proposer name is required").max(100),
+  email: z
+    .union([z.string(), z.undefined()])
+    .transform((v) => (v == null ? "" : String(v).trim()))
+    .superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Primary contact email is required" });
+        return;
+      }
+      if (val.length > 255) {
+        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 255, type: "string", message: "Email must be at most 255 characters" });
+        return;
+      }
+      const emailSchema = z.string().email("Enter a valid email");
+      const result = emailSchema.safeParse(val);
+      if (!result.success) {
+        const msg = result.error.errors[0]?.message ?? "Enter a valid email";
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
+      }
+    }),
+  links: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+});
+
 const kycInfoSchema = z
   .object({
     submitted: z.boolean().optional(),
@@ -181,6 +206,7 @@ const metaDataSchema = z.object({
   contractingParty: contractingPartySchema.optional().default({}),
   primaryContact: primaryContactSchema.optional().default({}),
   signatoryContact: signatoryContactSchema.optional().default({}),
+  proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
   /** Other Info section (FormOtherInfo): initiative type, proposal type, supporting links.
    * superRefine adds exactly one issue per field so the frontend shows one error per radio group. */
   initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
