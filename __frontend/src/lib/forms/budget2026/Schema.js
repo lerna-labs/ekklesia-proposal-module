@@ -38,10 +38,13 @@ export const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
 
 /** Single milestone schema (repeatable per work package). */
 export const milestoneSchema = z.object({
-  milestoneName: z.string().min(1, "Milestone name is required").max(100),
-  deliverables: z.string().min(1, "Deliverables are required").max(600),
-  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(600),
-  duration: z.string().min(1, "Duration is required").max(200),
+  name: z.string().min(1, "Milestone name is required").max(100),
+  deliverables: z.string().min(1, "Deliverables are required").max(4000),
+  acceptanceCriteria: z
+    .string()
+    .min(1, "Acceptance criteria are required")
+    .max(4000),
+  duration: z.string().min(1, "Duration is required").max(100),
 });
 
 /** Single work package schema. Matches FormWorkPackages.svelte (metaData.executionRoadmap.workPackages[]). */
