@@ -52,7 +52,7 @@ Describes the form fields used in this section: path in `formData`, type, constr
 
 ## Revision History
 
-This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version numbers use the form **MAJOR.MINOR.PATCH** as described in the Versioning section above.
+This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version numbers use the form **MAJOR.MINOR.PATCH**.
 
 | Version | Date       | Description |
 |---------|------------|-------------|
