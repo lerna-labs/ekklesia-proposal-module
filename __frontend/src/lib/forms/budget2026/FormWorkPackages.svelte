@@ -12,7 +12,6 @@
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import FormWorkPackagesCard from "./FormWorkPackagesCard.svelte";
   import FormWorkPackagesObjectives from "./FormWorkPackagesObjectives.svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { workPackageSchema } from "./Schema.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
@@ -66,7 +65,14 @@
           : [],
       expectedValue: pkg.expectedValue ?? "",
       metric: pkg.metric ?? "",
-      milestones: Array.isArray(pkg.milestones) ? [...pkg.milestones] : [],
+      milestones: Array.isArray(pkg.milestones)
+        ? pkg.milestones.map((m) => ({
+            name: (m?.name ?? "").toString(),
+            deliverables: (m?.deliverables ?? "").toString(),
+            acceptanceCriteria: (m?.acceptanceCriteria ?? "").toString(),
+            duration: (m?.duration ?? "").toString(),
+          }))
+        : [],
       budgetBreakdown: Array.isArray(pkg.budgetBreakdown)
         ? [...pkg.budgetBreakdown]
         : [],
@@ -136,6 +142,12 @@
     deleteDialogOpen = false;
   }
 
+  function updatePackageMilestones(pkgIndex, newMilestones) {
+    value = packages.map((p, i) =>
+      i === pkgIndex ? { ...p, milestones: newMilestones ?? [] } : p,
+    );
+  }
+
   function deleteFromDialog() {
     if (editingIndex != null) {
       indexToDelete = editingIndex;
@@ -152,39 +164,41 @@
         }
       : null,
   );
-
-  /** First validation error message for display at top of dialog when validation fails. */
-  const firstValidationError = $derived.by(() => {
-    const e = draftErrors;
-    if (!e) return null;
-    const first = e.errors?.[0];
-    if (first) return first;
-    const firstProp = e.properties && Object.values(e.properties)[0];
-    return typeof firstProp === "object" && firstProp?.errors?.[0]
-      ? firstProp.errors[0]
-      : null;
-  });
 </script>
 
+<div class="flex justify-start mb-8">
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+    onclick={openAddDialog}
+  >
+    <PlusIcon class="size-4" />
+    {addButtonLabel}
+  </Button>
+</div>
+
 <div class={[className, "gap-2 mb-8"].filter(Boolean).join(" ")}>
-  {#if label || description}
-    <div class="flex flex-row items-center gap-1 pb-2">
-      {#if label}
-        <span class="text-sm font-medium mb-0">{label}</span>
-      {/if}
-      {#if description}
-        <ToolTip content={description} />
-      {/if}
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
-    </div>
-  {/if}
   <Field.Field class="gap-1">
     {#if packages.length > 0}
+      <div class="flex flex-row items-center gap-1 pb-2">
+        {#if label}
+          <span class="text-sm font-medium mb-0">{label}</span>
+        {/if}
+        {#if description}
+          <ToolTip content={description} />
+        {/if}
+        <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      </div>
       <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
         {#each packages as pkg, index (index)}
           <li>
             <FormWorkPackagesCard
               name={pkg.name}
+              milestones={pkg.milestones ?? []}
+              onMilestonesChange={(milestones) =>
+                updatePackageMilestones(index, milestones)}
               onEdit={() => openAddDialog(index)}
               onDelete={() => requestDelete(index)}
             />
@@ -195,47 +209,27 @@
       <p class="text-sm text-muted-foreground">{emptyMessage}</p>
     {/if}
 
-    <div class="flex justify-start">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
-        onclick={openAddDialog}
-      >
-        <PlusIcon class="size-4" />
-        {addButtonLabel}
-      </Button>
-    </div>
-
     {#if schemaError}
       <Field.Error class="text-xs">{schemaError}</Field.Error>
     {/if}
   </Field.Field>
 </div>
 
-<!-- Add / Edit work package dialog (close only via Cancel/Save/Delete) -->
-<Dialog.Root bind:open={addDialogOpen}>
-  <Dialog.Content
+<!-- Add / Edit work package (AlertDialog: doesn't close without user action) -->
+<AlertDialog.Root bind:open={addDialogOpen}>
+  <AlertDialog.Content
     class="sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col"
-    onInteractOutside={(e) => e.preventDefault()}
-    escapeKeydownBehavior="ignore"
   >
-    <Dialog.Header class="text-left">
-      <Dialog.Title>
+    <AlertDialog.Header class="text-left">
+      <AlertDialog.Title>
         {editingIndex != null ? "Edit Work Package" : "Add Work Package"}
-      </Dialog.Title>
-      <Dialog.Description>
+      </AlertDialog.Title>
+      <AlertDialog.Description>
         This section breaks down the proposed work and the value it delivers to
         Cardano.
-      </Dialog.Description>
-    </Dialog.Header>
+      </AlertDialog.Description>
+    </AlertDialog.Header>
     <div class="grid gap-4 py-4">
-      {#if firstValidationError}
-        <p class="text-sm text-destructive font-medium" role="alert">
-          {firstValidationError}
-        </p>
-      {/if}
       <Input
         id="name"
         label="Work Package Name"
@@ -323,7 +317,7 @@
         validationErrors={supportingDocsValidationErrors}
       />
     </div>
-    <Dialog.Footer class="flex gap-2 shrink-0 flex-wrap">
+    <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
       {#if editingIndex != null}
         <Button
           type="button"
@@ -335,20 +329,13 @@
           Delete
         </Button>
       {/if}
-      <Button
-        type="button"
-        variant="outline"
-        class="cursor-pointer"
-        onclick={() => (addDialogOpen = false)}
-      >
-        Cancel
-      </Button>
+      <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <Button type="button" class="cursor-pointer" onclick={saveWorkPackage}>
         {editingIndex != null ? "Save changes" : "Save Work Package"}
       </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- Delete confirmation -->
 <AlertDialog.Root bind:open={deleteDialogOpen}>

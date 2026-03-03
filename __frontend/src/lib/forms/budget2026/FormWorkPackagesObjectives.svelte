@@ -9,7 +9,6 @@
   import Textarea from "$lib/components/form/Textarea.svelte";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
@@ -184,19 +183,19 @@
   </Field.Field>
 </div>
 
-<!-- Add / Edit objective dialog -->
-<Dialog.Root bind:open={addDialogOpen}>
-  <Dialog.Content class="sm:max-w-lg">
-    <Dialog.Header class="text-left">
-      <Dialog.Title>
+<!-- Add / Edit objective (AlertDialog: doesn't close without user action) -->
+<AlertDialog.Root bind:open={addDialogOpen}>
+  <AlertDialog.Content class="sm:max-w-lg">
+    <AlertDialog.Header class="text-left">
+      <AlertDialog.Title>
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}
-      </Dialog.Title>
-      <Dialog.Description>
+      </AlertDialog.Title>
+      <AlertDialog.Description>
         {editingIndex != null
           ? "Update the Core Objective below."
           : `Enter the Core Objective (max ${maxLength} characters).`}
-      </Dialog.Description>
-    </Dialog.Header>
+      </AlertDialog.Description>
+    </AlertDialog.Header>
     <div class="grid gap-4 py-2">
       <Textarea
         id="objective-list-editor-text"
@@ -215,7 +214,7 @@
           : null}
       />
     </div>
-    <Dialog.Footer class="flex gap-2 flex-wrap">
+    <AlertDialog.Footer class="flex gap-2 flex-wrap">
       {#if editingIndex != null}
         <Button
           type="button"
@@ -227,20 +226,13 @@
           Delete
         </Button>
       {/if}
-      <Button
-        type="button"
-        variant="outline"
-        class="cursor-pointer"
-        onclick={() => (addDialogOpen = false)}
-      >
-        Cancel
-      </Button>
+      <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <Button type="button" class="cursor-pointer" onclick={saveObjective}>
         {editingIndex != null ? "Save changes" : "Save"}
       </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- Delete confirmation -->
 <AlertDialog.Root bind:open={deleteDialogOpen}>

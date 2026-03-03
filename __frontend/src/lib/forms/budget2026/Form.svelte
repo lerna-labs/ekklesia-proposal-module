@@ -168,7 +168,10 @@
             url: link?.url ?? "",
           }));
       }
-      if (p.metaData.conversionRate != null && p.metaData.conversionRate !== undefined)
+      if (
+        p.metaData.conversionRate != null &&
+        p.metaData.conversionRate !== undefined
+      )
         formData.metaData.conversionRate = p.metaData.conversionRate;
       if (p.metaData.treasuryRepayment != null)
         formData.metaData.treasuryRepayment =
@@ -191,16 +194,26 @@
             : [],
         };
       }
-      if (p.metaData.executionRoadmap && Array.isArray(p.metaData.executionRoadmap.workPackages)) {
+      if (
+        p.metaData.executionRoadmap &&
+        Array.isArray(p.metaData.executionRoadmap.workPackages)
+      ) {
         formData.metaData.executionRoadmap = {
           workPackages: p.metaData.executionRoadmap.workPackages.map((wp) => ({
             ...wp,
             supportingDocuments: Array.isArray(wp?.supportingDocuments)
-              ? wp.supportingDocuments.map((l) => ({ title: l?.title ?? "", url: l?.url ?? "" }))
+              ? wp.supportingDocuments.map((l) => ({
+                  title: l?.title ?? "",
+                  url: l?.url ?? "",
+                }))
               : [],
-            coreObjectives: Array.isArray(wp?.coreObjectives) ? [...wp.coreObjectives] : [""],
+            coreObjectives: Array.isArray(wp?.coreObjectives)
+              ? [...wp.coreObjectives]
+              : [""],
             milestones: Array.isArray(wp?.milestones) ? [...wp.milestones] : [],
-            budgetBreakdown: Array.isArray(wp?.budgetBreakdown) ? [...wp.budgetBreakdown] : [],
+            budgetBreakdown: Array.isArray(wp?.budgetBreakdown)
+              ? [...wp.budgetBreakdown]
+              : [],
           })),
         };
       }
@@ -295,7 +308,7 @@
     <Accordion.Item value="section-3" id="strategy-framework">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Strategy framework
+          Alignment to Strategy framework
           {#if sectionErrorCounts["section-3"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-3"])}
@@ -317,7 +330,7 @@
     <Accordion.Item value="section-4" id="proposal-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Proposal details
+          Proposal Details
           {#if sectionErrorCounts["section-4"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-4"])}
@@ -339,7 +352,7 @@
     <Accordion.Item value="section-5" id="budget-summary">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Budget summary
+          Budget Summary
           {#if sectionErrorCounts["section-5"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-5"])}
@@ -361,7 +374,7 @@
     <Accordion.Item value="section-6" id="proposer-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Proposer details
+          Proposer Details
           {#if sectionErrorCounts["section-6"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-6"])}
@@ -383,7 +396,7 @@
     <Accordion.Item value="section-7" id="budget-administration">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Budget administration
+          Budget Administration
           {#if sectionErrorCounts["section-7"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-7"])}
@@ -405,7 +418,7 @@
     <Accordion.Item value="section-8" id="other-info">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Other info
+          Other Info
           {#if sectionErrorCounts["section-8"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-8"])}

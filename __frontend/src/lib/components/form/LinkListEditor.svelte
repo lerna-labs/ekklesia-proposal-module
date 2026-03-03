@@ -10,7 +10,6 @@
   import Input from "$lib/components/form/Input.svelte";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
@@ -219,19 +218,19 @@
   </Field.Field>
 </div>
 
-<!-- Add / Edit link dialog -->
-<Dialog.Root bind:open={addDialogOpen}>
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>
+<!-- Add / Edit link (AlertDialog: doesn't close without user action) -->
+<AlertDialog.Root bind:open={addDialogOpen}>
+  <AlertDialog.Content class="sm:max-w-md">
+    <AlertDialog.Header>
+      <AlertDialog.Title>
         {editingIndex != null ? "Edit Link" : "Add Link"}
-      </Dialog.Title>
-      <Dialog.Description>
+      </AlertDialog.Title>
+      <AlertDialog.Description>
         {editingIndex != null
           ? "Update the title and URL for this link."
           : "Enter a title and URL for the link."}
-      </Dialog.Description>
-    </Dialog.Header>
+      </AlertDialog.Description>
+    </AlertDialog.Header>
     <div class="grid gap-4 py-2">
       <Input
         id="link-list-title"
@@ -266,7 +265,7 @@
         }}
       />
     </div>
-    <Dialog.Footer class="flex gap-2 flex-wrap">
+    <AlertDialog.Footer class="flex gap-2 flex-wrap">
       {#if editingIndex != null}
         <Button
           type="button"
@@ -278,19 +277,13 @@
           Delete
         </Button>
       {/if}
-      <Button
-        type="button"
-        variant="outline"
-        onclick={() => (addDialogOpen = false)}
-      >
-        Cancel
-      </Button>
-      <Button type="button" onclick={saveLink}>
+      <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
+      <Button type="button" class="cursor-pointer" onclick={saveLink}>
         {editingIndex != null ? "Save changes" : "Save"}
       </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
 
 <!-- Delete confirmation -->
 <AlertDialog.Root bind:open={deleteDialogOpen}>
