@@ -129,11 +129,11 @@
   }
 </script>
 
-<Card.Root class={[className, "gap-2 space-y-0"].filter(Boolean).join(" ")}>
+<div class={[className, "gap-2"].filter(Boolean).join(" ")}>
   {#if label || notPublic || description}
-    <Card.Header class="flex flex-row items-center gap-1 pb-2">
+    <div class="flex flex-row items-center gap-1 pb-2">
       {#if label}
-        <Card.Title class="mb-0">{label}</Card.Title>
+        <span class="text-sm font-medium mb-0">{label}</span>
       {/if}
       {#if notPublic}
         <PrivateFieldIndicator />
@@ -142,80 +142,82 @@
         <ToolTip content={description} />
       {/if}
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
-    </Card.Header>
+    </div>
   {/if}
-  <Card.Content class="pt-0">
-    <Field.Field class="gap-1">
-      {#if links.length > 0}
-        <ul
-          class="link-list-editor-list space-y-2 rounded-md border border-input"
-        >
-          {#each links as link, index (index)}
-            <li class="flex items-center gap-0 p-2 pl-3 text-sm">
-              <button
-                type="button"
-                class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none"
-                title={link.title}
-                onclick={() => openAddDialog(index)}
+  <Field.Field class="gap-1">
+    {#if links.length > 0}
+      <ul class="link-list-editor-list space-y-2 list-none p-0 m-0 mb-1!">
+        {#each links as link, index (index)}
+          <li>
+            <Card.Root class="py-2">
+              <Card.Header
+                class="flex flex-row items-center gap-2 py-0 pl-4 pr-2 text-sm"
               >
-                {link.title}
-              </button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="shrink-0 size-8 text-black hover:text-black cursor-pointer"
-                aria-label="Open link in new window"
-                onclick={() => openLinkUrl(link.url)}
-              >
-                <ExternalLinkIcon class="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="shrink-0 size-8 text-black hover:text-black cursor-pointer"
-                aria-label="Edit link"
-                onclick={() => openAddDialog(index)}
-              >
-                <PencilIcon class="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="shrink-0 size-8 text-black hover:text-black cursor-pointer"
-                aria-label="Remove link"
-                onclick={() => requestDelete(index)}
-              >
-                <TrashIcon class="size-4" />
-              </Button>
-            </li>
-          {/each}
-        </ul>
-      {:else if emptyMessage}
-        <p class="text-sm text-muted-foreground">{emptyMessage}</p>
-      {/if}
+                <button
+                  type="button"
+                  class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none"
+                  title={link.title}
+                  onclick={() => openAddDialog(index)}
+                >
+                  {link.title}
+                </button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  class="shrink-0 size-8 cursor-pointer"
+                  aria-label="Open link in new window"
+                  onclick={() => openLinkUrl(link.url)}
+                >
+                  <ExternalLinkIcon class="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  class="shrink-0 size-8 cursor-pointer"
+                  aria-label="Edit link"
+                  onclick={() => openAddDialog(index)}
+                >
+                  <PencilIcon class="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  class="shrink-0 size-8 cursor-pointer"
+                  aria-label="Remove link"
+                  onclick={() => requestDelete(index)}
+                >
+                  <TrashIcon class="size-4" />
+                </Button>
+              </Card.Header>
+            </Card.Root>
+          </li>
+        {/each}
+      </ul>
+    {:else if emptyMessage}
+      <p class="text-sm text-muted-foreground">{emptyMessage}</p>
+    {/if}
 
-      <div class="flex justify-start">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          class="add-item-btn text-xs w-fit cursor-pointer gap-1"
-          onclick={openAddDialog}
-        >
-          <PlusIcon class="size-4" />
-          {addButtonLabel}
-        </Button>
-      </div>
+    <div class="flex justify-start">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+        onclick={openAddDialog}
+      >
+        <PlusIcon class="size-4" />
+        {addButtonLabel}
+      </Button>
+    </div>
 
-      {#if schemaError}
-        <Field.Error class="text-xs">{schemaError}</Field.Error>
-      {/if}
-    </Field.Field>
-  </Card.Content>
-</Card.Root>
+    {#if schemaError}
+      <Field.Error class="text-xs">{schemaError}</Field.Error>
+    {/if}
+  </Field.Field>
+</div>
 
 <!-- Add / Edit link dialog -->
 <Dialog.Root bind:open={addDialogOpen}>
