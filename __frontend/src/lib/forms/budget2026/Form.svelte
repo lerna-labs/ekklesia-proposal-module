@@ -11,7 +11,10 @@
   import FormBudgetAdministration from "./FormBudgetAdministration.svelte";
   import FormOtherInfo from "./FormOtherInfo.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
-  let { vote, categories, proposal, onSave, validationErrors } = $props();
+  import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
+  let { vote, categories, proposal, onSave, validationErrors, openLegalDialog = $bindable(false) } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
   function countErrorsInTree(node) {
@@ -103,6 +106,16 @@
         email: "",
         links: [],
       },
+      /** Legal declarations: never prefilled; must be re-submitted on every submit/re-submit. */
+      legalDeclarations: {
+        dataProtection: false,
+        publicVisibilityConsent: false,
+        submitterName: "",
+        submitterEmail: "",
+        submitterRole: "",
+        authorizationEntity: false,
+        authorizationAttestation: false,
+      },
     },
   });
 
@@ -143,8 +156,27 @@
             : [],
         };
       }
+      // Do not prefill legalDeclarations: they must be re-submitted on every submit/re-submit.
     }
   });
+
+  const legalDeclarationsErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.legalDeclarations
+  );
+
+  let legalDialogSubmitting = $state(false);
+  async function confirmLegalAndSubmit() {
+    if (!onSave || legalDialogSubmitting) return;
+    legalDialogSubmitting = true;
+    try {
+      await Promise.resolve(onSave(getPayload("live")));
+      openLegalDialog = false;
+    } catch (_) {
+      // Errors shown via validationErrors
+    } finally {
+      legalDialogSubmitting = false;
+    }
+  }
 
   function getPayload(status) {
     return { ...formData, status };
@@ -359,3 +391,35 @@
     bind:autoSaveEnabled
   />
 </form>
+
+<Dialog.Root bind:open={openLegalDialog}>
+  <Dialog.Content class="sm:max-w-2xl max-h-[90vh] flex flex-col">
+    <Dialog.Header>
+      <Dialog.Title>Proposal submission legal declarations</Dialog.Title>
+      <Dialog.Description>
+        Confirm the legal declarations below before submitting your proposal. These must be confirmed on every submit or re-submit.
+      </Dialog.Description>
+    </Dialog.Header>
+    <FormLegalDeclarations
+      bind:value={formData.metaData.legalDeclarations}
+      validationErrors={legalDeclarationsErrors}
+    />
+    <Dialog.Footer class="flex gap-2 shrink-0 mt-4">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={legalDialogSubmitting}
+        onclick={() => (openLegalDialog = false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        type="button"
+        disabled={legalDialogSubmitting}
+        onclick={confirmLegalAndSubmit}
+      >
+        {legalDialogSubmitting ? "Submitting…" : "Confirm and submit"}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

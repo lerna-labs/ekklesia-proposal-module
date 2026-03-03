@@ -10,12 +10,40 @@
     default: DefaultForm,
   };
 
+  /** Count all errors in validation error tree (errors array + recursive properties + items). */
+  function countErrorsInTree(node) {
+    if (node == null) return 0;
+    let n = (node.errors?.length ?? 0);
+    if (node.properties) {
+      for (const child of Object.values(node.properties)) {
+        n += countErrorsInTree(child);
+      }
+    }
+    if (node.items) {
+      for (const item of node.items) {
+        n += countErrorsInTree(item);
+      }
+    }
+    return n;
+  }
+
+  /** True if validation errors exist and are exclusively under metaData.legalDeclarations. */
+  function areErrorsOnlyLegal(errors) {
+    if (errors == null) return false;
+    const total = countErrorsInTree(errors);
+    if (total === 0) return false;
+    const legalNode = errors?.properties?.metaData?.properties?.legalDeclarations;
+    const legalCount = countErrorsInTree(legalNode);
+    return total === legalCount;
+  }
+
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
   let categories = $derived(data.categories ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
+  let openLegalDialog = $state(false);
   let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
   async function onSave(payload) {
@@ -26,6 +54,7 @@
     }
     saving = true;
     validationErrors = null;
+    openLegalDialog = false;
     try {
       const body = { ...payload, voteId: proposal.voteId };
       const res = await api.fetch(fetch, `/proposals/${proposal._id}`, {
@@ -40,6 +69,9 @@
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";
         toast.error(msg);
+        if (payload.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors)) {
+          openLegalDialog = true;
+        }
       }
     } catch (err) {
       if (err?.body?.errors != null) validationErrors = err.body.errors;
@@ -48,6 +80,9 @@
           ? err.body
           : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
       toast.error(msg);
+      if (payload?.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors)) {
+        openLegalDialog = true;
+      }
     } finally {
       saving = false;
     }
@@ -64,4 +99,5 @@
   {proposal}
   {onSave}
   bind:validationErrors
+  bind:openLegalDialog
 />
