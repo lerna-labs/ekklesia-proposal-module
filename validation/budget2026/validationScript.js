@@ -234,6 +234,21 @@ const metaDataSchema = z.object({
     }
   }),
   supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+  /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
+  treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+    if (val === "" || val === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Treasury repayment is required" });
+      return;
+    }
+    if (val !== "Yes" && val !== "No") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Treasury repayment must be Yes or No",
+      });
+    }
+  }),
+  treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
+  priorFunding: z.string().min(1, "Prior funding is required").max(10000),
   kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: legalDeclarationsSchema.optional(),
 });
