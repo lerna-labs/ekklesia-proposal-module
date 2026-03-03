@@ -117,7 +117,9 @@
         {#each objectives as objective, index (index)}
           <li>
             <Card.Root class="py-2">
-              <Card.Header class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm">
+              <Card.Header
+                class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm"
+              >
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                 <div
                   class="min-w-0 flex-1 text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
