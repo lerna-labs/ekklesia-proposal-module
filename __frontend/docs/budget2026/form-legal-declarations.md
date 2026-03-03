@@ -23,13 +23,13 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 
 | Field | formData path | Type | maxLength | required | public |
 |-------|----------------|------|-----------|----------|--------|
-| Data protection consent | `formData.metaData.legalDeclarations.dataProtection` | checkbox | — | yes | yes |
-| Public visibility consent | `formData.metaData.legalDeclarations.publicVisibilityConsent` | checkbox | — | yes | yes |
-| Submitter name | `formData.metaData.legalDeclarations.submitterName` | text (Input) | 100 | yes | yes |
-| Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 100 | yes | yes |
-| Submitter role | `formData.metaData.legalDeclarations.submitterRole` | text (Input) | 100 | yes | yes |
-| Authorization (entity) | `formData.metaData.legalDeclarations.authorizationEntity` | checkbox | — | yes | yes |
-| Authorization (attestation) | `formData.metaData.legalDeclarations.authorizationAttestation` | checkbox | — | yes | yes |
+| Data protection consent | `formData.metaData.legalDeclarations.dataProtection` | checkbox | — | yes | no |
+| Public visibility consent | `formData.metaData.legalDeclarations.publicVisibilityConsent` | checkbox | — | yes | no |
+| Submitter name | `formData.metaData.legalDeclarations.submitterName` | text (Input) | 100 | yes | no |
+| Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 100 | yes | no |
+| Submitter role | `formData.metaData.legalDeclarations.submitterRole` | text (Input) | 100 | yes | no |
+| Authorization (entity) | `formData.metaData.legalDeclarations.authorizationEntity` | checkbox | — | yes | no |
+| Authorization (attestation) | `formData.metaData.legalDeclarations.authorizationAttestation` | checkbox | — | yes | no |
 
 ---
 
@@ -41,7 +41,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Description:** Section 1 (Data Protection): personal data may be shared with internal stakeholders for evaluation, voting, contracting, and treasury execution.
 - **Type:** checkbox (Checkbox)
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Public visibility consent
 - **Path:** `formData.metaData.legalDeclarations.publicVisibilityConsent`
@@ -49,7 +49,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Description:** Consent for public visibility of entity name, personal name, and X handle.
 - **Type:** checkbox (Checkbox)
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Submitter name
 - **Path:** `formData.metaData.legalDeclarations.submitterName`
@@ -58,7 +58,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Type:** text (Input)
 - **maxLength:** 100
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Submitter email
 - **Path:** `formData.metaData.legalDeclarations.submitterEmail`
@@ -67,7 +67,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Type:** email (Input, type="email")
 - **maxLength:** 100
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Submitter role
 - **Path:** `formData.metaData.legalDeclarations.submitterRole`
@@ -76,7 +76,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Type:** text (Input)
 - **maxLength:** 100
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Authorization (entity)
 - **Path:** `formData.metaData.legalDeclarations.authorizationEntity`
@@ -84,7 +84,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Description:** Confirmation of authority to submit on behalf of the vendor (section 8).
 - **Type:** checkbox (Checkbox)
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ### Authorization (attestation)
 - **Path:** `formData.metaData.legalDeclarations.authorizationAttestation`
@@ -92,7 +92,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Description:** Confirmation of authority to attest to all legal declarations (section 8).
 - **Type:** checkbox (Checkbox)
 - **required:** yes
-- **public:** yes
+- **public:** no
 
 ---
 

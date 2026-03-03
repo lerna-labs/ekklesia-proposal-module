@@ -11,7 +11,7 @@
   let { value = $bindable(), validationErrors } = $props();
 </script>
 
-<div class="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+<div class="space-y-6 pr-2">
   <section class="space-y-3">
     <h3 class="text-base font-medium">1. Data Protection</h3>
     <p class="text-sm text-muted-foreground">
@@ -24,6 +24,7 @@
       bind:value={value.dataProtection}
       label="I acknowledge and consent to the above data processing and sharing."
       required
+      notPublic
       {validationErrors}
     />
     <Checkbox
@@ -31,6 +32,7 @@
       bind:value={value.publicVisibilityConsent}
       label="By submitting this form, you acknowledge and agree that the legal entity name, personal name, and X (Twitter) handle entered will be publicly visible in connection with this budget request."
       required
+      notPublic
       {validationErrors}
     />
   </section>
@@ -117,6 +119,7 @@
           placeholder="Enter Full Name"
           required
           maxLength={100}
+          notPublic
           {validationErrors}
         />
         <Input
@@ -127,6 +130,7 @@
           required
           maxLength={100}
           type="email"
+          notPublic
           {validationErrors}
         />
       </div>
@@ -139,6 +143,7 @@
         required
         maxLength={100}
         class="w-full md:max-w-[50%]"
+        notPublic
         {validationErrors}
       />
     </div>
@@ -147,6 +152,7 @@
       bind:value={value.authorizationEntity}
       label="I confirm that I am authorized to submit this proposal on behalf of the vendor entity. I acknowledge that submission does not constitute authority to bind the entity contractually."
       required
+      notPublic
       {validationErrors}
     />
     <Checkbox
@@ -154,6 +160,7 @@
       bind:value={value.authorizationAttestation}
       label="I confirm that I am authorized to submit and attest to all legal declarations above on behalf of the vendor."
       required
+      notPublic
       {validationErrors}
     />
   </section>

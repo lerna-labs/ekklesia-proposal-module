@@ -14,12 +14,20 @@
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  let { vote, categories, proposal, onSave, validationErrors, openLegalDialog = $bindable(false) } = $props();
+  import XIcon from "@lucide/svelte/icons/x";
+  let {
+    vote,
+    categories,
+    proposal,
+    onSave,
+    validationErrors,
+    openLegalDialog = $bindable(false),
+  } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
   function countErrorsInTree(node) {
     if (node == null) return 0;
-    let n = (node.errors?.length ?? 0);
+    let n = node.errors?.length ?? 0;
     if (node.properties) {
       for (const child of Object.values(node.properties)) {
         n += countErrorsInTree(child);
@@ -142,9 +150,11 @@
         };
       }
       if (Array.isArray(p.metaData.supportingInfoLinks)) {
-        formData.metaData.supportingInfoLinks = p.metaData.supportingInfoLinks.map(
-          (link) => ({ title: link?.title ?? "", url: link?.url ?? "" }),
-        );
+        formData.metaData.supportingInfoLinks =
+          p.metaData.supportingInfoLinks.map((link) => ({
+            title: link?.title ?? "",
+            url: link?.url ?? "",
+          }));
       }
       const pd = p.metaData.proposerDetails;
       if (pd && typeof pd === "object") {
@@ -152,16 +162,29 @@
           name: pd.name ?? "",
           email: pd.email ?? "",
           links: Array.isArray(pd.links)
-            ? pd.links.map((link) => ({ title: link?.title ?? "", url: link?.url ?? "" }))
+            ? pd.links.map((link) => ({
+                title: link?.title ?? "",
+                url: link?.url ?? "",
+              }))
             : [],
         };
       }
-      // Do not prefill legalDeclarations: they must be re-submitted on every submit/re-submit.
+      // Never prefill legalDeclarations: they must be re-submitted on every submit/re-submit.
+      // Reset to full shape so no property is undefined (avoids bind:value={undefined} in dialog).
+      formData.metaData.legalDeclarations = {
+        dataProtection: false,
+        publicVisibilityConsent: false,
+        submitterName: "",
+        submitterEmail: "",
+        submitterRole: "",
+        authorizationEntity: false,
+        authorizationAttestation: false,
+      };
     }
   });
 
   const legalDeclarationsErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.legalDeclarations
+    validationErrors?.properties?.metaData?.properties?.legalDeclarations,
   );
 
   let legalDialogSubmitting = $state(false);
@@ -189,6 +212,17 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col form">
+  <div class="mb-2">
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      class="text-muted-foreground"
+      onclick={() => (openLegalDialog = true)}
+    >
+      Show legal declarations (test)
+    </Button>
+  </div>
   <Accordion.Root type="multiple" class="w-full">
     <Accordion.Item
       value="section-1"
@@ -199,7 +233,9 @@
         <span class="flex items-center gap-2">
           Treasury Donation
           {#if sectionErrorCounts["section-1"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-1"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-1"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -223,7 +259,9 @@
         <span class="flex items-center gap-2">
           Project Definition
           {#if sectionErrorCounts["section-2"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-2"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-2"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -247,7 +285,9 @@
         <span class="flex items-center gap-2">
           Strategy framework
           {#if sectionErrorCounts["section-3"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-3"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-3"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -271,7 +311,9 @@
         <span class="flex items-center gap-2">
           Proposal details
           {#if sectionErrorCounts["section-4"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-4"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-4"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -295,7 +337,9 @@
         <span class="flex items-center gap-2">
           Budget summary
           {#if sectionErrorCounts["section-5"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-5"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-5"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -319,7 +363,9 @@
         <span class="flex items-center gap-2">
           Proposer details
           {#if sectionErrorCounts["section-6"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-6"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-6"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -343,7 +389,9 @@
         <span class="flex items-center gap-2">
           Budget administration
           {#if sectionErrorCounts["section-7"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-7"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-7"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -367,7 +415,9 @@
         <span class="flex items-center gap-2">
           Other info
           {#if sectionErrorCounts["section-8"] > 0}
-            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-8"])}</Badge>
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-8"])}
+            </Badge>
           {/if}
         </span>
       </Accordion.Trigger>
@@ -386,40 +436,54 @@
   <FormControls
     bind:this={formControlsRef}
     {formData}
-    getPayload={getPayload}
+    {getPayload}
     {onSave}
     bind:autoSaveEnabled
   />
 </form>
 
 <Dialog.Root bind:open={openLegalDialog}>
-  <Dialog.Content class="sm:max-w-2xl max-h-[90vh] flex flex-col">
-    <Dialog.Header>
-      <Dialog.Title>Proposal submission legal declarations</Dialog.Title>
-      <Dialog.Description>
-        Confirm the legal declarations below before submitting your proposal. These must be confirmed on every submit or re-submit.
-      </Dialog.Description>
-    </Dialog.Header>
-    <FormLegalDeclarations
-      bind:value={formData.metaData.legalDeclarations}
-      validationErrors={legalDeclarationsErrors}
-    />
-    <Dialog.Footer class="flex gap-2 shrink-0 mt-4">
-      <Button
-        type="button"
-        variant="outline"
-        disabled={legalDialogSubmitting}
-        onclick={() => (openLegalDialog = false)}
+  <Dialog.Content
+    showCloseButton={false}
+    class="!fixed !inset-0 !top-0 !left-0 !translate-x-0 !translate-y-0 !max-w-none w-full overflow-y-auto flex flex-col items-center p-4 py-8 !bg-transparent !rounded-none !border-0 shadow-none pointer-events-none"
+  >
+    <div
+      class="relative w-full max-w-2xl flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto"
+    >
+      <Dialog.Close
+        class="absolute end-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+        aria-label="Close"
       >
-        Cancel
-      </Button>
-      <Button
-        type="button"
-        disabled={legalDialogSubmitting}
-        onclick={confirmLegalAndSubmit}
-      >
-        {legalDialogSubmitting ? "Submitting…" : "Confirm and submit"}
-      </Button>
-    </Dialog.Footer>
+        <XIcon class="size-4" />
+      </Dialog.Close>
+      <Dialog.Header>
+        <Dialog.Title>Proposal submission legal declarations</Dialog.Title>
+        <Dialog.Description>
+          Confirm the legal declarations below before submitting your proposal.
+          These must be confirmed on every submit or re-submit.
+        </Dialog.Description>
+      </Dialog.Header>
+      <FormLegalDeclarations
+        bind:value={formData.metaData.legalDeclarations}
+        validationErrors={legalDeclarationsErrors}
+      />
+      <Dialog.Footer class="flex gap-2 shrink-0 mt-4">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={legalDialogSubmitting}
+          onclick={() => (openLegalDialog = false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          disabled={legalDialogSubmitting}
+          onclick={confirmLegalAndSubmit}
+        >
+          {legalDialogSubmitting ? "Submitting…" : "Confirm and submit"}
+        </Button>
+      </Dialog.Footer>
+    </div>
   </Dialog.Content>
 </Dialog.Root>
