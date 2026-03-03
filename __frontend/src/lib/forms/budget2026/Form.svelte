@@ -61,7 +61,10 @@
       ["metaData", "estimatedDuration"],
     ],
     "section-3": [["metaData", "strategyFramework"]],
-    "section-4": [],
+    "section-4": [
+      ["metaData", "conversionRate"],
+      ["metaData", "executionRoadmap", "workPackages"],
+    ],
     "section-5": [
       ["metaData", "treasuryRepayment"],
       ["metaData", "treasuryRepaymentCircumstances"],
@@ -113,9 +116,11 @@
       initiativeType: "",
       proposalType: "",
       supportingInfoLinks: [],
+      conversionRate: "",
       treasuryRepayment: "",
       treasuryRepaymentCircumstances: "",
       priorFunding: "",
+      executionRoadmap: { workPackages: [] },
       proposerDetails: {
         name: "",
         email: "",
@@ -163,6 +168,8 @@
             url: link?.url ?? "",
           }));
       }
+      if (p.metaData.conversionRate != null && p.metaData.conversionRate !== undefined)
+        formData.metaData.conversionRate = p.metaData.conversionRate;
       if (p.metaData.treasuryRepayment != null)
         formData.metaData.treasuryRepayment =
           p.metaData.treasuryRepayment ?? "";
@@ -182,6 +189,19 @@
                 url: link?.url ?? "",
               }))
             : [],
+        };
+      }
+      if (p.metaData.executionRoadmap && Array.isArray(p.metaData.executionRoadmap.workPackages)) {
+        formData.metaData.executionRoadmap = {
+          workPackages: p.metaData.executionRoadmap.workPackages.map((wp) => ({
+            ...wp,
+            supportingDocuments: Array.isArray(wp?.supportingDocuments)
+              ? wp.supportingDocuments.map((l) => ({ title: l?.title ?? "", url: l?.url ?? "" }))
+              : [],
+            coreObjectives: Array.isArray(wp?.coreObjectives) ? [...wp.coreObjectives] : [""],
+            milestones: Array.isArray(wp?.milestones) ? [...wp.milestones] : [],
+            budgetBreakdown: Array.isArray(wp?.budgetBreakdown) ? [...wp.budgetBreakdown] : [],
+          })),
         };
       }
       // Never prefill legalDeclarations: they must be re-submitted on every submit/re-submit.

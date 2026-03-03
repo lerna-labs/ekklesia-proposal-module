@@ -44,18 +44,16 @@ export const milestoneSchema = z.object({
   duration: z.string().min(1, "Duration is required").max(200),
 });
 
-/** Single work package schema (Section 3 – Execution Roadmap). Matches metaData.executionRoadmap.workPackages[]. */
+/** Single work package schema. Matches FormWorkPackages.svelte (metaData.executionRoadmap.workPackages[]). */
 export const workPackageSchema = z.object({
-  title: z.string().min(1, "Work Package name is required").max(100),
-  scope: z.string().min(1, "Scope of Work is required").max(2000),
+  name: z.string().min(1, "Work Package name is required").max(100),
+  summary: z.string().min(1, "Work Package summary is required").max(10000),
   supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-  estimatedDuration: z.string().max(200).optional(),
-  coreObjectives: z
-    .array(z.string().min(1, "At least one Core Objective is required").max(400)),
-  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
+  estimatedDuration: z.string().max(200).optional().default(""),
+  coreObjectives: z.array(z.string().max(1000)).optional().default([]),
+  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
   metric: z.string().min(1, "Metric is required").max(600),
   milestones: z.array(milestoneSchema).optional().default([]),
-  /** Allow empty in add/edit dialog; user adds budget rows in the expanded card. Backend still requires at least one row on submit. */
   budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
 });
 
