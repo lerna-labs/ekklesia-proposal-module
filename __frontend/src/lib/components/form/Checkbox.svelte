@@ -31,23 +31,17 @@
       class="shrink-0 mt-0.5"
     />
     <div class="min-w-0 flex-1 space-y-1">
-      <div class="flex items-center gap-1 w-full min-w-0 flex-1">
+      <div class="flex items-start gap-1 w-full min-w-0">
         <Field.Label
           for={id}
-          class="flex gap-0 mb-0 pb-0 text-sm cursor-pointer shrink-0 w-fit"
+          class="mb-0 pb-0 text-sm cursor-pointer min-w-0 flex-1 block"
         >
-          {label}
-          {#if required}
-            <span class="text-(--mbo-electric-blue)">*</span>
-          {/if}
+          <span class="inline">{label}</span>{#if required}<span class="text-(--mbo-electric-blue)">*</span>{/if}{#if notPublic}
+            <span class="inline-flex align-middle ml-1"><PrivateFieldIndicator /></span>{/if}
         </Field.Label>
-        {#if notPublic}
-          <PrivateFieldIndicator />
-        {/if}
         {#if descriptionProp}
-          <ToolTip content={descriptionProp} />
+          <ToolTip content={descriptionProp} class="shrink-0 mt-0.5" />
         {/if}
-        <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>
     </div>
   </div>
