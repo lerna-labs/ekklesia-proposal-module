@@ -122,7 +122,7 @@
               >
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                 <div
-                  class="min-w-0 flex-1 text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
+                  class="objective-text min-w-0 flex-1 min-h-8 flex items-center text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
                   role="button"
                   tabindex="0"
                   title={typeof objective === "string" ? objective : ""}

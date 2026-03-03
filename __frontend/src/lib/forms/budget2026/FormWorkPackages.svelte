@@ -214,10 +214,12 @@
   </Field.Field>
 </div>
 
-<!-- Add / Edit work package dialog -->
+<!-- Add / Edit work package dialog (close only via Cancel/Save/Delete) -->
 <Dialog.Root bind:open={addDialogOpen}>
   <Dialog.Content
     class="sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col"
+    onInteractOutside={(e) => e.preventDefault()}
+    escapeKeydownBehavior="ignore"
   >
     <Dialog.Header class="text-left">
       <Dialog.Title>
@@ -246,7 +248,9 @@
         class="mb-4"
       />
 
-      <h2>Please describe this Work Package at a high level</h2>
+      <h2 class="font-medium">
+        Please describe this Work Package at a high level
+      </h2>
       <p class="text-sm text-muted-foreground">
         Describe the main activities and, where relevant, the key outputs or
         deliverables. The goal is to give reviewers enough context to understand
@@ -262,16 +266,19 @@
         required
         maxLength={10000}
         validationErrors={draftErrors}
+        class="mb-4"
       />
 
-      <h2>What is this work package intended to achieve?</h2>
+      <h2 class="font-medium">
+        What is this work package intended to achieve?
+      </h2>
 
       <FormWorkPackagesObjectives
         bind:value={draft.coreObjectives}
         validationErrors={draftErrors?.properties?.coreObjectives}
       />
 
-      <h2>
+      <h2 class="mt-4 font-medium">
         Why does this work matter to Cardano, and how will success be measured?
       </h2>
       <p class="text-sm text-muted-foreground">
@@ -303,7 +310,7 @@
         validationErrors={draftErrors}
       />
 
-      <h2>
+      <h2 class="mt-4 font-medium">
         Is there any extra material you would like to share about this work
         package?
       </h2>
