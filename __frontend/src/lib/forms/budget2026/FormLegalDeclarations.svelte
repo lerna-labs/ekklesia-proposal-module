@@ -1,5 +1,5 @@
 <script>
-  /** @see __frontend/docs/budget2026/form-legal-declarations.md Version: 1.0.0 */
+  /** @see __frontend/docs/budget2026/form-legal-declarations.md Version: 1.1.0 */
   /**
    * Legal declarations form content for the submit dialog.
    * Shown only on submit/re-submit when all other validation errors are cleared.
@@ -15,13 +15,13 @@
   <section class="space-y-3">
     <h3 class="text-base font-medium">1. Data Protection</h3>
     <p class="text-sm text-muted-foreground">
-      The proposer acknowledges that personal data submitted in this form may
-      be shared with relevant internal stakeholders solely for proposal
-      evaluation, voting, contracting, and treasury execution.
+      The proposer acknowledges that personal data submitted in this form may be
+      shared with relevant internal stakeholders solely for proposal evaluation,
+      voting, contracting, and treasury execution.
     </p>
     <Checkbox
-      id="dataProtection"
-      bind:value={value.dataProtection}
+      id="dataProcessingConsent"
+      bind:value={value.dataProcessingConsent}
       label="I acknowledge and consent to the above data processing and sharing."
       required
       notPublic
@@ -78,8 +78,8 @@
       5. Compliance with Laws and Regulations
     </h3>
     <p class="text-sm text-muted-foreground">
-      The vendor confirms compliance with all applicable laws, regulations,
-      and export controls in connection with this proposal.
+      The vendor confirms compliance with all applicable laws, regulations, and
+      export controls in connection with this proposal.
     </p>
   </section>
 
@@ -87,8 +87,8 @@
     <h3 class="text-base font-medium">6. Sanctions / Restricted Parties</h3>
     <p class="text-sm text-muted-foreground">
       The vendor confirms that neither they nor any associated parties are
-      located in, or otherwise subject to, countries or individuals on
-      relevant sanctions lists.
+      located in, or otherwise subject to, countries or individuals on relevant
+      sanctions lists
     </p>
   </section>
 
@@ -97,12 +97,12 @@
       7. No Contract Formation / Limitation of Liability
     </h3>
     <p class="text-sm text-muted-foreground">
-      The vendor acknowledges that submission of this proposal does not create
-      a contract, obligation, or entitlement to award.
+      The vendor acknowledges that submission of this proposal does not create a
+      contract, obligation, or entitlement to award.
     </p>
     <p class="text-sm text-muted-foreground">
       The vendor acknowledges that submission of this proposal does not
-      guarantee approval and that only the delegated representatives ("DReps")
+      guarantee approval and that only the delegated representatives (“DReps”)
       have authority to vote on and approve proposals. DReps reserve sole
       discretion over evaluation, voting, and approval.
     </p>

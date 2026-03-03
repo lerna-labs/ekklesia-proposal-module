@@ -169,7 +169,7 @@ const executionRoadmapSchema = z.object({
 });
 
 const legalDeclarationsSchema = z.object({
-  dataProtection: z.boolean().refine((v) => v === true, { message: "You must acknowledge and consent." }),
+  dataProcessingConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and consent." }),
   publicVisibilityConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and agree." }),
   authorizationEntity: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),

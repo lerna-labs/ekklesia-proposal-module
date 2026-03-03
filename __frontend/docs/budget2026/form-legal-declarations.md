@@ -4,9 +4,9 @@
 
 | Field            | Detail                                                                 |
 |------------------|------------------------------------------------------------------------|
-| **Version**      | 1.0.0                                                                  |
+| **Version**      | 1.1.0                                                                  |
 | **Created**      | 2025-03-02                                                             |
-| **Last Revised** | 2025-03-02                                                             |
+| **Last Revised** | 2025-03-03                                                             |
 | **Component**    | `__frontend/src/lib/forms/budget2026/FormLegalDeclarations.svelte`   |
 
 ---
@@ -23,7 +23,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 
 | Field | formData path | Type | maxLength | required | public |
 |-------|----------------|------|-----------|----------|--------|
-| Data protection consent | `formData.metaData.legalDeclarations.dataProtection` | checkbox | — | yes | no |
+| Data processing consent | `formData.metaData.legalDeclarations.dataProcessingConsent` | checkbox | — | yes | no |
 | Public visibility consent | `formData.metaData.legalDeclarations.publicVisibilityConsent` | checkbox | — | yes | no |
 | Submitter name | `formData.metaData.legalDeclarations.submitterName` | text (Input) | 100 | yes | no |
 | Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 100 | yes | no |
@@ -35,8 +35,8 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 
 ## Field details
 
-### Data protection consent
-- **Path:** `formData.metaData.legalDeclarations.dataProtection`
+### Data processing consent
+- **Path:** `formData.metaData.legalDeclarations.dataProcessingConsent`
 - **Label:** I acknowledge and consent to the above data processing and sharing.
 - **Description:** Section 1 (Data Protection): personal data may be shared with internal stakeholders for evaluation, voting, contracting, and treasury execution.
 - **Type:** checkbox (Checkbox)
@@ -103,3 +103,4 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 | Version | Date       | Description |
 |---------|------------|-------------|
 | 1.0.0   | 2025-03-02 | Initial doc: Fields table and field details for Legal Declarations (dialog) section. |
+| 1.1.0   | 2025-03-03 | Align with component: dataProcessingConsent (id and path); rename Data protection → Data processing consent. |

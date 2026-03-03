@@ -116,7 +116,7 @@
       },
       /** Legal declarations: never prefilled; must be re-submitted on every submit/re-submit. */
       legalDeclarations: {
-        dataProtection: false,
+        dataProcessingConsent: false,
         publicVisibilityConsent: false,
         submitterName: "",
         submitterEmail: "",
@@ -172,7 +172,7 @@
       // Never prefill legalDeclarations: they must be re-submitted on every submit/re-submit.
       // Reset to full shape so no property is undefined (avoids bind:value={undefined} in dialog).
       formData.metaData.legalDeclarations = {
-        dataProtection: false,
+        dataProcessingConsent: false,
         publicVisibilityConsent: false,
         submitterName: "",
         submitterEmail: "",
@@ -445,10 +445,10 @@
 <Dialog.Root bind:open={openLegalDialog}>
   <Dialog.Content
     showCloseButton={false}
-    class="fixed! inset-0! top-0! left-0! translate-x-0! translate-y-0! max-w-none w-full overflow-y-auto flex flex-col items-center p-4 py-8 bg-transparent! rounded-none! border-0! shadow-none! pointer-events-none"
+    class="fixed! inset-0! top-0! left-0! translate-x-0! translate-y-0! max-w-none! w-full min-w-0 overflow-y-auto overflow-x-hidden flex! flex-col items-center justify-start p-4 py-8 bg-transparent! rounded-none! border-0! shadow-none! pointer-events-none box-border"
   >
     <div
-      class="relative w-full max-w-2xl flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto"
+      class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
     >
       <Dialog.Close
         class="absolute inset-e-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
