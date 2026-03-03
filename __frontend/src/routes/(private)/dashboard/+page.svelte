@@ -148,7 +148,7 @@
         {/if}
       </Card.Header>
       <Card.Content>
-        {#if !proposals || proposals.length === 0}
+        {#if proposalPagination.totalItems === 0}
           <p class="text-center text-muted-foreground">
             You have not created any proposals yet.
           </p>
