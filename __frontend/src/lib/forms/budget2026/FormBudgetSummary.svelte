@@ -1,5 +1,5 @@
 <script>
-  let { formData, vote, categories, proposal, validationErrors } = $props();
+  let { formData = $bindable(), vote, categories, proposal, validationErrors } = $props();
 </script>
 
 <!-- Budget summary – content to be added -->

@@ -2,7 +2,13 @@
   /** @see __frontend/docs/budget2026/form-project-definition.md Version: 1.0.0 */
   import Input from "$lib/components/form/Input.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
-  let { formData, vote, categories, proposal, validationErrors } = $props();
+  let {
+    formData = $bindable(),
+    vote,
+    categories,
+    proposal,
+    validationErrors,
+  } = $props();
 </script>
 
 <Input
@@ -14,11 +20,10 @@
   required
   maxLength={100}
   {validationErrors}
+  class="mb-8"
 />
 
-<h2 class="text-lg font-medium mt-8">
-  Please describe your whole proposal at high level
-</h2>
+<h2 class="!text-lg">Please describe your whole proposal at high level</h2>
 
 <p>
   Provide an high-level overview of the problem, proposed solution and value
@@ -32,8 +37,9 @@
   economies and societies of the future." <a
     href="https://ipfs.io/ipfs/bafkreicu4r3rowukvtrxaok3xd7bxkoig6uxmxgldjpyt6shjli5vjwhxe"
     target="_blank"
+    class="link"
   >
-    read more
+    Read more
   </a>
 </p>
 
@@ -46,11 +52,10 @@
   required
   maxLength={2000}
   {validationErrors}
+  class="mb-8"
 />
 
-<h2 class="text-lg font-medium mt-8">
-  Why are you the best suited to deliver this work?
-</h2>
+<h3>Why are you the best suited to deliver this work?</h3>
 <p>
   Describe what previous experience and expertise you or your team have which is
   relevant for your proposal. Focus on proven history of delivery, mention
@@ -66,12 +71,13 @@
   placeholder="Enter Track Record Here"
   maxLength={650}
   validationErrors={validationErrors?.properties?.metaData}
+  class="mb-8"
 />
 
-<h2 class="text-lg font-medium mt-8">
+<h3>
   How long will your proposal need to be fully delivered? Or if you are
   requesting funding for operations, how many months will this budget cover?
-</h2>
+</h3>
 <p>
   Provide an estimated duration from the start of the work to completion. Or if
   your proposal covers ongoing operations or services, specify the number of
@@ -84,9 +90,9 @@
   label="Estimated Duration"
   type="number"
   min={1}
-  description="Estimated duration of the project proposal in months"
+  description="Estimated duration of the project proposal"
   placeholder="Enter Duration in Months"
   required
-  class="sm: w-1/4"
+  class="sm: w-1/4 mb-8"
   validationErrors={validationErrors?.properties?.metaData}
 />

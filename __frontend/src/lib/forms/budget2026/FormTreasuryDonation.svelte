@@ -3,7 +3,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
-  let { formData, vote, categories, proposal, validationErrors } = $props();
+  let { formData = $bindable(), vote, categories, proposal, validationErrors } = $props();
 </script>
 
 <h2>Treasury Donation – Required Before Submission</h2>

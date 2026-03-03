@@ -1,6 +1,7 @@
 <script>
   import "./form.css";
   import * as Accordion from "$lib/components/ui/accordion/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import FormTreasuryDonation from "./FormTreasuryDonation.svelte";
   import FormProjectDefinition from "./FormProjectDefinition.svelte";
   import FormStrategyFramework from "./FormStrategyFramework.svelte";
@@ -12,6 +13,74 @@
   import FormControls from "$lib/components/form/FormControls.svelte";
   let { vote, categories, proposal, onSave, validationErrors } = $props();
 
+  /** Count all errors in a tree node (errors array + recursive properties + items). */
+  function countErrorsInTree(node) {
+    if (node == null) return 0;
+    let n = (node.errors?.length ?? 0);
+    if (node.properties) {
+      for (const child of Object.values(node.properties)) {
+        n += countErrorsInTree(child);
+      }
+    }
+    if (node.items) {
+      for (const item of node.items) {
+        n += countErrorsInTree(item);
+      }
+    }
+    return n;
+  }
+
+  /** Get node at path; path segments are keys under .properties at each level. */
+  function getNodeAtPath(tree, pathSegments) {
+    if (tree == null || !pathSegments?.length) return tree;
+    const next = tree.properties?.[pathSegments[0]];
+    return getNodeAtPath(next, pathSegments.slice(1));
+  }
+
+  /** Section value → list of error path segments (relative to validationErrors.properties). */
+  const SECTION_ERROR_PATHS = {
+    "section-1": [
+      ["metaData", "treasuryDonationTxHash"],
+      ["metaData", "treasuryDonationConfirmed"],
+    ],
+    "section-2": [
+      ["title"],
+      ["summary"],
+      ["metaData", "trackRecord"],
+      ["metaData", "estimatedDuration"],
+    ],
+    "section-3": [["metaData", "strategyFramework"]],
+    "section-4": [],
+    "section-5": [],
+    "section-6": [
+      ["metaData", "proposerDetails", "name"],
+      ["metaData", "proposerDetails", "email"],
+      ["metaData", "proposerDetails", "links"],
+    ],
+    "section-7": [],
+    "section-8": [
+      ["metaData", "initiativeType"],
+      ["metaData", "proposalType"],
+      ["metaData", "supportingInfoLinks"],
+    ],
+  };
+
+  let sectionErrorCounts = $derived.by(() => {
+    const root = validationErrors;
+    const counts = {};
+    for (const [section, paths] of Object.entries(SECTION_ERROR_PATHS)) {
+      counts[section] = paths.reduce(
+        (sum, path) => sum + countErrorsInTree(getNodeAtPath(root, path)),
+        0,
+      );
+    }
+    return counts;
+  });
+
+  function errorCountLabel(n) {
+    return n === 1 ? "1 Error" : `${n} Errors`;
+  }
+
   let formData = $state({
     status: "draft",
     title: "",
@@ -21,11 +90,61 @@
       estimatedDuration: "",
       treasuryDonationTxHash: "",
       treasuryDonationConfirmed: false,
+      strategyFramework: {
+        pillars: [],
+        pillarRationale: "",
+        kpiAlignment: "",
+      },
+      initiativeType: "",
+      proposalType: "",
+      supportingInfoLinks: [],
+      proposerDetails: {
+        name: "",
+        email: "",
+        links: [],
+      },
     },
   });
 
   let autoSaveEnabled = $state(false);
   let formControlsRef = $state(null);
+
+  /** Prefill formData from proposal once when editing */
+  let prefilled = $state(false);
+  $effect(() => {
+    const p = proposal;
+    if (!p || prefilled) return;
+    prefilled = true;
+    formData.title = p.title ?? "";
+    formData.summary = p.summary ?? "";
+    formData.status = p.status ?? "draft";
+    if (p.metaData) {
+      Object.assign(formData.metaData, p.metaData);
+      const sf = p.metaData.strategyFramework;
+      if (sf && typeof sf === "object") {
+        formData.metaData.strategyFramework = {
+          pillars: Array.isArray(sf.pillars) ? [...sf.pillars] : [],
+          pillarRationale: sf.pillarRationale ?? "",
+          kpiAlignment: sf.kpiAlignment ?? "",
+        };
+      }
+      if (Array.isArray(p.metaData.supportingInfoLinks)) {
+        formData.metaData.supportingInfoLinks = p.metaData.supportingInfoLinks.map(
+          (link) => ({ title: link?.title ?? "", url: link?.url ?? "" }),
+        );
+      }
+      const pd = p.metaData.proposerDetails;
+      if (pd && typeof pd === "object") {
+        formData.metaData.proposerDetails = {
+          name: pd.name ?? "",
+          email: pd.email ?? "",
+          links: Array.isArray(pd.links)
+            ? pd.links.map((link) => ({ title: link?.title ?? "", url: link?.url ?? "" }))
+            : [],
+        };
+      }
+    }
+  });
 
   function getPayload(status) {
     return { ...formData, status };
@@ -45,11 +164,16 @@
       class="bg-slate-500/5 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Treasury Donation
+        <span class="flex items-center gap-2">
+          Treasury Donation
+          {#if sectionErrorCounts["section-1"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-1"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormTreasuryDonation
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -64,11 +188,16 @@
       class="bg-slate-500/10 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Project Definition
+        <span class="flex items-center gap-2">
+          Project Definition
+          {#if sectionErrorCounts["section-2"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-2"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormProjectDefinition
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -83,11 +212,16 @@
       class="bg-slate-500/15 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Strategy framework
+        <span class="flex items-center gap-2">
+          Strategy framework
+          {#if sectionErrorCounts["section-3"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-3"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormStrategyFramework
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -102,11 +236,16 @@
       class="bg-slate-500/20 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Proposal details
+        <span class="flex items-center gap-2">
+          Proposal details
+          {#if sectionErrorCounts["section-4"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-4"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormProposalDetails
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -121,11 +260,16 @@
       class="bg-slate-500/25 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Budget summary
+        <span class="flex items-center gap-2">
+          Budget summary
+          {#if sectionErrorCounts["section-5"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-5"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormBudgetSummary
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -140,11 +284,16 @@
       class="bg-slate-500/30 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Proposer details
+        <span class="flex items-center gap-2">
+          Proposer details
+          {#if sectionErrorCounts["section-6"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-6"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormProposerDetails
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -159,11 +308,16 @@
       class="bg-slate-500/35 border-0 shadow-none"
     >
       <Accordion.Trigger class="section-title">
-        Budget administration
+        <span class="flex items-center gap-2">
+          Budget administration
+          {#if sectionErrorCounts["section-7"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-7"])}</Badge>
+          {/if}
+        </span>
       </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormBudgetAdministration
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}
@@ -177,10 +331,17 @@
       id="other-info"
       class="bg-slate-500/40 border-0 shadow-none"
     >
-      <Accordion.Trigger class="section-title">Other info</Accordion.Trigger>
+      <Accordion.Trigger class="section-title">
+        <span class="flex items-center gap-2">
+          Other info
+          {#if sectionErrorCounts["section-8"] > 0}
+            <Badge variant="destructive">{errorCountLabel(sectionErrorCounts["section-8"])}</Badge>
+          {/if}
+        </span>
+      </Accordion.Trigger>
       <Accordion.Content class="max-w-4xl mx-auto px-4">
         <FormOtherInfo
-          {formData}
+          bind:formData
           {vote}
           {categories}
           {proposal}

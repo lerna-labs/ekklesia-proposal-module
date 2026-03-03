@@ -53,3 +53,8 @@ form ol {
 form ol li {
   @apply text-sm;
 }
+
+form a.link {
+  color: var(--mbo-electric-blue);
+  border-bottom: 1px dashed var(--mbo-electric-blue);
+}
