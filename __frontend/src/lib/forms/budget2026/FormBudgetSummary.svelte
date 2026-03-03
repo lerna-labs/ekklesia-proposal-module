@@ -39,7 +39,7 @@
   id="treasuryRepayment"
   bind:value={formData.metaData.treasuryRepayment}
   label="Treasury Repayment"
-  description="Select whether your proposal includes any form of treasury repayment (for example, unused funds, profit-sharing, or conditional returns)."
+  description="Indicate whether any portion of the requested funds may be returned to the Cardano Treasury under any circumstances."
   required
   options={[
     { value: "Yes", label: "Yes" },
@@ -61,7 +61,7 @@
   id="treasuryRepaymentCircumstances"
   bind:value={formData.metaData.treasuryRepaymentCircumstances}
   label="Repayment Circumstances"
-  description="This helps DReps understand downside protection and fiscal responsibility."
+  description="If repayment applies, describe the specific conditions under which funds would be returned to the Treasury."
   placeholder="Enter Explanation"
   maxLength={10000}
   validationErrors={treasuryRepaymentCircumstancesErrors}
