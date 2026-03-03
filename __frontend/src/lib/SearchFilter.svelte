@@ -25,7 +25,6 @@
     ),
   );
 
-  const ALL_VALUE = "__all__";
   const ALL_CATEGORIES_VALUE = "__all_categories__";
   let open = $state(false);
   /** @type {string[]} */
@@ -33,14 +32,9 @@
   let pendingLive = $state(true);
   let pendingWithdrawn = $state(false);
   let pendingDraft = $state(false);
-  let pendingProposalType = $state(ALL_VALUE);
-  let pendingInitiativeType = $state(ALL_VALUE);
-
   const STATUS_LIVE = "live";
   const STATUS_WITHDRAWN = "withdrawn";
   const STATUS_DRAFT = "draft";
-  const PROPOSAL_TYPES = ["Technical (software/IT)", "Non-technical"];
-  const INITIATIVE_TYPES = ["New Initiative", "Maintenance"];
 
   const categoryTriggerLabel = $derived(
     pendingCategories.length === 0
@@ -51,16 +45,12 @@
         : `${pendingCategories.length} Categories`,
   );
 
-  /** True when any filter param is present (category, status, proposalType, initiativeType) */
+  /** True when any filter param is present (category, status) */
   const hasActiveFilters = $derived.by(() => {
     const cat = page.url.searchParams.get("category") ?? "";
     const hasStatus = page.url.searchParams.has("status");
-    const pt = page.url.searchParams.get("proposalType") ?? "";
-    const it = page.url.searchParams.get("initiativeType") ?? "";
     if (cat.trim()) return true;
     if (hasStatus) return true;
-    if (pt.trim()) return true;
-    if (it.trim()) return true;
     return false;
   });
 
@@ -68,8 +58,6 @@
     const catParam = page.url.searchParams.get("category") ?? "";
     const statusParam = page.url.searchParams.get("status") ?? "live";
     const terms = statusParam.split(",").map((s) => s.trim().toLowerCase());
-    const pt = page.url.searchParams.get("proposalType") ?? "";
-    const it = page.url.searchParams.get("initiativeType") ?? "";
     if (open) {
       pendingCategories = catParam
         ? catParam
@@ -80,8 +68,6 @@
       pendingLive = terms.includes(STATUS_LIVE);
       pendingWithdrawn = terms.includes(STATUS_WITHDRAWN);
       pendingDraft = terms.includes(STATUS_DRAFT);
-      pendingProposalType = pt || ALL_VALUE;
-      pendingInitiativeType = it || ALL_VALUE;
     }
   });
 
@@ -110,16 +96,6 @@
     const statusValue =
       statusParts.length === 0 ? STATUS_LIVE : statusParts.join(",");
     searchParams.set("status", statusValue);
-    if (pendingProposalType && pendingProposalType !== ALL_VALUE) {
-      searchParams.set("proposalType", pendingProposalType);
-    } else {
-      searchParams.delete("proposalType");
-    }
-    if (pendingInitiativeType && pendingInitiativeType !== ALL_VALUE) {
-      searchParams.set("initiativeType", pendingInitiativeType);
-    } else {
-      searchParams.delete("initiativeType");
-    }
     // Use literal commas in URL for status and category instead of encoded %2C
     let qs = searchParams.toString();
     for (const key of ["status", "category"]) {
@@ -140,8 +116,6 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.delete("category");
     searchParams.delete("status");
-    searchParams.delete("proposalType");
-    searchParams.delete("initiativeType");
     searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
@@ -197,42 +171,6 @@
                   </Select.Item>
                 {/each}
               </Select.Group>
-            </Select.Content>
-          </Select.Root>
-        </div>
-        <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">Proposal type</Label>
-          <Select.Root type="single" bind:value={pendingProposalType}>
-            <Select.Trigger class="w-full min-w-0" aria-label="Proposal type">
-              <span class="truncate block min-w-0">
-                {pendingProposalType === ALL_VALUE
-                  ? "All types"
-                  : pendingProposalType}
-              </span>
-            </Select.Trigger>
-            <Select.Content>
-              <Select.Item value={ALL_VALUE}>All types</Select.Item>
-              {#each PROPOSAL_TYPES as pt (pt)}
-                <Select.Item value={pt}>{pt}</Select.Item>
-              {/each}
-            </Select.Content>
-          </Select.Root>
-        </div>
-        <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">Initiative type</Label>
-          <Select.Root type="single" bind:value={pendingInitiativeType}>
-            <Select.Trigger class="w-full min-w-0" aria-label="Initiative type">
-              <span class="truncate block min-w-0">
-                {pendingInitiativeType === ALL_VALUE
-                  ? "All initiative types"
-                  : pendingInitiativeType}
-              </span>
-            </Select.Trigger>
-            <Select.Content>
-              <Select.Item value={ALL_VALUE}>All initiative types</Select.Item>
-              {#each INITIATIVE_TYPES as it (it)}
-                <Select.Item value={it}>{it}</Select.Item>
-              {/each}
             </Select.Content>
           </Select.Root>
         </div>
