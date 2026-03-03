@@ -1,7 +1,7 @@
 @reference "$lib/css/layout.css";
 
 form .section-title {
-  @apply text-xl font-medium cursor-pointer max-w-4xl mx-auto px-4;
+  @apply text-xl font-medium cursor-pointer max-w-4xl mx-auto;
 }
 
 form .section-title:hover {

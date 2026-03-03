@@ -226,13 +226,9 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} class="flex flex-col form">
-  <Accordion.Root type="multiple" class="w-full">
-    <Accordion.Item
-      value="section-1"
-      id="treasury-donation"
-      class="bg-slate-500/5 border-0 shadow-none"
-    >
+<form onsubmit={handleSubmit} class="flex flex-col">
+  <Accordion.Root type="multiple" class="max-w-4xl mx-auto px-4 w-full">
+    <Accordion.Item value="section-1" id="treasury-donation">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Treasury Donation
@@ -243,7 +239,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content class="max-w-4xl mx-auto px-4">
+      <Accordion.Content>
         <FormTreasuryDonation
           bind:formData
           {vote}
@@ -254,11 +250,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-2"
-      id="project-definition"
-      class="bg-slate-500/10 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-2" id="project-definition">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Project Definition
@@ -280,11 +272,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-3"
-      id="strategy-framework"
-      class="bg-slate-500/15 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-3" id="strategy-framework">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Strategy framework
@@ -306,11 +294,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-4"
-      id="proposal-details"
-      class="bg-slate-500/20 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-4" id="proposal-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Proposal details
@@ -332,11 +316,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-5"
-      id="budget-summary"
-      class="bg-slate-500/25 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-5" id="budget-summary">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Budget summary
@@ -358,11 +338,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-6"
-      id="proposer-details"
-      class="bg-slate-500/30 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-6" id="proposer-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Proposer details
@@ -384,11 +360,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-7"
-      id="budget-administration"
-      class="bg-slate-500/35 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-7" id="budget-administration">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Budget administration
@@ -410,11 +382,7 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item
-      value="section-8"
-      id="other-info"
-      class="bg-slate-500/40 border-0 shadow-none"
-    >
+    <Accordion.Item value="section-8" id="other-info">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Other info
