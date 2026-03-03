@@ -19,6 +19,12 @@ const supportingInfoLinkSchema = z.object({
   url: z.string().url("Enter a valid URL"),
 });
 
+/** Other Info section: links with title max 100 (per form-other-info.md). */
+const supportingInfoLinkSchemaOtherInfo = z.object({
+  title: z.string().min(1, "Title is required").max(100),
+  url: z.string().min(1, "URL is required").url("Enter a valid URL"),
+});
+
 const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
     errorMap: () => ({ message: "Cost category is required" }),
@@ -175,7 +181,33 @@ const metaDataSchema = z.object({
   contractingParty: contractingPartySchema.optional().default({}),
   primaryContact: primaryContactSchema.optional().default({}),
   signatoryContact: signatoryContactSchema.optional().default({}),
-  proposalType: z.enum(["Technical (software/IT)", "Non-technical"]).optional(),
+  /** Other Info section (FormOtherInfo): initiative type, proposal type, supporting links.
+   * Uses Zod 4 pattern: z.string({ error }) for undefined, .min(1) for empty string, .refine() for allowed values — one error per field. */
+  initiativeType: z
+    .string({
+      error: (iss) =>
+        iss.input === undefined
+          ? "Initiative Type is required"
+          : "Initiative Type must be New Initiative or Maintenance",
+    })
+    .min(1, "Initiative Type is required")
+    .refine(
+      (val) => val === "New Initiative" || val === "Maintenance",
+      { error: "Initiative Type must be New Initiative or Maintenance" }
+    ),
+  proposalType: z
+    .string({
+      error: (iss) =>
+        iss.input === undefined
+          ? "Type of Proposal is required"
+          : "Type of Proposal must be Technical (software/IT) or Non-technical",
+    })
+    .min(1, "Type of Proposal is required")
+    .refine(
+      (val) => val === "Technical (software/IT)" || val === "Non-technical",
+      { error: "Type of Proposal must be Technical (software/IT) or Non-technical" }
+    ),
+  supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
   kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: legalDeclarationsSchema.optional(),
 });
