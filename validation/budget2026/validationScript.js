@@ -182,6 +182,40 @@ const strategyFrameworkSchema = z.object({
     .max(10000),
 });
 
+/** Admin section: contracting party (company or individual), contact, signatory, KYC. */
+const contractingPartySchema = z.object({
+  legalEntityType: z.string().optional().default(""),
+  legalEntityName: z.string().max(100).optional().default(""),
+  legalEntityRegistrationNumber: z.string().max(100).optional().default(""),
+  legalEntityCountry: z.string().max(100).optional().default(""),
+  legalEntityAddressLine1: z.string().max(100).optional().default(""),
+  legalEntityAddressLine2: z.string().max(100).optional().default(""),
+  legalEntityAddressLine3: z.string().max(100).optional().default(""),
+  govtIssuedIdNumber: z.string().max(100).optional().default(""),
+  countryOfResidence: z.string().max(100).optional().default(""),
+  residentialAddressLine1: z.string().max(100).optional().default(""),
+  residentialAddressLine2: z.string().max(100).optional().default(""),
+  residentialAddressLine3: z.string().max(100).optional().default(""),
+});
+
+const primaryContactSchema = z.object({
+  name: z.string().max(100).optional().default(""),
+  email: z.string().max(255).optional().default(""),
+});
+
+const signatoryContactSchema = z.object({
+  title: z.string().max(100).optional().default(""),
+  name: z.string().max(100).optional().default(""),
+  email: z.string().max(255).optional().default(""),
+  authorization: z.boolean().optional().default(false),
+});
+
+const kycInfoSchema = z.object({
+  submitted: z.string().optional().default(""),
+  email: z.string().max(100).optional().default(""),
+  totalProposalsSubmitted: z.string().max(100).optional().default(""),
+});
+
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
   estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
@@ -205,6 +239,14 @@ const metaDataSchema = z.object({
   }),
   treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
   priorFunding: z.string().min(1, "Prior funding is required").max(10000),
+  /** Budget Admin: administrator choice, contracting party, primary contact, signatory, KYC. */
+  administrator: z.string().optional().default(""),
+  intersectAdministratorFeeConsent: z.boolean().optional().default(false),
+  otherAdministrator: z.string().max(4000).optional().default(""),
+  contractingParty: contractingPartySchema.optional().default({}),
+  primaryContact: primaryContactSchema.optional().default({}),
+  signatoryContact: signatoryContactSchema.optional().default({}),
+  kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: legalDeclarationsSchema.optional(),
 }).superRefine((data, ctx) => {
   if (data.treasuryRepayment === "Yes") {
@@ -216,6 +258,79 @@ const metaDataSchema = z.object({
         message: "Repayment circumstances are required when treasury repayment is Yes",
       });
     }
+  }
+  // Admin section: administrator required first; only validate the rest when administrator is selected
+  const admin = (data.administrator ?? "").trim();
+  if (admin !== "Intersect" && admin !== "Other") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["administrator"],
+      message: "Administrator is required (Intersect or Other)",
+    });
+    return; // Do not validate contracting party, contact, signatory, KYC until administrator is selected
+  }
+  if (admin === "Intersect" && data.intersectAdministratorFeeConsent !== true) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["intersectAdministratorFeeConsent"],
+      message: "You must agree to the Intersect administration fee",
+    });
+  }
+  if (admin === "Other") {
+    const other = (data.otherAdministrator ?? "").trim();
+    if (!other) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["otherAdministrator"],
+        message: "Other administrator details are required when not selecting Intersect",
+      });
+    }
+  }
+  // Contracting party type required; conditional company/individual fields
+  const cp = data.contractingParty ?? {};
+  const entityType = (cp.legalEntityType ?? "").trim();
+  if (entityType !== "company" && entityType !== "individual") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["contractingParty", "legalEntityType"],
+      message: "Please select Company or Individual",
+    });
+  }
+  if (entityType === "company") {
+    if (!(cp.legalEntityName ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityName"], message: "Legal entity name is required" });
+    if (!(cp.legalEntityRegistrationNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityRegistrationNumber"], message: "Registration number is required" });
+    if (!(cp.legalEntityCountry ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityCountry"], message: "Country of incorporation is required" });
+    if (!(cp.legalEntityAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityAddressLine1"], message: "Registered address line 1 is required" });
+  }
+  if (entityType === "individual") {
+    if (!(cp.govtIssuedIdNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "govtIssuedIdNumber"], message: "Government-issued ID number is required" });
+    if (!(cp.countryOfResidence ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "countryOfResidence"], message: "Country of residence is required" });
+    if (!(cp.residentialAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "residentialAddressLine1"], message: "Residential address line 1 is required" });
+  }
+  // Primary contact
+  const pc = data.primaryContact ?? {};
+  if (!(pc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "name"], message: "Primary contact name is required" });
+  const pcEmail = (pc.email ?? "").trim();
+  if (!pcEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Primary contact email is required" });
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pcEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Enter a valid email" });
+  // Signatory
+  const sc = data.signatoryContact ?? {};
+  if (!(sc.title ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "title"], message: "Signatory title is required" });
+  if (!(sc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "name"], message: "Signatory name is required" });
+  const scEmail = (sc.email ?? "").trim();
+  if (!scEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Signatory email is required" });
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Enter a valid email" });
+  if (sc.authorization !== true) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "authorization"], message: "You must confirm signatory authorization" });
+  // KYC
+  const kyc = data.kycInfo ?? {};
+  const kycSubmitted = (kyc.submitted ?? "").trim();
+  if (kycSubmitted !== "Yes" && kycSubmitted !== "No") {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "submitted"], message: "KYC/KYB submission status is required (Yes or No)" });
+  }
+  if (kycSubmitted === "No") {
+    const kycEmail = (kyc.email ?? "").trim();
+    if (!kycEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "KYC contact email is required when KYC has not been submitted" });
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "Enter a valid email" });
   }
 });
 
