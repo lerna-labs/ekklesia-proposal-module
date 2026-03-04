@@ -38,19 +38,25 @@
     localMilestoneAlternative = milestoneAlternative ?? "";
   });
 
-  const hasMilestonesError =
-    $derived(!noMilestonesBreakdown && (validationErrors?.properties?.milestones?.errors?.length > 0));
-  const hasMilestoneAlternativeError =
-    $derived(noMilestonesBreakdown && (validationErrors?.properties?.milestoneAlternative?.errors?.length > 0));
+  const hasMilestonesError = $derived(
+    !noMilestonesBreakdown &&
+      validationErrors?.properties?.milestones?.errors?.length > 0,
+  );
+  const hasMilestoneAlternativeError = $derived(
+    noMilestonesBreakdown &&
+      validationErrors?.properties?.milestoneAlternative?.errors?.length > 0,
+  );
   const sectionRingClass = $derived(
-    hasMilestonesError || hasMilestoneAlternativeError ? "ring-2 ring-destructive rounded-md p-3" : ""
+    hasMilestonesError || hasMilestoneAlternativeError
+      ? "ring-2 ring-destructive rounded-md p-3"
+      : "",
   );
   const milestoneSectionError = $derived(
     hasMilestonesError
       ? validationErrors?.properties?.milestones?.errors?.[0]
       : hasMilestoneAlternativeError
         ? validationErrors?.properties?.milestoneAlternative?.errors?.[0]
-        : undefined
+        : undefined,
   );
   /** Pass to milestone-alternative Textarea so it doesn't show the section error (we show it below the outline). */
   const validationErrorsWithoutMilestoneAlternativeError = $derived(
@@ -59,17 +65,23 @@
           ...validationErrors,
           properties: {
             ...validationErrors?.properties,
-            milestoneAlternative: { ...validationErrors.properties.milestoneAlternative, errors: [] },
+            milestoneAlternative: {
+              ...validationErrors.properties.milestoneAlternative,
+              errors: [],
+            },
           },
         }
-      : validationErrors
+      : validationErrors,
   );
 
-  const hasBudgetBreakdownError =
-    $derived((validationErrors?.properties?.budgetBreakdown?.errors?.length ?? 0) > 0);
-  const budgetBreakdownError = $derived(validationErrors?.properties?.budgetBreakdown?.errors?.[0]);
+  const hasBudgetBreakdownError = $derived(
+    (validationErrors?.properties?.budgetBreakdown?.errors?.length ?? 0) > 0,
+  );
+  const budgetBreakdownError = $derived(
+    validationErrors?.properties?.budgetBreakdown?.errors?.[0],
+  );
   const budgetSectionRingClass = $derived(
-    hasBudgetBreakdownError ? "ring-2 ring-destructive rounded-md p-3" : ""
+    hasBudgetBreakdownError ? "ring-2 ring-destructive rounded-md p-3" : "",
   );
 
   function handleNoMilestonesBreakdownChange(checked) {
@@ -77,30 +89,48 @@
       if (milestones.length > 0) {
         confirmRemoveMilestonesOpen = true;
       } else {
-        onMilestoneOptionChange?.({ noMilestonesBreakdown: true, milestoneAlternative });
+        onMilestoneOptionChange?.({
+          noMilestonesBreakdown: true,
+          milestoneAlternative,
+        });
       }
     } else {
       if ((milestoneAlternative ?? "").trim().length > 0) {
         confirmClearAlternativeOpen = true;
       } else {
-        onMilestoneOptionChange?.({ noMilestonesBreakdown: false, milestoneAlternative: "" });
+        onMilestoneOptionChange?.({
+          noMilestonesBreakdown: false,
+          milestoneAlternative: "",
+        });
       }
     }
   }
 
   function confirmRemoveMilestones() {
-    onMilestoneOptionChange?.({ noMilestonesBreakdown: true, milestoneAlternative });
+    onMilestoneOptionChange?.({
+      noMilestonesBreakdown: true,
+      milestoneAlternative,
+    });
     confirmRemoveMilestonesOpen = false;
   }
 
   function confirmClearAlternative() {
-    onMilestoneOptionChange?.({ noMilestonesBreakdown: false, milestoneAlternative: "" });
+    onMilestoneOptionChange?.({
+      noMilestonesBreakdown: false,
+      milestoneAlternative: "",
+    });
     confirmClearAlternativeOpen = false;
   }
 
   $effect(() => {
-    if (noMilestonesBreakdown && localMilestoneAlternative !== (milestoneAlternative ?? "")) {
-      onMilestoneOptionChange?.({ noMilestonesBreakdown: true, milestoneAlternative: localMilestoneAlternative });
+    if (
+      noMilestonesBreakdown &&
+      localMilestoneAlternative !== (milestoneAlternative ?? "")
+    ) {
+      onMilestoneOptionChange?.({
+        noMilestonesBreakdown: true,
+        milestoneAlternative: localMilestoneAlternative,
+      });
     }
   });
 </script>
@@ -140,67 +170,67 @@
   <Card.Content class="p-4 pt-0">
     <section>
       <div class={sectionRingClass}>
-      <h1 class="text-normal font-medium mb-2">
-        How will this work package be delivered?
-      </h1>
-      <p class="text-sm text-muted-foreground">
-        Break this Work Package into milestones or delivery phases. This helps
-        reviewers understand how progress will be structured and validated, and
-        provides a clear basis for contracting and payment if the proposal is
-        approved.
-      </p>
+        <h1 class="text-normal font-medium mb-2">
+          How will this work package be delivered?
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          Break this Work Package into milestones or delivery phases. This helps
+          reviewers understand how progress will be structured and validated,
+          and provides a clear basis for contracting and payment if the proposal
+          is approved.
+        </p>
 
-      <Field.Field class="gap-2 mb-4">
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-        <div
-          class="flex items-start gap-2 cursor-pointer"
-          role="button"
-          tabindex="0"
-          onclick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
-          }}
-          onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
+        <Field.Field class="gap-2 mb-4">
+          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+          <div
+            class="flex items-start gap-2 cursor-pointer"
+            role="button"
+            tabindex="0"
+            onclick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
-            }
-          }}
-        >
-          <Checkbox
-            id="noMilestonesBreakdown"
-            checked={noMilestonesBreakdown}
-            class="shrink-0 mt-0.5 pointer-events-none"
-          />
-          <Field.Label
-            for="noMilestonesBreakdown"
-            class="text-sm cursor-pointer mb-0 pb-0 pointer-events-none"
+            }}
+            onkeydown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
+              }
+            }}
           >
-            I can't break down my work in Milestones
-          </Field.Label>
-        </div>
-      </Field.Field>
+            <Checkbox
+              id="noMilestonesBreakdown"
+              checked={noMilestonesBreakdown}
+              class="shrink-0 mt-0.5 pointer-events-none"
+            />
+            <Field.Label
+              for="noMilestonesBreakdown"
+              class="text-sm cursor-pointer mb-0 pb-0 pointer-events-none"
+            >
+              I can't break down my work in Milestones
+            </Field.Label>
+          </div>
+        </Field.Field>
 
-      {#if noMilestonesBreakdown}
-        <Textarea
-          id="milestoneAlternative"
-          label="Milestone Alternative"
-          bind:value={localMilestoneAlternative}
-          placeholder="Provide a rationale and alternative way to track progress..."
-          description="Provide a rationale and alternative to track progress"
-          required
-          maxLength={4000}
-          validationErrors={validationErrorsWithoutMilestoneAlternativeError}
-        />
-      {:else}
-        <FormWorkPackagesMilestones
-          value={milestones}
-          onvaluechange={onMilestonesChange}
-          validationErrors={validationErrors?.properties?.milestones}
-          hideSectionError
-        />
-      {/if}
+        {#if noMilestonesBreakdown}
+          <Textarea
+            id="milestoneAlternative"
+            label="Milestone Alternative"
+            bind:value={localMilestoneAlternative}
+            placeholder="Provide a rationale and alternative way to track progress..."
+            description="Provide a rationale and alternative to track progress"
+            required
+            maxLength={4000}
+            validationErrors={validationErrorsWithoutMilestoneAlternativeError}
+          />
+        {:else}
+          <FormWorkPackagesMilestones
+            value={milestones}
+            onvaluechange={onMilestonesChange}
+            validationErrors={validationErrors?.properties?.milestones}
+            hideSectionError
+          />
+        {/if}
       </div>
       {#if milestoneSectionError}
         <Field.Error class="text-xs mt-3">{milestoneSectionError}</Field.Error>
@@ -235,12 +265,16 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Remove milestones?</AlertDialog.Title>
       <AlertDialog.Description>
-        All existing milestones in this work package will be deleted if you proceed. This cannot be undone.
+        All existing milestones in this work package will be deleted if you
+        proceed. This cannot be undone.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action class="cursor-pointer bg-destructive text-white hover:bg-destructive/90" onclick={confirmRemoveMilestones}>
+      <AlertDialog.Action
+        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        onclick={confirmRemoveMilestones}
+      >
         Proceed
       </AlertDialog.Action>
     </AlertDialog.Footer>
@@ -252,12 +286,16 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Clear milestone alternative?</AlertDialog.Title>
       <AlertDialog.Description>
-        The rationale and alternative text you entered will be removed if you proceed.
+        The rationale and alternative text you entered will be removed if you
+        proceed.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action class="cursor-pointer bg-destructive text-white hover:bg-destructive/90" onclick={confirmClearAlternative}>
+      <AlertDialog.Action
+        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        onclick={confirmClearAlternative}
+      >
         Proceed
       </AlertDialog.Action>
     </AlertDialog.Footer>
