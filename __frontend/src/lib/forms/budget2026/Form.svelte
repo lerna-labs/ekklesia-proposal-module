@@ -15,7 +15,7 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import XIcon from "@lucide/svelte/icons/x";
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   const BUDGET2026_AUTOSAVE_KEY = "ekklesia.budget2026.autoSaveEnabled";
 
@@ -274,6 +274,8 @@
         authorizationAttestation: false,
       };
     }
+    // Reset FormControls dirty baseline after prefill so opening a proposal and leaving does not show "unsaved changes".
+    tick().then(() => formControlsRef?.resetDirtyBaseline?.());
   });
 
   const legalDeclarationsErrors = $derived(

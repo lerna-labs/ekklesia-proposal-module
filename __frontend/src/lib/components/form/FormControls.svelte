@@ -94,6 +94,11 @@
     submitLive();
   }
 
+  /** Reset dirty baseline to current form state. Call after loading/prefilling proposal data so the form is not considered dirty on first paint. */
+  export function resetDirtyBaseline() {
+    if (getPayload) initialSnapshot = JSON.stringify(getPayload(formData.status));
+  }
+
   /** Auto-save draft at interval when enabled. */
   $effect(() => {
     if (
