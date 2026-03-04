@@ -19,7 +19,11 @@
     let qs = searchParams.toString();
     for (const key of ["status", "category"]) {
       const m = qs.match(new RegExp(`\\b${key}=([^&]*)`));
-      if (m) qs = qs.replace(new RegExp(`\\b${key}=[^&]*`), key + "=" + decodeURIComponent(m[1]));
+      if (m)
+        qs = qs.replace(
+          new RegExp(`\\b${key}=[^&]*`),
+          key + "=" + decodeURIComponent(m[1]),
+        );
     }
     return qs;
   }
@@ -50,7 +54,6 @@
       submit();
     }
   }
-
 </script>
 
 <div class="relative flex w-full items-center gap-1 {className}">
@@ -79,7 +82,7 @@
       type="button"
       variant="ghost"
       size="icon"
-      class="!size-8 min-w-0 shrink-0 rounded-none !p-0 -ml-3 hover:bg-transparent cursor-pointer"
+      class="size-8! min-w-0 shrink-0 rounded-none p-0! -ml-3 hover:bg-transparent cursor-pointer"
       onclick={submit}
       aria-label="Search"
       title="Search"
