@@ -8,10 +8,10 @@
     formData,
     getPayload,
     onSave,
-    autoSaveEnabled = $bindable(false),
+    autoSaveEnabled = $bindable(true),
   } = $props();
 
-  const AUTO_SAVE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  const AUTO_SAVE_INTERVAL_MS = 1 * 60 * 1000; // 1 minute
 
   /** Snapshot of current form data for dirty check (serialized payload). */
   let formDataSnapshot = $derived(
@@ -99,6 +99,7 @@
     if (!autoSaveEnabled || formData.status !== "draft" || !onSave || !getPayload)
       return;
     const id = setInterval(() => {
+      console.log("Auto-save running", new Date().toISOString());
       const payload = getPayload("draft");
       Promise.resolve(onSave(payload)).catch(() => {});
     }, AUTO_SAVE_INTERVAL_MS);

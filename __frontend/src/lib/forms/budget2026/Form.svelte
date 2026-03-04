@@ -15,6 +15,10 @@
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import XIcon from "@lucide/svelte/icons/x";
+  import { onMount } from "svelte";
+
+  const BUDGET2026_AUTOSAVE_KEY = "ekklesia.budget2026.autoSaveEnabled";
+
   let {
     vote,
     categories,
@@ -132,8 +136,19 @@
     },
   });
 
-  let autoSaveEnabled = $state(false);
+  let autoSaveEnabled = $state(true);
   let formControlsRef = $state(null);
+
+  onMount(() => {
+    const stored = localStorage.getItem(BUDGET2026_AUTOSAVE_KEY);
+    if (stored === "true") autoSaveEnabled = true;
+    else if (stored === "false") autoSaveEnabled = false;
+  });
+
+  $effect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(BUDGET2026_AUTOSAVE_KEY, String(autoSaveEnabled));
+  });
 
   /** Prefill formData from proposal once when editing */
   let prefilled = $state(false);
