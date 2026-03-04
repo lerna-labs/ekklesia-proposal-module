@@ -19,7 +19,7 @@ const supportingInfoLinkSchema = z.object({
   url: z.string().url("Enter a valid URL"),
 });
 
-/** Other Info section: links with title max 100 (per form-other-info.md). */
+/** Additional Info section: links with title max 255 (per form-additional-info.md). */
 const supportingInfoLinkSchemaOtherInfo = z.object({
   title: z.string().min(1, "Title is required").max(100),
   url: z.string().min(1, "URL is required").url("Enter a valid URL"),
@@ -258,7 +258,7 @@ const metaDataSchema = z.object({
   primaryContact: primaryContactSchema.optional().default({}),
   signatoryContact: signatoryContactSchema.optional().default({}),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
-  /** Other Info section (FormOtherInfo): supporting links only. Initiative type and proposal type are per work package. */
+  /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
   supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
   /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
   treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
