@@ -110,11 +110,6 @@ router.post("/", async (req, res) => {
           strategicFocusArea: null,
           keyPerformanceIndicators: [],
           proposalDetails: { conversionRate: "", workPackages: [] },
-          financialAndAdministrative: {},
-          contractingParty: {},
-          primaryContact: {},
-          signatoryContact: {},
-          kycInfo: {},
         }
         : null;
 

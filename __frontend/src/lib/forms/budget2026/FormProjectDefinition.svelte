@@ -18,6 +18,7 @@
   description="The official name of your project as it will appear in governance voting."
   placeholder="Enter Title Here"
   required
+  minLength={2}
   maxLength={100}
   {validationErrors}
   class="mb-8"
@@ -50,6 +51,7 @@
   description="A high-level overview of the problem, solution, and impact. This is the first thing voters read."
   placeholder="Enter Summary Here"
   required
+  minLength={2}
   maxLength={2000}
   {validationErrors}
   class="mb-8"

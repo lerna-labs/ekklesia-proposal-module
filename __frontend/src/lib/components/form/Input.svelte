@@ -13,6 +13,7 @@
     notPublic = false,
     required = false,
     maxLength,
+    minLength,
     type = "text",
     min,
     max,
@@ -21,6 +22,13 @@
   } = $props();
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
+  let trimmedLength = $derived((value ?? "").toString().trim().length);
+  let minLengthError = $derived(
+    minLength != null && trimmedLength > 0 && trimmedLength < minLength
+      ? `Must be at least ${minLength} characters`
+      : null,
+  );
+  let displayError = $derived(schemaError ?? minLengthError);
 </script>
 
 <Field.Field class="gap-2 {className}">
@@ -53,10 +61,10 @@
     {min}
     {max}
     {step}
-    aria-invalid={schemaError ? true : false}
+    aria-invalid={displayError ? true : false}
     class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
   />
-  {#if schemaError}
-    <Field.Error class="text-xs">{schemaError}</Field.Error>
+  {#if displayError}
+    <Field.Error class="text-xs">{displayError}</Field.Error>
   {/if}
 </Field.Field>

@@ -45,10 +45,10 @@ const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
 }));
 
 const milestoneSchema = z.object({
-  milestoneName: z.string().min(1, "Milestone name is required").max(100),
-  deliverables: z.string().min(1, "Deliverables are required").max(600),
-  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(600),
-  duration: z.string().min(1, "Duration is required").max(200),
+  name: z.string().min(1, "Milestone name is required").max(100),
+  deliverables: z.string().min(1, "Deliverables are required").max(4000),
+  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(4000),
+  duration: z.string().min(1, "Duration is required").max(100),
 });
 
 const workPackageSchema = z
@@ -81,9 +81,9 @@ const workPackageSchema = z
     }),
     supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
     coreObjectives: z
-    .array(z.string().min(1).max(400))
+    .array(z.string().min(1).max(1000))
     .min(1, "At least one core objective is required"),
-    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
     metric: z.string().min(1, "Metric is required").max(600),
     milestones: z.array(milestoneSchema).optional().default([]),
     budgetBreakdown: z
@@ -116,34 +116,6 @@ const workPackageSchema = z
     }
   });
 
-const contractingPartySchema = z.object({
-  legalEntityType: z.enum(["company", "individual"], {
-    required_error: "Legal entity type is required",
-    invalid_type_error: "Legal entity type must be company or individual",
-  }),
-  legalEntityName: z.string().max(100).optional(),
-  legalEntityRegistrationNumber: z.string().max(100).optional(),
-  legalEntityCountry: z.string().max(100).optional(),
-  legalEntityAddress: z.string().max(100).optional(),
-  countryOfResidence: z.string().max(100).optional(),
-  govtIssuedIdNumber: z.string().max(100).optional(),
-  fullResidentialAddress: z.string().max(100).optional(),
-});
-
-const primaryContactSchema = z.object({
-  name: z.string().max(100).min(1, "Name is required"),
-  title: z.string().max(100).min(1, "Title is required"),
-  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
-  socialMedia: z.string().max(100).optional(),
-});
-
-const signatoryContactSchema = z.object({
-  name: z.string().max(100).min(1, "Name is required"),
-  title: z.string().max(100).min(1, "Role is required"),
-  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
-  authorization: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
-});
-
 /** Proposer details (FormProposerDetails): public name, contact email, social/media links. */
 const proposerDetailsSchema = z.object({
   name: z.string().min(1, "Proposer name is required").max(100),
@@ -167,44 +139,6 @@ const proposerDetailsSchema = z.object({
       }
     }),
   links: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
-});
-
-const kycInfoSchema = z
-  .object({
-    submitted: z.boolean().optional(),
-    email: z.string().trim().max(100).email().optional(),
-    totalProposalsSubmitted: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((v) => {
-        if (v === "" || v == null) return undefined;
-        const n = Number(v);
-        if (Number.isNaN(n)) return undefined;
-        const int = Math.floor(n);
-        return int >= 0 && int <= 99999 ? int : undefined;
-      }),
-  })
-  .refine(
-    (data) => {
-      if (data.submitted === false) {
-        const email = (data.email ?? "").trim();
-        return email.length > 0 && z.string().email().safeParse(email).success;
-      }
-      return true;
-    },
-    { message: "KYC Contact Email is required when KYC/KYB has not been submitted.", path: ["email"] }
-  );
-
-const financialAndAdministrativeSchema = z.object({
-  intersectAdministrator: z.boolean().optional(),
-  otherAdministrators: z.string().max(400).optional(),
-  initiativeType: z.enum(["New Initiative", "Maintenance"]).optional(),
-  priorFunding: z.string().min(1, "Prior funding is required").max(800),
-  treasuryRepayment: z.boolean().optional(),
-  treasuryRepaymentCondition: z.string().max(800).optional(),
-  treasuryDonationHash: z.string().max(255).optional(),
-  thirdPartyAssurers: z.string().max(600).optional(),
-  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
 });
 
 const proposalDetailsSchema = z.object({
@@ -241,11 +175,11 @@ const strategyFrameworkSchema = z.object({
   pillarRationale: z
     .string()
     .min(1, "Rationale for your selection is required")
-    .max(150000),
+    .max(15000),
   kpiAlignment: z
     .string()
     .min(1, "Alignment to KPIs is required")
-    .max(100000),
+    .max(10000),
 });
 
 const metaDataSchema = z.object({
@@ -253,10 +187,6 @@ const metaDataSchema = z.object({
   estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
   strategyFramework: strategyFrameworkSchema,
   proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
-  financialAndAdministrative: financialAndAdministrativeSchema.optional().default({}),
-  contractingParty: contractingPartySchema.optional().default({}),
-  primaryContact: primaryContactSchema.optional().default({}),
-  signatoryContact: signatoryContactSchema.optional().default({}),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
   /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
   supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
@@ -275,7 +205,6 @@ const metaDataSchema = z.object({
   }),
   treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
   priorFunding: z.string().min(1, "Prior funding is required").max(10000),
-  kycInfo: kycInfoSchema.optional().default({}),
   legalDeclarations: legalDeclarationsSchema.optional(),
 });
 

@@ -13,10 +13,18 @@
     notPublic = false,
     required = false,
     maxLength,
+    minLength,
     class: className,
   } = $props();
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
+  let trimmedLength = $derived((value ?? "").toString().trim().length);
+  let minLengthError = $derived(
+    minLength != null && trimmedLength > 0 && trimmedLength < minLength
+      ? `Must be at least ${minLength} characters`
+      : null,
+  );
+  let displayError = $derived(schemaError ?? minLengthError);
 
   /** Strip markdown syntax to get visible character count (for limit display). */
   function stripMarkdownForCount(text) {
@@ -61,7 +69,7 @@
   </div>
   <div
     class="relative rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
-    aria-invalid={schemaError ? true : false}
+    aria-invalid={displayError ? true : false}
   >
     <Editor bind:value />
     {#if placeholder && (value == null || String(value).trim() === "")}
@@ -73,7 +81,7 @@
       </span>
     {/if}
   </div>
-  {#if schemaError}
-    <Field.Error class="text-xs">{schemaError}</Field.Error>
+  {#if displayError}
+    <Field.Error class="text-xs">{displayError}</Field.Error>
   {/if}
 </Field.Field>
