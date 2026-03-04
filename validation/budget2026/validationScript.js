@@ -27,7 +27,7 @@ const supportingInfoLinkSchemaOtherInfo = z.object({
 
 const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
-    errorMap: () => ({ message: "Cost category is required" }),
+    error: "Cost category is required",
   }),
   name: z.string().min(1, "Item name is required").max(200),
   description: z.string().min(1, "Item description is required").max(600),
@@ -36,7 +36,7 @@ const budgetRowInputSchema = z.object({
     .min(0.001, "Quantity is required and must be greater than 0"),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
-    .min(0, "Unit cost in ADA is required and must be 0 or greater"),
+    .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
 });
 
 const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
@@ -51,21 +51,70 @@ const milestoneSchema = z.object({
   duration: z.string().min(1, "Duration is required").max(200),
 });
 
-const workPackageSchema = z.object({
-  title: z.string().min(1, "Work Package name is required").max(100),
-  scope: z.string().min(1, "Scope of Work is required").max(2000),
-  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-  estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
-  coreObjectives: z.array(z.string().min(1).max(400)),
-  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
-  metric: z.string().min(1, "Metric is required").max(600),
-  milestones: z.array(milestoneSchema).optional().default([]),
-  budgetBreakdown: z
-    .array(budgetRowSchema)
-    .min(1, "At least one budget row is required")
-    .optional()
-    .default([]),
-});
+const workPackageSchema = z
+  .object({
+    name: z.string().min(1, "Work Package name is required").max(100),
+    summary: z.string().min(1, "Work Package summary is required").max(10000),
+    initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
+        return;
+      }
+      if (val !== "New Initiative" && val !== "Maintenance") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Initiative type must be New Initiative or Maintenance",
+        });
+      }
+    }),
+    proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
+        return;
+      }
+      if (val !== "Technical (software/IT)" && val !== "Non-technical") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Type of proposal must be Technical (software/IT) or Non-technical",
+        });
+      }
+    }),
+    supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
+    coreObjectives: z
+    .array(z.string().min(1).max(400))
+    .min(1, "At least one core objective is required"),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
+    metric: z.string().min(1, "Metric is required").max(600),
+    milestones: z.array(milestoneSchema).optional().default([]),
+    budgetBreakdown: z
+      .array(budgetRowSchema)
+      .min(1, "At least one budget row is required")
+      .optional()
+      .default([]),
+    noMilestonesBreakdown: z.boolean().optional().default(false),
+    milestoneAlternative: z.string().max(4000).optional().default(""),
+  })
+  .superRefine((data, ctx) => {
+    if (data.noMilestonesBreakdown) {
+      const alt = (data.milestoneAlternative ?? "").trim();
+      if (alt.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Milestone alternative is required when not using milestones",
+          path: ["milestoneAlternative"],
+        });
+      }
+    } else {
+      const list = data.milestones ?? [];
+      if (!Array.isArray(list) || list.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "At least one milestone is required",
+          path: ["milestones"],
+        });
+      }
+    }
+  });
 
 const contractingPartySchema = z.object({
   legalEntityType: z.enum(["company", "individual"], {
@@ -147,10 +196,6 @@ const kycInfoSchema = z
   );
 
 const financialAndAdministrativeSchema = z.object({
-  conversionRate: z.coerce
-    .number({ invalid_type_error: "Enter a valid number" })
-    .min(0)
-    .refine((v) => v > 0, { message: "Conversion rate is required" }),
   intersectAdministrator: z.boolean().optional(),
   otherAdministrators: z.string().max(400).optional(),
   initiativeType: z.enum(["New Initiative", "Maintenance"]).optional(),
@@ -162,11 +207,16 @@ const financialAndAdministrativeSchema = z.object({
   supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
 });
 
-// API receives dates as ISO strings; coerce to Date for validation/storage
-const executionRoadmapSchema = z.object({
-  projectStartDate: z.coerce.date("Start Date is required"),
-  projectEndDate: z.coerce.date("End Date is required"),
-  workPackages: z.array(workPackageSchema).optional().default([]),
+const proposalDetailsSchema = z.object({
+  conversionRate: z.coerce
+    .number({ invalid_type_error: "Enter a valid number" })
+    .min(0)
+    .refine((v) => v > 0, { message: "Conversion rate is required" }),
+  workPackages: z
+    .array(workPackageSchema)
+    .min(1, "At least one work package is required")
+    .optional()
+    .default([]),
 });
 
 const legalDeclarationsSchema = z.object({
@@ -202,38 +252,13 @@ const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
   estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
   strategyFramework: strategyFrameworkSchema,
-  executionRoadmap: executionRoadmapSchema.optional().default({ workPackages: [] }),
+  proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
   financialAndAdministrative: financialAndAdministrativeSchema.optional().default({}),
   contractingParty: contractingPartySchema.optional().default({}),
   primaryContact: primaryContactSchema.optional().default({}),
   signatoryContact: signatoryContactSchema.optional().default({}),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
-  /** Other Info section (FormOtherInfo): initiative type, proposal type, supporting links.
-   * superRefine adds exactly one issue per field so the frontend shows one error per radio group. */
-  initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
-    if (val === "" || val === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
-      return;
-    }
-    if (val !== "New Initiative" && val !== "Maintenance") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Initiative type must be New Initiative or Maintenance",
-      });
-    }
-  }),
-  proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
-    if (val === "" || val === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
-      return;
-    }
-    if (val !== "Technical (software/IT)" && val !== "Non-technical") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Type of proposal must be Technical (software/IT) or Non-technical",
-      });
-    }
-  }),
+  /** Other Info section (FormOtherInfo): supporting links only. Initiative type and proposal type are per work package. */
   supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
   /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
   treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {

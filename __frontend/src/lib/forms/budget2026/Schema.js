@@ -16,7 +16,7 @@ export const COST_CATEGORIES_LIST = costCategoriesList;
 /** Single budget row input schema (object only). Matches workPackages[].budgetBreakdown[]. */
 export const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
-    errorMap: () => ({ message: "Cost category is required" }),
+    error: "Cost category is required",
   }),
   name: z
     .string()
@@ -31,7 +31,7 @@ export const budgetRowInputSchema = z.object({
     .min(0.001, "Quantity is required and must be greater than 0"),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
-    .min(0, "Unit cost in ADA is required and must be 0 or greater"),
+    .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
 });
 
 /** Single budget row schema (repeatable per work package); adds total via transform. */
@@ -82,7 +82,11 @@ export const workPackageSchema = z
     }),
     supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
     estimatedDuration: z.string().max(200).optional().default(""),
-    coreObjectives: z.array(z.string().max(1000)).optional().default([]),
+    coreObjectives: z
+    .array(z.string().min(1).max(1000))
+    .min(1, "At least one core objective is required")
+    .optional()
+    .default([]),
     expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
     metric: z.string().min(1, "Metric is required").max(600),
     milestones: z.array(milestoneSchema).optional().default([]),
@@ -91,6 +95,7 @@ export const workPackageSchema = z
     milestoneAlternative: z.string().max(4000).optional().default(""),
   })
   .superRefine((data, ctx) => {
+    // Only validate milestone alternative when checkbox is set; "at least one milestone" is enforced on backend on submit.
     if (data.noMilestonesBreakdown) {
       const alt = (data.milestoneAlternative ?? "").trim();
       if (alt.length === 0) {
@@ -98,15 +103,6 @@ export const workPackageSchema = z
           code: z.ZodIssueCode.custom,
           message: "Milestone alternative is required when not using milestones",
           path: ["milestoneAlternative"],
-        });
-      }
-    } else {
-      const list = data.milestones ?? [];
-      if (!Array.isArray(list) || list.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "At least one milestone is required",
-          path: ["milestones"],
         });
       }
     }
