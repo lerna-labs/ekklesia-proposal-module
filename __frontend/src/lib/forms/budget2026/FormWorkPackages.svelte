@@ -2,6 +2,7 @@
   /**
    * Work packages list editor: list of work packages with add, edit (dialog), and delete.
    * Pattern matches LinkListEditor: list of items, click title or pencil to edit, trash to remove, Add button.
+   * @see __frontend/docs/budget2026/form-work-packages.md Version: 1.0.0
    */
   import { z } from "zod";
   import * as Field from "$lib/components/ui/field/index.js";
