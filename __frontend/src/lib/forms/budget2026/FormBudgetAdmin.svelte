@@ -217,7 +217,7 @@
   description="Who is your Third Party Assurer? This person can be a person or organization."
   required
   maxLength={1000}
-  {validationErrors}
+  validationErrors={administratorErrors}
   class="mb-8"
 />
 
