@@ -15,11 +15,11 @@ const costCategoriesList = JSON.parse(readFileSync(costCategoriesPath, "utf8"));
 const COST_CATEGORIES = costCategoriesList.map((c) => c.name);
 
 const supportingInfoLinkSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255),
+  title: z.string().min(1, "Title is required").max(100),
   url: z.string().url("Enter a valid URL"),
 });
 
-/** Additional Info section: links with title max 255 (per form-additional-info.md). */
+/** Additional Info section: links with title max 100. */
 const supportingInfoLinkSchemaOtherInfo = z.object({
   title: z.string().min(1, "Title is required").max(100),
   url: z.string().min(1, "URL is required").url("Enter a valid URL"),
