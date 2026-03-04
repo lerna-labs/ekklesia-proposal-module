@@ -97,7 +97,7 @@
       {/if}
     </Popover.Trigger>
     <Popover.Content align="end" class="w-64 p-3">
-      <h3 class="text-sm font-medium mb-2">Sort</h3>
+      <h3 class="text-sm font-medium mb-2">Sort Options</h3>
       <Separator.Root class="mb-3" />
       <div class="space-y-4">
         <div class="space-y-2">

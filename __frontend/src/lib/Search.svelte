@@ -50,6 +50,7 @@
       submit();
     }
   }
+
 </script>
 
 <div class="relative flex w-full items-center gap-1 {className}">
@@ -57,10 +58,10 @@
     bind:value
     {placeholder}
     onkeydown={handleKeydown}
-    class="pr-16"
+    class="min-w-0 flex-1 pr-8"
     aria-label="Search"
   />
-  <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-1">
+  <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-0.5">
     {#if value.trim()}
       <Button.Root
         type="button"
