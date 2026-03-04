@@ -337,14 +337,62 @@ const metaDataSchema = z.object({
     if (!kycEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "KYC contact email is required when KYC has not been submitted" });
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "Enter a valid email" });
   }
+  // Third party assurers (independent audits) required when administrator is selected
+  const independentAuditsVal = (data.independentAudits ?? "").trim();
+  if (!independentAuditsVal) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["independentAudits"],
+      message: "Third party assurers (independent audits) is required",
+    });
+  }
 });
 
-const formSchema = z.object({
-  title: z.string().min(2, "Proposal Title is required").max(100),
-  summary: z.string().min(2, "Executive Summary is required").max(2000),
-  status: z.enum(["draft", "live"]).default("draft"),
-  metaData: metaDataSchema,
-});
+const formSchema = z
+  .object({
+    title: z.string().min(2, "Proposal Title is required").max(100),
+    summary: z.string().min(2, "Executive Summary is required").max(2000),
+    status: z.enum(["draft", "live"]).default("draft"),
+    metaData: metaDataSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.status !== "live") return;
+    const md = data.metaData ?? {};
+    const txHash = (md.treasuryDonationTxHash ?? "").trim();
+    if (!txHash) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["metaData", "treasuryDonationTxHash"],
+        message: "Treasury donation verification hash is required to submit",
+      });
+    }
+    if (md.treasuryDonationConfirmed !== true) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["metaData", "treasuryDonationConfirmed"],
+        message: "You must confirm the treasury donation to submit",
+      });
+    }
+    // Legal declarations required on submit/re-submit (all checkboxes and submitter fields)
+    const ld = md.legalDeclarations;
+    if (!ld || typeof ld !== "object") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["metaData", "legalDeclarations"],
+        message: "Legal declarations are required to submit",
+      });
+      return;
+    }
+    const ldResult = legalDeclarationsSchema.safeParse(ld);
+    if (!ldResult.success) {
+      for (const issue of ldResult.error.issues) {
+        ctx.addIssue({
+          ...issue,
+          path: ["metaData", "legalDeclarations", ...(issue.path || [])],
+        });
+      }
+    }
+  });
 
 /** Full proposal body: form payload + voteId (ObjectId string). */
 export const createProposalBodySchema = formSchema.extend({
