@@ -206,6 +206,17 @@ const metaDataSchema = z.object({
   treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
   priorFunding: z.string().min(1, "Prior funding is required").max(10000),
   legalDeclarations: legalDeclarationsSchema.optional(),
+}).superRefine((data, ctx) => {
+  if (data.treasuryRepayment === "Yes") {
+    const circumstances = (data.treasuryRepaymentCircumstances ?? "").trim();
+    if (!circumstances) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["treasuryRepaymentCircumstances"],
+        message: "Repayment circumstances are required when treasury repayment is Yes",
+      });
+    }
+  }
 });
 
 const formSchema = z.object({

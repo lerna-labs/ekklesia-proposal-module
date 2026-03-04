@@ -49,24 +49,27 @@
   class="mb-8"
 />
 
-<h3>If yes, under what circumstances would a repayment occur?</h3>
+{#if formData.metaData.treasuryRepayment === "Yes"}
+  <h3>Under what circumstances would a repayment occur?</h3>
 
-<p>
-  Describe the specific conditions or triggers that would result in funds being
-  returned to the Treasury (e.g. surplus funds, revenue thresholds, loan,
-  project cancellation).
-</p>
+  <p>
+    Describe the specific conditions or triggers that would result in funds
+    being returned to the Treasury (e.g. surplus funds, revenue thresholds,
+    loan, project cancellation).
+  </p>
 
-<Textarea
-  id="treasuryRepaymentCircumstances"
-  bind:value={formData.metaData.treasuryRepaymentCircumstances}
-  label="Repayment Circumstances"
-  description="If repayment applies, describe the specific conditions under which funds would be returned to the Treasury."
-  placeholder="Enter Explanation"
-  maxLength={10000}
-  validationErrors={treasuryRepaymentCircumstancesErrors}
-  class="mb-8"
-/>
+  <Textarea
+    id="treasuryRepaymentCircumstances"
+    bind:value={formData.metaData.treasuryRepaymentCircumstances}
+    label="Repayment Circumstances"
+    description="If repayment applies, describe the specific conditions under which funds would be returned to the Treasury."
+    placeholder="Enter Explanation"
+    maxLength={10000}
+    required
+    validationErrors={treasuryRepaymentCircumstancesErrors}
+    class="mb-8"
+  />
+{/if}
 
 <h3>
   Have you previously received funding from Cardano or related ecosystem
