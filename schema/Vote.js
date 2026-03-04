@@ -66,7 +66,7 @@ const voteSchema = new Schema(
       },
       depositAddress: {
         type: String, // bech32 address or empty string for no deposit
-        required: true,
+        required: false,
       },
       depositAmount: {
         type: Number, // min deposit amount in lovelace or zero for no deposit needed
