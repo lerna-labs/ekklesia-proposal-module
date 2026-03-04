@@ -239,6 +239,11 @@ const metaDataSchema = z.object({
   }),
   treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
   priorFunding: z.string().min(1, "Prior funding is required").max(10000),
+  /** Treasury Donation (FormTreasuryDonation): verification hash and confirmation. */
+  treasuryDonationTxHash: z.string().max(64).optional().default(""),
+  treasuryDonationConfirmed: z.boolean().optional().default(false),
+  /** Budget Admin: independent audits text (FormBudgetAdmin). */
+  independentAudits: z.string().max(1000).optional().default(""),
   /** Budget Admin: administrator choice, contracting party, primary contact, signatory, KYC. */
   administrator: z.string().optional().default(""),
   intersectAdministratorFeeConsent: z.boolean().optional().default(false),
