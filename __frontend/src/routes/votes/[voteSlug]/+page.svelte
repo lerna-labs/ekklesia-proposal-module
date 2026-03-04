@@ -8,6 +8,7 @@
   import Search from "$lib/Search.svelte";
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
+  import { shortenString } from "$lib/utils.js";
   let { data } = $props();
   let vote = $derived(data.vote);
   let proposals = $derived(data.proposals.data);
@@ -15,6 +16,9 @@
   let categories = $derived(data.categories ?? []);
   let sort = $state("title");
   let ascending = $state(true);
+
+  const proposerId = $derived(page.url.searchParams.get("proposer") ?? "");
+  const shortProposerId = $derived(shortenString(proposerId, 12, true));
 
   function navigate(pageNum) {
     const pathname = page.url.pathname;
@@ -65,13 +69,17 @@
     <div
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <h2 class="text-xl font-semibold">
-        Proposals
+      <h2 class="text-xl font-medium">
+        {#if shortProposerId}
+          Proposals from {shortProposerId}
+        {:else}
+          Proposals
+        {/if}
         <span class="text-muted-foreground font-normal">
           ({proposalPagination.totalItems})
         </span>
       </h2>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
         <SearchFilter {categories} voteId={vote._id} />
         <SearchSort bind:sort bind:ascending />
@@ -81,16 +89,14 @@
     {#if !proposals || proposals.length === 0}
       <Card.Root>
         <Card.Content class="py-12 text-center">
-          <p class="text-muted-foreground">
-            No proposals found for this vote.
-          </p>
+          <p class="text-muted-foreground">No proposals found for this vote.</p>
         </Card.Content>
       </Card.Root>
     {:else}
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} vote={vote} {categories} />
+          <ProposalCard {proposal} {vote} {categories} />
         {/each}
       </div>
 
