@@ -146,12 +146,32 @@
         </div>
       {/if}
       {#if proposal.metaData?.proposerDetails?.name != null && String(proposal.metaData.proposerDetails.name).trim() !== ""}
+        {@const legalEntityType = proposal.metaData?.contractingParty?.legalEntityType}
         <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          {#if proposal.metaData?.contractingParty?.legalEntityType === "company"}
-            <HomeIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+          {#if legalEntityType != null && String(legalEntityType).trim() !== ""}
+            <Popover.Root>
+              <Popover.Trigger
+                type="button"
+                class="rounded outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5 -m-0.5 cursor-help"
+                aria-label="Proposer type: {legalEntityType}"
+              >
+                {#if legalEntityType === "company"}
+                  <HomeIcon
+                    class="size-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                {:else}
+                  <UserIcon
+                    class="size-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                {/if}
+              </Popover.Trigger>
+              <Popover.Content class="w-auto p-2 text-xs" align="start">
+                <span class="font-medium text-muted-foreground">Proposer type:</span>
+                <span class="ml-1">{legalEntityType}</span>
+              </Popover.Content>
+            </Popover.Root>
           {:else}
             <UserIcon
               class="size-3.5 shrink-0 text-muted-foreground"
@@ -170,12 +190,6 @@
           {:else}
             <span>{proposal.metaData.proposerDetails.name}</span>
           {/if}
-        </div>
-      {/if}
-      {#if proposal.metaData?.contractingParty?.legalEntityType != null && String(proposal.metaData.contractingParty.legalEntityType).trim() !== ""}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <span class={labelClass}>Proposer type:</span>
-          <span>{proposal.metaData.contractingParty.legalEntityType}</span>
         </div>
       {/if}
       {#if pillarEntries.length > 0}
