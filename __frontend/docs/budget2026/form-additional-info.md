@@ -4,7 +4,7 @@
 
 | Field            | Detail                                                                 |
 |------------------|------------------------------------------------------------------------|
-| **Version**      | 1.0.0                                                                  |
+| **Version**      | 1.0.1                                                                  |
 | **Created**      | 2025-03-02                                                             |
 | **Last Revised** | 2025-03-04                                                             |
 | **Component**    | `__frontend/src/lib/forms/budget2026/FormAdditionalInfo.svelte`        |
