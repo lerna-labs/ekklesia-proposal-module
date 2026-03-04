@@ -20,7 +20,7 @@
 <Popover.Root class={className}>
   <Popover.Trigger
     type="button"
-    class="w-fit rounded-md border border-border px-2 py-1.5 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 hover:bg-muted/50 transition-colors"
+    class="w-fit rounded-md border border-border px-2 py-1.5 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 hover:bg-muted/50 transition-colors bg-white"
     title="View budget in USD equivalent"
     aria-label="View USD equivalent"
   >
