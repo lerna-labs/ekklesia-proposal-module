@@ -87,6 +87,7 @@
 
     <FormWorkPackages
       bind:value={formData.metaData.proposalDetails.workPackages}
+      conversionRate={formData.metaData.proposalDetails.conversionRate}
       validationErrors={validationErrors?.properties?.metaData?.properties?.proposalDetails}
       hideSectionLevelError
     />

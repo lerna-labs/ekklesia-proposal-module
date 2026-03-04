@@ -20,6 +20,7 @@
     onMilestonesChange,
     budgetBreakdown = [],
     onBudgetBreakdownChange,
+    conversionRate,
     noMilestonesBreakdown = false,
     milestoneAlternative = "",
     onMilestoneOptionChange,
@@ -251,6 +252,7 @@
         <FormWorkPackagesBudget
           value={budgetBreakdown}
           onvaluechange={onBudgetBreakdownChange}
+          conversionRate={conversionRate}
         />
       </div>
       {#if budgetBreakdownError}

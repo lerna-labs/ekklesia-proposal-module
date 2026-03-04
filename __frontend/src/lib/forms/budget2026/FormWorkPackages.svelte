@@ -23,6 +23,7 @@
     value = $bindable([]),
     label = "Work Packages",
     description = "Break down the work into packages: summary, objectives, milestones, and budget per package.",
+    conversionRate,
     validationErrors,
     addButtonLabel = "Add Work Package",
     emptyMessage,
@@ -236,6 +237,7 @@
               budgetBreakdown={pkg.budgetBreakdown ?? []}
               onBudgetBreakdownChange={(budgetBreakdown) =>
                 updatePackageBudgetBreakdown(index, budgetBreakdown)}
+              conversionRate={conversionRate}
               noMilestonesBreakdown={pkg.noMilestonesBreakdown ?? false}
               milestoneAlternative={pkg.milestoneAlternative ?? ""}
               onMilestoneOptionChange={(opts) =>

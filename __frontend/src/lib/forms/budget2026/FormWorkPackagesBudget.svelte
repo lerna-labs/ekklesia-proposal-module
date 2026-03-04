@@ -12,16 +12,19 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { budgetRowSchema, COST_CATEGORIES_LIST } from "./Schema.js";
-  import { formatAda } from "$lib/utils.js";
+  import { formatAda, formatUsd } from "$lib/utils.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import { fade } from "svelte/transition";
 
   let {
     value = $bindable([]),
     onvaluechange,
+    conversionRate,
     validationErrors,
     class: className = "",
   } = $props();
@@ -51,6 +54,31 @@
       if (Number.isFinite(t)) sum += t;
     }
     return sum;
+  });
+
+  /** Current budget item total (ADA) in the add/edit dialog (from draft quantity × unit price). */
+  const draftItemAda = $derived.by(() => {
+    const q = Number(draft.quantity);
+    const p = Number(draft.unitPrice);
+    if (!Number.isFinite(q) || !Number.isFinite(p) || q < 0 || p < 0)
+      return null;
+    return Math.round(q * p * 1000) / 1000;
+  });
+
+  /** Conversion rate as number (handles string from AmountInput); null if not set or invalid. */
+  const conversionRateNum = $derived.by(() => {
+    const v = conversionRate;
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  });
+
+  /** Current budget item total in USD when conversion rate is set. */
+  const draftItemUsd = $derived.by(() => {
+    const ada = draftItemAda;
+    const rate = conversionRateNum;
+    if (ada == null || rate == null) return null;
+    return ada * rate;
   });
 
   function getDefaultDraft() {
@@ -248,10 +276,25 @@
   <AlertDialog.Content
     class="sm:max-w-xl max-h-[90vh] overflow-y-auto flex flex-col"
   >
-    <AlertDialog.Header class="text-left">
+    <AlertDialog.Header
+      class="text-left flex flex-row items-center justify-between gap-4"
+    >
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
+      {#if draftItemAda != null && draftItemAda > 0}
+        <span in:fade={{ duration: 400 }} class="shrink-0 inline-block">
+          <Badge
+            variant="secondary"
+            class="tabular-nums bg-(--mbo-electric-blue) text-white border-0 px-3 py-1.5"
+          >
+            Total: {formatAda(draftItemAda)} ADA
+            {#if draftItemUsd != null}
+              <span class="opacity-90">· {formatUsd(draftItemUsd)} USD</span>
+            {/if}
+          </Badge>
+        </span>
+      {/if}
     </AlertDialog.Header>
     <div class="grid gap-4 pb-4">
       <Input
