@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 vote, import categories, 10 live proposals (random proposer, varying category per proposal), 1 draft.
+ * Create dummy data: 1 vote, import categories, 12 live proposals (for pagination), 1 withdrawn proposal, 1 draft.
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Category, Proposal, Comment, User.
  *
@@ -35,11 +35,64 @@ const LEGAL_DECLARATIONS = {
     submitterEmail: "submitter@example.com",
 };
 
+/**
+ * Build admin section metaData (administrator, contractingParty, primaryContact, signatoryContact, kycInfo, independentAudits).
+ * @param {object} template - { contactName, contactEmail }
+ * @param {number} index - Proposal index; used to vary administrator and contracting party type.
+ */
+function buildBudget2026AdminMetaData(template, index) {
+    const adminChoice = index % 2 === 0 ? "Intersect" : "Other";
+    const entityType = index % 3 === 0 ? "company" : "individual"; // alternate: 0,1 -> company; 2 -> individual (then repeat)
+    const isCompany = entityType === "company";
+    const kycSubmitted = index % 4 !== 3 ? "Yes" : "No"; // most Yes, one in four No
+
+    const baseContact = {
+        name: template.contactName || "Test Contact",
+        email: template.contactEmail || "admin-contact@example.com",
+    };
+
+    const contractingParty = {
+        legalEntityType: entityType,
+        legalEntityName: isCompany ? "Acme Solutions Ltd" : "",
+        legalEntityRegistrationNumber: isCompany ? "REG-123456" : "",
+        legalEntityCountry: isCompany ? "Singapore" : "",
+        legalEntityAddressLine1: isCompany ? "1 Business Park Drive" : "",
+        legalEntityAddressLine2: isCompany ? "Suite 100" : "",
+        legalEntityAddressLine3: isCompany ? "" : "",
+        govtIssuedIdNumber: isCompany ? "" : "PASSPORT-XYZ789",
+        countryOfResidence: isCompany ? "" : "DE",
+        residentialAddressLine1: isCompany ? "" : "42 Main Street",
+        residentialAddressLine2: isCompany ? "" : "Apt 5",
+        residentialAddressLine3: isCompany ? "" : "",
+    };
+
+    return {
+        administrator: adminChoice,
+        intersectAdministratorFeeConsent: adminChoice === "Intersect",
+        otherAdministrator: adminChoice === "Other" ? "External Admin Corp will handle contracting and payments." : "",
+        contractingParty,
+        primaryContact: { ...baseContact },
+        signatoryContact: {
+            title: isCompany ? "Director" : "Proposer",
+            name: template.contactName || "Jane Signatory",
+            email: template.contactEmail ? `signatory-${template.contactEmail}` : "signatory@example.com",
+            authorization: true,
+        },
+        kycInfo: {
+            submitted: kycSubmitted,
+            email: kycSubmitted === "No" ? "kyc-submit@example.com" : "",
+            totalProposalsSubmitted: String((index % 5) + 1),
+        },
+        independentAudits: "Third-party audit firm TBD; 5% of budget reserved for annual audit.",
+    };
+}
+
 /** Build metaData for a live Budget 2026 proposal (matches validation/budget2026/validationScript.js). */
-function buildBudget2026MetaData(template, categoryIds) {
+function buildBudget2026MetaData(template, categoryIds, proposalIndex = 0) {
     const ids = Array.isArray(categoryIds) ? categoryIds : (categoryIds ? [categoryIds] : []);
     const pillars = ids.map((id) => String(id));
     const wpBudget = Math.floor(template.totalBudget * 0.6);
+    const adminMeta = buildBudget2026AdminMetaData(template, proposalIndex);
     return {
         treasuryDonationTxHash: "abc123def456789",
         treasuryDonationConfirmed: true,
@@ -92,6 +145,7 @@ function buildBudget2026MetaData(template, categoryIds) {
         treasuryRepayment: "No",
         treasuryRepaymentCircumstances: "",
         priorFunding: "None",
+        ...adminMeta,
         legalDeclarations: LEGAL_DECLARATIONS,
     };
 }
@@ -205,20 +259,118 @@ async function createDummyData() {
             return PROPOSERS[Math.floor(Math.random() * PROPOSERS.length)];
         }
 
-        // 4. Create 10 live proposals (random proposer per proposal, different category per proposal), then one draft
+        // 4. Create 12 live proposals (for pagination), one withdrawn proposal, then one draft
         const COMMENT_TEST_PROPOSAL_TITLE = "Comment test proposal";
+        const SUMMARY_MAX_LENGTH = 2000; // budget2026 validation: Executive Summary max 2000
+
+        /** Build a summary at max allowed length (2000 chars) with paragraphs and markdown for line-clamp testing. */
+        function buildFullLengthSummary() {
+            const sections = [
+                "## Executive summary\n\nThis proposal requests funding for a **governance dashboard** and analytics platform. The dashboard will aggregate voting activity, proposal lifecycle data, and treasury-related metrics so that DReps, proposers, and the community can make informed decisions.\n\n",
+                "### Problem statement\n\nToday, stakeholders lack a single place to view participation rates, outcome trends, and treasury flows. Data is scattered across tools and reports. This makes it harder to assess impact and to hold the process accountable.\n\n",
+                "### Solution\n\nWe will deliver a public dashboard with:\n\n- **Real-time metrics**: votes cast, proposals by status, budget allocated vs spent.\n- **Charts and filters**: by category, proposer, time period.\n- **Exports** for auditors and researchers (CSV/API).\n- Transparent, auditable data sources and methodology.\n\n",
+                "### Implementation\n\nPhase 1 (months 1–3): data pipeline and core metrics. Phase 2 (months 4–6): visualisations and filters. Phase 3 (months 7–9): exports and documentation. We will use open-source stack and publish the code.\n\n",
+                "### Impact\n\nDReps can evaluate participation and outcomes at a glance. Proposers can see how their proposals compare. The community can track treasury usage over time. Transparency and accountability improve across the ecosystem.\n\n",
+                "### Team and budget\n\nOur team has delivered similar dashboards for other governance contexts. The budget covers design, development, hosting, and maintenance for 12 months. We will report quarterly and hand over documentation for long-term sustainability. _This summary uses the full allowed length (2000 characters) to test rendering and line clamping._",
+            ];
+            let s = sections.join("");
+            if (s.length > SUMMARY_MAX_LENGTH) {
+                s = s.slice(0, SUMMARY_MAX_LENGTH);
+            } else if (s.length < SUMMARY_MAX_LENGTH) {
+                const filler = " Additional context and supporting detail for testing. ";
+                while (s.length < SUMMARY_MAX_LENGTH) {
+                    s += filler;
+                }
+                s = s.slice(0, SUMMARY_MAX_LENGTH);
+            }
+            return s;
+        }
 
         const LIVE_PROPOSAL_TEMPLATES = [
-            { title: COMMENT_TEST_PROPOSAL_TITLE, summary: "Proposal used to test comments (one per user + withdrawn).", totalBudget: 50000, contactName: "Comment Test Proposer", contactEmail: "comment-test@example.com" },
-            { title: "Community Website and Documentation Hub", summary: "Build a community website and documentation hub.", totalBudget: 150000, contactName: "Test Proposer", contactEmail: "proposal-1@example.com" },
-            { title: "Open-Source Tooling and Developer Experience", summary: "Improve developer experience and maintain open-source tooling.", totalBudget: 85000, contactName: "Stake Test Proposer", contactEmail: "proposal-2@example.com" },
-            { title: "Governance Dashboard and Analytics", summary: "Deliver a governance dashboard with analytics and reporting.", totalBudget: 120000, contactName: "Gov Lead", contactEmail: "proposal-3@example.com" },
-            { title: "Security Audits and Best Practices", summary: "Fund security audits and publish best-practice guides.", totalBudget: 95000, contactName: "Security Lead", contactEmail: "proposal-4@example.com" },
-            { title: "Education and Onboarding Program", summary: "Create an education and onboarding program for new contributors.", totalBudget: 78000, contactName: "Education Lead", contactEmail: "proposal-5@example.com" },
-            { title: "Research and Standards Working Group", summary: "Run a research and standards working group with quarterly reports.", totalBudget: 110000, contactName: "Research Lead", contactEmail: "proposal-6@example.com" },
-            { title: "Infrastructure and DevOps Support", summary: "Provide infrastructure and DevOps support for core projects.", totalBudget: 135000, contactName: "DevOps Lead", contactEmail: "proposal-7@example.com" },
-            { title: "Community Events and Meetups", summary: "Organise community events, meetups and hackathons over 12 months.", totalBudget: 65000, contactName: "Events Lead", contactEmail: "proposal-8@example.com" },
-            { title: "Multilingual Documentation and Localisation", summary: "Expand documentation and localise key resources.", totalBudget: 88000, contactName: "Localisation Lead", contactEmail: "proposal-9@example.com" },
+            {
+                title: COMMENT_TEST_PROPOSAL_TITLE,
+                summary: "Proposal used to test **comments** (one per user + withdrawn).\n\nWe use this to verify:\n- Comment threads\n- Withdrawn comment state\n- Line clamping with _markdown_ in summaries.",
+                totalBudget: 50000,
+                contactName: "Comment Test Proposer",
+                contactEmail: "comment-test@example.com",
+            },
+            {
+                title: "Community Website and Documentation Hub",
+                summary: "Build a community website and documentation hub.",
+                totalBudget: 150000,
+                contactName: "Test Proposer",
+                contactEmail: "proposal-1@example.com",
+            },
+            {
+                title: "Open-Source Tooling and Developer Experience",
+                summary: "## Aim\n\nImprove **developer experience** and maintain open-source tooling.\n\n### Plan\n\n1. Extend existing CLI and SDKs\n2. Add integration tests and CI templates\n3. Publish guides and _best practices_\n\nTarget: reduce time-to-first-contribution and improve reliability of community-built tooling.",
+                totalBudget: 85000,
+                contactName: "Stake Test Proposer",
+                contactEmail: "proposal-2@example.com",
+            },
+            {
+                title: "Governance Dashboard and Analytics",
+                summary: buildFullLengthSummary(),
+                totalBudget: 120000,
+                contactName: "Gov Lead",
+                contactEmail: "proposal-3@example.com",
+            },
+            {
+                title: "Security Audits and Best Practices",
+                summary: "Fund **security audits** and publish best-practice guides. We will commission independent audits for critical components and document findings. Outputs: audit reports (redacted where needed), **hardening checklists** for node and wallet operators, and response playbooks. This reduces risk and raises the bar for ecosystem security.",
+                totalBudget: 95000,
+                contactName: "Security Lead",
+                contactEmail: "proposal-4@example.com",
+            },
+            {
+                title: "Education and Onboarding Program",
+                summary: "Create an education and onboarding program for new contributors.\n\n**Goals:** Structured learning paths (technical and non-technical), mentorship and office hours, _certification_ or recognition for completed tracks. We will partner with existing initiatives and fill gaps so that newcomers can ramp up quickly and sustainably.",
+                totalBudget: 78000,
+                contactName: "Education Lead",
+                contactEmail: "proposal-5@example.com",
+            },
+            {
+                title: "Research and Standards Working Group",
+                summary: "Run a **research and standards** working group with quarterly reports. We will coordinate with academia and industry, publish specs and reference implementations, and liaise with other standardisation bodies. The working group will maintain a roadmap, run open calls, and produce quarterly reports so that research outputs are visible and standards evolve in a coordinated way.",
+                totalBudget: 110000,
+                contactName: "Research Lead",
+                contactEmail: "proposal-6@example.com",
+            },
+            {
+                title: "Infrastructure and DevOps Support",
+                summary: "Provide **infrastructure** and DevOps support for core projects: CI/CD, monitoring, incident response, cost-effective and reproducible setups, and documentation for runbooks and _disaster recovery_. This keeps critical services stable and frees maintainers to focus on product work.",
+                totalBudget: 135000,
+                contactName: "DevOps Lead",
+                contactEmail: "proposal-7@example.com",
+            },
+            {
+                title: "Community Events and Meetups",
+                summary: "Organise community events, **meetups** and hackathons over 12 months. Quarterly online summits, regional in-person meetups where possible, and one flagship hackathon with prizes and mentorship. We will work with local organisers and track attendance and feedback to iterate and grow engagement.",
+                totalBudget: 65000,
+                contactName: "Events Lead",
+                contactEmail: "proposal-8@example.com",
+            },
+            {
+                title: "Multilingual Documentation and Localisation",
+                summary: "Expand documentation and **localise** key resources. Prioritise high-traffic pages and tutorials; use community translators and review workflows; maintain glossaries and style guides. Target languages will be chosen with community input so that non-English speakers can contribute and learn effectively.",
+                totalBudget: 88000,
+                contactName: "Localisation Lead",
+                contactEmail: "proposal-9@example.com",
+            },
+            {
+                title: "Developer Grants and Bounty Program",
+                summary: "Run a **developer grants** and bounty program. Open rounds with clear criteria and deadlines; bounties for specific bugs, features, or docs; transparent selection and payment. The program will publish guidelines, accept applications, and disburse funds in ADA with clear reporting so that builders are rewarded and the community can see where funds go.",
+                totalBudget: 200000,
+                contactName: "Grants Lead",
+                contactEmail: "proposal-10@example.com",
+            },
+            {
+                title: "Node Operations and Monitoring Tools",
+                summary: "Deliver **node operations** tooling and monitoring dashboards: deployment and config automation, health checks, alerts, and _metrics_, plus runbooks for common operations. Operators get a single place to see status and act, reducing downtime and operational burden.",
+                totalBudget: 98000,
+                contactName: "Ops Lead",
+                contactEmail: "proposal-11@example.com",
+            },
         ];
 
         const liveProposals = [];
@@ -232,8 +384,8 @@ async function createDummyData() {
                     ? [singleCat._id, categories[(i + 1) % categories.length]._id]
                     : [singleCat._id];
             const categoryTitles = categoryIds.map((id) => categories.find((c) => String(c._id) === String(id))?.title ?? id).join(", ");
-            console.log(`Creating live proposal ${i + 1}/10: ${t.title} (proposer: ${proposer.name}, categories: ${categoryTitles})...`);
-            const metaData = buildBudget2026MetaData(t, categoryIds);
+            console.log(`Creating live proposal ${i + 1}/12: ${t.title} (proposer: ${proposer.name}, categories: ${categoryTitles})...`);
+            const metaData = buildBudget2026MetaData(t, categoryIds, i);
             const totalBudget = metaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
                 const rows = wp.budgetBreakdown || [];
                 return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
@@ -251,6 +403,40 @@ async function createDummyData() {
             liveProposals.push(p);
             console.log(`  Created: ${p._id}`);
         }
+
+        // Create one withdrawn proposal (for testing withdrawn state and withdrawal details UI)
+        const withdrawnProposer = randomProposer();
+        const withdrawnTemplate = {
+            title: "Withdrawn proposal (no longer active)",
+            summary: "This proposal was **withdrawn** by the proposer.\n\n_Reason:_ Decided to resubmit in a later round with updated scope and budget.\n\nWe will incorporate feedback from the community and DReps, revise the work packages, and resubmit when the next funding round opens. Thank you to everyone who commented.",
+            totalBudget: 72000,
+            contactName: "Withdrawn Proposer",
+            contactEmail: "withdrawn@example.com",
+        };
+        const withdrawnCategoryIds = [categories[0]._id];
+        const withdrawnMetaData = buildBudget2026MetaData(withdrawnTemplate, withdrawnCategoryIds, 12);
+        const withdrawnTotalBudget = withdrawnMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+            const rows = wp.budgetBreakdown || [];
+            return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
+        }, 0) ?? 0;
+        console.log("Creating withdrawn proposal...");
+        const withdrawnProposal = await Proposal.create({
+            proposerId: withdrawnProposer.id,
+            voteId: vote._id,
+            title: withdrawnTemplate.title,
+            summary: withdrawnTemplate.summary,
+            status: "withdrawnByProposer",
+            submittedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+            totalBudget: withdrawnTotalBudget,
+            metaData: withdrawnMetaData,
+            withdrawalDetails: {
+                category: "Other",
+                userId: withdrawnProposer.id,
+                comment: "Proposer decided to withdraw and resubmit in a later round.",
+                date: now,
+            },
+        });
+        console.log(`  Withdrawn proposal created: ${withdrawnProposal._id}`);
 
         const commentTestProposal = liveProposals.find((p) => p.title === COMMENT_TEST_PROPOSAL_TITLE);
 
@@ -272,6 +458,27 @@ async function createDummyData() {
                 treasuryRepayment: "",
                 treasuryRepaymentCircumstances: "",
                 priorFunding: "",
+                administrator: "",
+                intersectAdministratorFeeConsent: false,
+                otherAdministrator: "",
+                contractingParty: {
+                    legalEntityType: "",
+                    legalEntityName: "",
+                    legalEntityRegistrationNumber: "",
+                    legalEntityCountry: "",
+                    legalEntityAddressLine1: "",
+                    legalEntityAddressLine2: "",
+                    legalEntityAddressLine3: "",
+                    govtIssuedIdNumber: "",
+                    countryOfResidence: "",
+                    residentialAddressLine1: "",
+                    residentialAddressLine2: "",
+                    residentialAddressLine3: "",
+                },
+                primaryContact: { name: "", email: "" },
+                signatoryContact: { title: "", name: "", email: "", authorization: false },
+                kycInfo: { submitted: "", email: "", totalProposalsSubmitted: "" },
+                independentAudits: "",
             },
         });
         console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${draftProposer.id}, ${draftProposer.name})`);
@@ -318,8 +525,9 @@ async function createDummyData() {
         console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
         console.log(`  Categories: ${categories.length}`);
         console.log(`  Proposers (all have User entries): ${PROPOSERS.map((p) => p.name).join(", ")}`);
-        console.log(`  Live proposals: 10 (random proposer, varying category per proposal)`);
+        console.log(`  Live proposals: 12 (for pagination; random proposer, varying category per proposal)`);
         liveProposals.forEach((p, i) => console.log(`    ${i + 1}. ${p.title}: ${p._id}`));
+        console.log(`  Withdrawn proposal: ${withdrawnProposal._id} (${withdrawnProposal.title})`);
         console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${draftProposer.id})`);
         console.log(`  Comments: ${createdComments.length} (on "${COMMENT_TEST_PROPOSAL_TITLE}" only)`);
