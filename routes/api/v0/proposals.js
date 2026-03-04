@@ -107,11 +107,12 @@ router.post("/", async (req, res) => {
       status === "draft"
         ? {
           trackRecord: "",
+          keyPerformanceIndicators: [],
           proposalDetails: { conversionRate: "", workPackages: [] },
         }
         : null;
 
-    const rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
+    let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
     const sanitizedMetaData = { ...rawMetaData };
 
     const doc = {
@@ -476,7 +477,9 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
-    const sanitizedMetaData = { ...metaData };
+    const rawMetaData = metaData;
+    const sanitizedMetaData = { ...rawMetaData };
+
     const totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
 
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
@@ -636,7 +639,7 @@ router.get("/:proposalId", async (req, res) => {
  * @access Public (Authentication optional - provides enhanced access when proposer matches authenticated user's ID)
  *
  * @query {string} [vote] - Filter by vote cycle (exact match, must be valid ObjectId). If provided, validates vote exists.
- * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category IDs). Filters proposals where metaData.strategyFramework.pillars contains any of the provided category IDs. Valid values are 24-char hex IDs from the Category schema.
+ * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category IDs). Filters proposals where metaData.strategyFramework.pillars contains any of the provided category IDs. Valid values are MongoDB ObjectIds from the Category schema.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
  * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
