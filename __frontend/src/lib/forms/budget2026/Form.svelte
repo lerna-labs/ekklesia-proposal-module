@@ -12,9 +12,6 @@
   import FormAdditionalInfo from "./FormAdditionalInfo.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import XIcon from "@lucide/svelte/icons/x";
   import { onMount, tick } from "svelte";
 
   const BUDGET2026_AUTOSAVE_KEY = "ekklesia.budget2026.autoSaveEnabled";
@@ -599,48 +596,10 @@
   />
 </form>
 
-<Dialog.Root bind:open={openLegalDialog}>
-  <Dialog.Content
-    showCloseButton={false}
-    class="fixed! inset-0! top-0! left-0! translate-x-0! translate-y-0! max-w-none! w-full min-w-0 overflow-y-auto overflow-x-hidden flex! flex-col items-center justify-start p-4 py-8 bg-transparent! rounded-none! border-0! shadow-none! pointer-events-none box-border"
-  >
-    <div
-      class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
-    >
-      <Dialog.Close
-        class="absolute inset-e-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
-        aria-label="Close"
-      >
-        <XIcon class="size-4" />
-      </Dialog.Close>
-      <Dialog.Header>
-        <Dialog.Title>Proposal submission legal declarations</Dialog.Title>
-        <Dialog.Description>
-          Confirm the legal declarations below before submitting your proposal.
-          These must be confirmed on every submit or re-submit.
-        </Dialog.Description>
-      </Dialog.Header>
-      <FormLegalDeclarations
-        bind:value={formData.metaData.legalDeclarations}
-        validationErrors={legalDeclarationsErrors}
-      />
-      <Dialog.Footer class="flex gap-2 shrink-0 mt-4">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={legalDialogSubmitting}
-          onclick={() => (openLegalDialog = false)}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          disabled={legalDialogSubmitting}
-          onclick={confirmLegalAndSubmit}
-        >
-          {legalDialogSubmitting ? "Submitting…" : "Confirm and submit"}
-        </Button>
-      </Dialog.Footer>
-    </div>
-  </Dialog.Content>
-</Dialog.Root>
+<FormLegalDeclarations
+  bind:value={formData.metaData.legalDeclarations}
+  validationErrors={legalDeclarationsErrors}
+  bind:open={openLegalDialog}
+  onConfirm={confirmLegalAndSubmit}
+  submitting={legalDialogSubmitting}
+/>
