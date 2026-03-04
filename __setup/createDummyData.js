@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 vote, import categories, 10 live proposals (random proposer per proposal), 1 draft.
+ * Create dummy data: 1 vote, import categories, 10 live proposals (random proposer, varying category per proposal), 1 draft.
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Category, Proposal, Comment, User.
  *
@@ -36,8 +36,9 @@ const LEGAL_DECLARATIONS = {
 };
 
 /** Build metaData for a live Budget 2026 proposal (matches validation/budget2026/validationScript.js). */
-function buildBudget2026MetaData(template, categoryId) {
-    const pillarId = categoryId ? String(categoryId) : null;
+function buildBudget2026MetaData(template, categoryIds) {
+    const ids = Array.isArray(categoryIds) ? categoryIds : (categoryIds ? [categoryIds] : []);
+    const pillars = ids.map((id) => String(id));
     const wpBudget = Math.floor(template.totalBudget * 0.6);
     return {
         treasuryDonationTxHash: "abc123def456789",
@@ -45,7 +46,7 @@ function buildBudget2026MetaData(template, categoryId) {
         trackRecord: "Previous community projects delivered on time.",
         estimatedDuration: 6,
         strategyFramework: {
-            pillars: pillarId ? [pillarId] : [],
+            pillars,
             pillarRationale: "Alignment with test budget priorities.",
             kpiAlignment: "KPIs aligned with roadmap deliverables.",
         },
@@ -204,8 +205,7 @@ async function createDummyData() {
             return PROPOSERS[Math.floor(Math.random() * PROPOSERS.length)];
         }
 
-        // 4. Create 10 live proposals (random proposer per proposal), then one draft
-        const categoryId = categories[0]._id;
+        // 4. Create 10 live proposals (random proposer per proposal, different category per proposal), then one draft
         const COMMENT_TEST_PROPOSAL_TITLE = "Comment test proposal";
 
         const LIVE_PROPOSAL_TEMPLATES = [
@@ -225,8 +225,15 @@ async function createDummyData() {
         for (let i = 0; i < LIVE_PROPOSAL_TEMPLATES.length; i++) {
             const t = LIVE_PROPOSAL_TEMPLATES[i];
             const proposer = randomProposer();
-            console.log(`Creating live proposal ${i + 1}/10: ${t.title} (proposer: ${proposer.name})...`);
-            const metaData = buildBudget2026MetaData(t, categoryId);
+            // Some proposals have one category, others have two (when we have at least 2 categories)
+            const singleCat = categories[i % categories.length];
+            const categoryIds =
+                categories.length >= 2 && i % 3 === 1
+                    ? [singleCat._id, categories[(i + 1) % categories.length]._id]
+                    : [singleCat._id];
+            const categoryTitles = categoryIds.map((id) => categories.find((c) => String(c._id) === String(id))?.title ?? id).join(", ");
+            console.log(`Creating live proposal ${i + 1}/10: ${t.title} (proposer: ${proposer.name}, categories: ${categoryTitles})...`);
+            const metaData = buildBudget2026MetaData(t, categoryIds);
             const totalBudget = metaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
                 const rows = wp.budgetBreakdown || [];
                 return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
@@ -311,7 +318,7 @@ async function createDummyData() {
         console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
         console.log(`  Categories: ${categories.length}`);
         console.log(`  Proposers (all have User entries): ${PROPOSERS.map((p) => p.name).join(", ")}`);
-        console.log(`  Live proposals: 10 (random proposer per proposal)`);
+        console.log(`  Live proposals: 10 (random proposer, varying category per proposal)`);
         liveProposals.forEach((p, i) => console.log(`    ${i + 1}. ${p.title}: ${p._id}`));
         console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${draftProposer.id})`);
