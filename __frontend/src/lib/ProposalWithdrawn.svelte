@@ -1,13 +1,12 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import * as Button from "$lib/components/ui/button";
+  import * as Alert from "$lib/components/ui/alert-dialog/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
 
   let { proposal, open = $bindable(false) } = $props();
 </script>
 
-<Dialog.Root bind:open>
-  <Dialog.Content class="sm:max-w-md">
+<Alert.Root bind:open>
+  <Alert.Content class="sm:max-w-md">
     {#if proposal}
       {@const wd = proposal.withdrawalDetails}
       {@const withdrawalDate = wd?.date
@@ -16,16 +15,16 @@
             timeStyle: "short",
           })
         : "—"}
-      <Dialog.Header>
-        <Dialog.Title>
+      <Alert.Header>
+        <Alert.Title>
           {proposal.status === "withdrawnByAdmin"
             ? "Proposal Withdrawn by Admin"
             : "Proposal Withdrawn by Proposer"}
-        </Dialog.Title>
-        <Dialog.Description>
+        </Alert.Title>
+        <Alert.Description>
           This proposal was withdrawn on {withdrawalDate}
-        </Dialog.Description>
-      </Dialog.Header>
+        </Alert.Description>
+      </Alert.Header>
       {#if wd}
         <div class="space-y-1 text-sm">
           {#if wd.category}
@@ -47,10 +46,8 @@
         </div>
       {/if}
     {/if}
-    <Dialog.Footer>
-      <Button.Root variant="outline" onclick={() => (open = false)}>
-        Close
-      </Button.Root>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+    <Alert.Footer>
+      <Alert.Cancel>Close</Alert.Cancel>
+    </Alert.Footer>
+  </Alert.Content>
+</Alert.Root>

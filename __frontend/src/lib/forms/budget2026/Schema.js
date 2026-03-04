@@ -1,9 +1,9 @@
 import { z } from "zod";
 import costCategoriesList from "./costCategories.json";
 
-/** Single link schema (for add-link dialog validation and supportingInfoLinks array). Title mandatory, 255 chars. */
+/** Single link schema (for add-link dialog validation and supportingInfoLinks array). Title mandatory, 100 chars. */
 export const supportingInfoLinkSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255),
+  title: z.string().min(1, "Title is required").max(100),
   url: z.string().url("Enter a valid URL"),
 });
 
@@ -81,7 +81,6 @@ export const workPackageSchema = z
       }
     }),
     supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-    estimatedDuration: z.string().max(200).optional().default(""),
     coreObjectives: z
     .array(z.string().min(1).max(1000))
     .min(1, "At least one core objective is required")

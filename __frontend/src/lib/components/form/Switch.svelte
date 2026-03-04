@@ -1,8 +1,8 @@
 <script>
   import * as Field from "$lib/components/ui/field/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
-  import ToolTip from "$lib/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
+  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
   let {
     id,
     label = "",

@@ -12,6 +12,7 @@
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
+  import { shortenString } from "$lib/utils.js";
 
   /** @type {{ categories?: Array<{ _id: string, title?: string }>, voteId?: string, class?: string }} */
   let { categories = [], voteId = "", class: className = "" } = $props();
@@ -45,12 +46,16 @@
         : `${pendingCategories.length} Categories`,
   );
 
-  /** True when any filter param is present (category, status) */
+  const proposerId = $derived(page.url.searchParams.get("proposer") ?? "");
+  const shortProposerId = $derived(shortenString(proposerId, 26, true));
+
+  /** True when any filter param is present (category, status, proposer) */
   const hasActiveFilters = $derived.by(() => {
     const cat = page.url.searchParams.get("category") ?? "";
     const hasStatus = page.url.searchParams.has("status");
     if (cat.trim()) return true;
     if (hasStatus) return true;
+    if (proposerId) return true;
     return false;
   });
 
@@ -116,6 +121,7 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.delete("category");
     searchParams.delete("status");
+    searchParams.delete("proposer");
     searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
@@ -142,9 +148,17 @@
       {/if}
     </Popover.Trigger>
     <Popover.Content align="end" class="w-64 p-3">
-      <h3 class="text-sm font-medium mb-2">Filter</h3>
+      <h3 class="text-sm font-medium mb-2">Filter Options</h3>
       <Separator.Root class="mb-3" />
       <div class="space-y-4">
+        {#if shortProposerId}
+          <div class="space-y-1">
+            <Label class="text-xs text-muted-foreground">Proposer</Label>
+            <p class="text-sm font-medium truncate" title={proposerId}>
+              {shortProposerId}
+            </p>
+          </div>
+        {/if}
         <div class="space-y-2">
           <Label class="text-xs text-muted-foreground">Category</Label>
           <Select.Root type="multiple" bind:value={pendingCategories}>

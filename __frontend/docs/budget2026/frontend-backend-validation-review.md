@@ -40,8 +40,8 @@ These are **not** bugs in the backend; they are gaps or UX improvements on the f
 | conversionRate | number > 0 | String, no client check | Empty or invalid value → backend reject. Optional: validate/coerce before submit. |
 | estimatedDuration | number ≥ 1 | Can be `""` | Empty → backend reject. Optional: initialise or coerce to number before submit. |
 | Title / summary min length | min 2 | minLength 2 in FormProjectDefinition | Aligned. |
-| Work package supporting doc title | max 255 | LinkListEditor 100 | Frontend stricter; safe. To allow up to 255, use a different prop/schema for that list. |
-| Additional Info link title | max 100 | LinkListEditor 100 | Aligned. Doc form-additional-info.md said 255; should say 100. |
+| Work package supporting doc title | max 100 | max 100 | Aligned. |
+| Additional Info link title | max 100 | max 100 | Aligned. |
 
 ---
 
@@ -60,14 +60,14 @@ These are **not** bugs in the backend; they are gaps or UX improvements on the f
 | conversionRate | number > 0 | string, no schema |
 | estimatedDuration | number ≥ 1 | can be "" |
 | Additional Info link title | 100 | 100 |
-| Work package supporting doc title | 255 | 100 |
+| Work package supporting doc title | 100 | 100 |
 
 ---
 
 ## 4. Optional improvements
 
 - **Cost categories:** `costCategories.json` exists under both `validation/budget2026/` and `__frontend/.../budget2026/`. Keep them in sync when categories change.
-- **form-additional-info.md:** Set link title max to **100** (not 255) to match backend and LinkListEditor.
+- **form-additional-info.md:** Link title max is **100** everywhere (validation, Schema.js, form-additional-info.md, form-work-packages.md).
 - **Client-side hints:** Optionally mirror backend rules (conversion rate, estimated duration, budget row count, milestone count) so users see errors before submit; backend remains the authority.
 
 ---

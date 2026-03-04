@@ -4,7 +4,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
+  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
   import { getLocalTimeZone, today } from "@internationalized/date";
 
   let {

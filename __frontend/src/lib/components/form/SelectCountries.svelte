@@ -1,7 +1,7 @@
 <script>
   import * as Field from "$lib/components/ui/field/index.js";
-  import ToolTip from "$lib/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/form/PrivateFieldIndicator.svelte";
+  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
   import * as Select from "$lib/components/ui/select/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 

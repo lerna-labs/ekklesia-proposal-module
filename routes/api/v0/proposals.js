@@ -107,21 +107,13 @@ router.post("/", async (req, res) => {
       status === "draft"
         ? {
           trackRecord: "",
-          strategicFocusArea: null,
           keyPerformanceIndicators: [],
           proposalDetails: { conversionRate: "", workPackages: [] },
         }
         : null;
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
-
-    // Empty string strategicFocusArea is allowed for draft; store as null for Mongoose ObjectId
     const sanitizedMetaData = { ...rawMetaData };
-    if (sanitizedMetaData.strategicFocusArea === "") {
-      sanitizedMetaData.strategicFocusArea = null;
-    } else if (sanitizedMetaData.strategicFocusArea) {
-      sanitizedMetaData.strategicFocusArea = new mongoose.Types.ObjectId(sanitizedMetaData.strategicFocusArea);
-    }
 
     const doc = {
       proposerId,
@@ -487,11 +479,6 @@ router.put("/:proposalId", async (req, res) => {
 
     const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
-    if (sanitizedMetaData.strategicFocusArea === "") {
-      sanitizedMetaData.strategicFocusArea = null;
-    } else if (sanitizedMetaData.strategicFocusArea) {
-      sanitizedMetaData.strategicFocusArea = new mongoose.Types.ObjectId(sanitizedMetaData.strategicFocusArea);
-    }
 
     const totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
 
@@ -652,7 +639,7 @@ router.get("/:proposalId", async (req, res) => {
  * @access Public (Authentication optional - provides enhanced access when proposer matches authenticated user's ID)
  *
  * @query {string} [vote] - Filter by vote cycle (exact match, must be valid ObjectId). If provided, validates vote exists.
- * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where metaData.strategicFocusArea matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.
+ * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category IDs). Filters proposals where metaData.strategyFramework.pillars contains any of the provided category IDs. Valid values are MongoDB ObjectIds from the Category schema.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
  * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
@@ -860,8 +847,19 @@ router.get("/", async (req, res) => {
         });
       }
 
-      // Filter by strategicFocusArea (category reference in Proposal schema) using $in for multiple values
-      query["metaData.strategicFocusArea"] = { $in: categoryObjectIds };
+      // Filter by category: metaData.strategyFramework.pillars (stored as strings in DB)
+      const categoryCondition = {
+        "metaData.strategyFramework.pillars": { $in: categoryIds },
+      };
+      if (query.$or) {
+        const existingOr = query.$or;
+        delete query.$or;
+        query.$and = query.$and || [];
+        query.$and.push({ $or: existingOr }, categoryCondition);
+      } else {
+        query.$and = query.$and || [];
+        query.$and.push(categoryCondition);
+      }
     }
 
     // Add proposer filter (exact match, must be valid bech32 address)
@@ -1015,7 +1013,10 @@ router.get("/", async (req, res) => {
       const { metaData, withdrawalReason, versions, signature, userId, commentCount, ...rest } = proposal;
       const shortenedMetaData = metaData
         ? {
-          strategicFocusArea: metaData.strategicFocusArea,
+          proposerDetails: metaData.proposerDetails ? { name: metaData.proposerDetails.name } : undefined,
+          contractingParty: metaData.contractingParty ? { legalEntityType: metaData.contractingParty.legalEntityType } : undefined,
+          strategyFramework: metaData.strategyFramework ? { pillars: metaData.strategyFramework.pillars } : undefined,
+          conversionRate: metaData.proposalDetails?.conversionRate ?? metaData.financialAndAdministrative?.conversionRate,
         }
         : null;
       return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };

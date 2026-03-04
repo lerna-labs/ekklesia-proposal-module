@@ -5,9 +5,10 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Label from "$lib/components/ui/label";
   import * as Select from "$lib/components/ui/select";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import * as Field from "$lib/components/ui/field";
   import Textarea from "$lib/components/form/Textarea.svelte";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
 
   let {
     open = $bindable(false),
@@ -101,18 +102,26 @@
 <Dialog.Root bind:open>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Withdraw proposal</Dialog.Title>
+      <Dialog.Title>Withdraw Proposal</Dialog.Title>
       <Dialog.Description>
         {#if proposal}
-          Choose a reason and add a comment. This will withdraw "{proposal.title ??
-            proposal._id}".
+          <div
+            class="mt-2 outline-destructive p-2 rounded-md border-destructive border-2 text-destructive text-medium"
+          >
+            You are about to withdraw Proposal "{proposal.title ??
+              proposal._id}". This proposal will be marked as withdrawn and
+            removed from the vote. For transparency reasons withdrawn proposals
+            remain visible to the public including your withdrawal reason and
+            comment. Proceed with caution, withdrawing a proposal cannot be
+            undone.
+          </div>
         {/if}
       </Dialog.Description>
     </Dialog.Header>
-    <div class="grid gap-4 py-4">
+    <div class="grid gap-4">
       <div class="grid gap-2">
         <Label.Root for="withdraw-reason" class="gap-0">
-          Reason
+          Withdrawal Reason
           <span class="text-(--mbo-electric-blue)">*</span>
         </Label.Root>
         <Select.Root
@@ -142,12 +151,12 @@
         {/if}
       </div>
       <div class="grid gap-0">
-        <Label.Root for="comment" class="gap-0">
-          Comment
-          <span class="text-(--mbo-electric-blue)">*</span>
-        </Label.Root>
         <Textarea
           id="comment"
+          label="Withdrawal Comment"
+          description="Explain why you are withdrawing this proposal. This comment will be visible to the public."
+          required
+          maxLength={1000}
           bind:value={comment}
           formSchema={withdrawSchema}
           {validationErrors}
@@ -156,20 +165,21 @@
       </div>
     </div>
     <Dialog.Footer class="gap-1">
-      <Button.Root
+      <Button
         variant="outline"
         disabled={submitting}
         onclick={() => (open = false)}
       >
         Cancel
-      </Button.Root>
-      <Button.Root
+      </Button>
+      <Button
         variant="destructive"
         disabled={submitting}
         onclick={confirmWithdraw}
       >
+        <Trash2Icon class="size-4" />
         {submitting ? "Withdrawing…" : "Withdraw proposal"}
-      </Button.Root>
+      </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>

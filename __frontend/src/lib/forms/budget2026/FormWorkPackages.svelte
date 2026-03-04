@@ -23,6 +23,7 @@
     value = $bindable([]),
     label = "Work Packages",
     description = "Break down the work into packages: summary, objectives, milestones, and budget per package.",
+    conversionRate,
     validationErrors,
     addButtonLabel = "Add Work Package",
     emptyMessage,
@@ -68,7 +69,6 @@
             url: (l?.url ?? "").trim(),
           }))
         : [],
-      estimatedDuration: pkg.estimatedDuration ?? "",
       coreObjectives:
         Array.isArray(pkg.coreObjectives) && pkg.coreObjectives.length > 0
           ? pkg.coreObjectives.map((o) => (o ?? "").trim())
@@ -131,7 +131,6 @@
     const final = normalizeWorkPackage({
       ...data,
       summary: data.summary ?? "",
-      estimatedDuration: data.estimatedDuration ?? "",
     });
     console.log("[FormWorkPackages] Validation passed, saving work package:", final);
     draftErrors = null;
@@ -236,6 +235,7 @@
               budgetBreakdown={pkg.budgetBreakdown ?? []}
               onBudgetBreakdownChange={(budgetBreakdown) =>
                 updatePackageBudgetBreakdown(index, budgetBreakdown)}
+              conversionRate={conversionRate}
               noMilestonesBreakdown={pkg.noMilestonesBreakdown ?? false}
               milestoneAlternative={pkg.milestoneAlternative ?? ""}
               onMilestoneOptionChange={(opts) =>

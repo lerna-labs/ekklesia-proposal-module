@@ -27,7 +27,7 @@ Data path: `formData.metaData.proposalDetails.workPackages` (array of work packa
 | Work Package Summary  | `workPackages[].summary`     | textarea          | 10000       | yes      | yes    |
 | Initiative Type       | `workPackages[].initiativeType` | radio          | —           | yes      | yes    |
 | Type of Proposal      | `workPackages[].proposalType` | radio             | —           | yes      | yes    |
-| Supporting Documents  | `workPackages[].supportingDocuments` | array of link | title 255   | no       | yes    |
+| Supporting Documents  | `workPackages[].supportingDocuments` | array of link | title 100   | no       | yes    |
 | Core Objectives       | `workPackages[].coreObjectives` | array of text   | 1000 each   | min 1    | yes    |
 | Expected Value (ROI)  | `workPackages[].expectedValue` | textarea         | 1000        | yes      | yes    |
 | Metric                | `workPackages[].metric`      | textarea          | 600         | yes      | yes    |
@@ -86,7 +86,7 @@ Data path: `formData.metaData.proposalDetails.workPackages` (array of work packa
 - **Label:** Supporting Documentation
 - **Description:** Link any relevant diagrams, technical specs, or planning documents (PDF, PNG, JPG).
 - **Type:** array of `{ title: string, url: string }` (LinkListEditor)
-- **Per-item:** title max 255, url valid URL
+- **Per-item:** title max 100, url valid URL
 - **required:** no (list may be empty)
 - **public:** yes
 

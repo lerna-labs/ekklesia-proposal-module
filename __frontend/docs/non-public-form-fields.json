@@ -1,96 +1,143 @@
 {
-  "description": "Form fields marked notPublic in the frontend (Administrative & Verification section). These show the PrivateFieldIndicator and are intended for Intersect only, not displayed publicly.",
-  "source": "FormAdministrative.svelte and related form components",
+  "description": "Form fields marked notPublic in the frontend (Budget Admin / Administrative & Verification section). These show the PrivateFieldIndicator and are intended for Intersect only, not displayed publicly.",
+  "source": "FormBudgetAdminIntersect.svelte, FormBudgetAdminOther.svelte and related form components",
   "fields": [
     {
-      "path": "metaData.financialAndAdministrative.otherAdministrators",
-      "id": "otherAdministrators",
-      "label": "Other Administrators?",
-      "section": "Financial & Administrative",
-      "condition": "When Intersect Administrator is No",
-      "component": "Textarea"
+      "path": "metaData.contractingParty.legalEntityType",
+      "id": "contractingParty",
+      "label": "Company or Individual",
+      "section": "Contracting Party",
+      "condition": "Administrator section",
+      "component": "RadioGroup"
     },
     {
-      "path": "metaData.contractingParty.legalEntityAddress",
-      "id": "legalEntityAddress",
-      "label": "Registered Address",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is A Company",
+      "path": "metaData.contractingParty.legalEntityName",
+      "id": "legalEntityName",
+      "label": "Legal Entity Name",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.legalEntityRegistrationNumber",
+      "id": "legalEntityRegistrationNumber",
+      "label": "Registration Number",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
       "component": "Input"
     },
     {
       "path": "metaData.contractingParty.legalEntityCountry",
       "id": "legalEntityCountry",
       "label": "Country of Incorporation",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is A Company",
-      "component": "FormCountrySelect"
-    },
-    {
-      "path": "metaData.contractingParty.legalEntityRegistrationNumber",
-      "id": "legalEntityRegistrationNumber",
-      "label": "Registration Number",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is A Company",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
       "component": "Input"
     },
     {
-      "path": "metaData.contractingParty.fullResidentialAddress",
-      "id": "fullResidentialAddress",
-      "label": "Full Residential Address",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is An Individual",
+      "path": "metaData.contractingParty.legalEntityAddressLine1",
+      "id": "legalEntityAddressLine1",
+      "label": "Registered Address line 1",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.legalEntityAddressLine2",
+      "id": "legalEntityAddressLine2",
+      "label": "Registered Address line 2",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.legalEntityAddressLine3",
+      "id": "legalEntityAddressLine3",
+      "label": "Registered Address line 3",
+      "section": "Entity Details",
+      "condition": "When Contracting Party is Company",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.govtIssuedIdNumber",
+      "id": "govtIssuedIdNumber",
+      "label": "Government-issued ID number",
+      "section": "Identity & Legal Details",
+      "condition": "When Contracting Party is Individual",
       "component": "Input"
     },
     {
       "path": "metaData.contractingParty.countryOfResidence",
       "id": "countryOfResidence",
       "label": "Country of Residence",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is An Individual",
-      "component": "FormCountrySelect"
+      "section": "Identity & Legal Details",
+      "condition": "When Contracting Party is Individual",
+      "component": "SelectCountries"
     },
     {
-      "path": "metaData.contractingParty.govtIssuedIdNumber",
-      "id": "govtIssuedIdNumber",
-      "label": "Govt Issued ID Number",
-      "section": "Contracting Party",
-      "condition": "When Contracting Party is An Individual",
+      "path": "metaData.contractingParty.residentialAddressLine1",
+      "id": "residentialAddressLine1",
+      "label": "Residential Address line 1",
+      "section": "Identity & Legal Details",
+      "condition": "When Contracting Party is Individual",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.residentialAddressLine2",
+      "id": "residentialAddressLine2",
+      "label": "Residential Address line 2",
+      "section": "Identity & Legal Details",
+      "condition": "When Contracting Party is Individual",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.contractingParty.residentialAddressLine3",
+      "id": "residentialAddressLine3",
+      "label": "Residential Address line 3",
+      "section": "Identity & Legal Details",
+      "condition": "When Contracting Party is Individual",
+      "component": "Input"
+    },
+    {
+      "path": "metaData.primaryContact.name",
+      "id": "name",
+      "label": "Primary Contact Full Name",
+      "section": "Primary Contact",
       "component": "Input"
     },
     {
       "path": "metaData.primaryContact.email",
       "id": "email",
       "label": "Primary Contact Email",
-      "section": "Contracting Party (Primary Contact)",
+      "section": "Primary Contact",
       "component": "Input"
     },
     {
       "path": "metaData.signatoryContact.title",
       "id": "title",
-      "label": "Signatory Title",
-      "section": "Signatory",
+      "label": "Signatory Title or Role",
+      "section": "Authorized Signatory",
       "component": "Input"
     },
     {
       "path": "metaData.signatoryContact.name",
       "id": "name",
-      "label": "Signatory Name",
-      "section": "Signatory",
+      "label": "Authorized signatory name",
+      "section": "Authorized Signatory",
       "component": "Input"
     },
     {
       "path": "metaData.signatoryContact.email",
       "id": "email",
-      "label": "Signatory Email",
-      "section": "Signatory",
+      "label": "Authorized signatory email",
+      "section": "Authorized Signatory",
       "component": "Input"
     },
     {
       "path": "metaData.signatoryContact.authorization",
       "id": "authorization",
       "label": "Signatory Authorization",
-      "section": "Signatory",
+      "section": "Authorized Signatory",
       "component": "Checkbox"
     },
     {
@@ -98,12 +145,12 @@
       "id": "submitted",
       "label": "KYC/KYB Submitted?",
       "section": "KYC/KYB",
-      "component": "Switch"
+      "component": "RadioGroup"
     },
     {
       "path": "metaData.kycInfo.email",
       "id": "email",
-      "label": "KYC Contact Email",
+      "label": "KYC Contact Email (If No)",
       "section": "KYC/KYB",
       "condition": "When KYC/KYB Submitted is No",
       "component": "Input"

@@ -44,9 +44,10 @@
   let saving = $state(false);
   let validationErrors = $state(null);
   let openLegalDialog = $state(false);
+  let showLegalErrors = $state(false);
   let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
-  async function onSave(payload) {
+  async function onSave(payload, options) {
     if (!proposal?._id) return;
     if (!proposal?.voteId) {
       toast.error("Proposal vote is missing.");
@@ -54,7 +55,7 @@
     }
     saving = true;
     validationErrors = null;
-    openLegalDialog = false;
+    if (!options?.fromLegalModal) openLegalDialog = false;
     try {
       const body = { ...payload, voteId: proposal.voteId };
       const res = await api.fetch(fetch, `/proposals/${proposal._id}`, {
@@ -63,26 +64,38 @@
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success("Proposal saved.");
-        goto("/dashboard");
+        toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
+        if (payload.status === "live") goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
-        const msg = json?.message ?? "Failed to save proposal.";
-        toast.error(msg);
-        if (payload.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors)) {
-          openLegalDialog = true;
+        const onlyLegalErrors =
+          payload.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
+        if (!onlyLegalErrors) {
+          const msg = json?.message ?? "Failed to save proposal.";
+          toast.error(msg);
         }
+        if (onlyLegalErrors) {
+          openLegalDialog = true;
+          showLegalErrors = options?.fromLegalModal === true;
+        }
+        throw new Error(json?.message ?? "Failed to save proposal.");
       }
     } catch (err) {
       if (err?.body?.errors != null) validationErrors = err.body.errors;
-      const msg =
-        typeof err?.body === "string"
-          ? err.body
-          : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
-      toast.error(msg);
-      if (payload?.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors)) {
-        openLegalDialog = true;
+      const onlyLegalErrors =
+        payload?.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
+      if (!onlyLegalErrors) {
+        const msg =
+          typeof err?.body === "string"
+            ? err.body
+            : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
+        toast.error(msg);
       }
+      if (onlyLegalErrors) {
+        openLegalDialog = true;
+        showLegalErrors = options?.fromLegalModal === true;
+      }
+      throw err;
     } finally {
       saving = false;
     }
@@ -98,6 +111,7 @@
   {categories}
   {proposal}
   {onSave}
+  {showLegalErrors}
   bind:validationErrors
   bind:openLegalDialog
 />

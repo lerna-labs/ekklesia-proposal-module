@@ -2,6 +2,7 @@
   /** @see __frontend/docs/budget2026/form-budget-summary.md Version: 1.0.0 */
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
+  import { formatAda, formatUsd } from "$lib/utils.js";
   let {
     formData = $bindable(),
     vote,
@@ -9,6 +10,40 @@
     proposal,
     validationErrors,
   } = $props();
+
+  const workPackages = $derived(
+    formData.metaData?.proposalDetails?.workPackages ?? [],
+  );
+  const conversionRateNum = $derived.by(() => {
+    const v = formData.metaData?.proposalDetails?.conversionRate;
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  });
+  const summaryRows = $derived.by(() => {
+    const list = Array.isArray(workPackages) ? workPackages : [];
+    const rate = conversionRateNum;
+    return list.map((wp) => {
+      const rows = Array.isArray(wp?.budgetBreakdown) ? wp.budgetBreakdown : [];
+      let totalAda = 0;
+      for (const row of rows) {
+        const t = row.total ?? Number(row.quantity) * Number(row.unitPrice);
+        if (Number.isFinite(t)) totalAda += t;
+      }
+      const totalUsd = rate != null ? totalAda * rate : null;
+      return {
+        title: (wp?.name ?? "").toString() || "—",
+        totalAda,
+        totalUsd,
+      };
+    });
+  });
+  const grandTotalAda = $derived(
+    summaryRows.reduce((sum, r) => sum + r.totalAda, 0),
+  );
+  const grandTotalUsd = $derived(
+    conversionRateNum != null ? grandTotalAda * conversionRateNum : null,
+  );
 
   const metaErrors = $derived(
     validationErrors?.properties?.metaData?.properties ?? {},
@@ -25,6 +60,58 @@
     properties: { priorFunding: metaErrors.priorFunding },
   });
 </script>
+
+{#if workPackages.length > 0}
+  <p class="mb-4">
+    Please review if all the details in the summary of your budget are correct
+    before going to the next step.
+  </p>
+  <div class="rounded-md border overflow-x-auto mb-8 bg-white">
+    <table class="w-full caption-bottom text-xs border-collapse">
+      <thead>
+        <tr class="border-b transition-colors hover:bg-muted/50">
+          <th class="h-9 px-3 text-left align-middle font-medium">
+            Work Package
+          </th>
+          <th
+            class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
+          >
+            ADA Cost
+          </th>
+          <th
+            class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
+          >
+            USD Equiv.
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each summaryRows as row, i (i)}
+          <tr class="border-b transition-colors hover:bg-muted/50">
+            <td class="p-3 align-top font-medium">{row.title}</td>
+            <td class="p-3 text-right align-top tabular-nums">
+              {formatAda(row.totalAda)}
+            </td>
+            <td class="p-3 text-right align-top tabular-nums">
+              {row.totalUsd != null ? "$" + formatUsd(row.totalUsd) : "—"}
+            </td>
+          </tr>
+        {/each}
+      </tbody>
+      <tfoot>
+        <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
+          <td class="p-3 font-medium">Total budget</td>
+          <td class="p-3 text-right tabular-nums">
+            {formatAda(grandTotalAda)}
+          </td>
+          <td class="p-3 text-right tabular-nums">
+            {grandTotalUsd != null ? "$" + formatUsd(grandTotalUsd) : "—"}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+{/if}
 
 <h3>
   Will any portion of the requested funds be returned to the Cardano Treasury?
@@ -49,24 +136,27 @@
   class="mb-8"
 />
 
-<h3>If yes, under what circumstances would a repayment occur?</h3>
+{#if formData.metaData.treasuryRepayment === "Yes"}
+  <h3>Under what circumstances would a repayment occur?</h3>
 
-<p>
-  Describe the specific conditions or triggers that would result in funds being
-  returned to the Treasury (e.g. surplus funds, revenue thresholds, loan,
-  project cancellation).
-</p>
+  <p>
+    Describe the specific conditions or triggers that would result in funds
+    being returned to the Treasury (e.g. surplus funds, revenue thresholds,
+    loan, project cancellation).
+  </p>
 
-<Textarea
-  id="treasuryRepaymentCircumstances"
-  bind:value={formData.metaData.treasuryRepaymentCircumstances}
-  label="Repayment Circumstances"
-  description="If repayment applies, describe the specific conditions under which funds would be returned to the Treasury."
-  placeholder="Enter Explanation"
-  maxLength={10000}
-  validationErrors={treasuryRepaymentCircumstancesErrors}
-  class="mb-8"
-/>
+  <Textarea
+    id="treasuryRepaymentCircumstances"
+    bind:value={formData.metaData.treasuryRepaymentCircumstances}
+    label="Repayment Circumstances"
+    description="If repayment applies, describe the specific conditions under which funds would be returned to the Treasury."
+    placeholder="Enter Explanation"
+    maxLength={10000}
+    required
+    validationErrors={treasuryRepaymentCircumstancesErrors}
+    class="mb-8"
+  />
+{/if}
 
 <h3>
   Have you previously received funding from Cardano or related ecosystem

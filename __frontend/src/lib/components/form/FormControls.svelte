@@ -11,7 +11,7 @@
     autoSaveEnabled = $bindable(true),
   } = $props();
 
-  const AUTO_SAVE_INTERVAL_MS = 1 * 60 * 1000; // 1 minute
+  const AUTO_SAVE_INTERVAL_MS = 120 * 1000; // 2 minutes
 
   /** Snapshot of current form data for dirty check (serialized payload). */
   let formDataSnapshot = $derived(
@@ -74,7 +74,7 @@
     const payload = getPayload("draft");
     Promise.resolve(onSave(payload))
       .then(() => {
-        initialSnapshot = formDataSnapshot;
+        initialSnapshot = JSON.stringify(payload);
       })
       .catch(() => {});
   }
@@ -84,7 +84,7 @@
     const payload = getPayload("live");
     Promise.resolve(onSave(payload))
       .then(() => {
-        initialSnapshot = formDataSnapshot;
+        initialSnapshot = JSON.stringify(payload);
       })
       .catch(() => {});
   }
@@ -94,14 +94,28 @@
     submitLive();
   }
 
+  /** Reset dirty baseline to current form state. Call after loading/prefilling proposal data so the form is not considered dirty on first paint. */
+  export function resetDirtyBaseline() {
+    if (getPayload) initialSnapshot = JSON.stringify(getPayload(formData.status));
+  }
+
   /** Auto-save draft at interval when enabled. */
   $effect(() => {
-    if (!autoSaveEnabled || formData.status !== "draft" || !onSave || !getPayload)
+    if (
+      !autoSaveEnabled ||
+      formData.status !== "draft" ||
+      !onSave ||
+      !getPayload
+    )
       return;
     const id = setInterval(() => {
       console.log("Auto-save running", new Date().toISOString());
       const payload = getPayload("draft");
-      Promise.resolve(onSave(payload)).catch(() => {});
+      Promise.resolve(onSave(payload))
+        .then(() => {
+          initialSnapshot = JSON.stringify(payload);
+        })
+        .catch(() => {});
     }, AUTO_SAVE_INTERVAL_MS);
     return () => clearInterval(id);
   });

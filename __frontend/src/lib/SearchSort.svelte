@@ -13,11 +13,11 @@
   import CheckIcon from "@lucide/svelte/icons/check";
 
   const SORT_OPTIONS = [
-    { value: "title", label: "Title" },
+    { value: "title", label: "Proposal Title" },
     { value: "totalBudget", label: "Total Budget" },
+    { value: "commentCount", label: "Comment Count" },
     { value: "date", label: "Submission Date" },
     { value: "updatedAt", label: "Last Updated" },
-    { value: "commentCount", label: "Comments" },
   ];
 
   const VALID_SORT = new Set(SORT_OPTIONS.map((o) => o.value));
@@ -57,6 +57,7 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("sort", pendingSort);
     searchParams.set("direction", pendingDescending ? "desc" : "asc");
+    searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     sort = pendingSort;
@@ -68,6 +69,7 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("sort", "title");
     searchParams.set("direction", "asc");
+    searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     sort = "title";
@@ -95,7 +97,7 @@
       {/if}
     </Popover.Trigger>
     <Popover.Content align="end" class="w-64 p-3">
-      <h3 class="text-sm font-medium mb-2">Sort</h3>
+      <h3 class="text-sm font-medium mb-2">Sort Options</h3>
       <Separator.Root class="mb-3" />
       <div class="space-y-4">
         <div class="space-y-2">
