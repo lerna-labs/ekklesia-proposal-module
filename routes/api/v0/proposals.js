@@ -17,17 +17,17 @@ import { loadValidationScript } from "../../../validation/loadValidationScript.j
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
 
 /**
- * Compute total budget (ADA) from metaData.executionRoadmap.workPackages, same logic as FormFinancialSummary.
+ * Compute total budget (ADA) from metaData.proposalDetails.workPackages, same logic as FormFinancialSummary.
  * Sums each budgetBreakdown row's total or quantity*unitPrice.
  * @param {Object} metaData - proposal metaData
  * @returns {number} grand total in ADA
  */
 function computeTotalBudgetFromMetaData(metaData) {
-  if (!metaData?.executionRoadmap?.workPackages || !Array.isArray(metaData.executionRoadmap.workPackages)) {
+  if (!metaData?.proposalDetails?.workPackages || !Array.isArray(metaData.proposalDetails.workPackages)) {
     return 0;
   }
   let total = 0;
-  for (const pkg of metaData.executionRoadmap.workPackages) {
+  for (const pkg of metaData.proposalDetails.workPackages) {
     const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
     for (const row of rows) {
       const ada = Number(row?.total ?? (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN));
@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
             trackRecord: "",
             strategicFocusArea: null,
             keyPerformanceIndicators: [],
-            executionRoadmap: { projectStartDate: null, projectEndDate: null, workPackages: [] },
+            proposalDetails: { conversionRate: "", workPackages: [] },
             financialAndAdministrative: {},
             contractingParty: {},
             primaryContact: {},
@@ -119,17 +119,6 @@ router.post("/", async (req, res) => {
         : null;
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
-
-    // Draft: treat empty enum fields as unset so Mongoose optional + enum doesn't reject ""
-    if (status === "draft") {
-      if (rawMetaData.proposalType === "") rawMetaData.proposalType = undefined;
-      if (rawMetaData.financialAndAdministrative?.initiativeType === "") {
-        rawMetaData = {
-          ...rawMetaData,
-          financialAndAdministrative: { ...rawMetaData.financialAndAdministrative, initiativeType: undefined },
-        };
-      }
-    }
 
     // Empty string strategicFocusArea is allowed for draft; store as null for Mongoose ObjectId
     const sanitizedMetaData = { ...rawMetaData };
@@ -501,17 +490,7 @@ router.put("/:proposalId", async (req, res) => {
       });
     }
 
-    let rawMetaData = metaData;
-    if (status === "draft") {
-      if (rawMetaData.proposalType === "") rawMetaData = { ...rawMetaData, proposalType: undefined };
-      if (rawMetaData.financialAndAdministrative?.initiativeType === "") {
-        rawMetaData = {
-          ...rawMetaData,
-          financialAndAdministrative: { ...rawMetaData.financialAndAdministrative, initiativeType: undefined },
-        };
-      }
-    }
-
+    const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
     if (sanitizedMetaData.strategicFocusArea === "") {
       sanitizedMetaData.strategicFocusArea = null;
@@ -679,8 +658,6 @@ router.get("/:proposalId", async (req, res) => {
  *
  * @query {string} [vote] - Filter by vote cycle (exact match, must be valid ObjectId). If provided, validates vote exists.
  * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category ObjectIds). Filters proposals where metaData.strategicFocusArea matches any of the provided Category ObjectIds. Valid values are MongoDB ObjectIds from the Category schema.
- * @query {string} [proposalType] - Filter by proposal type (exact match). Valid values: 'Technical (software/IT)', 'Non-technical'.
- * @query {string} [initiativeType] - Filter by initiative type (exact match). Valid values: 'New Initiative', 'Maintenance'.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
  * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
@@ -701,8 +678,6 @@ router.get("/", async (req, res) => {
       search,
       vote: voteParam,
       category,
-      proposalType: proposalTypeParam,
-      initiativeType: initiativeTypeParam,
       proposer,
       status: statusParam,
       sort: sortParam,
@@ -894,32 +869,6 @@ router.get("/", async (req, res) => {
       query["metaData.strategicFocusArea"] = { $in: categoryObjectIds };
     }
 
-    // Add proposalType filter (exact match)
-    const PROPOSAL_TYPES = ["Technical (software/IT)", "Non-technical"];
-    if (proposalTypeParam) {
-      const proposalType = String(proposalTypeParam).trim();
-      if (!PROPOSAL_TYPES.includes(proposalType)) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid proposalType parameter. Must be one of: ${PROPOSAL_TYPES.join(", ")}.`,
-        });
-      }
-      query["metaData.proposalType"] = proposalType;
-    }
-
-    // Add initiativeType filter (exact match; stored in metaData.financialAndAdministrative.initiativeType)
-    const INITIATIVE_TYPES = ["New Initiative", "Maintenance"];
-    if (initiativeTypeParam) {
-      const initiativeType = String(initiativeTypeParam).trim();
-      if (!INITIATIVE_TYPES.includes(initiativeType)) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid initiativeType parameter. Must be one of: ${INITIATIVE_TYPES.join(", ")}.`,
-        });
-      }
-      query["metaData.financialAndAdministrative.initiativeType"] = initiativeType;
-    }
-
     // Add proposer filter (exact match, must be valid bech32 address)
     if (proposer) {
       const proposerTerm = proposer.trim();
@@ -1072,8 +1021,6 @@ router.get("/", async (req, res) => {
       const shortenedMetaData = metaData
         ? {
             strategicFocusArea: metaData.strategicFocusArea,
-            proposalType: metaData.proposalType,
-            initiativeType: metaData.financialAndAdministrative?.initiativeType,
           }
         : null;
       return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };
