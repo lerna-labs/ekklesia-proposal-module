@@ -21,6 +21,7 @@
   <Popover.Trigger
     type="button"
     class="w-fit rounded-md border border-border px-2 py-1.5 text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 hover:bg-muted/50 transition-colors"
+    title="View budget in USD equivalent"
     aria-label="View USD equivalent"
   >
     <div class="flex items-center divide-x divide-border text-xs">
@@ -30,11 +31,11 @@
       </span>
     </div>
   </Popover.Trigger>
-  <Popover.Content class="w-auto p-2" align="end" side="bottom">
-    <table class="text-xs w-full border-collapse">
+  <Popover.Content class="w-auto max-w-[16rem] p-2" align="end" side="bottom">
+    <table class="text-xs w-full border-collapse table-fixed">
       <tbody>
         <tr>
-          <td class="text-muted-foreground pr-2 py-0.5">USD Equivalent:</td>
+          <td class="text-black pr-2 py-0.5">USD Equivalent:</td>
           <td class="font-medium tabular-nums text-right">
             {#if hasRate}
               ${formatUsd(usdAmount)}
@@ -45,13 +46,25 @@
         </tr>
         {#if hasRate}
           <tr>
-            <td class="text-muted-foreground pr-2 py-0.5">Conversion Rate:</td>
+            <td class="text-black pr-2 py-0.5 pb-2">Conversion Rate:</td>
             <td class="font-medium tabular-nums text-right">
               {formatRate(rate)} ADA/USD
             </td>
           </tr>
         {/if}
       </tbody>
+      <tfoot>
+        <tr>
+          <td
+            colspan="2"
+            class="text-muted-foreground pt-2 border-t border-border"
+          >
+            <span class="font-medium">Note:</span>
+            The USD equivalent is calculated using the individual conversion rate
+            set by the proposer for this proposal.
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </Popover.Content>
 </Popover.Root>
