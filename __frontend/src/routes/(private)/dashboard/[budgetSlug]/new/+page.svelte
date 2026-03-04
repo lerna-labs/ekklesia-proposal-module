@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
   import DefaultForm from "$lib/forms/default/Form.svelte";
@@ -59,6 +59,7 @@
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success("Proposal created.");
+        await invalidateAll();
         goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;

@@ -115,7 +115,7 @@
         class="flex flex-row flex-wrap items-center justify-between gap-3"
       >
         <Card.Title>
-          My proposals
+          My Proposals
           <span class="text-muted-foreground font-normal">
             ({proposalPagination.totalItems})
           </span>
@@ -157,21 +157,21 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-border">
-                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top">
+                  <th class="text-left font-medium py-3 pl-0 pr-4 align-middle">
                     Title
                   </th>
                   <th
-                    class="text-right font-medium py-3 px-4 whitespace-nowrap align-top"
+                    class="text-right font-medium py-3 px-4 whitespace-nowrap align-middle"
                   >
                     Total Budget
                   </th>
                   <th
-                    class="text-left font-medium py-3 px-4 whitespace-nowrap align-top"
+                    class="text-left font-medium py-3 px-4 whitespace-nowrap align-middle"
                   >
                     Last updated
                   </th>
                   <th
-                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-top"
+                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-middle"
                   >
                     Actions
                   </th>
@@ -193,7 +193,7 @@
                       ? 'border-border'
                       : 'border-border/50'}"
                   >
-                    <td class="py-3 pl-0 pr-4 text-left align-top">
+                    <td class="py-3 pl-0 pr-4 text-left align-middle">
                       <div class="flex flex-wrap items-center gap-2">
                         {#if isWithdrawn}
                           <span class="font-medium">
@@ -233,18 +233,18 @@
                       </div>
                     </td>
                     <td
-                      class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-top"
+                      class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-middle"
                     >
                       {proposal.totalBudget != null
                         ? `${formatAda(proposal.totalBudget)} ADA`
                         : "—"}
                     </td>
                     <td
-                      class="py-3 px-4 text-muted-foreground whitespace-nowrap align-top"
+                      class="py-3 px-4 text-muted-foreground whitespace-nowrap align-middle"
                     >
                       {formatUpdatedAt(proposal.updatedAt)}
                     </td>
-                    <td class="py-3 pr-0 pl-4 text-right align-top">
+                    <td class="py-3 pr-0 pl-4 text-right align-middle">
                       <div class="flex items-center justify-end gap-1">
                         {#if isWithdrawn}
                           <Button.Root
@@ -338,7 +338,7 @@
           </div>
 
           {#if proposalPagination.totalPages > 1}
-            <div class="px-6 pb-6 mt-8">
+            <div class="px-6 pb-2 mt-8">
               <Pagination.Root
                 count={proposalPagination.totalItems}
                 page={proposalPagination.currentPage}
