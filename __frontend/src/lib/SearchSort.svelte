@@ -13,11 +13,11 @@
   import CheckIcon from "@lucide/svelte/icons/check";
 
   const SORT_OPTIONS = [
-    { value: "title", label: "Title" },
+    { value: "title", label: "Proposal Title" },
     { value: "totalBudget", label: "Total Budget" },
+    { value: "commentCount", label: "Comment Count" },
     { value: "date", label: "Submission Date" },
     { value: "updatedAt", label: "Last Updated" },
-    { value: "commentCount", label: "Comments" },
   ];
 
   const VALID_SORT = new Set(SORT_OPTIONS.map((o) => o.value));
@@ -57,6 +57,7 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("sort", pendingSort);
     searchParams.set("direction", pendingDescending ? "desc" : "asc");
+    searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     sort = pendingSort;
@@ -68,6 +69,7 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("sort", "title");
     searchParams.set("direction", "asc");
+    searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     sort = "title";
