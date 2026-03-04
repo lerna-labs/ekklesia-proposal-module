@@ -69,7 +69,6 @@
             url: (l?.url ?? "").trim(),
           }))
         : [],
-      estimatedDuration: pkg.estimatedDuration ?? "",
       coreObjectives:
         Array.isArray(pkg.coreObjectives) && pkg.coreObjectives.length > 0
           ? pkg.coreObjectives.map((o) => (o ?? "").trim())
@@ -132,7 +131,6 @@
     const final = normalizeWorkPackage({
       ...data,
       summary: data.summary ?? "",
-      estimatedDuration: data.estimatedDuration ?? "",
     });
     console.log("[FormWorkPackages] Validation passed, saving work package:", final);
     draftErrors = null;

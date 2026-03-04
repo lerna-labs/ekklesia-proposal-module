@@ -89,7 +89,6 @@ and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
 | Work Package *                | `workPackages[].title`               | Yes         | 100 chars                            | Short text.                                                      |
 | Scope of Work *               | `workPackages[].scope`               | Yes         | 2000 chars                           | Text area.                                                       |
 | Supporting Documentation Link | `workPackages[].supportingDocuments` | No          | Array of `{ title, url }`            | Title 1–255 chars, URL required; external links need disclaimer. |
-| (WP duration)                 | `workPackages[].estimatedDuration`   | No          | String, max 200                      | e.g. "3 months".                                                 |
 | Core Objectives *             | `workPackages[].coreObjectives`      | Yes         | Array of strings, each max 400 chars | Repeatable long text.                                            |
 | Expected Value (ROI) *        | `workPackages[].expectedValue`       | Yes         | 600 chars                            | Long text.                                                       |
 | Metric *                      | `workPackages[].metric`              | Yes         | 600 chars                            | Long text.                                                       |

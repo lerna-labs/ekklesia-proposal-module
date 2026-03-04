@@ -81,7 +81,6 @@ export const workPackageSchema = z
       }
     }),
     supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-    estimatedDuration: z.string().max(200).optional().default(""),
     coreObjectives: z
     .array(z.string().min(1).max(1000))
     .min(1, "At least one core objective is required")
