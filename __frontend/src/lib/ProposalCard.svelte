@@ -9,6 +9,7 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import HashIcon from "@lucide/svelte/icons/hash";
   import UserIcon from "@lucide/svelte/icons/user";
+  import HomeIcon from "@lucide/svelte/icons/home";
   import LandmarkIcon from "@lucide/svelte/icons/landmark";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import * as Popover from "$lib/components/ui/popover";
@@ -146,10 +147,17 @@
       {/if}
       {#if proposal.metaData?.proposerDetails?.name != null && String(proposal.metaData.proposerDetails.name).trim() !== ""}
         <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <UserIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+          {#if proposal.metaData?.contractingParty?.legalEntityType === "company"}
+            <HomeIcon
+              class="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {:else}
+            <UserIcon
+              class="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {/if}
           <span class={labelClass}>Proposer Name:</span>
           {#if proposerHref}
             <a
