@@ -21,6 +21,7 @@
   let proposalPagination = $derived(data.proposals.pagination);
   let voteSlugs = $derived(data.voteSlugs ?? {});
   let voteTitles = $derived(data.voteTitles ?? {});
+  let votes = $derived(data.votes ?? []);
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
@@ -114,24 +115,40 @@
         class="flex flex-row flex-wrap items-center justify-between gap-3"
       >
         <Card.Title>
-          My proposals
+          My Proposals
           <span class="text-muted-foreground font-normal">
             ({proposalPagination.totalItems})
           </span>
         </Card.Title>
-        <Button.Root
-          variant="outline"
-          class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
-          href="/dashboard/new"
-          aria-label="New proposal"
-          size="sm"
-        >
-          <PlusIcon class="size-4" />
-          New proposal
-        </Button.Root>
+        {#if votes.length === 1}
+          <Button.Root
+            variant="outline"
+            class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+            href="/dashboard/{votes[0].slug}/new"
+            aria-label="New proposal"
+            size="sm"
+          >
+            <PlusIcon class="size-4" />
+            New proposal
+          </Button.Root>
+        {:else if votes.length > 1}
+          <div class="flex items-center gap-1">
+            <Button.Root
+              variant="outline"
+              class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+              href="/dashboard/{votes[0].slug}/new"
+              aria-label="New proposal"
+              size="sm"
+            >
+              <PlusIcon class="size-4" />
+              New proposal
+            </Button.Root>
+            <!-- TODO: dropdown for other votes -->
+          </div>
+        {/if}
       </Card.Header>
       <Card.Content>
-        {#if !proposals || proposals.length === 0}
+        {#if proposalPagination.totalItems === 0}
           <p class="text-center text-muted-foreground">
             You have not created any proposals yet.
           </p>
@@ -140,45 +157,67 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-border">
-                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top">Title</th>
-                  <th class="text-right font-medium py-3 px-4 whitespace-nowrap align-top">Total Budget</th>
-                  <th class="text-left font-medium py-3 px-4 whitespace-nowrap align-top">Last updated</th>
-                  <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-top">
+                  <th class="text-left font-medium py-3 pl-0 pr-4 align-middle">
+                    Title
+                  </th>
+                  <th
+                    class="text-right font-medium py-3 px-4 whitespace-nowrap align-middle"
+                  >
+                    Total Budget
+                  </th>
+                  <th
+                    class="text-left font-medium py-3 px-4 whitespace-nowrap align-middle"
+                  >
+                    Last updated
+                  </th>
+                  <th
+                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-middle"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {#each proposals as proposal, i (proposal._id)}
-                  {@const editHref = `/dashboard/${proposal._id}/edit`}
+                  {@const slug = voteSlugs[proposal.voteId]}
+                  {@const editHref = slug
+                    ? `/dashboard/${slug}/${proposal._id}`
+                    : null}
                   {@const viewUrl = viewHref(proposal)}
                   {@const isLastRow = i === proposals.length - 1}
-                  {@const isWithdrawn = proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
+                  {@const isWithdrawn =
+                    proposal.status === "withdrawnByProposer" ||
+                    proposal.status === "withdrawnByAdmin"}
                   <tr
                     class="border-b hover:bg-muted/50 {isLastRow
                       ? 'border-border'
                       : 'border-border/50'}"
                   >
-                    <td class="py-3 pl-0 pr-4 text-left align-top">
+                    <td class="py-3 pl-0 pr-4 text-left align-middle">
                       <div class="flex flex-wrap items-center gap-2">
                         {#if isWithdrawn}
                           <span class="font-medium">
                             {proposal.title ?? proposal._id}
                           </span>
-                        {:else}
+                        {:else if editHref}
                           <a
                             href={editHref}
                             class="text-primary hover:underline font-medium"
                           >
                             {proposal.title ?? proposal._id}
                           </a>
+                        {:else}
+                          <span class="font-medium">
+                            {proposal.title ?? proposal._id}
+                          </span>
                         {/if}
                         {#if isWithdrawn}
                           <button
                             type="button"
                             class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-destructive text-white cursor-pointer hover:bg-destructive/90"
                             aria-label="View withdrawal details"
-                            onclick={() => openWithdrawalDetailsDialog(proposal)}
+                            onclick={() =>
+                              openWithdrawalDetailsDialog(proposal)}
                           >
                             {proposal.status === "withdrawnByAdmin"
                               ? "Withdrawn by Admin"
@@ -193,15 +232,19 @@
                         {/if}
                       </div>
                     </td>
-                    <td class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-top">
+                    <td
+                      class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-middle"
+                    >
                       {proposal.totalBudget != null
                         ? `${formatAda(proposal.totalBudget)} ADA`
                         : "—"}
                     </td>
-                    <td class="py-3 px-4 text-muted-foreground whitespace-nowrap align-top">
+                    <td
+                      class="py-3 px-4 text-muted-foreground whitespace-nowrap align-middle"
+                    >
                       {formatUpdatedAt(proposal.updatedAt)}
                     </td>
-                    <td class="py-3 pr-0 pl-4 text-right align-top">
+                    <td class="py-3 pr-0 pl-4 text-right align-middle">
                       <div class="flex items-center justify-end gap-1">
                         {#if isWithdrawn}
                           <Button.Root
@@ -213,13 +256,23 @@
                           >
                             <PencilIcon class="size-4" />
                           </Button.Root>
-                        {:else}
+                        {:else if editHref}
                           <Button.Root
                             variant="outline"
                             size="icon"
                             href={editHref}
                             aria-label="Edit proposal"
                             title="Edit proposal"
+                          >
+                            <PencilIcon class="size-4" />
+                          </Button.Root>
+                        {:else}
+                          <Button.Root
+                            variant="outline"
+                            size="icon"
+                            disabled
+                            aria-label="Edit proposal"
+                            title="Edit (vote slug unknown)"
                           >
                             <PencilIcon class="size-4" />
                           </Button.Root>
@@ -285,7 +338,7 @@
           </div>
 
           {#if proposalPagination.totalPages > 1}
-            <div class="px-6 pb-6">
+            <div class="px-6 pb-2 mt-8">
               <Pagination.Root
                 count={proposalPagination.totalItems}
                 page={proposalPagination.currentPage}

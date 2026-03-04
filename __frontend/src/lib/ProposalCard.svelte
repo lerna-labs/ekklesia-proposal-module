@@ -141,8 +141,8 @@
         </span>
         <BudgetConversion
           totalBudget={proposal.totalBudget}
-          conversionRate={proposal.metaData?.financialAndAdministrative
-            ?.conversionRate}
+          conversionRate={proposal.metaData?.proposalDetails?.conversionRate
+            ?? proposal.metaData?.financialAndAdministrative?.conversionRate}
           class="text-sm"
         />
       </div>
@@ -153,23 +153,6 @@
         <span class="text-sm">{categoryLabel}</span>
       </div>
     {/if}
-    {#if proposal.metaData?.proposalType}
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-muted-foreground">
-          Proposal type:
-        </span>
-        <span class="text-sm">{proposal.metaData.proposalType}</span>
-      </div>
-    {/if}
-    {#if proposal.metaData?.initiativeType}
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-medium text-muted-foreground">
-          Initiative type:
-        </span>
-        <span class="text-sm">{proposal.metaData.initiativeType}</span>
-      </div>
-    {/if}
-
     {#if proposal.withdrawalDetails}
       {@const wd = proposal.withdrawalDetails}
       {@const withdrawalDate = wd?.date

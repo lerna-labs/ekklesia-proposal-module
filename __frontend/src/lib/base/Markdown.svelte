@@ -117,6 +117,12 @@
 </Dialog.Root>
 
 <style>
+  /* Propagate wrapper font-size/line-height to rendered markdown content (e.g. when class="text-[0.65rem]" is passed). */
+  :global(div.markdown *) {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
   :global(div.markdown a) {
     color: var(--mbo-electric-blue) !important;
     text-decoration: none !important;

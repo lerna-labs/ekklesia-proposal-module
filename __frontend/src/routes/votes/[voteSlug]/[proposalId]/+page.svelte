@@ -1,16 +1,19 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import ProposalCard from "$lib/ProposalCard.svelte";
-  import Comments from "$lib/Comments.svelte";
+  import Comments from "$lib/comments/Comments.svelte";
   let { data } = $props();
 
   let { vote, proposal, categories = [], commentCount } = $derived(data);
 
   const isWithdrawn = $derived(
-    proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"
+    proposal?.status === "withdrawnByAdmin" ||
+      proposal?.status === "withdrawnByProposer",
   );
   const showComments = $derived(
-    proposal && proposal.status !== "draft" && (!isWithdrawn || (commentCount ?? 0) > 0)
+    proposal &&
+      proposal.status !== "draft" &&
+      (!isWithdrawn || (commentCount ?? 0) > 0),
   );
 </script>
 

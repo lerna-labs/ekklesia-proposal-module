@@ -19,7 +19,7 @@ const proposalSchema = new Schema(
     },
     title: { type: String, required: false },
     summary: { type: String, required: false },
-    /** Variable payload (trackRecord, executionRoadmap, legalDeclarations, etc.). Shape validated by vote validationScript on submit. */
+    /** Variable payload (trackRecord, proposalDetails, legalDeclarations, etc.). Shape validated by vote validationScript on submit. */
     metaData: {
       type: Schema.Types.Mixed,
       default: () => ({}),

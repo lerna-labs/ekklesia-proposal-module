@@ -19,17 +19,24 @@ const supportingInfoLinkSchema = z.object({
   url: z.string().url("Enter a valid URL"),
 });
 
+/** Additional Info section: links with title max 255 (per form-additional-info.md). */
+const supportingInfoLinkSchemaOtherInfo = z.object({
+  title: z.string().min(1, "Title is required").max(100),
+  url: z.string().min(1, "URL is required").url("Enter a valid URL"),
+});
+
 const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
-    errorMap: () => ({ message: "Cost category is required" }),
+    error: "Cost category is required",
   }),
+  name: z.string().min(1, "Item name is required").max(200),
   description: z.string().min(1, "Item description is required").max(600),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .min(0.001, "Quantity is required and must be greater than 0"),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
-    .min(0, "Unit cost in ADA is required and must be 0 or greater"),
+    .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
 });
 
 const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
@@ -38,107 +45,116 @@ const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
 }));
 
 const milestoneSchema = z.object({
-  milestoneName: z.string().min(1, "Milestone name is required").max(100),
-  deliverables: z.string().min(1, "Deliverables are required").max(600),
-  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(600),
-  duration: z.string().min(1, "Duration is required").max(200),
+  name: z.string().min(1, "Milestone name is required").max(100),
+  deliverables: z.string().min(1, "Deliverables are required").max(4000),
+  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(4000),
+  duration: z.string().min(1, "Duration is required").max(100),
 });
 
-const workPackageSchema = z.object({
-  title: z.string().min(1, "Work Package name is required").max(100),
-  scope: z.string().min(1, "Scope of Work is required").max(2000),
-  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-  estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
-  coreObjectives: z.array(z.string().min(1).max(400)),
-  expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(600),
-  metric: z.string().min(1, "Metric is required").max(600),
-  milestones: z.array(milestoneSchema).optional().default([]),
-  budgetBreakdown: z
-    .array(budgetRowSchema)
-    .min(1, "At least one budget row is required")
-    .optional()
-    .default([]),
-});
-
-const contractingPartySchema = z.object({
-  legalEntityType: z.enum(["company", "individual"], {
-    required_error: "Legal entity type is required",
-    invalid_type_error: "Legal entity type must be company or individual",
-  }),
-  legalEntityName: z.string().max(100).optional(),
-  legalEntityRegistrationNumber: z.string().max(100).optional(),
-  legalEntityCountry: z.string().max(100).optional(),
-  legalEntityAddress: z.string().max(100).optional(),
-  countryOfResidence: z.string().max(100).optional(),
-  govtIssuedIdNumber: z.string().max(100).optional(),
-  fullResidentialAddress: z.string().max(100).optional(),
-});
-
-const primaryContactSchema = z.object({
-  name: z.string().max(100).min(1, "Name is required"),
-  title: z.string().max(100).min(1, "Title is required"),
-  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
-  socialMedia: z.string().max(100).optional(),
-});
-
-const signatoryContactSchema = z.object({
-  name: z.string().max(100).min(1, "Name is required"),
-  title: z.string().max(100).min(1, "Role is required"),
-  email: z.string().trim().max(255).min(1, "Email is required").email("Enter a valid email"),
-  authorization: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
-});
-
-const kycInfoSchema = z
+const workPackageSchema = z
   .object({
-    submitted: z.boolean().optional(),
-    email: z.string().trim().max(100).email().optional(),
-    totalProposalsSubmitted: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((v) => {
-        if (v === "" || v == null) return undefined;
-        const n = Number(v);
-        if (Number.isNaN(n)) return undefined;
-        const int = Math.floor(n);
-        return int >= 0 && int <= 99999 ? int : undefined;
-      }),
-  })
-  .refine(
-    (data) => {
-      if (data.submitted === false) {
-        const email = (data.email ?? "").trim();
-        return email.length > 0 && z.string().email().safeParse(email).success;
+    name: z.string().min(1, "Work Package name is required").max(100),
+    summary: z.string().min(1, "Work Package summary is required").max(10000),
+    initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
+        return;
       }
-      return true;
-    },
-    { message: "KYC Contact Email is required when KYC/KYB has not been submitted.", path: ["email"] }
-  );
+      if (val !== "New Initiative" && val !== "Maintenance") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Initiative type must be New Initiative or Maintenance",
+        });
+      }
+    }),
+    proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
+        return;
+      }
+      if (val !== "Technical (software/IT)" && val !== "Non-technical") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Type of proposal must be Technical (software/IT) or Non-technical",
+        });
+      }
+    }),
+    supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
+    coreObjectives: z
+    .array(z.string().min(1).max(1000))
+    .min(1, "At least one core objective is required"),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
+    metric: z.string().min(1, "Metric is required").max(600),
+    milestones: z.array(milestoneSchema).optional().default([]),
+    budgetBreakdown: z
+      .array(budgetRowSchema)
+      .min(1, "At least one budget row is required")
+      .optional()
+      .default([]),
+    noMilestonesBreakdown: z.boolean().optional().default(false),
+    milestoneAlternative: z.string().max(4000).optional().default(""),
+  })
+  .superRefine((data, ctx) => {
+    if (data.noMilestonesBreakdown) {
+      const alt = (data.milestoneAlternative ?? "").trim();
+      if (alt.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Milestone alternative is required when not using milestones",
+          path: ["milestoneAlternative"],
+        });
+      }
+    } else {
+      const list = data.milestones ?? [];
+      if (!Array.isArray(list) || list.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "At least one milestone is required",
+          path: ["milestones"],
+        });
+      }
+    }
+  });
 
-const financialAndAdministrativeSchema = z.object({
+/** Proposer details (FormProposerDetails): public name, contact email, social/media links. */
+const proposerDetailsSchema = z.object({
+  name: z.string().min(1, "Proposer name is required").max(100),
+  email: z
+    .union([z.string(), z.undefined()])
+    .transform((v) => (v == null ? "" : String(v).trim()))
+    .superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Primary contact email is required" });
+        return;
+      }
+      if (val.length > 255) {
+        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 255, type: "string", message: "Email must be at most 255 characters" });
+        return;
+      }
+      const emailSchema = z.string().email("Enter a valid email");
+      const result = emailSchema.safeParse(val);
+      if (!result.success) {
+        const msg = result.error.errors[0]?.message ?? "Enter a valid email";
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
+      }
+    }),
+  links: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+});
+
+const proposalDetailsSchema = z.object({
   conversionRate: z.coerce
     .number({ invalid_type_error: "Enter a valid number" })
     .min(0)
     .refine((v) => v > 0, { message: "Conversion rate is required" }),
-  intersectAdministrator: z.boolean().optional(),
-  otherAdministrators: z.string().max(400).optional(),
-  initiativeType: z.enum(["New Initiative", "Maintenance"]).optional(),
-  priorFunding: z.string().min(1, "Prior funding is required").max(800),
-  treasuryRepayment: z.boolean().optional(),
-  treasuryRepaymentCondition: z.string().max(800).optional(),
-  treasuryDonationHash: z.string().max(255).optional(),
-  thirdPartyAssurers: z.string().max(600).optional(),
-  supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-});
-
-// API receives dates as ISO strings; coerce to Date for validation/storage
-const executionRoadmapSchema = z.object({
-  projectStartDate: z.coerce.date("Start Date is required"),
-  projectEndDate: z.coerce.date("End Date is required"),
-  workPackages: z.array(workPackageSchema).optional().default([]),
+  workPackages: z
+    .array(workPackageSchema)
+    .min(1, "At least one work package is required")
+    .optional()
+    .default([]),
 });
 
 const legalDeclarationsSchema = z.object({
-  dataProtection: z.boolean().refine((v) => v === true, { message: "You must acknowledge and consent." }),
+  dataProcessingConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and consent." }),
   publicVisibilityConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and agree." }),
   authorizationEntity: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
@@ -159,30 +175,42 @@ const strategyFrameworkSchema = z.object({
   pillarRationale: z
     .string()
     .min(1, "Rationale for your selection is required")
-    .max(150000),
+    .max(15000),
   kpiAlignment: z
     .string()
     .min(1, "Alignment to KPIs is required")
-    .max(100000),
+    .max(10000),
 });
 
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
   estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
   strategyFramework: strategyFrameworkSchema,
-  executionRoadmap: executionRoadmapSchema.optional().default({ workPackages: [] }),
-  financialAndAdministrative: financialAndAdministrativeSchema.optional().default({}),
-  contractingParty: contractingPartySchema.optional().default({}),
-  primaryContact: primaryContactSchema.optional().default({}),
-  signatoryContact: signatoryContactSchema.optional().default({}),
-  proposalType: z.enum(["Technical (software/IT)", "Non-technical"]).optional(),
-  kycInfo: kycInfoSchema.optional().default({}),
+  proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
+  proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
+  /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
+  supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+  /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
+  treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+    if (val === "" || val === undefined) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Treasury repayment is required" });
+      return;
+    }
+    if (val !== "Yes" && val !== "No") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Treasury repayment must be Yes or No",
+      });
+    }
+  }),
+  treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
+  priorFunding: z.string().min(1, "Prior funding is required").max(10000),
   legalDeclarations: legalDeclarationsSchema.optional(),
 });
 
 const formSchema = z.object({
-  title: z.string().min(2).max(100),
-  summary: z.string().min(2).max(2000),
+  title: z.string().min(2, "Proposal Title is required").max(100),
+  summary: z.string().min(2, "Executive Summary is required").max(2000),
   status: z.enum(["draft", "live"]).default("draft"),
   metaData: metaDataSchema,
 });

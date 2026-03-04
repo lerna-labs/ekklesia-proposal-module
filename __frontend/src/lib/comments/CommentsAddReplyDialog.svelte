@@ -1,7 +1,7 @@
 <script>
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Button } from "$lib/components/ui/button";
-  import Textarea from "$lib/form/Textarea.svelte";
+  import Textarea from "$lib/components/form/Textarea.svelte";
 
   let {
     open = $bindable(false),
@@ -38,7 +38,7 @@
         </Dialog.Title>
       </Dialog.Header>
       <div class="py-4">
-        {#key open && replyTo ? replyTo._id : (open ? "add" : "closed")}
+        {#key open && replyTo ? replyTo._id : open ? "add" : "closed"}
           <Textarea
             id="comment-content"
             label="Comment"
