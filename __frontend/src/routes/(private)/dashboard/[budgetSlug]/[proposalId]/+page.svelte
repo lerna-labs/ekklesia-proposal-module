@@ -63,8 +63,8 @@
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success("Proposal saved.");
-        goto("/dashboard");
+        toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
+        if (payload.status === "live") goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";

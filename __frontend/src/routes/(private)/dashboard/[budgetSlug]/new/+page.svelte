@@ -58,9 +58,11 @@
       });
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success("Proposal created.");
-        await invalidateAll();
-        goto("/dashboard");
+        toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
+        if (payload.status === "live") {
+          await invalidateAll();
+          goto("/dashboard");
+        }
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to create proposal.";
