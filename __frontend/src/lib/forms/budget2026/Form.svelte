@@ -23,6 +23,7 @@
     onSave,
     validationErrors,
     openLegalDialog = $bindable(false),
+    showLegalErrors = false,
   } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
@@ -389,7 +390,7 @@
     if (!onSave || legalDialogSubmitting) return;
     legalDialogSubmitting = true;
     try {
-      await Promise.resolve(onSave(getPayload("live")));
+      await Promise.resolve(onSave(getPayload("live"), { fromLegalModal: true }));
       openLegalDialog = false;
     } catch (_) {
       // Errors shown via validationErrors
@@ -598,7 +599,7 @@
 
 <FormLegalDeclarations
   bind:value={formData.metaData.legalDeclarations}
-  validationErrors={legalDeclarationsErrors}
+  validationErrors={showLegalErrors ? legalDeclarationsErrors : undefined}
   bind:open={openLegalDialog}
   onConfirm={confirmLegalAndSubmit}
   submitting={legalDialogSubmitting}

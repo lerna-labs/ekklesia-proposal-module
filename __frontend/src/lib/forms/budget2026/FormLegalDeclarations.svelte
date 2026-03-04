@@ -8,6 +8,7 @@
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { tick } from "svelte";
 
   let {
     value = $bindable(),
@@ -16,6 +17,38 @@
     onConfirm,
     submitting = false,
   } = $props();
+
+  /** Field ids in form order; first with an error is scrolled into view. */
+  const FIELD_ORDER = [
+    "dataProcessingConsent",
+    "publicVisibilityConsent",
+    "submitterName",
+    "submitterEmail",
+    "submitterRole",
+    "authorizationEntity",
+    "authorizationAttestation",
+  ];
+
+  function getFirstErrorFieldId(errors) {
+    if (!errors?.properties) return null;
+    for (const id of FIELD_ORDER) {
+      if (errors.properties[id]?.errors?.length) return id;
+    }
+    return null;
+  }
+
+  $effect(() => {
+    const firstId = getFirstErrorFieldId(validationErrors);
+    if (!firstId || !open) return;
+    tick().then(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(firstId);
+          el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      });
+    });
+  });
 </script>
 
 <AlertDialog.Root bind:open>
