@@ -15,8 +15,20 @@
     validationErrors?.properties?.metaData?.properties ?? {},
   );
   const conversionRateErrors = $derived({
-    properties: { conversionRate: metaErrors.conversionRate },
+    properties: { conversionRate: metaErrors.proposalDetails?.properties?.conversionRate },
   });
+  /** Section-level error (e.g. "At least one work package is required"); outline matches FormStrategyFramework (border-destructive ring-destructive/20). */
+  const hasWorkPackagesSectionError = $derived(
+    (metaErrors.proposalDetails?.properties?.workPackages?.errors?.length ?? 0) > 0,
+  );
+  const workPackagesSectionError = $derived(
+    metaErrors.proposalDetails?.properties?.workPackages?.errors?.[0],
+  );
+  const sectionOutlineClass = $derived(
+    hasWorkPackagesSectionError
+      ? "rounded-md border border-destructive ring-[3px] ring-destructive/20 p-3"
+      : "",
+  );
 </script>
 
 <h3>
@@ -48,11 +60,12 @@
         id="conversionRate"
         prefix="$"
         suffix="/ ADA"
-        bind:value={formData.metaData.conversionRate}
+        bind:value={formData.metaData.proposalDetails.conversionRate}
         placeholder="0.25"
         decimalComma={true}
         min="0"
         step="any"
+        validationErrors={conversionRateErrors}
       />
       <p class="text-xs text-muted-foreground">
         *If Intersect is selected as the administrator, this rate is indicative
@@ -64,13 +77,21 @@
   </div>
 </Field.Field>
 
-<h3>How can your proposal be broken down in work packages?</h3>
-<p>
-  One proposal may include one or multiple work packages or work streams. Please
-  provide details for each one below.
-</p>
+<section>
+  <div class={sectionOutlineClass} aria-invalid={hasWorkPackagesSectionError || undefined}>
+    <h3>How can your proposal be broken down in work packages?</h3>
+    <p>
+      One proposal may include one or multiple work packages or work streams. Please
+      provide details for each one below.
+    </p>
 
-<FormWorkPackages
-  bind:value={formData.metaData.executionRoadmap.workPackages}
-  validationErrors={validationErrors?.properties?.metaData?.properties?.executionRoadmap}
-/>
+    <FormWorkPackages
+      bind:value={formData.metaData.proposalDetails.workPackages}
+      validationErrors={validationErrors?.properties?.metaData?.properties?.proposalDetails}
+      hideSectionLevelError
+    />
+  </div>
+  {#if workPackagesSectionError}
+    <Field.Error class="text-xs mt-1.5">{workPackagesSectionError}</Field.Error>
+  {/if}
+</section>

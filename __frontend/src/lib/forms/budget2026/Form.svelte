@@ -9,7 +9,7 @@
   import FormBudgetSummary from "./FormBudgetSummary.svelte";
   import FormProposerDetails from "./FormProposerDetails.svelte";
   import FormBudgetAdministration from "./FormBudgetAdministration.svelte";
-  import FormOtherInfo from "./FormOtherInfo.svelte";
+  import FormAdditionalInfo from "./FormAdditionalInfo.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
@@ -62,8 +62,8 @@
     ],
     "section-3": [["metaData", "strategyFramework"]],
     "section-4": [
-      ["metaData", "conversionRate"],
-      ["metaData", "executionRoadmap", "workPackages"],
+      ["metaData", "proposalDetails", "conversionRate"],
+      ["metaData", "proposalDetails", "workPackages"],
     ],
     "section-5": [
       ["metaData", "treasuryRepayment"],
@@ -76,11 +76,7 @@
       ["metaData", "proposerDetails", "links"],
     ],
     "section-7": [],
-    "section-8": [
-      ["metaData", "initiativeType"],
-      ["metaData", "proposalType"],
-      ["metaData", "supportingInfoLinks"],
-    ],
+    "section-8": [["metaData", "supportingInfoLinks"]],
   };
 
   let sectionErrorCounts = $derived.by(() => {
@@ -113,14 +109,11 @@
         pillarRationale: "",
         kpiAlignment: "",
       },
-      initiativeType: "",
-      proposalType: "",
       supportingInfoLinks: [],
-      conversionRate: "",
       treasuryRepayment: "",
       treasuryRepaymentCircumstances: "",
       priorFunding: "",
-      executionRoadmap: { workPackages: [] },
+      proposalDetails: { conversionRate: "", workPackages: [] },
       proposerDetails: {
         name: "",
         email: "",
@@ -169,10 +162,17 @@
           }));
       }
       if (
+        p.metaData.proposalDetails?.conversionRate != null &&
+        p.metaData.proposalDetails?.conversionRate !== undefined
+      )
+        formData.metaData.proposalDetails.conversionRate =
+          p.metaData.proposalDetails.conversionRate;
+      if (
         p.metaData.conversionRate != null &&
         p.metaData.conversionRate !== undefined
       )
-        formData.metaData.conversionRate = p.metaData.conversionRate;
+        formData.metaData.proposalDetails.conversionRate =
+          p.metaData.conversionRate;
       if (p.metaData.treasuryRepayment != null)
         formData.metaData.treasuryRepayment =
           p.metaData.treasuryRepayment ?? "";
@@ -195,12 +195,42 @@
         };
       }
       if (
+        p.metaData.proposalDetails &&
+        Array.isArray(p.metaData.proposalDetails.workPackages)
+      ) {
+        formData.metaData.proposalDetails = {
+          ...formData.metaData.proposalDetails,
+          workPackages: p.metaData.proposalDetails.workPackages.map((wp) => ({
+            ...wp,
+            initiativeType: wp.initiativeType ?? "",
+            proposalType: wp.proposalType ?? "",
+            supportingDocuments: Array.isArray(wp?.supportingDocuments)
+              ? wp.supportingDocuments.map((l) => ({
+                  title: l?.title ?? "",
+                  url: l?.url ?? "",
+                }))
+              : [],
+            coreObjectives: Array.isArray(wp?.coreObjectives)
+              ? [...wp.coreObjectives]
+              : [""],
+            milestones: Array.isArray(wp?.milestones) ? [...wp.milestones] : [],
+            budgetBreakdown: Array.isArray(wp?.budgetBreakdown)
+              ? [...wp.budgetBreakdown]
+              : [],
+          })),
+        };
+      }
+      if (
+        !p.metaData.proposalDetails &&
         p.metaData.executionRoadmap &&
         Array.isArray(p.metaData.executionRoadmap.workPackages)
       ) {
-        formData.metaData.executionRoadmap = {
+        formData.metaData.proposalDetails = {
+          ...formData.metaData.proposalDetails,
           workPackages: p.metaData.executionRoadmap.workPackages.map((wp) => ({
             ...wp,
+            initiativeType: wp.initiativeType ?? "",
+            proposalType: wp.proposalType ?? "",
             supportingDocuments: Array.isArray(wp?.supportingDocuments)
               ? wp.supportingDocuments.map((l) => ({
                   title: l?.title ?? "",
@@ -418,7 +448,7 @@
     <Accordion.Item value="section-8" id="other-info">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Other Info
+          Additional Info
           {#if sectionErrorCounts["section-8"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-8"])}
@@ -427,7 +457,7 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content>
-        <FormOtherInfo
+        <FormAdditionalInfo
           bind:formData
           {vote}
           {categories}

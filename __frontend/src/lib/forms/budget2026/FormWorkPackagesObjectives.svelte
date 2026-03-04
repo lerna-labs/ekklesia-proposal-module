@@ -35,6 +35,11 @@
 
   const objectives = $derived(Array.isArray(value) ? value : []);
   const schemaError = $derived(validationErrors?.errors?.[0]);
+  const sectionOutlineClass = $derived(
+    schemaError
+      ? "rounded-md border border-destructive ring-[3px] ring-destructive/20 p-3"
+      : "",
+  );
 
   function openAddDialog(index = null) {
     const obj = index != null ? objectives[index] : null;
@@ -99,88 +104,92 @@
 </script>
 
 <div class={[className, "gap-2"].filter(Boolean).join(" ")}>
-  {#if label || description}
-    <div class="flex flex-row items-center gap-1 pb-2">
-      {#if label}
-        <span class="text-sm font-medium mb-0">{label}</span>
-      {/if}
-      {#if description}
-        <ToolTip content={description} />
-      {/if}
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
-    </div>
-  {/if}
-  <Field.Field class="gap-1">
-    {#if objectives.length > 0}
-      <ul class="objective-list-editor-list space-y-2 list-none p-0 m-0">
-        {#each objectives as objective, index (index)}
-          <li>
-            <Card.Root class="py-2">
-              <Card.Header
-                class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm"
-              >
-                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-                <div
-                  class="objective-text min-w-0 flex-1 min-h-8 flex items-center text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
-                  role="button"
-                  tabindex="0"
-                  title={typeof objective === "string" ? objective : ""}
-                  onclick={() => openAddDialog(index)}
-                  onkeydown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      openAddDialog(index);
-                    }
-                  }}
+  <div class={sectionOutlineClass} aria-invalid={schemaError || undefined}>
+    {#if label || description}
+      <div class="flex flex-row items-center gap-1 pb-2">
+        {#if label}
+          <span class="text-sm font-medium mb-0">
+            {label}
+            <span class="text-(--mbo-electric-blue)">*</span>
+          </span>
+        {/if}
+        {#if description}
+          <ToolTip content={description} />
+        {/if}
+        <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      </div>
+    {/if}
+    <Field.Field class="gap-1">
+      {#if objectives.length > 0}
+        <ul class="objective-list-editor-list space-y-2 list-none p-0 m-0 mb-1">
+          {#each objectives as objective, index (index)}
+            <li>
+              <Card.Root class="py-2">
+                <Card.Header
+                  class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm"
                 >
-                  <Markdown content={objective ?? ""} class="text-inherit" />
-                </div>
-                <div class="flex flex-row gap-1 shrink-0">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    class="size-8 text-black cursor-pointer"
-                    aria-label="Edit objective"
+                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+                  <div
+                    class="objective-text min-w-0 flex-1 min-h-8 flex items-center text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
+                    role="button"
+                    tabindex="0"
+                    title={typeof objective === "string" ? objective : ""}
                     onclick={() => openAddDialog(index)}
+                    onkeydown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openAddDialog(index);
+                      }
+                    }}
                   >
-                    <PencilIcon class="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    class="size-8 text-black cursor-pointer"
-                    aria-label="Remove objective"
-                    onclick={() => requestDelete(index)}
-                  >
-                    <TrashIcon class="size-4" />
-                  </Button>
-                </div>
-              </Card.Header>
-            </Card.Root>
-          </li>
-        {/each}
-      </ul>
-    {/if}
+                    <Markdown content={objective ?? ""} class="text-inherit" />
+                  </div>
+                  <div class="flex flex-row gap-1 shrink-0">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      class="size-8 text-black cursor-pointer"
+                      aria-label="Edit objective"
+                      onclick={() => openAddDialog(index)}
+                    >
+                      <PencilIcon class="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      class="size-8 text-black cursor-pointer"
+                      aria-label="Remove objective"
+                      onclick={() => requestDelete(index)}
+                    >
+                      <TrashIcon class="size-4" />
+                    </Button>
+                  </div>
+                </Card.Header>
+              </Card.Root>
+            </li>
+          {/each}
+        </ul>
+      {/if}
 
-    <div class="flex justify-start">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
-        onclick={openAddDialog}
-      >
-        <PlusIcon class="size-4" />
-        {addButtonLabel}
-      </Button>
-    </div>
-
-    {#if schemaError}
-      <Field.Error class="text-xs">{schemaError}</Field.Error>
-    {/if}
-  </Field.Field>
+      <div class="flex justify-start">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+          onclick={openAddDialog}
+        >
+          <PlusIcon class="size-4" />
+          {addButtonLabel}
+        </Button>
+      </div>
+    </Field.Field>
+  </div>
+  {#if schemaError}
+    <Field.Error class="text-xs mt-1.5">{schemaError}</Field.Error>
+  {/if}
 </div>
 
 <!-- Add / Edit objective (AlertDialog: doesn't close without user action) -->

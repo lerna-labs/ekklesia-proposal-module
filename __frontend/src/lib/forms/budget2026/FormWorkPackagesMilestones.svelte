@@ -20,6 +20,8 @@
     onvaluechange,
     validationErrors,
     class: className = "",
+    /** When true, parent shows the section-level error below the outline; do not show it here. */
+    hideSectionError = false,
   } = $props();
 
   let addDialogOpen = $state(false);
@@ -191,7 +193,7 @@
       </Button>
     </div>
 
-    {#if schemaError}
+    {#if !hideSectionError && schemaError}
       <Field.Error class="text-xs">{schemaError}</Field.Error>
     {/if}
   </Field.Field>

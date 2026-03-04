@@ -8,6 +8,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import Input from "$lib/components/form/Input.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
+  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import FormWorkPackagesCard from "./FormWorkPackagesCard.svelte";
@@ -25,6 +26,8 @@
     addButtonLabel = "Add Work Package",
     emptyMessage,
     class: className = "",
+    /** When true, parent shows the section-level error (e.g. "At least one work package is required") below the ring, so we do not render it here. */
+    hideSectionLevelError = false,
   } = $props();
 
   let addDialogOpen = $state(false);
@@ -37,12 +40,16 @@
     return {
       name: "",
       summary: "",
+      initiativeType: "",
+      proposalType: "",
       supportingDocuments: [],
       coreObjectives: [],
       expectedValue: "",
       metric: "",
       milestones: [],
       budgetBreakdown: [],
+      noMilestonesBreakdown: false,
+      milestoneAlternative: "",
     };
   }
 
@@ -52,6 +59,8 @@
     return {
       name: (pkg.name ?? "").toString(),
       summary: (pkg.summary ?? pkg.scope ?? "").toString(),
+      initiativeType: (pkg.initiativeType ?? "").toString(),
+      proposalType: (pkg.proposalType ?? "").toString(),
       supportingDocuments: Array.isArray(pkg.supportingDocuments)
         ? pkg.supportingDocuments.map((l) => ({
             title: (l?.title ?? "").trim(),
@@ -76,6 +85,8 @@
       budgetBreakdown: Array.isArray(pkg.budgetBreakdown)
         ? [...pkg.budgetBreakdown]
         : [],
+      noMilestonesBreakdown: Boolean(pkg.noMilestonesBreakdown),
+      milestoneAlternative: (pkg.milestoneAlternative ?? "").toString(),
     };
   }
 
@@ -110,6 +121,8 @@
     };
     const result = workPackageSchema.safeParse(toValidate);
     if (!result.success) {
+      console.log("[FormWorkPackages] Zod validation failed:", result.error);
+      console.log("[FormWorkPackages] Zod issues:", result.error.issues);
       draftErrors = z.treeifyError(result.error);
       return;
     }
@@ -119,6 +132,7 @@
       summary: data.summary ?? "",
       estimatedDuration: data.estimatedDuration ?? "",
     });
+    console.log("[FormWorkPackages] Validation passed, saving work package:", final);
     draftErrors = null;
     if (editingIndex != null) {
       value = packages.map((item, i) => (i === editingIndex ? final : item));
@@ -154,6 +168,19 @@
     );
   }
 
+  function updatePackageMilestoneOption(pkgIndex, { noMilestonesBreakdown, milestoneAlternative }) {
+    value = packages.map((p, i) => {
+      if (i !== pkgIndex) return p;
+      const next = {
+        ...p,
+        noMilestonesBreakdown: !!noMilestonesBreakdown,
+        milestoneAlternative: milestoneAlternative ?? p.milestoneAlternative ?? "",
+      };
+      if (noMilestonesBreakdown) next.milestones = [];
+      return next;
+    });
+  }
+
   function deleteFromDialog() {
     if (editingIndex != null) {
       indexToDelete = editingIndex;
@@ -172,7 +199,7 @@
   );
 </script>
 
-<div class="flex justify-start mb-8">
+<div class="flex justify-start {packages.length > 0 ? 'mb-8' : 'mb-2'}">
   <Button
     type="button"
     variant="outline"
@@ -185,7 +212,7 @@
   </Button>
 </div>
 
-<div class={[className, "gap-2 mb-8"].filter(Boolean).join(" ")}>
+<div class={[className, "gap-2", packages.length > 0 ? "mb-8" : ""].filter(Boolean).join(" ")}>
   <Field.Field class="gap-1">
     {#if packages.length > 0}
       <div class="flex flex-row items-center gap-1 pb-2">
@@ -208,6 +235,11 @@
               budgetBreakdown={pkg.budgetBreakdown ?? []}
               onBudgetBreakdownChange={(budgetBreakdown) =>
                 updatePackageBudgetBreakdown(index, budgetBreakdown)}
+              noMilestonesBreakdown={pkg.noMilestonesBreakdown ?? false}
+              milestoneAlternative={pkg.milestoneAlternative ?? ""}
+              onMilestoneOptionChange={(opts) =>
+                updatePackageMilestoneOption(index, opts)}
+              validationErrors={validationErrors?.properties?.workPackages?.items?.[index]}
               onEdit={() => openAddDialog(index)}
               onDelete={() => requestDelete(index)}
             />
@@ -218,7 +250,7 @@
       <p class="text-sm text-muted-foreground">{emptyMessage}</p>
     {/if}
 
-    {#if schemaError}
+    {#if !hideSectionLevelError && schemaError}
       <Field.Error class="text-xs">{schemaError}</Field.Error>
     {/if}
   </Field.Field>
@@ -311,6 +343,44 @@
         required
         maxLength={600}
         validationErrors={draftErrors}
+      />
+
+      <h2 class="mt-4 font-medium">
+        Is this a new initiative or a continuation of existing work?
+      </h2>
+      <p class="text-sm text-muted-foreground">
+        Select the option that best describes the nature of this work package.
+      </p>
+      <RadioGroup
+        id="initiativeType"
+        bind:value={draft.initiativeType}
+        label="Initiative Type"
+        description="Is this a brand new project or the continuation/maintenance of an existing one?"
+        required
+        options={[
+          { value: "New Initiative", label: "New Initiative" },
+          { value: "Maintenance", label: "Maintenance" },
+        ]}
+        validationErrors={draftErrors ? { properties: { initiativeType: draftErrors.properties?.initiativeType } } : undefined}
+      />
+
+      <h2 class="mt-4 font-medium">
+        How would you classify the primary nature of this work proposal?
+      </h2>
+      <p class="text-sm text-muted-foreground">
+        This helps reviewers understand whether the work is primarily technical or non-technical.
+      </p>
+      <RadioGroup
+        id="proposalType"
+        bind:value={draft.proposalType}
+        label="Type of Proposal"
+        description="Classification of the proposal type."
+        required
+        options={[
+          { value: "Technical (software/IT)", label: "Technical (software/IT)" },
+          { value: "Non-technical", label: "Non-technical" },
+        ]}
+        validationErrors={draftErrors ? { properties: { proposalType: draftErrors.properties?.proposalType } } : undefined}
       />
 
       <h2 class="mt-4 font-medium">

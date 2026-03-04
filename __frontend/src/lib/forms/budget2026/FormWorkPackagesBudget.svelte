@@ -53,14 +53,6 @@
     return sum;
   });
 
-  const draftTotal = $derived.by(() => {
-    const q = Number(draft.quantity);
-    const u = Number(draft.unitPrice);
-    if (!Number.isFinite(q) || !Number.isFinite(u) || q < 0 || u < 0)
-      return null;
-    return Math.round(q * u * 1000) / 1000;
-  });
-
   function getDefaultDraft() {
     return {
       costCategory: "",
@@ -260,13 +252,8 @@
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
-      <AlertDialog.Description>
-        {editingIndex != null
-          ? "Update the budget item details below."
-          : "Add a budget line: cost category, item name, item description, quantity, and unit cost in ADA. All fields are required."}
-      </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-4">
+    <div class="grid gap-4 pb-4">
       <Input
         id="name"
         label="Item Name"
@@ -355,12 +342,6 @@
           validationErrors={draftErrors}
         />
       </div>
-
-      {#if draftTotal != null}
-        <p class="text-sm font-medium tabular-nums">
-          Total: {draftTotal.toLocaleString()} ADA
-        </p>
-      {/if}
     </div>
     <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
       {#if editingIndex != null}
