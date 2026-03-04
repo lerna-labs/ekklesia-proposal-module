@@ -106,16 +106,16 @@ router.post("/", async (req, res) => {
     const defaultDraftMetaData =
       status === "draft"
         ? {
-            trackRecord: "",
-            strategicFocusArea: null,
-            keyPerformanceIndicators: [],
-            proposalDetails: { conversionRate: "", workPackages: [] },
-            financialAndAdministrative: {},
-            contractingParty: {},
-            primaryContact: {},
-            signatoryContact: {},
-            kycInfo: {},
-          }
+          trackRecord: "",
+          strategicFocusArea: null,
+          keyPerformanceIndicators: [],
+          proposalDetails: { conversionRate: "", workPackages: [] },
+          financialAndAdministrative: {},
+          contractingParty: {},
+          primaryContact: {},
+          signatoryContact: {},
+          kycInfo: {},
+        }
         : null;
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
@@ -875,21 +875,21 @@ router.get("/", async (req, res) => {
       // Validate bech32 address format - try stake first, then drep
       const stakeValidation = validateAddress(proposerTerm, "stake");
       const drepValidation = validateAddress(proposerTerm, "drep");
-      
+
       let validatedAddress = null;
       if (!stakeValidation.error) {
         validatedAddress = proposerTerm; // stake address is valid as-is
       } else if (drepValidation && !drepValidation.error && drepValidation.cip129) {
         validatedAddress = drepValidation.cip129; // use CIP-129 format for drep
       }
-      
+
       if (!validatedAddress) {
         return res.status(400).json({
           status: "error",
           message: "Invalid proposer parameter. Must be a valid bech32 address (stake1... or drep1...).",
         });
       }
-      
+
       query.proposerId = validatedAddress;
     }
 
@@ -1020,8 +1020,8 @@ router.get("/", async (req, res) => {
       const { metaData, withdrawalReason, versions, signature, userId, commentCount, ...rest } = proposal;
       const shortenedMetaData = metaData
         ? {
-            strategicFocusArea: metaData.strategicFocusArea,
-          }
+          strategicFocusArea: metaData.strategicFocusArea,
+        }
         : null;
       return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };
     });
