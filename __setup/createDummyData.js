@@ -390,6 +390,7 @@ async function createDummyData() {
                 const rows = wp.budgetBreakdown || [];
                 return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
             }, 0) ?? 0;
+            metaData.totalBudget = totalBudget;
             const p = await Proposal.create({
                 proposerId: proposer.id,
                 voteId: vote._id,
@@ -397,7 +398,6 @@ async function createDummyData() {
                 summary: t.summary,
                 status: "live",
                 submittedAt: now,
-                totalBudget,
                 metaData,
             });
             liveProposals.push(p);
@@ -419,6 +419,7 @@ async function createDummyData() {
             const rows = wp.budgetBreakdown || [];
             return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
         }, 0) ?? 0;
+        withdrawnMetaData.totalBudget = withdrawnTotalBudget;
         console.log("Creating withdrawn proposal...");
         const withdrawnProposal = await Proposal.create({
             proposerId: withdrawnProposer.id,
@@ -427,7 +428,6 @@ async function createDummyData() {
             summary: withdrawnTemplate.summary,
             status: "withdrawnByProposer",
             submittedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-            totalBudget: withdrawnTotalBudget,
             metaData: withdrawnMetaData,
             withdrawalDetails: {
                 category: "Other",

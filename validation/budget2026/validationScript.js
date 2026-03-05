@@ -239,6 +239,8 @@ const metaDataSchema = z.object({
   }),
   treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
   priorFunding: z.string().min(1, "Prior funding is required").max(10000),
+  /** Total budget (ADA); must equal sum of work package budget breakdown rows. Set by frontend. */
+  totalBudget: z.coerce.number({ invalid_type_error: "Total budget must be a number" }).min(0, "Total budget must be ≥ 0"),
   /** Treasury Donation (FormTreasuryDonation): verification hash and confirmation. */
   treasuryDonationTxHash: z.string().max(64).optional().default(""),
   treasuryDonationConfirmed: z.boolean().optional().default(false),
@@ -344,6 +346,25 @@ const metaDataSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["independentAudits"],
       message: "Third party assurers (independent audits) is required",
+    });
+  }
+  // Total budget must equal sum of work package budget breakdown rows (round to 3 decimals)
+  const workPackages = data.proposalDetails?.workPackages ?? [];
+  let sumAda = 0;
+  for (const pkg of workPackages) {
+    const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
+    for (const row of rows) {
+      const ada = Number(row?.total ?? (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN));
+      if (Number.isFinite(ada)) sumAda += ada;
+    }
+  }
+  const sumRounded = Math.round(sumAda * 1000) / 1000;
+  const totalBudgetRounded = typeof data.totalBudget === "number" && Number.isFinite(data.totalBudget) ? Math.round(data.totalBudget * 1000) / 1000 : data.totalBudget;
+  if (Number.isFinite(totalBudgetRounded) && Math.abs(totalBudgetRounded - sumRounded) > 1e-9) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["totalBudget"],
+      message: "Total budget must equal the sum of all work package budget line items",
     });
   }
 });

@@ -17,27 +17,6 @@ import { loadValidationScript } from "../../../validation/loadValidationScript.j
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
 
 /**
- * Compute total budget (ADA) from metaData.proposalDetails.workPackages, same logic as FormFinancialSummary.
- * Sums each budgetBreakdown row's total or quantity*unitPrice.
- * @param {Object} metaData - proposal metaData
- * @returns {number} grand total in ADA
- */
-function computeTotalBudgetFromMetaData(metaData) {
-  if (!metaData?.proposalDetails?.workPackages || !Array.isArray(metaData.proposalDetails.workPackages)) {
-    return 0;
-  }
-  let total = 0;
-  for (const pkg of metaData.proposalDetails.workPackages) {
-    const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
-    for (const row of rows) {
-      const ada = Number(row?.total ?? (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN));
-      if (Number.isFinite(ada)) total += ada;
-    }
-  }
-  return total;
-}
-
-/**
  * @route POST /api/v0/proposals
  * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
  * @access Private (requires valid JWT)
@@ -127,8 +106,6 @@ router.post("/", async (req, res) => {
     if (status === "live") {
       doc.submittedAt = new Date();
     }
-
-    doc.totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
 
     const proposal = await Proposal.create(doc);
     const created = proposal.toObject ? proposal.toObject() : proposal;
@@ -358,7 +335,7 @@ router.delete("/:proposalId", async (req, res) => {
  * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
  * status is immutable (400 if body tries to change it); updates are locked after the vote's
  * reviewEndDate (400); the current version is archived (new doc with status "archived") and
- * a reference is appended to versions before applying the update. Computes totalBudget from work packages.
+ * a reference is appended to versions before applying the update.
  * @access Private (proposer or vote admin for draft only)
  * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
  * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
@@ -480,14 +457,11 @@ router.put("/:proposalId", async (req, res) => {
     const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
 
-    const totalBudget = computeTotalBudgetFromMetaData(sanitizedMetaData);
-
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
     proposal.title = title;
     proposal.summary = summary ?? "";
     proposal.status = status;
     proposal.metaData = sanitizedMetaData;
-    proposal.totalBudget = totalBudget;
     if (status === "live") {
       proposal.submittedAt = proposal.submittedAt || new Date();
     }
@@ -1017,6 +991,7 @@ router.get("/", async (req, res) => {
           contractingParty: metaData.contractingParty ? { legalEntityType: metaData.contractingParty.legalEntityType } : undefined,
           strategyFramework: metaData.strategyFramework ? { pillars: metaData.strategyFramework.pillars } : undefined,
           conversionRate: metaData.proposalDetails?.conversionRate ?? metaData.financialAndAdministrative?.conversionRate,
+          totalBudget: metaData.totalBudget,
         }
         : null;
       return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };

@@ -108,9 +108,9 @@
           </button>
         {/if}
       </Card.Title>
-      {#if proposal.totalBudget !== undefined}
+      {#if proposal.metaData?.totalBudget != null}
         <ProposalCardBudget
-          totalBudget={proposal.totalBudget}
+          totalBudget={proposal.metaData.totalBudget}
           conversionRate={proposal.metaData?.conversionRate ??
             proposal.metaData?.proposalDetails?.conversionRate ??
             proposal.metaData?.financialAndAdministrative?.conversionRate}

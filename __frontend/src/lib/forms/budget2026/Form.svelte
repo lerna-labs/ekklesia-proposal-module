@@ -25,6 +25,7 @@
     validationErrors,
     openLegalDialog = $bindable(false),
     showLegalErrors = false,
+    formRef,
   } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
@@ -175,6 +176,13 @@
 
   let autoSaveEnabled = $state(true);
   let formControlsRef = $state(null);
+
+  /** Expose clearDirty so parent can reset dirty state before navigating after save (avoids "unsaved changes" dialog). */
+  $effect(() => {
+    if (formRef && formControlsRef) {
+      formRef.clearDirty = () => formControlsRef?.resetDirtyBaseline?.();
+    }
+  });
 
   onMount(() => {
     const stored = localStorage.getItem(BUDGET2026_AUTOSAVE_KEY);
@@ -385,7 +393,18 @@
   }
 
   function getPayload(status) {
-    return { ...formData, status };
+    const workPackages = formData.metaData?.proposalDetails?.workPackages ?? [];
+    let grandTotalAda = 0;
+    for (const wp of workPackages) {
+      const rows = Array.isArray(wp?.budgetBreakdown) ? wp.budgetBreakdown : [];
+      for (const row of rows) {
+        const t = row?.total ?? Number(row?.quantity) * Number(row?.unitPrice);
+        if (Number.isFinite(t)) grandTotalAda += t;
+      }
+    }
+    const payload = { ...formData, status };
+    payload.metaData = { ...payload.metaData, totalBudget: grandTotalAda };
+    return payload;
   }
 
   function handleSubmit(e) {

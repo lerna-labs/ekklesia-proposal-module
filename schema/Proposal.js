@@ -48,8 +48,6 @@ const proposalSchema = new Schema(
       },
     ],
     submittedAt: { type: Date, required: false },
-    signature: { type: String, required: false },
-    totalBudget: { type: Number, required: false },
     version: { type: Number, default: 1 },
   },
   { timestamps: true, versionKey: false }

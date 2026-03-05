@@ -235,8 +235,8 @@
                     <td
                       class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-middle"
                     >
-                      {proposal.totalBudget != null
-                        ? `${formatAda(proposal.totalBudget)} ADA`
+                      {proposal.metaData?.totalBudget != null
+                        ? `${formatAda(proposal.metaData.totalBudget)} ADA`
                         : "—"}
                     </td>
                     <td
