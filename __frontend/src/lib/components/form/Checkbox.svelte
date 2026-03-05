@@ -28,7 +28,7 @@
       {id}
       bind:checked={value}
       aria-invalid={schemaError ? true : false}
-      class="shrink-0 mt-0.5 w-4 h-4 border border-muted-foreground/80"
+      class="shrink-0 mt-0.5 w-4 h-4 border border-muted-foreground/80 aria-invalid:border-muted-foreground/80 aria-invalid:ring-0"
     />
     <div class="min-w-0 flex-1 space-y-1">
       <div class="flex items-start gap-1 w-full min-w-0">
