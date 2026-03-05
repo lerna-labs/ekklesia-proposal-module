@@ -1,5 +1,6 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
+  import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
   import DefaultForm from "$lib/forms/default/Form.svelte";
@@ -47,6 +48,7 @@
   let showLegalErrors = $state(false);
   let openTreasuryModal = $state(false);
   let treasuryAcknowledged = $state(false);
+  let formRef = $state({});
   let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
   const showForm = $derived(
@@ -73,10 +75,10 @@
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
         toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
-        if (payload.status === "live") {
-          await invalidateAll();
-          goto("/dashboard");
-        }
+        formRef?.clearDirty?.();
+        await tick();
+        await invalidateAll();
+        goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const onlyLegalErrors =
@@ -130,5 +132,5 @@
 {/if}
 
 {#if vote && showForm}
-  <FormComponent {vote} {categories} {onSave} {showLegalErrors} bind:validationErrors bind:openLegalDialog />
+  <FormComponent {vote} {categories} {onSave} {showLegalErrors} {formRef} bind:validationErrors bind:openLegalDialog />
 {/if}

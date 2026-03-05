@@ -25,6 +25,7 @@
     validationErrors,
     openLegalDialog = $bindable(false),
     showLegalErrors = false,
+    formRef,
   } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
@@ -175,6 +176,13 @@
 
   let autoSaveEnabled = $state(true);
   let formControlsRef = $state(null);
+
+  /** Expose clearDirty so parent can reset dirty state before navigating after save (avoids "unsaved changes" dialog). */
+  $effect(() => {
+    if (formRef && formControlsRef) {
+      formRef.clearDirty = () => formControlsRef?.resetDirtyBaseline?.();
+    }
+  });
 
   onMount(() => {
     const stored = localStorage.getItem(BUDGET2026_AUTOSAVE_KEY);
