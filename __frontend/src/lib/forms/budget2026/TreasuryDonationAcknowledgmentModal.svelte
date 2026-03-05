@@ -6,12 +6,14 @@
    * @see docs/treasury-donation-acknowledgment-modal-plan.md
    */
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Card from "$lib/components/ui/card/index.js";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
 
   let {
     open = $bindable(false),
     onContinue,
     onCancel,
+    guideUrl = "https://intersectmbo.org",
   } = $props();
 
   let acknowledged = $state(false);
@@ -25,79 +27,75 @@
       class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
     >
       <AlertDialog.Header>
-        <AlertDialog.Title>Treasury Donation - Required Before Submission</AlertDialog.Title>
-        <AlertDialog.Description>
-          Please read the requirements below and confirm before continuing to the proposal form.
-        </AlertDialog.Description>
+        <AlertDialog.Title>Submit your Budget Proposal</AlertDialog.Title>
       </AlertDialog.Header>
 
       <div class="space-y-6 pr-2 text-sm">
-        <section class="space-y-2">
-          <h3 class="text-base font-medium">Why is this required?</h3>
-          <p class="text-muted-foreground">
-            To participate in the Intersect budget proposal process, proposers are required to make a
-            <strong>1,000 ADA non-refundable donation</strong> to the Cardano Treasury. This idea
-            originated from DReps and has strong support from both DReps and vendors.
-          </p>
-          <p class="text-muted-foreground mb-0">This donation:</p>
-          <ul class="list-disc pl-5 text-muted-foreground space-y-1">
-            <li>Confirms proposer commitment</li>
-            <li>Demonstrates control of the submitting wallet</li>
-            <li>Helps protect the process from spam or low-effort submissions</li>
-          </ul>
-        </section>
+        <p class="text-muted-foreground mb-3">
+          This form is used to submit a proposal to the Cardano Ecosystem Budget
+          Process facilitated by Intersect.
+        </p>
+        <p class="text-muted-foreground mb-3">
+          This budget process, designed by the Cardano Budget Committee and
+          supported by Cardano DReps, provides a
+          <strong>
+            transparent, structured, and strategic way to allocate Treasury
+            funds
+          </strong>
+          to initiatives that contribute to the long-term growth of the Cardano ecosystem.
+        </p>
+        <p class="text-muted-foreground">
+          Proposals submitted through this form will follow the defined
+          budgeting workflow, which includes
+          <strong>
+            DRep feedback, DRep off-chain voting, ahead of the on-chain treasury
+            withdrawals.
+          </strong>
+        </p>
 
-        <section class="space-y-2">
-          <h3 class="text-base font-medium">Important: One donation per proposal</h3>
-          <p class="text-muted-foreground">
-            Each 1,000 ADA donation applies to a single proposal only. If you intend to submit
-            multiple proposals, a separate donation is required for each proposal.
-          </p>
-        </section>
-
-        <section class="space-y-2">
-          <h3 class="text-base font-medium">Important: What this donation does not mean</h3>
-          <p class="text-muted-foreground mb-1">Making this donation <strong>does not:</strong></p>
-          <ul class="list-disc pl-5 text-muted-foreground space-y-1">
-            <li>Guarantee proposal approval</li>
-            <li>Guarantee on-chain execution</li>
-            <li>Guarantee funding, even if off-chain voting thresholds are met</li>
-            <li>
-              Guarantee that Intersect will submit or sponsor a Treasury Withdrawal Action
-            </li>
-          </ul>
-          <p class="text-muted-foreground">
-            All proposals remain subject to governance review, voting outcomes, and Net Change
-            Limit (NCL) constraints.
-          </p>
-        </section>
-
-        <section class="space-y-2">
-          <h3 class="text-base font-medium">Wallet requirement</h3>
-          <p class="text-muted-foreground">
-            You <strong>must use the same wallet</strong> to:
-          </p>
-          <ol class="list-decimal pl-5 text-muted-foreground space-y-1">
-            <li>Make the 1,000 ADA treasury donation</li>
-            <li>Submit your proposal in this application</li>
-          </ol>
-          <p class="text-muted-foreground">
-            This allows reviewers to verify proposer identity and wallet ownership. Proposals
-            submitted from a different wallet than the donation is not possible.
-          </p>
-        </section>
-
-        <div class="pt-2">
-          <Checkbox
-            id="treasury-acknowledgment"
-            bind:value={acknowledged}
-            label="I understand the treasury donation requirements and wish to continue."
-          />
-        </div>
+        <Card.Root class="gap-2">
+          <Card.Header class="pb-0">
+            <Card.Title>IMPORTANT</Card.Title>
+          </Card.Header>
+          <Card.Content class="space-y-4 pt-0">
+            <p class="text-muted-foreground mb-3">
+              To reduce potential spam and confirm proposer commitment, you'll
+              need to submit a non-refundable <strong>
+                1,000 ADA donation to the treasury
+              </strong>
+              and be logged in to this portal with
+              <strong>the same wallet you used to submit the donation.</strong>
+              In the last step of this process you'll be asked to provide proof for
+              this donation.
+            </p>
+            <p class="text-muted-foreground mb-3">
+              A separate donation is required for each proposal.
+            </p>
+            <p class="text-muted-foreground mb-4">
+              Read how to in
+              <a
+                href={guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary underline underline-offset-4 hover:no-underline"
+              >
+                this guide
+              </a>
+              .
+            </p>
+            <Checkbox
+              id="treasury-acknowledgment"
+              bind:value={acknowledged}
+              label="I agree this donation does not guarantee approval, success on-chain, or that Intersect will raise a governance action on your behalf, even if your proposal hits the 67% threshold."
+            />
+          </Card.Content>
+        </Card.Root>
       </div>
 
       <AlertDialog.Footer class="flex gap-2 shrink-0 mt-4">
-        <AlertDialog.Cancel onclick={() => onCancel?.()}>Cancel</AlertDialog.Cancel>
+        <AlertDialog.Cancel onclick={() => onCancel?.()}>
+          Cancel
+        </AlertDialog.Cancel>
         <AlertDialog.Action
           disabled={!acknowledged}
           onclick={() => {
