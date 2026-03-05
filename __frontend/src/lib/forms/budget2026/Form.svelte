@@ -107,6 +107,9 @@
     return n === 1 ? "1 Error" : `${n} Errors`;
   }
 
+  /** First accordion section (Project Definition) open by default. */
+  let accordionValue = $state(["section-1"]);
+
   let formData = $state({
     status: "draft",
     title: "",
@@ -381,7 +384,7 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <Accordion.Root type="multiple" class="max-w-4xl mx-auto px-4 w-full">
+  <Accordion.Root type="multiple" class="max-w-4xl mx-auto px-4 w-full" bind:value={accordionValue}>
     <Accordion.Item value="section-1" id="project-definition">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
