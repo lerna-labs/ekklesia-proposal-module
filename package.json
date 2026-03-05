@@ -16,7 +16,7 @@
   "type": "module",
   "dependencies": {
     "@emurgo/cardano-serialization-lib-nodejs": "^15.0.3",
-    "@meshsdk/core": "^1.9.0-beta.100",
+    "@meshsdk/core": "^1.9.0-beta.101",
     "bech32": "^2.0.0",
     "blakejs": "^1.2.1",
     "cbor": "^10.0.12",
