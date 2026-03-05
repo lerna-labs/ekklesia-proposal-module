@@ -385,7 +385,18 @@
   }
 
   function getPayload(status) {
-    return { ...formData, status };
+    const workPackages = formData.metaData?.proposalDetails?.workPackages ?? [];
+    let grandTotalAda = 0;
+    for (const wp of workPackages) {
+      const rows = Array.isArray(wp?.budgetBreakdown) ? wp.budgetBreakdown : [];
+      for (const row of rows) {
+        const t = row?.total ?? Number(row?.quantity) * Number(row?.unitPrice);
+        if (Number.isFinite(t)) grandTotalAda += t;
+      }
+    }
+    const payload = { ...formData, status };
+    payload.metaData = { ...payload.metaData, totalBudget: grandTotalAda };
+    return payload;
   }
 
   function handleSubmit(e) {
