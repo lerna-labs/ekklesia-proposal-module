@@ -78,6 +78,11 @@ const voteSchema = new Schema(
       type: String,
       required: true,
     },
+    commentsEnabled: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
   },
   {
     timestamps: true,
