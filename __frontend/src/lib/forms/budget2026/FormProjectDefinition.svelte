@@ -95,6 +95,6 @@
   description="Estimated duration of the project proposal"
   placeholder="Enter Duration in Months"
   required
-  class="sm: w-1/4 mb-8"
+  class="sm:w-1/4 mb-8"
   validationErrors={validationErrors?.properties?.metaData}
 />

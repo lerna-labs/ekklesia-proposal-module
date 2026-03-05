@@ -215,6 +215,7 @@
   bind:value={formData.metaData.independentAudits}
   label="Third Party Assurers"
   description="Who is your Third Party Assurer? This person can be a person or organization."
+  placeholder="e.g. The amount (if any) allocated for audits or assurance, etc."
   required
   maxLength={1000}
   validationErrors={administratorErrors}
