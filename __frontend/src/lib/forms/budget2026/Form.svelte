@@ -12,6 +12,7 @@
   import FormAdditionalInfo from "./FormAdditionalInfo.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
+  import { normalizeWorkPackage } from "./workPackageUtils.js";
   import { onMount, tick } from "svelte";
 
   const BUDGET2026_AUTOSAVE_KEY = "ekklesia.budget2026.autoSaveEnabled";
@@ -318,24 +319,9 @@
       ) {
         formData.metaData.proposalDetails = {
           ...formData.metaData.proposalDetails,
-          workPackages: p.metaData.proposalDetails.workPackages.map((wp) => ({
-            ...wp,
-            initiativeType: wp.initiativeType ?? "",
-            proposalType: wp.proposalType ?? "",
-            supportingDocuments: Array.isArray(wp?.supportingDocuments)
-              ? wp.supportingDocuments.map((l) => ({
-                  title: l?.title ?? "",
-                  url: l?.url ?? "",
-                }))
-              : [],
-            coreObjectives: Array.isArray(wp?.coreObjectives)
-              ? [...wp.coreObjectives]
-              : [""],
-            milestones: Array.isArray(wp?.milestones) ? [...wp.milestones] : [],
-            budgetBreakdown: Array.isArray(wp?.budgetBreakdown)
-              ? [...wp.budgetBreakdown]
-              : [],
-          })),
+          workPackages: p.metaData.proposalDetails.workPackages.map((wp) =>
+            normalizeWorkPackage(wp),
+          ),
         };
       }
       if (
@@ -345,24 +331,9 @@
       ) {
         formData.metaData.proposalDetails = {
           ...formData.metaData.proposalDetails,
-          workPackages: p.metaData.executionRoadmap.workPackages.map((wp) => ({
-            ...wp,
-            initiativeType: wp.initiativeType ?? "",
-            proposalType: wp.proposalType ?? "",
-            supportingDocuments: Array.isArray(wp?.supportingDocuments)
-              ? wp.supportingDocuments.map((l) => ({
-                  title: l?.title ?? "",
-                  url: l?.url ?? "",
-                }))
-              : [],
-            coreObjectives: Array.isArray(wp?.coreObjectives)
-              ? [...wp.coreObjectives]
-              : [""],
-            milestones: Array.isArray(wp?.milestones) ? [...wp.milestones] : [],
-            budgetBreakdown: Array.isArray(wp?.budgetBreakdown)
-              ? [...wp.budgetBreakdown]
-              : [],
-          })),
+          workPackages: p.metaData.executionRoadmap.workPackages.map((wp) =>
+            normalizeWorkPackage(wp),
+          ),
         };
       }
       // Never prefill legalDeclarations: they must be re-submitted on every submit/re-submit.

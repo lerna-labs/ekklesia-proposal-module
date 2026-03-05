@@ -37,6 +37,35 @@
     return null;
   }
 
+  /** Find nearest scrollable ancestor (overflow-y: auto | scroll) so we scroll the modal content, not the window. */
+  function getScrollParent(el) {
+    let parent = el.parentElement;
+    while (parent) {
+      const overflowY = getComputedStyle(parent).overflowY;
+      if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay")
+        return parent;
+      parent = parent.parentElement;
+    }
+    return null;
+  }
+
+  function scrollToElement(el) {
+    const scrollParent = getScrollParent(el);
+    if (scrollParent) {
+      const parentRect = scrollParent.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const padding = 16;
+      const targetScrollTop =
+        scrollParent.scrollTop + (elRect.top - parentRect.top) - padding;
+      scrollParent.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: "smooth",
+      });
+    } else {
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
   $effect(() => {
     const firstId = getFirstErrorFieldId(validationErrors);
     if (!firstId || !open) return;
@@ -44,7 +73,7 @@
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const el = document.getElementById(firstId);
-          el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          if (el) scrollToElement(el);
         });
       });
     });

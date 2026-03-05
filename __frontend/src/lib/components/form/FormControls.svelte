@@ -109,7 +109,6 @@
     )
       return;
     const id = setInterval(() => {
-      console.log("Auto-save running", new Date().toISOString());
       const payload = getPayload("draft");
       Promise.resolve(onSave(payload))
         .then(() => {
