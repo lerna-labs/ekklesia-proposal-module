@@ -54,11 +54,15 @@
       {/if}
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>
-    <RadioGroup.Root {id} bind:value={internal} class="grid gap-3">
+    <RadioGroup.Root {id} bind:value={internal} class="grid gap-2">
       {#each options as option (option.value)}
         {@const itemId = `${id}-${option.value}`}
         <div class="flex items-center gap-2">
-          <RadioGroup.Item value={option.value} id={itemId} />
+          <RadioGroup.Item
+            value={option.value}
+            id={itemId}
+            class="border border-muted-foreground/80"
+          />
           <label for={itemId} class="text-sm font-normal cursor-pointer">
             {option.label}
           </label>
