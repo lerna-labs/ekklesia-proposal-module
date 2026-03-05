@@ -51,34 +51,30 @@
     return getNodeAtPath(next, pathSegments.slice(1));
   }
 
-  /** Section value → list of error path segments (relative to validationErrors.properties). */
+  /** Section value → list of error path segments (relative to validationErrors.properties). Order matches accordion: 1=Project Definition … 8=Treasury Donation. */
   const SECTION_ERROR_PATHS = {
     "section-1": [
-      ["metaData", "treasuryDonationTxHash"],
-      ["metaData", "treasuryDonationConfirmed"],
-    ],
-    "section-2": [
       ["title"],
       ["summary"],
       ["metaData", "trackRecord"],
       ["metaData", "estimatedDuration"],
     ],
-    "section-3": [["metaData", "strategyFramework"]],
-    "section-4": [
+    "section-2": [["metaData", "strategyFramework"]],
+    "section-3": [
       ["metaData", "proposalDetails", "conversionRate"],
       ["metaData", "proposalDetails", "workPackages"],
     ],
-    "section-5": [
+    "section-4": [
       ["metaData", "treasuryRepayment"],
       ["metaData", "treasuryRepaymentCircumstances"],
       ["metaData", "priorFunding"],
     ],
-    "section-6": [
+    "section-5": [
       ["metaData", "proposerDetails", "name"],
       ["metaData", "proposerDetails", "email"],
       ["metaData", "proposerDetails", "links"],
     ],
-    "section-7": [
+    "section-6": [
       ["metaData", "administrator"],
       ["metaData", "intersectAdministratorFeeConsent"],
       ["metaData", "otherAdministrator"],
@@ -88,7 +84,11 @@
       ["metaData", "kycInfo"],
       ["metaData", "independentAudits"],
     ],
-    "section-8": [["metaData", "supportingInfoLinks"]],
+    "section-7": [["metaData", "supportingInfoLinks"]],
+    "section-8": [
+      ["metaData", "treasuryDonationTxHash"],
+      ["metaData", "treasuryDonationConfirmed"],
+    ],
   };
 
   let sectionErrorCounts = $derived.by(() => {
@@ -382,35 +382,13 @@
 
 <form onsubmit={handleSubmit} class="flex flex-col">
   <Accordion.Root type="multiple" class="max-w-4xl mx-auto px-4 w-full">
-    <Accordion.Item value="section-1" id="treasury-donation">
-      <Accordion.Trigger class="section-title">
-        <span class="flex items-center gap-2">
-          Treasury Donation
-          {#if sectionErrorCounts["section-1"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-1"])}
-            </Badge>
-          {/if}
-        </span>
-      </Accordion.Trigger>
-      <Accordion.Content>
-        <FormTreasuryDonation
-          bind:formData
-          {vote}
-          {categories}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-2" id="project-definition">
+    <Accordion.Item value="section-1" id="project-definition">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Project Definition
-          {#if sectionErrorCounts["section-2"] > 0}
+          {#if sectionErrorCounts["section-1"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-2"])}
+              {errorCountLabel(sectionErrorCounts["section-1"])}
             </Badge>
           {/if}
         </span>
@@ -426,13 +404,13 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-3" id="strategy-framework">
+    <Accordion.Item value="section-2" id="strategy-framework">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Alignment to Strategy framework
-          {#if sectionErrorCounts["section-3"] > 0}
+          {#if sectionErrorCounts["section-2"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-3"])}
+              {errorCountLabel(sectionErrorCounts["section-2"])}
             </Badge>
           {/if}
         </span>
@@ -448,13 +426,13 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-4" id="proposal-details">
+    <Accordion.Item value="section-3" id="proposal-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Proposal Details
-          {#if sectionErrorCounts["section-4"] > 0}
+          {#if sectionErrorCounts["section-3"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-4"])}
+              {errorCountLabel(sectionErrorCounts["section-3"])}
             </Badge>
           {/if}
         </span>
@@ -470,13 +448,13 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-5" id="budget-summary">
+    <Accordion.Item value="section-4" id="budget-summary">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Budget Summary
-          {#if sectionErrorCounts["section-5"] > 0}
+          {#if sectionErrorCounts["section-4"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-5"])}
+              {errorCountLabel(sectionErrorCounts["section-4"])}
             </Badge>
           {/if}
         </span>
@@ -492,13 +470,13 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-6" id="proposer-details">
+    <Accordion.Item value="section-5" id="proposer-details">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Proposer Details
-          {#if sectionErrorCounts["section-6"] > 0}
+          {#if sectionErrorCounts["section-5"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-6"])}
+              {errorCountLabel(sectionErrorCounts["section-5"])}
             </Badge>
           {/if}
         </span>
@@ -514,13 +492,13 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-7" id="budget-administration">
+    <Accordion.Item value="section-6" id="budget-administration">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Budget Administration
-          {#if sectionErrorCounts["section-7"] > 0}
+          {#if sectionErrorCounts["section-6"] > 0}
             <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-7"])}
+              {errorCountLabel(sectionErrorCounts["section-6"])}
             </Badge>
           {/if}
         </span>
@@ -536,10 +514,32 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-8" id="other-info">
+    <Accordion.Item value="section-7" id="other-info">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
           Other Supporting Info
+          {#if sectionErrorCounts["section-7"] > 0}
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-7"])}
+            </Badge>
+          {/if}
+        </span>
+      </Accordion.Trigger>
+      <Accordion.Content>
+        <FormAdditionalInfo
+          bind:formData
+          {vote}
+          {categories}
+          {proposal}
+          {validationErrors}
+        />
+      </Accordion.Content>
+    </Accordion.Item>
+
+    <Accordion.Item value="section-8" id="treasury-donation">
+      <Accordion.Trigger class="section-title">
+        <span class="flex items-center gap-2">
+          Treasury Donation
           {#if sectionErrorCounts["section-8"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-8"])}
@@ -548,7 +548,7 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content>
-        <FormAdditionalInfo
+        <FormTreasuryDonation
           bind:formData
           {vote}
           {categories}
