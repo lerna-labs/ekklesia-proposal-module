@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+const sortOptionSchema = new Schema(
+  {
+    value: { type: String, required: true },
+    label: { type: String, required: true },
+    field: { type: String, required: true },
+  },
+  { _id: false }
+);
+
 const voteSchema = new Schema(
   {
     title: {
@@ -82,6 +91,17 @@ const voteSchema = new Schema(
       type: Boolean,
       required: true,
       default: true,
+    },
+    /** Optional. When absent or empty, the default array below is used. */
+    sortOptions: {
+      type: [sortOptionSchema],
+      required: false,
+      default: () => [
+        { value: "title", label: "Proposal Title", field: "title" },
+        { value: "commentCount", label: "Comment Count", field: "commentCount" },
+        { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
+        { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
+      ],
     },
   },
   {

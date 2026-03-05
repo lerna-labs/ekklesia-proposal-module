@@ -203,7 +203,7 @@ router.get("/", async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Execute query with pagination (exclude validationScript from response)
-    const [votes, totalItems] = await Promise.all([
+    const [votesRaw, totalItems] = await Promise.all([
       Vote.find(query)
         .select("-validationScript")
         .sort({ createdAt: -1 }) // Sort by newest first
@@ -212,6 +212,7 @@ router.get("/", async (req, res) => {
         .lean(), // Use lean() for better performance
       Vote.countDocuments(query), // Get total count for pagination
     ]);
+    const votes = votesRaw;
 
     // Return 404 if search or slug parameters were provided but no matches found
     if ((search || slug) && totalItems === 0) {

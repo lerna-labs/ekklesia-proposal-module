@@ -209,6 +209,13 @@ async function createDummyData() {
                 depositAddress: "", // placeholder for "no deposit"
                 depositAmount: 0,
             },
+            sortOptions: [
+                { value: "title", label: "Proposal Title", field: "title" },
+                { value: "totalBudget", label: "Total Budget", field: "metaData.totalBudget" },
+                { value: "commentCount", label: "Comment Count", field: "commentCount" },
+                { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
+                { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
+            ],
         });
         console.log(`Vote created: ${vote._id}`);
 
@@ -391,13 +398,15 @@ async function createDummyData() {
                 return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
             }, 0) ?? 0;
             metaData.totalBudget = totalBudget;
+            // Stagger submittedAt so each proposal has a distinct timestamp (oldest = index 0, newest = last)
+            const submittedAt = new Date(now.getTime() - (LIVE_PROPOSAL_TEMPLATES.length - 1 - i) * 24 * 60 * 60 * 1000);
             const p = await Proposal.create({
                 proposerId: proposer.id,
                 voteId: vote._id,
                 title: t.title,
                 summary: t.summary,
                 status: "live",
-                submittedAt: now,
+                submittedAt,
                 metaData,
             });
             liveProposals.push(p);
