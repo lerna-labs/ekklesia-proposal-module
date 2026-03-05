@@ -28,7 +28,7 @@
       {id}
       bind:checked={value}
       aria-invalid={schemaError ? true : false}
-      class="shrink-0 mt-0.5"
+      class="shrink-0 mt-0.5 w-4 h-4 border border-muted-foreground/80 aria-invalid:border-muted-foreground/80 aria-invalid:ring-0"
     />
     <div class="min-w-0 flex-1 space-y-1">
       <div class="flex items-start gap-1 w-full min-w-0">
@@ -36,8 +36,13 @@
           for={id}
           class="mb-0 pb-0 text-sm cursor-pointer min-w-0 flex-1 block"
         >
-          <span class="inline">{label}</span>{#if required}<span class="text-(--mbo-electric-blue)">*</span>{/if}{#if notPublic}
-            <span class="inline-flex align-middle ml-1"><PrivateFieldIndicator /></span>{/if}
+          <span class="inline">{label}</span>
+          {#if required}<span class="text-(--mbo-electric-blue)">
+              *
+            </span>{/if}{#if notPublic}
+            <span class="inline-flex align-middle ml-1">
+              <PrivateFieldIndicator />
+            </span>{/if}
         </Field.Label>
         {#if descriptionProp}
           <ToolTip content={descriptionProp} class="shrink-0 mt-0.5" />
