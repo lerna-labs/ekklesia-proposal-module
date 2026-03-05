@@ -25,13 +25,13 @@
   );
 </script>
 
-<Field.Set class="space-y-2">
+<Field.Set class="space-y-1">
   <div>
     <h2 class="text-lg! font-medium">
       To which strategic pillar does your proposal align the most?
     </h2>
 
-    <p>
+    <p class="text-muted-foreground mb-0!">
       Looking at the <a
         href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
@@ -46,9 +46,8 @@
         class="link"
       >
         info action
-      </a>
-      , which one does your proposal support or relate to the most. Before selecting
-      read the whole
+      </a>, which one does your proposal support or relate to the most. Before
+      selecting read the whole
       <a
         href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
@@ -73,7 +72,7 @@
     <div
       class="space-y-2 rounded-md border {pillarsError
         ? 'border-destructive ring-destructive/20 ring-[3px]'
-        : 'border-input'}"
+        : 'border-transparent'}"
       aria-invalid={pillarsError ? true : false}
     >
       {#each categories ?? [] as category (category._id)}
@@ -94,9 +93,9 @@
             }
           }}
         >
-          <div class="text-lg font-medium w-full">{category.title}</div>
+          <div class="text font-medium w-full">{category.title}</div>
           <p
-            class="text-sm {pillars.includes(category._id)
+            class="text-xs mb-0! {pillars.includes(category._id)
               ? 'text-white/80'
               : 'text-muted-foreground'}"
           >
