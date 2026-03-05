@@ -3,6 +3,7 @@
   import { toast } from "svelte-sonner";
   import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
   import DefaultForm from "$lib/forms/default/Form.svelte";
+  import TreasuryDonationAcknowledgmentModal from "$lib/forms/budget2026/TreasuryDonationAcknowledgmentModal.svelte";
   import { api } from "$stores/sessionManager.js";
 
   const FORM_MAP = {
@@ -45,7 +46,19 @@
   let validationErrors = $state(null);
   let openLegalDialog = $state(false);
   let showLegalErrors = $state(false);
+  let openTreasuryModal = $state(false);
+  let treasuryAcknowledged = $state(false);
   let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
+
+  const showForm = $derived(
+    vote?.form !== "budget2026" || treasuryAcknowledged,
+  );
+
+  $effect(() => {
+    if (vote?.form === "budget2026" && !treasuryAcknowledged) {
+      openTreasuryModal = true;
+    }
+  });
 
   async function onSave(payload, options) {
     if (!proposal?._id) return;
@@ -106,12 +119,25 @@
   <h1 class="text-2xl font-semibold mb-6">Edit proposal</h1>
 </div>
 
-<FormComponent
-  {vote}
-  {categories}
-  {proposal}
-  {onSave}
-  {showLegalErrors}
-  bind:validationErrors
-  bind:openLegalDialog
-/>
+{#if vote?.form === "budget2026"}
+  <TreasuryDonationAcknowledgmentModal
+    bind:open={openTreasuryModal}
+    onContinue={() => {
+      treasuryAcknowledged = true;
+      openTreasuryModal = false;
+    }}
+    onCancel={() => goto("/dashboard")}
+  />
+{/if}
+
+{#if vote && showForm}
+  <FormComponent
+    {vote}
+    {categories}
+    {proposal}
+    {onSave}
+    {showLegalErrors}
+    bind:validationErrors
+    bind:openLegalDialog
+  />
+{/if}
