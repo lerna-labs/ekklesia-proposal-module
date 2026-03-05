@@ -10,6 +10,9 @@
     proposal,
     validationErrors,
   } = $props();
+
+  /** Errors for this section: metaData.treasuryDonation* so Input/Checkbox can resolve by id. */
+  let treasuryDonationErrors = $derived(validationErrors?.properties?.metaData);
 </script>
 
 <p class="text-sm text-muted-foreground mb-4">
@@ -26,7 +29,7 @@
   placeholder="Transaction hash"
   required
   maxLength={64}
-  {validationErrors}
+  validationErrors={treasuryDonationErrors}
   class="mb-4"
 />
 
@@ -37,6 +40,6 @@
   bind:value={formData.metaData.treasuryDonationConfirmed}
   label="I confirm that I have made the required 1,000 ADA non-refundable donation to the Cardano Treasury, understand that this donation is required only to participate in the process and does not guarantee proposal approval, funding, or execution, and confirm that I am submitting this proposal using the same wallet that made the donation."
   required
-  {validationErrors}
+  validationErrors={treasuryDonationErrors}
   class="mb-8"
 />
