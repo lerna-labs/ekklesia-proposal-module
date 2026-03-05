@@ -146,7 +146,12 @@
         residentialAddressLine3: "",
       },
       primaryContact: { name: "", email: "" },
-      signatoryContact: { title: "", name: "", email: "", authorization: false },
+      signatoryContact: {
+        title: "",
+        name: "",
+        email: "",
+        authorization: false,
+      },
       kycInfo: { submitted: "", email: "", totalProposalsSubmitted: "" },
       independentAudits: "",
       proposalDetails: { conversionRate: "", workPackages: [] },
@@ -256,7 +261,8 @@
             ...cp,
             legalEntityType: cp.legalEntityType ?? "",
             legalEntityName: cp.legalEntityName ?? "",
-            legalEntityRegistrationNumber: cp.legalEntityRegistrationNumber ?? "",
+            legalEntityRegistrationNumber:
+              cp.legalEntityRegistrationNumber ?? "",
             legalEntityCountry: cp.legalEntityCountry ?? "",
             legalEntityAddressLine1: cp.legalEntityAddressLine1 ?? "",
             legalEntityAddressLine2: cp.legalEntityAddressLine2 ?? "",
@@ -296,12 +302,15 @@
       const adm = p.metaData.administrator;
       if (adm !== undefined && adm !== null) {
         const v = String(adm).trim();
-        if (v === "Yes" || v === "Intersect") formData.metaData.administrator = "Intersect";
-        else if (v === "No" || v === "Other") formData.metaData.administrator = "Other";
+        if (v === "Yes" || v === "Intersect")
+          formData.metaData.administrator = "Intersect";
+        else if (v === "No" || v === "Other")
+          formData.metaData.administrator = "Other";
         else formData.metaData.administrator = v || "";
       }
       if (p.metaData.independentAudits != null) {
-        formData.metaData.independentAudits = p.metaData.independentAudits ?? "";
+        formData.metaData.independentAudits =
+          p.metaData.independentAudits ?? "";
       }
       const pd = p.metaData.proposerDetails;
       if (pd && typeof pd === "object") {
@@ -364,7 +373,9 @@
     if (!onSave || legalDialogSubmitting) return;
     legalDialogSubmitting = true;
     try {
-      await Promise.resolve(onSave(getPayload("live"), { fromLegalModal: true }));
+      await Promise.resolve(
+        onSave(getPayload("live"), { fromLegalModal: true }),
+      );
       openLegalDialog = false;
     } catch (_) {
       // Errors shown via validationErrors
@@ -384,7 +395,11 @@
 </script>
 
 <form onsubmit={handleSubmit} class="flex flex-col">
-  <Accordion.Root type="multiple" class="max-w-4xl mx-auto px-4 w-full" bind:value={accordionValue}>
+  <Accordion.Root
+    type="multiple"
+    class="max-w-4xl mx-auto px-4 w-full"
+    bind:value={accordionValue}
+  >
     <Accordion.Item value="section-1" id="project-definition">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
@@ -542,7 +557,7 @@
     <Accordion.Item value="section-8" id="treasury-donation">
       <Accordion.Trigger class="section-title">
         <span class="flex items-center gap-2">
-          Treasury Donation
+          Treasury Donation Verification
           {#if sectionErrorCounts["section-8"] > 0}
             <Badge variant="destructive">
               {errorCountLabel(sectionErrorCounts["section-8"])}
