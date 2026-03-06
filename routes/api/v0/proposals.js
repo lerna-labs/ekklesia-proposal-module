@@ -26,6 +26,11 @@ function getByPath(obj, path) {
   return current;
 }
 
+/** Escape special regex characters in a string for safe use in MongoDB $regex. */
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * @route POST /api/v0/proposals
  * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
@@ -620,7 +625,7 @@ router.get("/:proposalId", async (req, res) => {
  * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category IDs). Filters proposals where metaData.strategyFramework.pillars contains any of the provided category IDs. Valid values are MongoDB ObjectIds from the Category schema.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
- * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
+ * @query {string} [search] - Search term matched using the vote's searchOptions (e.g. title, summary, proposerId, _id; partial case-insensitive or exact per option)
  * @query {string} [sort] - Sort value from vote's sortOptions (e.g. title, submittedAt, updatedAt, commentCount). Default: first option.
  * @query {string} [direction=desc] - Sort direction: asc or desc
  * @query {number} [page=1] - Page number for pagination (default: 1)
@@ -693,6 +698,8 @@ router.get("/", async (req, res) => {
 
     const resolvedFilterOptions =
       voteDoc.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const resolvedSearchOptions =
+      voteDoc.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
     const filterParamSet = new Set(
       resolvedFilterOptions.map((o) => o.param)
     );
@@ -863,24 +870,36 @@ router.get("/", async (req, res) => {
       query.proposerId = validatedAddress;
     }
 
-    // Add search: title, metaData.contractingParty.legalEntityName, proposerId (partial, case-insensitive) or _id (exact match)
+    // Add search from vote's searchOptions (like / exact / objectId)
     if (search) {
       const searchTerm = search.trim();
-      if (searchTerm) {
-        const searchConditions = [
-          { title: { $regex: searchTerm, $options: "i" } },
-          {
-            "metaData.contractingParty.legalEntityName": {
-              $regex: searchTerm,
-              $options: "i",
-            },
-          },
-          { proposerId: { $regex: searchTerm, $options: "i" } },
-        ];
-        if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
-          searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
+      if (searchTerm && resolvedSearchOptions.length > 0) {
+        const searchConditions = [];
+        const escapedTerm = escapeRegex(searchTerm);
+        const isValidObjectId =
+          mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24;
+        for (const option of resolvedSearchOptions) {
+          if (option.matchType === "like") {
+            const opts = option.caseSensitive ? "" : "i";
+            searchConditions.push({
+              [option.field]: { $regex: escapedTerm, $options: opts },
+            });
+          } else if (option.matchType === "exact") {
+            searchConditions.push({ [option.field]: searchTerm });
+          } else if (option.matchType === "objectId" && isValidObjectId) {
+            searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
+          }
         }
-        query.$or = searchConditions;
+        if (searchConditions.length > 0) {
+          if (query.$or) {
+            const existingOr = query.$or;
+            delete query.$or;
+            query.$and = query.$and || [];
+            query.$and.push({ $or: existingOr }, { $or: searchConditions });
+          } else {
+            query.$or = searchConditions;
+          }
+        }
       }
     }
 

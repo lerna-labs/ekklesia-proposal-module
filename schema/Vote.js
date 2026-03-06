@@ -28,6 +28,15 @@ const filterOptionSchema = new Schema(
   { _id: false }
 );
 
+const searchOptionSchema = new Schema(
+  {
+    field: { type: String, required: true },
+    matchType: { type: String, required: true, enum: ["like", "exact", "objectId"] },
+    caseSensitive: { type: Boolean, required: false, default: false },
+  },
+  { _id: false }
+);
+
 const voteSchema = new Schema(
   {
     title: {
@@ -138,6 +147,17 @@ const voteSchema = new Schema(
           allowedValues: ["live", "withdrawn", "draft"],
           multiple: true,
         },
+      ],
+    },
+    /** Optional. Fields and match types for free-text search on proposals. When absent or empty, the default below is used. */
+    searchOptions: {
+      type: [searchOptionSchema],
+      required: false,
+      default: () => [
+        { field: "title", matchType: "like", caseSensitive: false },
+        { field: "summary", matchType: "like", caseSensitive: false },
+        { field: "proposerId", matchType: "like", caseSensitive: false },
+        { field: "_id", matchType: "objectId" },
       ],
     },
   },

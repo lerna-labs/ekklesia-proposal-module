@@ -321,6 +321,13 @@ async function createDummyData() {
                     optionsPath: "metaData.strategyFramework.pillars",
                 },
             ],
+            searchOptions: [
+                { field: "title", matchType: "like", caseSensitive: false },
+                { field: "summary", matchType: "like", caseSensitive: false },
+                { field: "proposerId", matchType: "like", caseSensitive: false },
+                { field: "metaData.proposerDetails.name", matchType: "like", caseSensitive: false },
+                { field: "_id", matchType: "objectId" },
+            ],
             metaData: { strategyFramework: { pillars } },
         });
         console.log(`Vote created: ${vote._id}`);
