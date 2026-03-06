@@ -79,6 +79,7 @@
         if (!onlyLegalErrors) {
           const msg = json?.message ?? "Failed to save proposal.";
           toast.error(msg);
+          openLegalDialog = false;
         }
         if (onlyLegalErrors) {
           openLegalDialog = true;
@@ -96,6 +97,7 @@
             ? err.body
             : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
         toast.error(msg);
+        openLegalDialog = false;
       }
       if (onlyLegalErrors) {
         openLegalDialog = true;

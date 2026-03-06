@@ -63,14 +63,14 @@ So:
   - No generic error toast
   - `openLegalDialog = true`
   - `showLegalErrors = (options?.fromLegalModal === true)` so the legal modal can show field-level errors when the user has already tried from the modal
-- **Other errors:**  
-  Generic error toast with `json?.message` (or fallback).
+- **Other errors (e.g. treasury donation, general validation):**  
+  Generic error toast with `json?.message` (or fallback), and **`openLegalDialog = false`** so the legal declarations modal is closed and the user sees the main form and its validation errors.
 - `throw new Error(...)` so callers (e.g. legal modal) can handle failure.
 
 ### 2.4 On catch (network or thrown error)
 
 - If `err?.body?.errors` exists, set `validationErrors = err.body.errors`
-- Same “only legal” vs “other” logic as above for toasts and opening the legal dialog
+- Same “only legal” vs “other” logic as above for toasts, opening the legal dialog, and closing it when errors are not only legal (`openLegalDialog = false`).
 - Re-throw
 
 ### 2.5 Finally
