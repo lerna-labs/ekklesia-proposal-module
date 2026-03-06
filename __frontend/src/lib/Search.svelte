@@ -61,7 +61,7 @@
     bind:value
     {placeholder}
     onkeydown={handleKeydown}
-    class="min-w-0 flex-1 pr-8"
+    class="min-w-0 flex-1 pl-2 pr-8"
     aria-label="Search"
   />
   <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-0.5">
@@ -70,7 +70,7 @@
         type="button"
         variant="ghost"
         size="icon"
-        class="size-8! min-w-0 shrink-0 rounded-none p-0! hover:bg-transparent cursor-pointer"
+        class="size-8! min-w-0 shrink-0 rounded-none p-0! bg-white hover:bg-white cursor-pointer"
         onclick={clear}
         aria-label="Clear search"
         title="Clear search"
