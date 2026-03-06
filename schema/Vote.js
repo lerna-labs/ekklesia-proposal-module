@@ -103,6 +103,11 @@ const voteSchema = new Schema(
         { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
       ],
     },
+    /** Optional. Vote-specific payload (e.g. strategyFramework.pillars for budget2026). Same path as on proposals. */
+    metaData: {
+      type: Schema.Types.Mixed,
+      required: false,
+    },
   },
   {
     timestamps: true,
