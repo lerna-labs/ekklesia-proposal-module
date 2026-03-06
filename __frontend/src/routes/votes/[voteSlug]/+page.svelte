@@ -81,7 +81,7 @@
       </h2>
       <div class="flex items-center gap-1">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
-        <SearchFilter categories={pillars} voteId={vote._id} />
+        <SearchFilter filterOptions={vote.filterOptions ?? []} vote={vote} voteId={vote._id} />
         <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>
     </div>

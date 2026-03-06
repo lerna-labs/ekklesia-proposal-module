@@ -44,7 +44,9 @@ router.get("/:voteId", async (req, res) => {
       });
     }
 
-    return res.status(200).json(vote);
+    const filterOptions =
+      vote.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    return res.status(200).json({ ...vote, filterOptions });
   } catch (error) {
     console.error("Error fetching vote by ID:", error);
     return res.status(500).json({
@@ -147,13 +149,19 @@ router.get("/", async (req, res) => {
       });
     }
 
+    const defaultFilterOptions = Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const votesWithFilterOptions = votes.map((v) => ({
+      ...v,
+      filterOptions: v.filterOptions ?? defaultFilterOptions,
+    }));
+
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / limitNum);
     const hasNextPage = pageNum < totalPages;
     const hasPreviousPage = pageNum > 1;
 
     return res.status(200).json({
-      data: votes,
+      data: votesWithFilterOptions,
       meta: {
         page: pageNum,
         limit: limitNum,
@@ -197,7 +205,9 @@ router.get("/:slug", async (req, res) => {
       });
     }
 
-    return res.status(200).json(vote);
+    const filterOptions =
+      vote.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    return res.status(200).json({ ...vote, filterOptions });
   } catch (error) {
     console.error("Error fetching vote by slug:", error);
     return res.status(500).json({

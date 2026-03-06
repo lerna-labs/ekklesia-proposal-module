@@ -15,6 +15,17 @@ import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
 
+function getByPath(obj, path) {
+  if (!obj || !path) return undefined;
+  const parts = path.split(".");
+  let current = obj;
+  for (const p of parts) {
+    current = current?.[p];
+    if (current === undefined) return undefined;
+  }
+  return current;
+}
+
 /**
  * @route POST /api/v0/proposals
  * @description Create a new proposal (draft or live). Requires authentication. Body validated with same schema as frontend (__frontend/src/lib/budget2026/Schema.js).
@@ -626,7 +637,6 @@ router.get("/", async (req, res) => {
     const {
       search,
       vote: voteParam,
-      category,
       proposer,
       status: statusParam,
       sort: sortParam,
@@ -673,13 +683,19 @@ router.get("/", async (req, res) => {
       });
     }
 
-    const voteDoc = await Vote.findById(voteTerm);
+    const voteDoc = await Vote.findById(voteTerm).lean();
     if (!voteDoc) {
       return res.status(404).json({
         status: "error",
         message: "Vote not found",
       });
     }
+
+    const resolvedFilterOptions =
+      voteDoc.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const filterParamSet = new Set(
+      resolvedFilterOptions.map((o) => o.param)
+    );
 
     // Check authentication (optional - don't fail if token is missing)
     let authenticatedUserId = null;
@@ -708,126 +724,123 @@ router.get("/", async (req, res) => {
     // Build search query - default to Live proposals, or filter by status
     let query = { voteId: new mongoose.Types.ObjectId(voteTerm) };
 
-    // Handle status filter (single value or comma-separated: live,withdrawn,draft).
+    // Handle status filter only if vote's filterOptions include status (same permission logic as before).
     // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
     // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
-    // Normalize: accept string "live,draft" or array ["live", "draft"] from query
+    const statusOption = resolvedFilterOptions.find((o) => o.param === "status");
     const statusStr =
       typeof statusParam === "string"
         ? statusParam
         : Array.isArray(statusParam)
           ? statusParam.join(",")
           : "";
-    if (statusStr) {
-      const statusTerms = statusStr
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-      const hasLive = statusTerms.includes("live");
-      const hasWithdrawn = statusTerms.includes("withdrawn");
-      const hasDraft = statusTerms.includes("draft");
-      const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
-      if (hasDraft && !mayRequestDraft) {
-        return res.status(400).json({
-          status: "error",
-          message:
-            "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
-        });
-      }
-      const statusIn = [];
-      if (hasLive) statusIn.push("live");
-      if (hasWithdrawn) {
-        statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
-      }
-      if (hasDraft && mayRequestDraft) {
-        statusIn.push("draft");
-      }
-      if (statusTerms.length === 0 && !isAuthenticatedUserQueryingOwnProposals) {
-        query.status = "live";
-      } else if (statusTerms.length === 0) {
-        // invalid and own proposals: don't filter by status
-      } else if (statusIn.length === 0) {
-        // only invalid terms (e.g. draft for non-admin) – default to live for non-own
+    if (filterParamSet.has("status") && statusOption) {
+      if (statusStr) {
+        const statusTerms = statusStr
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean);
+        const allowedSet = new Set(
+          (statusOption.allowedValues || []).map((s) => s.toLowerCase())
+        );
+        const invalidTerms = statusTerms.filter((t) => !allowedSet.has(t));
+        if (invalidTerms.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid status parameter. Allowed: ${(statusOption.allowedValues || []).join(", ")}.`,
+          });
+        }
+        const hasLive = statusTerms.includes("live");
+        const hasWithdrawn = statusTerms.includes("withdrawn");
+        const hasDraft = statusTerms.includes("draft");
+        const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
+        if (hasDraft && !mayRequestDraft) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
+          });
+        }
+        const statusIn = [];
+        if (hasLive) statusIn.push("live");
+        if (hasWithdrawn) {
+          statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
+        }
+        if (hasDraft && mayRequestDraft) {
+          statusIn.push("draft");
+        }
+        if (statusIn.length === 1) {
+          query.status = statusIn[0];
+        } else if (statusIn.length > 1) {
+          query.status = { $in: [...new Set(statusIn)] };
+        }
+      } else {
         if (!isAuthenticatedUserQueryingOwnProposals) {
           query.status = "live";
         }
-      } else if (statusIn.length === 1) {
-        query.status = statusIn[0];
-      } else {
-        query.status = { $in: [...new Set(statusIn)] };
       }
-    } else {
-      // Default to live if no status specified, unless authenticated user is querying own proposals
+    } else if (!filterParamSet.has("status")) {
       if (!isAuthenticatedUserQueryingOwnProposals) {
         query.status = "live";
       }
-      // If authenticated user is querying own proposals, don't filter by status (show all)
+    } else if (!statusStr) {
+      if (!isAuthenticatedUserQueryingOwnProposals) {
+        query.status = "live";
+      }
     }
 
-    // Add category filter (pillar IDs from vote.metaData.strategyFramework.pillars)
-    if (category) {
-      const categoryIds = category
+    // Add filters for options that have optionsPath (e.g. category from vote.metaData.strategyFramework.pillars)
+    for (const option of resolvedFilterOptions) {
+      if (!option.optionsPath || option.param === "status" || option.param === "proposer") continue;
+      const paramValue = req.query[option.param];
+      if (!paramValue || typeof paramValue !== "string") continue;
+
+      const ids = paramValue
         .split(",")
         .map((id) => id.trim())
         .filter((id) => id.length > 0);
 
-      if (categoryIds.length === 0) {
+      if (ids.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: "Invalid category parameter. Must provide at least one valid pillar ID.",
+          message: `Invalid ${option.param} parameter. Must provide at least one value.`,
         });
       }
 
-      if (!query.voteId) {
+      const optionList = getByPath(voteDoc, option.optionsPath);
+      if (!Array.isArray(optionList) || optionList.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: "Category filter requires vote parameter.",
+          message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
         });
       }
 
-      const vote = await Vote.findById(query.voteId).select("metaData").lean();
-      if (!vote) {
-        return res.status(404).json({
-          status: "error",
-          message: "Vote not found",
-        });
-      }
-
-      const votePillars = vote.metaData?.strategyFramework?.pillars ?? [];
-      if (votePillars.length === 0) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid category parameter. This vote has no pillars defined.",
-        });
-      }
-
-      const validPillarIds = new Set(
-        votePillars.map((p) => String(p._id))
+      const valueKey = option.optionValueKey ?? "_id";
+      const validIds = new Set(
+        optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
       );
-      const missingIds = categoryIds.filter((id) => !validPillarIds.has(id));
+      const missingIds = ids.filter((id) => !validIds.has(id));
       if (missingIds.length > 0) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following pillar IDs were not found for this vote: ${missingIds.join(", ")}.`,
+          message: `Invalid ${option.param} parameter. The following values were not found for this vote: ${missingIds.join(", ")}.`,
         });
       }
 
-      const categoryCondition = {
-        "metaData.strategyFramework.pillars": { $in: categoryIds },
-      };
+      const condition = { [option.field]: option.multiple ? { $in: ids } : ids[0] };
       if (query.$or) {
         const existingOr = query.$or;
         delete query.$or;
         query.$and = query.$and || [];
-        query.$and.push({ $or: existingOr }, categoryCondition);
+        query.$and.push({ $or: existingOr }, condition);
       } else {
         query.$and = query.$and || [];
-        query.$and.push(categoryCondition);
+        query.$and.push(condition);
       }
     }
 
-    // Add proposer filter (exact match, must be valid bech32 address)
-    if (proposer) {
+    // Add proposer filter only if vote's filterOptions include proposer (exact match, must be valid bech32 address)
+    if (proposer && filterParamSet.has("proposer")) {
       const proposerTerm = proposer.trim();
       // Validate bech32 address format - try stake first, then drep
       const stakeValidation = validateAddress(proposerTerm, "stake");

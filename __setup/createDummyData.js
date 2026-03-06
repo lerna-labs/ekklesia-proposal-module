@@ -304,6 +304,23 @@ async function createDummyData() {
                 { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
                 { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
             ],
+            filterOptions: [
+                {
+                    param: "status",
+                    label: "Status",
+                    field: "status",
+                    allowedValues: ["live", "withdrawn", "draft"],
+                    multiple: true,
+                },
+                {
+                    param: "category",
+                    label: "Category",
+                    field: "metaData.strategyFramework.pillars",
+                    allowedValues: [],
+                    multiple: true,
+                    optionsPath: "metaData.strategyFramework.pillars",
+                },
+            ],
             metaData: { strategyFramework: { pillars } },
         });
         console.log(`Vote created: ${vote._id}`);

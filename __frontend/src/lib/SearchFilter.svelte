@@ -12,10 +12,25 @@
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
-  import { shortenString } from "$lib/utils.js";
 
-  /** @type {{ categories?: Array<{ _id: string, title?: string }>, voteId?: string, class?: string }} */
-  let { categories = [], voteId = "", class: className = "" } = $props();
+  /** @type {{ filterOptions?: Array<{ param: string, label: string, field: string, allowedValues?: string[], multiple: boolean, optionsPath?: string, optionValueKey?: string, optionLabelKey?: string }>, vote?: Record<string, unknown>, voteId?: string, class?: string }} */
+  let {
+    filterOptions = [],
+    vote = null,
+    voteId = "",
+    class: className = "",
+  } = $props();
+
+  function getByPath(obj, path) {
+    if (!obj || !path) return undefined;
+    const parts = path.split(".");
+    let current = obj;
+    for (const p of parts) {
+      current = current?.[p];
+      if (current === undefined) return undefined;
+    }
+    return current;
+  }
 
   const isVoteAdmin = $derived(
     !!(
@@ -26,57 +41,72 @@
     ),
   );
 
+  const statusOption = $derived(
+    filterOptions.find((o) => o.param === "status"),
+  );
+
+  /** Options with optionsPath: resolve option list from vote and build { value, label }[] */
+  const optionsFromVoteByParam = $derived.by(() => {
+    const out = /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
+    for (const opt of filterOptions) {
+      if (!opt.optionsPath || !vote) continue;
+      const list = getByPath(vote, opt.optionsPath);
+      if (!Array.isArray(list)) continue;
+      const valueKey = opt.optionValueKey ?? "_id";
+      const labelKey = opt.optionLabelKey ?? "title";
+      out[opt.param] = list.map((item) => ({
+        value: String(item[valueKey] ?? ""),
+        label: String(item[labelKey] ?? item[valueKey] ?? ""),
+      })).filter((o) => o.value);
+    }
+    return out;
+  });
+
+  const categoryOption = $derived(filterOptions.find((o) => o.param === "category"));
+  const categoryOptionsList = $derived(optionsFromVoteByParam["category"] ?? []);
+
   const ALL_CATEGORIES_VALUE = "__all_categories__";
   let open = $state(false);
-  /** @type {string[]} */
-  let pendingCategories = $state([]);
   let pendingLive = $state(true);
   let pendingWithdrawn = $state(false);
   let pendingDraft = $state(false);
-  const STATUS_LIVE = "live";
-  const STATUS_WITHDRAWN = "withdrawn";
-  const STATUS_DRAFT = "draft";
+  /** @type {string[]} */
+  let pendingCategories = $state([]);
+
+  /** True when any filter param from filterOptions is present in the URL */
+  const hasActiveFilters = $derived.by(() => {
+    for (const opt of filterOptions) {
+      const val = page.url.searchParams.get(opt.param) ?? "";
+      if (val.trim()) return true;
+    }
+    return false;
+  });
 
   const categoryTriggerLabel = $derived(
     pendingCategories.length === 0
       ? "All Categories"
       : pendingCategories.length === 1
-        ? (categories.find((c) => String(c._id) === pendingCategories[0])
-            ?.title ?? pendingCategories[0])
+        ? (categoryOptionsList.find((c) => String(c.value) === pendingCategories[0])?.label ?? pendingCategories[0])
         : `${pendingCategories.length} Categories`,
   );
 
-  const proposerId = $derived(page.url.searchParams.get("proposer") ?? "");
-  const shortProposerId = $derived(shortenString(proposerId, 26, true));
-
-  /** True when any filter param is present (category, status, proposer) */
-  const hasActiveFilters = $derived.by(() => {
-    const cat = page.url.searchParams.get("category") ?? "";
-    const hasStatus = page.url.searchParams.has("status");
-    if (cat.trim()) return true;
-    if (hasStatus) return true;
-    if (proposerId) return true;
-    return false;
-  });
-
   $effect(() => {
-    const catParam = page.url.searchParams.get("category") ?? "";
-    const statusParam = page.url.searchParams.get("status") ?? "live";
-    const terms = statusParam.split(",").map((s) => s.trim().toLowerCase());
-    if (open) {
+    if (!open) return;
+    if (statusOption) {
+      const statusParam = page.url.searchParams.get("status") ?? "live";
+      const terms = statusParam.split(",").map((s) => s.trim().toLowerCase());
+      pendingLive = terms.includes("live");
+      pendingWithdrawn = terms.includes("withdrawn");
+      pendingDraft = terms.includes("draft");
+    }
+    if (categoryOption) {
+      const catParam = page.url.searchParams.get("category") ?? "";
       pendingCategories = catParam
-        ? catParam
-            .split(",")
-            .map((id) => id.trim())
-            .filter(Boolean)
+        ? catParam.split(",").map((id) => id.trim()).filter(Boolean)
         : [];
-      pendingLive = terms.includes(STATUS_LIVE);
-      pendingWithdrawn = terms.includes(STATUS_WITHDRAWN);
-      pendingDraft = terms.includes(STATUS_DRAFT);
     }
   });
 
-  // When "All Categories" is selected in the multi-select, clear category selection
   $effect(() => {
     if (pendingCategories.includes(ALL_CATEGORIES_VALUE)) {
       pendingCategories = [];
@@ -86,29 +116,35 @@
   function apply() {
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("page", "1");
-    const categoryIds = pendingCategories.filter(
-      (id) => id !== ALL_CATEGORIES_VALUE,
-    );
-    if (categoryIds.length > 0) {
-      searchParams.set("category", categoryIds.join(","));
-    } else {
-      searchParams.delete("category");
+
+    if (statusOption) {
+      const statusParts = [];
+      if (pendingLive) statusParts.push("live");
+      if (pendingWithdrawn) statusParts.push("withdrawn");
+      if (pendingDraft && isVoteAdmin) statusParts.push("draft");
+      const statusValue =
+        statusParts.length === 0 ? "live" : statusParts.join(",");
+      searchParams.set("status", statusValue);
     }
-    const statusParts = [];
-    if (pendingLive) statusParts.push(STATUS_LIVE);
-    if (pendingWithdrawn) statusParts.push(STATUS_WITHDRAWN);
-    if (pendingDraft && isVoteAdmin) statusParts.push(STATUS_DRAFT);
-    const statusValue =
-      statusParts.length === 0 ? STATUS_LIVE : statusParts.join(",");
-    searchParams.set("status", statusValue);
-    // Use literal commas in URL for status and category instead of encoded %2C
+
+    if (categoryOption) {
+      const categoryIds = pendingCategories.filter((id) => id !== ALL_CATEGORIES_VALUE);
+      if (categoryIds.length > 0) {
+        searchParams.set("category", categoryIds.join(","));
+      } else {
+        searchParams.delete("category");
+      }
+    }
+
     let qs = searchParams.toString();
-    for (const key of ["status", "category"]) {
-      const match = qs.match(new RegExp(`\\b${key}=([^&]*)`));
+    // Keep comma-separated values as literal commas in the URL (no %2C encoding)
+    for (const opt of filterOptions) {
+      if (!opt.multiple) continue;
+      const match = qs.match(new RegExp(`\\b${opt.param}=([^&]*)`));
       if (match) {
         qs = qs.replace(
-          new RegExp(`\\b${key}=[^&]*`),
-          key + "=" + decodeURIComponent(match[1]),
+          new RegExp(`\\b${opt.param}=[^&]*`),
+          opt.param + "=" + decodeURIComponent(match[1]),
         );
       }
     }
@@ -119,9 +155,9 @@
 
   function resetFilters() {
     const searchParams = new URLSearchParams(page.url.searchParams);
-    searchParams.delete("category");
-    searchParams.delete("status");
-    searchParams.delete("proposer");
+    for (const opt of filterOptions) {
+      searchParams.delete(opt.param);
+    }
     searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
@@ -130,124 +166,114 @@
 </script>
 
 <div class={className}>
-  <Popover.Root bind:open>
-    <Popover.Trigger
-      class={buttonVariants({
-        variant: "outline",
-        size: "icon",
-        class: "cursor-pointer relative",
-      })}
-      aria-label="Filter proposals"
-    >
-      <FilterIcon class="size-4" />
-      {#if hasActiveFilters}
-        <span
-          class="absolute top-1.5 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
-          aria-hidden="true"
-        ></span>
-      {/if}
-    </Popover.Trigger>
-    <Popover.Content align="end" class="w-64 p-3">
-      <h3 class="text-sm font-medium mb-2">Filter Options</h3>
-      <Separator.Root class="mb-3" />
-      <div class="space-y-4">
-        {#if shortProposerId}
-          <div class="space-y-1">
-            <Label class="text-xs text-muted-foreground">Proposer</Label>
-            <p class="text-sm font-medium truncate" title={proposerId}>
-              {shortProposerId}
-            </p>
-          </div>
+  {#if filterOptions.length > 0}
+    <Popover.Root bind:open>
+      <Popover.Trigger
+        class={buttonVariants({
+          variant: "outline",
+          size: "icon",
+          class: "relative cursor-pointer",
+        })}
+        aria-label="Filter proposals"
+      >
+        <FilterIcon class="size-4" />
+        {#if hasActiveFilters}
+          <span
+            class="absolute top-1.5 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            aria-hidden="true"
+          ></span>
         {/if}
-        <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">Category</Label>
-          <Select.Root type="multiple" bind:value={pendingCategories}>
-            <Select.Trigger
-              class="w-full min-w-0 text-foreground data-[placeholder]:text-foreground"
-              aria-label="Category"
-            >
-              <span class="truncate block min-w-0">{categoryTriggerLabel}</span>
-            </Select.Trigger>
-            <Select.Content>
-              <Select.Group aria-label="Categories">
-                <Select.Item
-                  value={ALL_CATEGORIES_VALUE}
-                  label="All Categories"
-                >
-                  All Categories
-                </Select.Item>
-                {#each categories as cat (cat._id)}
-                  <Select.Item
-                    value={String(cat._id)}
-                    label={cat.title ?? String(cat._id)}
+      </Popover.Trigger>
+      <Popover.Content align="end" class="w-64 p-3">
+        <h3 class="text-sm font-medium mb-2">Filter Options</h3>
+        <Separator.Root class="mb-3" />
+        <div class="space-y-4">
+          {#if statusOption}
+            <div class="space-y-2">
+              <Label class="text-xs text-muted-foreground">{statusOption.label}</Label>
+              <div class="space-y-0">
+                {#if statusOption.allowedValues?.includes("live")}
+                  <label
+                    for="filter-status-live"
+                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
                   >
-                    {cat.title ?? cat._id}
-                  </Select.Item>
-                {/each}
-              </Select.Group>
-            </Select.Content>
-          </Select.Root>
-        </div>
-        <div class="space-y-2">
-          <Label class="text-xs text-muted-foreground">Status</Label>
-          <div class="space-y-0">
-            <label
-              for="filter-status-live"
-              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-            >
-              <Checkbox id="filter-status-live" bind:checked={pendingLive} />
-              <span class="cursor-pointer font-normal">Live</span>
-            </label>
-            <label
-              for="filter-status-withdrawn"
-              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
-            >
-              <Checkbox
-                id="filter-status-withdrawn"
-                bind:checked={pendingWithdrawn}
-              />
-              <span class="cursor-pointer font-normal">Withdrawn</span>
-            </label>
-            {#if isVoteAdmin}
-              <label
-                for="filter-status-draft"
-                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                    <Checkbox id="filter-status-live" bind:checked={pendingLive} class="border border-muted-foreground/80" />
+                    <span class="cursor-pointer font-normal">Live</span>
+                  </label>
+                {/if}
+                {#if statusOption.allowedValues?.includes("withdrawn")}
+                  <label
+                    for="filter-status-withdrawn"
+                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                  >
+                    <Checkbox id="filter-status-withdrawn" bind:checked={pendingWithdrawn} class="border border-muted-foreground/80" />
+                    <span class="cursor-pointer font-normal">Withdrawn</span>
+                  </label>
+                {/if}
+                {#if isVoteAdmin && statusOption.allowedValues?.includes("draft")}
+                  <label
+                    for="filter-status-draft"
+                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                  >
+                    <Checkbox id="filter-status-draft" bind:checked={pendingDraft} class="border border-muted-foreground/80" />
+                    <span class="cursor-pointer font-normal">Draft</span>
+                  </label>
+                {/if}
+              </div>
+            </div>
+          {/if}
+          {#if categoryOption && categoryOptionsList.length > 0}
+            <div class="space-y-2">
+              <Label class="text-xs text-muted-foreground">{categoryOption.label}</Label>
+              <Select.Root type="multiple" bind:value={pendingCategories}>
+                <Select.Trigger
+                  class="w-full min-w-0 text-foreground data-placeholder:text-foreground"
+                  aria-label={categoryOption.label}
+                >
+                  <span class="truncate block min-w-0">{categoryTriggerLabel}</span>
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Group aria-label="Categories">
+                    <Select.Item value={ALL_CATEGORIES_VALUE} label="All Categories">
+                      All Categories
+                    </Select.Item>
+                    {#each categoryOptionsList as opt (opt.value)}
+                      <Select.Item value={opt.value} label={opt.label}>
+                        {opt.label}
+                      </Select.Item>
+                    {/each}
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </div>
+          {/if}
+          <div class="border-t pt-3 flex gap-1">
+            {#if hasActiveFilters}
+              <Button.Root
+                type="button"
+                variant="destructive"
+                size="sm"
+                class="flex-1 text-xs text-white"
+                aria-label="Reset filters"
+                onclick={resetFilters}
               >
-                <Checkbox
-                  id="filter-status-draft"
-                  bind:checked={pendingDraft}
-                />
-                <span class="cursor-pointer font-normal">Draft</span>
-              </label>
+                <Trash2Icon class="size-4" />
+                Reset
+              </Button.Root>
             {/if}
-          </div>
-        </div>
-        <div class="border-t pt-3 flex gap-1">
-          {#if hasActiveFilters}
             <Button.Root
               type="button"
-              variant="destructive"
+              variant="default"
               size="sm"
-              class="flex-1 text-xs text-white"
-              aria-label="Reset filters"
-              onclick={resetFilters}
+              class="flex-1 text-xs"
+              onclick={apply}
             >
-              <Trash2Icon class="size-4" />
-              Reset
+              <CheckIcon class="size-4" />
+              Apply
             </Button.Root>
-          {/if}
-          <Button.Root
-            type="button"
-            variant="default"
-            size="sm"
-            class="flex-1 text-xs"
-            onclick={apply}
-          >
-            <CheckIcon class="size-4" />
-            Apply
-          </Button.Root>
+          </div>
         </div>
-      </div>
-    </Popover.Content>
-  </Popover.Root>
+      </Popover.Content>
+    </Popover.Root>
+  {/if}
 </div>
