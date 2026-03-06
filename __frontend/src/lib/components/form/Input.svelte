@@ -12,6 +12,7 @@
     validationErrors,
     notPublic = false,
     required = false,
+    disabled = false,
     maxLength,
     minLength,
     type = "text",
@@ -57,6 +58,7 @@
     {type}
     bind:value
     {placeholder}
+    {disabled}
     maxlength={maxLength}
     {min}
     {max}

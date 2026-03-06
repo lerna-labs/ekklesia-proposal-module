@@ -14,6 +14,60 @@ import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
+import { verifyDeposit } from "../../../helper/verifyDeposit.js";
+
+/** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
+function treasuryTxHashErrorTree(message) {
+  return {
+    properties: {
+      metaData: {
+        properties: {
+          treasuryDonationTxHash: { errors: [message] },
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Validate treasury donation tx hash: normalize, check uniqueness across proposals, call verifyDeposit.
+ * @param {string} txHash - Raw tx hash from metaData.treasuryDonationTxHash
+ * @param {string} proposerId - Proposer stake address
+ * @param {import("mongoose").LeanDocument} voteDoc - Vote document (lean) with depositOptions.treasuryDonation
+ * @param {{ excludeProposalIds?: import("mongoose").Types.ObjectId[] }} [options] - On PUT, exclude current proposal + versions
+ * @returns {Promise<{ ok: true, normalizedHash: string } | { ok: false, error: string }>}
+ */
+async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, options = {}) {
+  const normalizedHash = String(txHash ?? "").trim().toLowerCase();
+  if (!normalizedHash) {
+    return { ok: false, error: "Treasury donation verification hash is required to submit" };
+  }
+  const excludeProposalIds = options.excludeProposalIds ?? [];
+  const treasuryDonation = voteDoc?.depositOptions?.treasuryDonation;
+  if (treasuryDonation == null) {
+    return { ok: false, error: "Vote has no treasury donation configured" };
+  }
+
+  // Uniqueness: same hash not allowed on another proposal (case-insensitive). Allow same proposal + its versions.
+  const regex = new RegExp(`^${escapeRegex(normalizedHash)}$`, "i");
+  const existing = await Proposal.findOne({
+    "metaData.treasuryDonationTxHash": regex,
+    _id: { $nin: excludeProposalIds },
+  })
+    .lean()
+    .exec();
+  if (existing) {
+    return { ok: false, error: "This transaction hash is already used by another proposal" };
+  }
+
+  const result = await verifyDeposit(normalizedHash, proposerId, {
+    treasuryDonation,
+  });
+  if (result !== true) {
+    return { ok: false, error: result?.error ?? "Transaction verification failed" };
+  }
+  return { ok: true, normalizedHash };
+}
 
 function getByPath(obj, path) {
   if (!obj || !path) return undefined;
@@ -108,6 +162,31 @@ router.post("/", async (req, res) => {
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
     const sanitizedMetaData = { ...rawMetaData };
+
+    if (status === "live" && voteDoc.depositOptions?.treasuryDonation != null) {
+      const txHash = metaData?.treasuryDonationTxHash;
+      if ((txHash ?? "").toString().trim() === "") {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: treasuryTxHashErrorTree("Treasury donation verification hash is required to submit"),
+        });
+      }
+      const validationResult = await validateProposalTreasuryTxHash(
+        txHash,
+        proposerId,
+        voteDoc,
+        {},
+      );
+      if (!validationResult.ok) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: treasuryTxHashErrorTree(validationResult.error),
+        });
+      }
+      sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
+    }
 
     const doc = {
       proposerId,
@@ -471,6 +550,41 @@ router.put("/:proposalId", async (req, res) => {
 
     const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
+
+    if (proposal.status === "live") {
+      sanitizedMetaData.treasuryDonationTxHash =
+        proposal.metaData?.treasuryDonationTxHash ?? sanitizedMetaData.treasuryDonationTxHash;
+    } else if (
+      status === "live" &&
+      voteDoc.depositOptions?.treasuryDonation != null
+    ) {
+      const txHash = metaData?.treasuryDonationTxHash;
+      if ((txHash ?? "").toString().trim() === "") {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: treasuryTxHashErrorTree("Treasury donation verification hash is required to submit"),
+        });
+      }
+      const excludeProposalIds = [
+        proposal._id,
+        ...(proposal.versions ?? []).map((v) => v._id),
+      ];
+      const validationResult = await validateProposalTreasuryTxHash(
+        txHash,
+        String(tokenResult.userId ?? "").trim(),
+        voteDoc,
+        { excludeProposalIds },
+      );
+      if (!validationResult.ok) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: treasuryTxHashErrorTree(validationResult.error),
+        });
+      }
+      sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
+    }
 
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
     proposal.title = title;
