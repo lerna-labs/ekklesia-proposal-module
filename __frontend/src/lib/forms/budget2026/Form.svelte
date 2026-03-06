@@ -19,7 +19,7 @@
 
   let {
     vote,
-    categories,
+    pillars,
     proposal,
     onSave,
     validationErrors,
@@ -434,7 +434,6 @@
         <FormProjectDefinition
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -456,7 +455,7 @@
         <FormStrategyFramework
           bind:formData
           {vote}
-          {categories}
+          {pillars}
           {proposal}
           {validationErrors}
         />
@@ -478,7 +477,6 @@
         <FormProposalDetails
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -500,7 +498,6 @@
         <FormBudgetSummary
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -522,7 +519,6 @@
         <FormProposerDetails
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -544,7 +540,6 @@
         <FormBudgetAdmin
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -566,7 +561,6 @@
         <FormAdditionalInfo
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />
@@ -588,7 +582,6 @@
         <FormTreasuryDonation
           bind:formData
           {vote}
-          {categories}
           {proposal}
           {validationErrors}
         />

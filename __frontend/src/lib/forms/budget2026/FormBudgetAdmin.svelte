@@ -8,7 +8,6 @@
   let {
     formData = $bindable(),
     vote,
-    categories,
     proposal,
     validationErrors,
   } = $props();
@@ -183,7 +182,6 @@
   <FormBudgetAdministrationIntersect
     bind:formData
     {vote}
-    {categories}
     {proposal}
     {validationErrors}
   />
@@ -193,7 +191,6 @@
   <FormBudgetAdminOther
     bind:formData
     {vote}
-    {categories}
     {proposal}
     {validationErrors}
   />
