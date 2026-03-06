@@ -28,6 +28,7 @@
   placeholder="Transaction hash"
   required
   maxLength={64}
+  disabled={proposal?.status === "live"}
   validationErrors={treasuryDonationErrors}
   class="mb-4"
 />
