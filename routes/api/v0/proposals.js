@@ -818,22 +818,24 @@ router.get("/", async (req, res) => {
       resolvedFilterOptions.map((o) => o.param)
     );
 
-    // Check authentication (optional - don't fail if token is missing)
+    // Check authentication (optional - don't fail if token is missing).
+    // Use same normalized comparison as GET single for consistent exclude/auth behavior.
     let authenticatedUserId = null;
     const tokenResult = verifyToken(req);
     if (tokenResult.status === "success" && tokenResult.userId) {
-      authenticatedUserId = tokenResult.userId.toString();
+      authenticatedUserId = String(tokenResult.userId ?? "").trim();
     }
 
-    // Check if authenticated user is an admin of this vote
+    // Check if authenticated user is an admin of this vote (same logic as GET single: .some with trim).
     let isVoteAdmin = false;
     if (
       authenticatedUserId &&
       voteDoc.admins &&
-      Array.isArray(voteDoc.admins) &&
-      voteDoc.admins.includes(authenticatedUserId)
+      Array.isArray(voteDoc.admins)
     ) {
-      isVoteAdmin = true;
+      isVoteAdmin = voteDoc.admins.some(
+        (id) => String(id).trim() === authenticatedUserId
+      );
     }
 
     // Check if authenticated user is querying their own proposals
@@ -1110,6 +1112,21 @@ router.get("/", async (req, res) => {
         ...p,
         commentCount: commentCountsById.get(String(p._id)) ?? 0,
       }));
+    }
+
+    // Apply exclude script: remove non-public fields unless proposer or vote admin (same as GET single).
+    if (voteDoc.excludeScript) {
+      const excludeMod = await loadExcludeScript(voteDoc.excludeScript);
+      if (excludeMod?.excludeNonPublicFields) {
+        proposals = proposals.map((proposal) => {
+          const isProposer =
+            String(proposal.proposerId ?? "").trim() === authenticatedUserId;
+          return excludeMod.excludeNonPublicFields(proposal, {
+            isProposer,
+            isAdmin: isVoteAdmin,
+          });
+        });
+      }
     }
 
     const formattedProposals = proposals.map((proposal) => {

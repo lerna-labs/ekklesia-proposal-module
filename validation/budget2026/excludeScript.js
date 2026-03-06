@@ -13,22 +13,14 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
     return proposal;
   }
 
+  // Paths to remove: whole objects (entirely non-public) or single non-public fields.
   const paths = [
-    "metaData.financialAndAdministrative.otherAdministrators",
-    "metaData.contractingParty.legalEntityAddress",
-    "metaData.contractingParty.legalEntityCountry",
-    "metaData.contractingParty.legalEntityRegistrationNumber",
-    "metaData.contractingParty.fullResidentialAddress",
-    "metaData.contractingParty.countryOfResidence",
-    "metaData.contractingParty.govtIssuedIdNumber",
-    "metaData.primaryContact.email",
-    "metaData.signatoryContact.title",
-    "metaData.signatoryContact.name",
-    "metaData.signatoryContact.email",
-    "metaData.signatoryContact.authorization",
-    "metaData.kycInfo.submitted",
-    "metaData.kycInfo.email",
-    "metaData.kycInfo.totalProposalsSubmitted",
+    "metaData.contractingParty",
+    "metaData.primaryContact",
+    "metaData.signatoryContact",
+    "metaData.kycInfo",
+    "metaData.legalDeclarations",
+    "metaData.proposerDetails.email",
   ];
 
   const result = JSON.parse(JSON.stringify(proposal));
