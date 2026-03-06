@@ -1,15 +1,17 @@
 /**
- * Create dummy data: 1 vote, import categories, 12 live proposals (for pagination), 1 withdrawn proposal, 1 draft.
+ * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 1 draft.
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
- * Uses current schemas: Vote, Category, Proposal, Comment, User.
+ * Uses current schemas: Vote, Proposal, Comment, User.
  *
  * Usage (from project root): node __setup/createDummyData.js
  * From __setup: node createDummyData.js
  */
 
+import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "..", ".env.development") });
@@ -22,7 +24,85 @@ import { Vote } from "../schema/Vote.js";
 import { Proposal } from "../schema/Proposal.js";
 import { Comment } from "../schema/Comment.js";
 import { User } from "../schema/User.js";
-import { importCategoriesForVote } from "./importCategories.js";
+
+const CSV_PATH = path.join(__dirname, "categories.csv");
+
+function parseCsvLine(line) {
+    const fields = [];
+    let i = 0;
+    while (i < line.length) {
+        if (line[i] === '"') {
+            let searchStart = i + 1;
+            while (searchStart < line.length) {
+                const next = line.indexOf('"', searchStart);
+                if (next === -1) {
+                    fields.push(line.slice(i + 1).replace(/""/g, '"'));
+                    i = line.length;
+                    break;
+                }
+                if (line[next + 1] === '"') {
+                    searchStart = next + 2;
+                    continue;
+                }
+                fields.push(line.slice(i + 1, next).replace(/""/g, '"'));
+                i = next + 1;
+                if (line[i] === ";") i++;
+                break;
+            }
+            continue;
+        }
+        const sep = line.indexOf(";", i);
+        if (sep === -1) {
+            fields.push(line.slice(i).trim());
+            break;
+        }
+        fields.push(line.slice(i, sep).trim());
+        i = sep + 1;
+    }
+    return fields;
+}
+
+/**
+ * Parse categories.csv and return pillars array { _id, title, description, sortOrder } (deduplicated by pillar title).
+ * @returns {Array<{ _id: string, title: string, description: string, sortOrder: number }>}
+ */
+function buildPillarsFromCsv() {
+    const raw = readFileSync(CSV_PATH, "utf8");
+    const lines = raw.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) {
+        throw new Error("categories.csv must have a header row and at least one data row.");
+    }
+    const header = parseCsvLine(lines[0]);
+    const dataRows = lines.slice(1);
+    const rows = dataRows.map((line) => {
+        const values = parseCsvLine(line);
+        const row = {};
+        header.forEach((h, i) => {
+            row[h] = values[i] ?? "";
+        });
+        return row;
+    });
+    const seen = new Map();
+    for (const row of rows) {
+        const pillar = (row["Pillar"] ?? "").trim();
+        if (!pillar) continue;
+        if (seen.has(pillar)) continue;
+        const pillarDesc = (row["Pillar description"] ?? "").trim();
+        seen.set(pillar, { title: pillar, description: pillarDesc || "" });
+    }
+    const pillars = [];
+    let sortOrder = 0;
+    for (const { title, description } of seen.values()) {
+        sortOrder += 1;
+        pillars.push({
+            _id: new mongoose.Types.ObjectId().toString(),
+            title,
+            description: description ?? "",
+            sortOrder,
+        });
+    }
+    return pillars;
+}
 
 /** Legal declarations (Budget 2026 schema: dataProcessingConsent, submitterName, etc.). */
 const LEGAL_DECLARATIONS = {
@@ -190,6 +270,14 @@ async function createDummyData() {
         const reviewEnd = new Date(reviewStart);
         reviewEnd.setMonth(reviewEnd.getMonth() + 1);
 
+        // Build pillars from categories.csv (same path as on proposals: metaData.strategyFramework.pillars)
+        console.log("Building pillars from categories.csv...");
+        const pillars = buildPillarsFromCsv();
+        if (pillars.length === 0) {
+            throw new Error("No pillars from categories.csv. Check categories.csv.");
+        }
+        console.log(`Built ${pillars.length} pillars.`);
+
         const vote = await Vote.create({
             title: "Test Budget 2026",
             description: "A test vote for demonstration with one proposal and comments.",
@@ -216,16 +304,9 @@ async function createDummyData() {
                 { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
                 { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
             ],
+            metaData: { strategyFramework: { pillars } },
         });
         console.log(`Vote created: ${vote._id}`);
-
-        // 2. Import categories for this vote
-        console.log("Importing categories from categories.csv...");
-        const categories = await importCategoriesForVote(vote._id);
-        if (categories.length === 0) {
-            throw new Error("No categories imported. Check categories.csv.");
-        }
-        console.log(`Imported ${categories.length} categories.`);
 
         // 3. Ensure all proposers have User table entries (required for proposal creation)
         for (const proposer of PROPOSERS) {
@@ -384,14 +465,14 @@ async function createDummyData() {
         for (let i = 0; i < LIVE_PROPOSAL_TEMPLATES.length; i++) {
             const t = LIVE_PROPOSAL_TEMPLATES[i];
             const proposer = randomProposer();
-            // Some proposals have one category, others have two (when we have at least 2 categories)
-            const singleCat = categories[i % categories.length];
+            // Some proposals have one pillar, others have two (when we have at least 2 pillars)
+            const singlePillar = pillars[i % pillars.length];
             const categoryIds =
-                categories.length >= 2 && i % 3 === 1
-                    ? [singleCat._id, categories[(i + 1) % categories.length]._id]
-                    : [singleCat._id];
-            const categoryTitles = categoryIds.map((id) => categories.find((c) => String(c._id) === String(id))?.title ?? id).join(", ");
-            console.log(`Creating live proposal ${i + 1}/12: ${t.title} (proposer: ${proposer.name}, categories: ${categoryTitles})...`);
+                pillars.length >= 2 && i % 3 === 1
+                    ? [singlePillar._id, pillars[(i + 1) % pillars.length]._id]
+                    : [singlePillar._id];
+            const categoryTitles = categoryIds.map((id) => pillars.find((p) => String(p._id) === String(id))?.title ?? id).join(", ");
+            console.log(`Creating live proposal ${i + 1}/12: ${t.title} (proposer: ${proposer.name}, pillars: ${categoryTitles})...`);
             const metaData = buildBudget2026MetaData(t, categoryIds, i);
             const totalBudget = metaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
                 const rows = wp.budgetBreakdown || [];
@@ -422,7 +503,7 @@ async function createDummyData() {
             contactName: "Withdrawn Proposer",
             contactEmail: "withdrawn@example.com",
         };
-        const withdrawnCategoryIds = [categories[0]._id];
+        const withdrawnCategoryIds = [pillars[0]._id];
         const withdrawnMetaData = buildBudget2026MetaData(withdrawnTemplate, withdrawnCategoryIds, 12);
         const withdrawnTotalBudget = withdrawnMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
             const rows = wp.budgetBreakdown || [];
@@ -532,7 +613,7 @@ async function createDummyData() {
 
         console.log("\n✅ Dummy data created successfully.");
         console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
-        console.log(`  Categories: ${categories.length}`);
+        console.log(`  Pillars: ${pillars.length}`);
         console.log(`  Proposers (all have User entries): ${PROPOSERS.map((p) => p.name).join(", ")}`);
         console.log(`  Live proposals: 12 (for pagination; random proposer, varying category per proposal)`);
         liveProposals.forEach((p, i) => console.log(`    ${i + 1}. ${p.title}: ${p._id}`));
