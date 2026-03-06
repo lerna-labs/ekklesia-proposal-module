@@ -20,7 +20,7 @@
   let {
     proposal,
     vote,
-    categories = [],
+    pillars = [],
     showLink = true,
     class: className,
   } = $props();
@@ -65,11 +65,11 @@
     proposal?.metaData?.strategyFramework?.pillars ?? [],
   );
   const pillarEntries = $derived(
-    Array.isArray(categories) && pillarIds.length > 0
+    Array.isArray(pillars) && pillarIds.length > 0
       ? pillarIds
           .map((id) => {
-            const title = categories.find(
-              (c) => String(c._id) === String(id),
+            const title = pillars.find(
+              (p) => String(p._id) === String(id),
             )?.title;
             return title ? { id: String(id), title } : null;
           })

@@ -4,7 +4,6 @@ const router = Router();
 
 // schema import
 import { Proposal } from "../../../schema/Proposal.js";
-import { Category } from "../../../schema/Category.js";
 import { Vote } from "../../../schema/Vote.js";
 import { Comment } from "../../../schema/Comment.js";
 
@@ -584,12 +583,6 @@ router.get("/:proposalId", async (req, res) => {
       }
     }
 
-    const categoryDoc = await Category.findById(proposal.categoryId).lean();
-    if (categoryDoc) {
-      const { voteId, createdAt, updatedAt, ...category } = categoryDoc;
-      payload = { ...payload, category };
-    }
-
     // commentCount: total number of comments and replies on this proposal (excluding withdrawn)
     const commentCount = await Comment.countDocuments({
       proposalId: proposal._id,
@@ -771,9 +764,8 @@ router.get("/", async (req, res) => {
       // If authenticated user is querying own proposals, don't filter by status (show all)
     }
 
-    // Add category filter (exact match, accepts multiple comma-separated Category ObjectIds)
+    // Add category filter (pillar IDs from vote.metaData.strategyFramework.pillars)
     if (category) {
-      // Split comma-separated category IDs
       const categoryIds = category
         .split(",")
         .map((id) => id.trim())
@@ -782,48 +774,44 @@ router.get("/", async (req, res) => {
       if (categoryIds.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: "Invalid category parameter. Must provide at least one valid Category ObjectId.",
+          message: "Invalid category parameter. Must provide at least one valid pillar ID.",
         });
       }
 
-      // Validate all category IDs are valid ObjectIds
-      const invalidIds = categoryIds.filter(
-        (id) => !mongoose.Types.ObjectId.isValid(id) || id.length !== 24
-      );
-      if (invalidIds.length > 0) {
+      if (!query.voteId) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following category IDs are not valid ObjectIds: ${invalidIds.join(", ")}`,
+          message: "Category filter requires vote parameter.",
         });
       }
 
-      // Validate that all categories exist (and belong to this vote when vote filter is set)
-      const categoryObjectIds = categoryIds.map(
-        (id) => new mongoose.Types.ObjectId(id)
-      );
-      const categoryQuery = { _id: { $in: categoryObjectIds } };
-      if (query.voteId) {
-        categoryQuery.voteId = query.voteId;
+      const vote = await Vote.findById(query.voteId).select("metaData").lean();
+      if (!vote) {
+        return res.status(404).json({
+          status: "error",
+          message: "Vote not found",
+        });
       }
-      const existingCategories = await Category.find(categoryQuery).lean();
 
-      if (existingCategories.length !== categoryIds.length) {
-        const existingIds = new Set(
-          existingCategories.map((cat) => cat._id.toString())
-        );
-        const missingIds = categoryIds.filter(
-          (id) => !existingIds.has(id)
-        );
-        const hint = query.voteId
-          ? " Categories must exist and belong to the requested vote."
-          : "";
+      const votePillars = vote.metaData?.strategyFramework?.pillars ?? [];
+      if (votePillars.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following categories were not found or do not belong to this vote: ${missingIds.join(", ")}.${hint}`,
+          message: "Invalid category parameter. This vote has no pillars defined.",
         });
       }
 
-      // Filter by category: metaData.strategyFramework.pillars (stored as strings in DB)
+      const validPillarIds = new Set(
+        votePillars.map((p) => String(p._id))
+      );
+      const missingIds = categoryIds.filter((id) => !validPillarIds.has(id));
+      if (missingIds.length > 0) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid category parameter. The following pillar IDs were not found for this vote: ${missingIds.join(", ")}.`,
+        });
+      }
+
       const categoryCondition = {
         "metaData.strategyFramework.pillars": { $in: categoryIds },
       };

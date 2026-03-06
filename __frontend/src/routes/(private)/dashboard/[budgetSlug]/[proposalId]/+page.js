@@ -38,12 +38,7 @@ export async function load({ fetch, params, parent }) {
 		error(404, 'Proposal does not belong to this vote');
 	}
 
-	const catRes = await api.fetch(fetch, `/votes/${voteId}/categories`);
-	if (!catRes.ok) {
-		error(catRes.status, 'Failed to load categories');
-	}
-	const catJson = await catRes.json();
-	const categories = catJson.data ?? [];
+	const pillars = vote.metaData?.strategyFramework?.pillars ?? [];
 
-	return { proposal, vote, categories };
+	return { proposal, vote, pillars };
 }

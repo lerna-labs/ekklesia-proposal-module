@@ -41,7 +41,7 @@
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
-  let categories = $derived(data.categories ?? []);
+  let pillars = $derived(data.pillars ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
   let openLegalDialog = $state(false);
@@ -113,7 +113,7 @@
 
 <FormComponent
   {vote}
-  {categories}
+  {pillars}
   {proposal}
   {onSave}
   {showLegalErrors}
