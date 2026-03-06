@@ -5,7 +5,6 @@
   let {
     formData = $bindable(),
     vote,
-    categories,
     proposal,
     validationErrors,
     notPublic = false,

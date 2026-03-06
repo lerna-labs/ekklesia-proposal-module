@@ -4,7 +4,7 @@
   import Comments from "$lib/comments/Comments.svelte";
   let { data } = $props();
 
-  let { vote, proposal, categories = [], commentCount } = $derived(data);
+  let { vote, proposal, pillars = [], commentCount } = $derived(data);
 
   const isWithdrawn = $derived(
     proposal?.status === "withdrawnByAdmin" ||
@@ -29,7 +29,7 @@
     </Button>
   </div>
 
-  <ProposalCard {proposal} {vote} {categories} showLink={false} />
+  <ProposalCard {proposal} {vote} {pillars} showLink={false} />
 
   {#if showComments}
     <Comments proposalId={proposal._id} {proposal} {vote} />

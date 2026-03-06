@@ -4,84 +4,9 @@ const router = Router();
 
 // schema import
 import { Vote } from "../../../schema/Vote.js";
-import { Category } from "../../../schema/Category.js";
 
 // helper imports
 import mongoose from "mongoose";
-
-// Helper function to format categories for categories endpoint (section 3.3)
-// Returns categories with nested metaData structure
-const formatCategoryForCategoriesEndpoint = (category) => {
-  const formatted = {
-    _id: category._id,
-    title: category.title,
-    description: category.description,
-  };
-
-  // Include metaData nested if it exists
-  if (category.metaData) {
-    formatted.metaData = category.metaData;
-  }
-
-  return formatted;
-};
-
-/**
- * @route GET /api/v0/votes/:voteId/categories
- * @description Get categories for a specific vote cycle. Returns categories sorted by sortOrder.
- * @access Public
- *
- * @param {string} voteId - MongoDB ObjectId of the vote cycle
- *
- * @returns {Object} 200 - Response object containing data array of categories
- * @returns {Object} 400 - Invalid voteId format
- * @returns {Object} 404 - Vote not found
- */
-router.get("/:voteId/categories", async (req, res) => {
-  try {
-    const { voteId } = req.params;
-
-    // Validate voteId format
-    if (
-      !mongoose.Types.ObjectId.isValid(voteId) ||
-      voteId.length !== 24
-    ) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid voteId parameter. Must be a valid ObjectId.",
-      });
-    }
-
-    // Check if vote exists (exclude validationScript; vote not returned)
-    const vote = await Vote.findById(voteId).select("-validationScript").lean();
-    if (!vote) {
-      return res.status(404).json({
-        status: "error",
-        message: "Vote not found",
-      });
-    }
-
-    // Fetch categories for this vote, sorted by sortOrder
-    const categories = await Category.find({
-      voteId: new mongoose.Types.ObjectId(voteId),
-    })
-      .sort({ sortOrder: 1 })
-      .lean();
-
-    // Format categories with nested metaData for categories endpoint
-    const formattedCategories = categories.map(formatCategoryForCategoriesEndpoint);
-
-    return res.status(200).json({
-      data: formattedCategories,
-    });
-  } catch (error) {
-    console.error("Error fetching categories by voteId:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-});
 
 /**
  * @route GET /api/v0/votes/:voteId
@@ -119,7 +44,11 @@ router.get("/:voteId", async (req, res) => {
       });
     }
 
-    return res.status(200).json(vote);
+    const filterOptions =
+      vote.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const searchOptions =
+      vote.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
+    return res.status(200).json({ ...vote, filterOptions, searchOptions });
   } catch (error) {
     console.error("Error fetching vote by ID:", error);
     return res.status(500).json({
@@ -203,7 +132,7 @@ router.get("/", async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     // Execute query with pagination (exclude validationScript from response)
-    const [votes, totalItems] = await Promise.all([
+    const [votesRaw, totalItems] = await Promise.all([
       Vote.find(query)
         .select("-validationScript")
         .sort({ createdAt: -1 }) // Sort by newest first
@@ -212,6 +141,7 @@ router.get("/", async (req, res) => {
         .lean(), // Use lean() for better performance
       Vote.countDocuments(query), // Get total count for pagination
     ]);
+    const votes = votesRaw;
 
     // Return 404 if search or slug parameters were provided but no matches found
     if ((search || slug) && totalItems === 0) {
@@ -221,13 +151,21 @@ router.get("/", async (req, res) => {
       });
     }
 
+    const defaultFilterOptions = Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const defaultSearchOptions = Vote.schema.path("searchOptions").options.default?.() ?? [];
+    const votesWithOptions = votes.map((v) => ({
+      ...v,
+      filterOptions: v.filterOptions ?? defaultFilterOptions,
+      searchOptions: v.searchOptions ?? defaultSearchOptions,
+    }));
+
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalItems / limitNum);
     const hasNextPage = pageNum < totalPages;
     const hasPreviousPage = pageNum > 1;
 
     return res.status(200).json({
-      data: votes,
+      data: votesWithOptions,
       meta: {
         page: pageNum,
         limit: limitNum,
@@ -271,7 +209,11 @@ router.get("/:slug", async (req, res) => {
       });
     }
 
-    return res.status(200).json(vote);
+    const filterOptions =
+      vote.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const searchOptions =
+      vote.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
+    return res.status(200).json({ ...vote, filterOptions, searchOptions });
   } catch (error) {
     console.error("Error fetching vote by slug:", error);
     return res.status(500).json({

@@ -1,7 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
-const VALID_SORT = new Set(['title', 'status', 'date', 'amount', 'updatedAt']);
 const VALID_DIRECTION = new Set(['asc', 'desc']);
 
 /** @type {import('./$types').PageLoad} */
@@ -13,13 +12,35 @@ export async function load({ fetch, url, parent }) {
 		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, voteTitles: {}, voteSlugs: {}, votes: [] };
 	}
 
+	// Load votes first (required for vote-scoped proposals)
+	const votesRes = await api.fetch(fetch, '/votes?limit=50');
+	const votesJson = await votesRes.json();
+	const votes = votesJson.data ?? [];
+
+	if (votes.length === 0) {
+		return {
+			user,
+			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			voteTitles: {},
+			voteSlugs: {},
+			votes: [],
+		};
+	}
+
+	// Use first vote as scope for "my proposals"
+	const selectedVote = votes[0];
+	const sortOptions = selectedVote.sortOptions ?? [];
+	const validSortValues = new Set(sortOptions.map((o) => o.value));
+	const defaultSort = sortOptions[0]?.value ?? 'title';
+
 	// URL params with defaults and validation
 	const pageNum = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
 	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10));
-	const sort = VALID_SORT.has(url.searchParams.get('sort') || '') ? url.searchParams.get('sort') : 'updatedAt';
+	const urlSort = url.searchParams.get('sort') || defaultSort;
+	const sort = validSortValues.has(urlSort) ? urlSort : defaultSort;
 	const direction = VALID_DIRECTION.has(url.searchParams.get('direction') || '') ? url.searchParams.get('direction') : 'desc';
 
-	const proposalsUrl = `/proposals?proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;
+	const proposalsUrl = `/proposals?vote=${encodeURIComponent(selectedVote._id)}&proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;
 	const proposalsResponse = await api.fetch(fetch, proposalsUrl);
 	const json = await proposalsResponse.json();
 	const meta = json.meta ?? {};
@@ -42,32 +63,15 @@ export async function load({ fetch, url, parent }) {
 		throw redirect(302, `${url.pathname}?${params.toString()}`);
 	}
 
-	// Resolve vote titles and slugs for unique voteIds (parallel fetches)
-	const voteIds = [...new Set((proposals.data || []).map((p) => p.voteId).filter(Boolean))];
-	const votePromises = voteIds.map(async (voteId) => {
-		try {
-			const voteRes = await api.fetch(fetch, `/votes/${voteId}`);
-			if (voteRes.ok) {
-				const voteJson = await voteRes.json();
-				return { voteId, title: voteJson.title ?? voteJson.name ?? voteId, slug: voteJson.slug };
-			}
-		} catch {
-			// fallback to id as label
-		}
-		return { voteId, title: voteId, slug: undefined };
-	});
-	const voteResults = await Promise.all(votePromises);
+	// Build vote titles and slugs from the votes we already have
 	const voteTitles = {};
 	const voteSlugs = {};
-	for (const r of voteResults) {
-		voteTitles[r.voteId] = r.title;
-		if (r.slug) voteSlugs[r.voteId] = r.slug;
+	for (const v of votes) {
+		if (v._id) {
+			voteTitles[v._id] = v.title ?? v.name ?? v._id;
+			if (v.slug) voteSlugs[v._id] = v.slug;
+		}
 	}
-
-	// Load all votes for "New proposal" links (each vote → /dashboard/[slug]/new)
-	const votesRes = await api.fetch(fetch, '/votes?limit=50');
-	const votesJson = await votesRes.json();
-	const votes = votesJson.data ?? [];
 
 	return {
 		user,

@@ -13,7 +13,7 @@
   let vote = $derived(data.vote);
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
-  let categories = $derived(data.categories ?? []);
+  let pillars = $derived(data.pillars ?? []);
   let sort = $state("title");
   let ascending = $state(true);
 
@@ -81,8 +81,8 @@
       </h2>
       <div class="flex items-center gap-1">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
-        <SearchFilter {categories} voteId={vote._id} />
-        <SearchSort bind:sort bind:ascending />
+        <SearchFilter filterOptions={vote.filterOptions ?? []} vote={vote} voteId={vote._id} />
+        <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>
     </div>
 
@@ -96,7 +96,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {vote} {categories} />
+          <ProposalCard {proposal} {vote} {pillars} />
         {/each}
       </div>
 

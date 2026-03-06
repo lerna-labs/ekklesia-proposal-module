@@ -15,17 +15,7 @@ export async function load({ fetch, params, parent }) {
 	}
 
 	const vote = votes[0];
-	let categories = [];
+	const pillars = vote.metaData?.strategyFramework?.pillars ?? [];
 
-	try {
-		const catRes = await api.fetch(fetch, `/votes/${vote._id}/categories`);
-		if (catRes.ok) {
-			const catJson = await catRes.json();
-			categories = catJson.data ?? [];
-		}
-	} catch {
-		// leave categories empty
-	}
-
-	return { vote, categories };
+	return { vote, pillars };
 }

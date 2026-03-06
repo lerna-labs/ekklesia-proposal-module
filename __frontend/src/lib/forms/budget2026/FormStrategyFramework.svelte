@@ -7,7 +7,7 @@
   let {
     formData = $bindable(),
     vote,
-    categories,
+    pillars: pillarOptions = [],
     proposal,
     validationErrors,
   } = $props();
@@ -75,31 +75,31 @@
         : 'border-transparent'}"
       aria-invalid={pillarsError ? true : false}
     >
-      {#each categories ?? [] as category (category._id)}
-        {@const pillars = formData.metaData.strategyFramework?.pillars ?? []}
+      {#each pillarOptions as pillarOption (pillarOption._id)}
+        {@const selectedPillarIds = formData.metaData.strategyFramework?.pillars ?? []}
         <button
           type="button"
-          class="w-full text-left p-4 rounded-md border items-start cursor-pointer space-y-2 {pillars.includes(
-            category._id,
+          class="w-full text-left p-4 rounded-md border items-start cursor-pointer space-y-2 {selectedPillarIds.includes(
+            pillarOption._id,
           )
             ? 'bg-(--mbo-electric-blue) text-white border-(--mbo-electric-blue) hover:opacity-90'
             : 'border-muted-foreground/20 bg-muted-foreground/10 hover:bg-muted-foreground/20'}"
           onclick={() => {
             const arr = formData.metaData.strategyFramework.pillars;
-            if (arr.includes(category._id)) {
-              arr.splice(arr.indexOf(category._id), 1);
+            if (arr.includes(pillarOption._id)) {
+              arr.splice(arr.indexOf(pillarOption._id), 1);
             } else {
-              arr.push(category._id);
+              arr.push(pillarOption._id);
             }
           }}
         >
-          <div class="text font-medium w-full">{category.title}</div>
+          <div class="text font-medium w-full">{pillarOption.title}</div>
           <p
-            class="text-xs mb-0! {pillars.includes(category._id)
+            class="text-xs mb-0! {selectedPillarIds.includes(pillarOption._id)
               ? 'text-white/80'
               : 'text-muted-foreground'}"
           >
-            {category.description}
+            {pillarOption.description}
           </p>
         </button>
       {/each}

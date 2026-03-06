@@ -6,7 +6,6 @@ export async function load({ params, url, fetch }) {
 	const { voteSlug } = params;
 	const pageNum = url.searchParams.get('page') || '1';
 	const search = url.searchParams.get('search') || '';
-	const sort = url.searchParams.get('sort') || 'title';
 	const direction = url.searchParams.get('direction') || 'asc';
 	const category = url.searchParams.get('category') || '';
 	const status = url.searchParams.get('status') || 'live';
@@ -25,6 +24,12 @@ export async function load({ params, url, fetch }) {
 	if (!voteData) {
 		error(404, `Vote not found`);
 	}
+
+	const sortOptions = voteData.sortOptions ?? [];
+	const validSortValues = new Set(sortOptions.map((o) => o.value));
+	const defaultSort = sortOptions[0]?.value ?? 'title';
+	const urlSort = url.searchParams.get('sort') || defaultSort;
+	const sort = validSortValues.has(urlSort) ? urlSort : defaultSort;
 
 	const proposalsSearchParams = new URLSearchParams({
 		vote: voteData._id,
@@ -58,16 +63,11 @@ export async function load({ params, url, fetch }) {
 		};
 	}
 
-	let categories = [];
-	const catRes = await fetch(`${apiUrl}/votes/${voteData._id}/categories`);
-	if (catRes.ok) {
-		const catJson = await catRes.json();
-		categories = catJson.data ?? [];
-	}
+	const pillars = voteData.metaData?.strategyFramework?.pillars ?? [];
 
 	return {
 		vote: voteData,
 		proposals,
-		categories,
+		pillars,
 	};
 }

@@ -6,7 +6,6 @@
   let {
     formData = $bindable(),
     vote,
-    categories,
     proposal,
     validationErrors,
   } = $props();

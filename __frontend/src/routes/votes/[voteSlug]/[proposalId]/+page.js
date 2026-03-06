@@ -28,12 +28,7 @@ export async function load({ params, fetch }) {
 		error(404, `Proposal not found`);
 	}
 
-	let categories = [];
-	const catRes = await fetch(`${apiUrl}/votes/${voteData._id}/categories`);
-	if (catRes.ok) {
-		const catJson = await catRes.json();
-		categories = catJson.data ?? [];
-	}
+	const pillars = voteData.metaData?.strategyFramework?.pillars ?? [];
 
 	let commentCount;
 	const isWithdrawn =
@@ -51,7 +46,7 @@ export async function load({ params, fetch }) {
 	return {
 		vote: voteData,
 		proposal: proposalData,
-		categories,
+		pillars,
 		commentCount: commentCount,
 	};
 }

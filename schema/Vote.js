@@ -1,6 +1,42 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+const sortOptionSchema = new Schema(
+  {
+    value: { type: String, required: true },
+    label: { type: String, required: true },
+    field: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const filterOptionSchema = new Schema(
+  {
+    param: { type: String, required: true },
+    label: { type: String, required: true },
+    field: { type: String, required: true },
+    /** Required for enum-style filters (e.g. status). When optionsPath is set, can be empty. */
+    allowedValues: { type: [String], required: false, default: () => [] },
+    multiple: { type: Boolean, required: true },
+    /** Optional. Dot-path into the vote document for the option list (e.g. "metaData.strategyFramework.pillars"). When set, frontend and API use this instead of allowedValues for the option list. */
+    optionsPath: { type: String, required: false },
+    /** When optionsPath is set: property on each item used as the param value (default "_id"). */
+    optionValueKey: { type: String, required: false, default: "_id" },
+    /** When optionsPath is set: property on each item used as the display label (default "title"). */
+    optionLabelKey: { type: String, required: false, default: "title" },
+  },
+  { _id: false }
+);
+
+const searchOptionSchema = new Schema(
+  {
+    field: { type: String, required: true },
+    matchType: { type: String, required: true, enum: ["like", "exact", "objectId"] },
+    caseSensitive: { type: Boolean, required: false, default: false },
+  },
+  { _id: false }
+);
+
 const voteSchema = new Schema(
   {
     title: {
@@ -77,6 +113,52 @@ const voteSchema = new Schema(
     form: {
       type: String,
       required: true,
+    },
+    commentsEnabled: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    /** Optional. When absent or empty, the default array below is used. */
+    sortOptions: {
+      type: [sortOptionSchema],
+      required: false,
+      default: () => [
+        { value: "title", label: "Proposal Title", field: "title" },
+        { value: "commentCount", label: "Comment Count", field: "commentCount" },
+        { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
+        { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
+      ],
+    },
+    /** Optional. Vote-specific payload (e.g. strategyFramework.pillars for budget2026). Same path as on proposals. */
+    metaData: {
+      type: Schema.Types.Mixed,
+      required: false,
+    },
+    /** Optional. Filters shown in SearchFilter on the proposals page. When absent or empty, the default below is used. */
+    filterOptions: {
+      type: [filterOptionSchema],
+      required: false,
+      default: () => [
+        {
+          param: "status",
+          label: "Status",
+          field: "status",
+          allowedValues: ["live", "withdrawn", "draft"],
+          multiple: true,
+        },
+      ],
+    },
+    /** Optional. Fields and match types for free-text search on proposals. When absent or empty, the default below is used. */
+    searchOptions: {
+      type: [searchOptionSchema],
+      required: false,
+      default: () => [
+        { field: "title", matchType: "like", caseSensitive: false },
+        { field: "summary", matchType: "like", caseSensitive: false },
+        { field: "proposerId", matchType: "like", caseSensitive: false },
+        { field: "_id", matchType: "objectId" },
+      ],
     },
   },
   {

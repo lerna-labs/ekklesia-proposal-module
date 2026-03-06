@@ -4,7 +4,6 @@ const router = Router();
 
 // schema import
 import { Proposal } from "../../../schema/Proposal.js";
-import { Category } from "../../../schema/Category.js";
 import { Vote } from "../../../schema/Vote.js";
 import { Comment } from "../../../schema/Comment.js";
 
@@ -15,6 +14,22 @@ import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
+
+function getByPath(obj, path) {
+  if (!obj || !path) return undefined;
+  const parts = path.split(".");
+  let current = obj;
+  for (const p of parts) {
+    current = current?.[p];
+    if (current === undefined) return undefined;
+  }
+  return current;
+}
+
+/** Escape special regex characters in a string for safe use in MongoDB $regex. */
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 /**
  * @route POST /api/v0/proposals
@@ -584,12 +599,6 @@ router.get("/:proposalId", async (req, res) => {
       }
     }
 
-    const categoryDoc = await Category.findById(proposal.categoryId).lean();
-    if (categoryDoc) {
-      const { voteId, createdAt, updatedAt, ...category } = categoryDoc;
-      payload = { ...payload, category };
-    }
-
     // commentCount: total number of comments and replies on this proposal (excluding withdrawn)
     const commentCount = await Comment.countDocuments({
       proposalId: proposal._id,
@@ -612,12 +621,12 @@ router.get("/:proposalId", async (req, res) => {
  * @description Get all Live proposals with pagination. Returns proposals from all votes by default. Supports filtering by vote and searching by proposalId or title.
  * @access Public (Authentication optional - provides enhanced access when proposer matches authenticated user's ID)
  *
- * @query {string} [vote] - Filter by vote cycle (exact match, must be valid ObjectId). If provided, validates vote exists.
+ * @query {string} vote - Vote cycle (required, must be valid ObjectId). Validates vote exists.
  * @query {string} [category] - Filter by category (exact match, accepts multiple comma-separated Category IDs). Filters proposals where metaData.strategyFramework.pillars contains any of the provided category IDs. Valid values are MongoDB ObjectIds from the Category schema.
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
- * @query {string} [search] - Search term to match against proposal _id (exact match), title, description, metaData.contractingParty.legalEntityName, or proposerId (partial, case-insensitive)
- * @query {string} [sort=date] - Sort field: title, status, date (submittedAt), updatedAt, totalBudget, or commentCount
+ * @query {string} [search] - Search term matched using the vote's searchOptions (e.g. title, summary, proposerId, _id; partial case-insensitive or exact per option)
+ * @query {string} [sort] - Sort value from vote's sortOptions (e.g. title, submittedAt, updatedAt, commentCount). Default: first option.
  * @query {string} [direction=desc] - Sort direction: asc or desc
  * @query {number} [page=1] - Page number for pagination (default: 1)
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
@@ -626,14 +635,13 @@ router.get("/:proposalId", async (req, res) => {
  *   - data: Array of proposal documents (may include draft/archived when authenticated user queries own proposals)
  *   - meta: Object containing pagination metadata
  * @returns {Object} 400 - Error if query parameters are invalid
- * @returns {Object} 404 - Vote not found (when vote is provided)
+ * @returns {Object} 404 - Vote not found
  */
 router.get("/", async (req, res) => {
   try {
     const {
       search,
       vote: voteParam,
-      category,
       proposer,
       status: statusParam,
       sort: sortParam,
@@ -661,11 +669,57 @@ router.get("/", async (req, res) => {
       });
     }
 
+    // Require vote parameter
+    if (!voteParam || typeof voteParam !== "string") {
+      return res.status(400).json({
+        status: "error",
+        message: "The vote query parameter is required.",
+      });
+    }
+
+    const voteTerm = voteParam.trim();
+    if (
+      !mongoose.Types.ObjectId.isValid(voteTerm) ||
+      voteTerm.length !== 24
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid vote parameter. Must be a valid ObjectId.",
+      });
+    }
+
+    const voteDoc = await Vote.findById(voteTerm).lean();
+    if (!voteDoc) {
+      return res.status(404).json({
+        status: "error",
+        message: "Vote not found",
+      });
+    }
+
+    const resolvedFilterOptions =
+      voteDoc.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+    const resolvedSearchOptions =
+      voteDoc.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
+    const filterParamSet = new Set(
+      resolvedFilterOptions.map((o) => o.param)
+    );
+
     // Check authentication (optional - don't fail if token is missing)
     let authenticatedUserId = null;
     const tokenResult = verifyToken(req);
     if (tokenResult.status === "success" && tokenResult.userId) {
       authenticatedUserId = tokenResult.userId.toString();
+    }
+
+    // Check if authenticated user is an admin of this vote
+    let isVoteAdmin = false;
+    if (
+      authenticatedUserId &&
+      voteDoc.admins &&
+      Array.isArray(voteDoc.admins) &&
+      voteDoc.admins.includes(authenticatedUserId)
+    ) {
+      isVoteAdmin = true;
     }
 
     // Check if authenticated user is querying their own proposals
@@ -675,169 +729,125 @@ router.get("/", async (req, res) => {
       proposer.trim() === authenticatedUserId;
 
     // Build search query - default to Live proposals, or filter by status
-    let query = {};
-    let isVoteAdmin = false;
+    let query = { voteId: new mongoose.Types.ObjectId(voteTerm) };
 
-    // Add vote filter (exact match, must be valid ObjectId)
-    if (voteParam) {
-      const voteTerm = voteParam.trim();
-      if (
-        !mongoose.Types.ObjectId.isValid(voteTerm) ||
-        voteTerm.length !== 24
-      ) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid vote parameter. Must be a valid ObjectId.",
-        });
-      }
-
-      // Validate that vote exists
-      const voteDoc = await Vote.findById(voteTerm).lean();
-      if (!voteDoc) {
-        return res.status(404).json({
-          status: "error",
-          message: "Vote not found",
-        });
-      }
-
-      // Check if authenticated user is an admin of this vote
-      if (
-        authenticatedUserId &&
-        voteDoc.admins &&
-        Array.isArray(voteDoc.admins) &&
-        voteDoc.admins.includes(authenticatedUserId)
-      ) {
-        isVoteAdmin = true;
-      }
-
-      query.voteId = new mongoose.Types.ObjectId(voteTerm);
-    }
-
-    // Handle status filter (single value or comma-separated: live,withdrawn,draft).
+    // Handle status filter only if vote's filterOptions include status (same permission logic as before).
     // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
     // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
-    // Normalize: accept string "live,draft" or array ["live", "draft"] from query
+    const statusOption = resolvedFilterOptions.find((o) => o.param === "status");
     const statusStr =
       typeof statusParam === "string"
         ? statusParam
         : Array.isArray(statusParam)
           ? statusParam.join(",")
           : "";
-    if (statusStr) {
-      const statusTerms = statusStr
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean);
-      const hasLive = statusTerms.includes("live");
-      const hasWithdrawn = statusTerms.includes("withdrawn");
-      const hasDraft = statusTerms.includes("draft");
-      const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
-      if (hasDraft && !mayRequestDraft) {
-        return res.status(400).json({
-          status: "error",
-          message:
-            "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
-        });
-      }
-      const statusIn = [];
-      if (hasLive) statusIn.push("live");
-      if (hasWithdrawn) {
-        statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
-      }
-      if (hasDraft && mayRequestDraft) {
-        statusIn.push("draft");
-      }
-      if (statusTerms.length === 0 && !isAuthenticatedUserQueryingOwnProposals) {
-        query.status = "live";
-      } else if (statusTerms.length === 0) {
-        // invalid and own proposals: don't filter by status
-      } else if (statusIn.length === 0) {
-        // only invalid terms (e.g. draft for non-admin) – default to live for non-own
+    if (filterParamSet.has("status") && statusOption) {
+      if (statusStr) {
+        const statusTerms = statusStr
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean);
+        const allowedSet = new Set(
+          (statusOption.allowedValues || []).map((s) => s.toLowerCase())
+        );
+        const invalidTerms = statusTerms.filter((t) => !allowedSet.has(t));
+        if (invalidTerms.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid status parameter. Allowed: ${(statusOption.allowedValues || []).join(", ")}.`,
+          });
+        }
+        const hasLive = statusTerms.includes("live");
+        const hasWithdrawn = statusTerms.includes("withdrawn");
+        const hasDraft = statusTerms.includes("draft");
+        const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
+        if (hasDraft && !mayRequestDraft) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
+          });
+        }
+        const statusIn = [];
+        if (hasLive) statusIn.push("live");
+        if (hasWithdrawn) {
+          statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
+        }
+        if (hasDraft && mayRequestDraft) {
+          statusIn.push("draft");
+        }
+        if (statusIn.length === 1) {
+          query.status = statusIn[0];
+        } else if (statusIn.length > 1) {
+          query.status = { $in: [...new Set(statusIn)] };
+        }
+      } else {
         if (!isAuthenticatedUserQueryingOwnProposals) {
           query.status = "live";
         }
-      } else if (statusIn.length === 1) {
-        query.status = statusIn[0];
-      } else {
-        query.status = { $in: [...new Set(statusIn)] };
       }
-    } else {
-      // Default to live if no status specified, unless authenticated user is querying own proposals
+    } else if (!filterParamSet.has("status")) {
       if (!isAuthenticatedUserQueryingOwnProposals) {
         query.status = "live";
       }
-      // If authenticated user is querying own proposals, don't filter by status (show all)
+    } else if (!statusStr) {
+      if (!isAuthenticatedUserQueryingOwnProposals) {
+        query.status = "live";
+      }
     }
 
-    // Add category filter (exact match, accepts multiple comma-separated Category ObjectIds)
-    if (category) {
-      // Split comma-separated category IDs
-      const categoryIds = category
+    // Add filters for options that have optionsPath (e.g. category from vote.metaData.strategyFramework.pillars)
+    for (const option of resolvedFilterOptions) {
+      if (!option.optionsPath || option.param === "status" || option.param === "proposer") continue;
+      const paramValue = req.query[option.param];
+      if (!paramValue || typeof paramValue !== "string") continue;
+
+      const ids = paramValue
         .split(",")
         .map((id) => id.trim())
         .filter((id) => id.length > 0);
 
-      if (categoryIds.length === 0) {
+      if (ids.length === 0) {
         return res.status(400).json({
           status: "error",
-          message: "Invalid category parameter. Must provide at least one valid Category ObjectId.",
+          message: `Invalid ${option.param} parameter. Must provide at least one value.`,
         });
       }
 
-      // Validate all category IDs are valid ObjectIds
-      const invalidIds = categoryIds.filter(
-        (id) => !mongoose.Types.ObjectId.isValid(id) || id.length !== 24
+      const optionList = getByPath(voteDoc, option.optionsPath);
+      if (!Array.isArray(optionList) || optionList.length === 0) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+        });
+      }
+
+      const valueKey = option.optionValueKey ?? "_id";
+      const validIds = new Set(
+        optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
       );
-      if (invalidIds.length > 0) {
+      const missingIds = ids.filter((id) => !validIds.has(id));
+      if (missingIds.length > 0) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid category parameter. The following category IDs are not valid ObjectIds: ${invalidIds.join(", ")}`,
+          message: `Invalid ${option.param} parameter. The following values were not found for this vote: ${missingIds.join(", ")}.`,
         });
       }
 
-      // Validate that all categories exist (and belong to this vote when vote filter is set)
-      const categoryObjectIds = categoryIds.map(
-        (id) => new mongoose.Types.ObjectId(id)
-      );
-      const categoryQuery = { _id: { $in: categoryObjectIds } };
-      if (query.voteId) {
-        categoryQuery.voteId = query.voteId;
-      }
-      const existingCategories = await Category.find(categoryQuery).lean();
-
-      if (existingCategories.length !== categoryIds.length) {
-        const existingIds = new Set(
-          existingCategories.map((cat) => cat._id.toString())
-        );
-        const missingIds = categoryIds.filter(
-          (id) => !existingIds.has(id)
-        );
-        const hint = query.voteId
-          ? " Categories must exist and belong to the requested vote."
-          : "";
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid category parameter. The following categories were not found or do not belong to this vote: ${missingIds.join(", ")}.${hint}`,
-        });
-      }
-
-      // Filter by category: metaData.strategyFramework.pillars (stored as strings in DB)
-      const categoryCondition = {
-        "metaData.strategyFramework.pillars": { $in: categoryIds },
-      };
+      const condition = { [option.field]: option.multiple ? { $in: ids } : ids[0] };
       if (query.$or) {
         const existingOr = query.$or;
         delete query.$or;
         query.$and = query.$and || [];
-        query.$and.push({ $or: existingOr }, categoryCondition);
+        query.$and.push({ $or: existingOr }, condition);
       } else {
         query.$and = query.$and || [];
-        query.$and.push(categoryCondition);
+        query.$and.push(condition);
       }
     }
 
-    // Add proposer filter (exact match, must be valid bech32 address)
-    if (proposer) {
+    // Add proposer filter only if vote's filterOptions include proposer (exact match, must be valid bech32 address)
+    if (proposer && filterParamSet.has("proposer")) {
       const proposerTerm = proposer.trim();
       // Validate bech32 address format - try stake first, then drep
       const stakeValidation = validateAddress(proposerTerm, "stake");
@@ -860,44 +870,49 @@ router.get("/", async (req, res) => {
       query.proposerId = validatedAddress;
     }
 
-    // Add search: title, metaData.contractingParty.legalEntityName, proposerId (partial, case-insensitive) or _id (exact match)
+    // Add search from vote's searchOptions (like / exact / objectId)
     if (search) {
       const searchTerm = search.trim();
-      if (searchTerm) {
-        const searchConditions = [
-          { title: { $regex: searchTerm, $options: "i" } },
-          {
-            "metaData.contractingParty.legalEntityName": {
-              $regex: searchTerm,
-              $options: "i",
-            },
-          },
-          { proposerId: { $regex: searchTerm, $options: "i" } },
-        ];
-        if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
-          searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
+      if (searchTerm && resolvedSearchOptions.length > 0) {
+        const searchConditions = [];
+        const escapedTerm = escapeRegex(searchTerm);
+        const isValidObjectId =
+          mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24;
+        for (const option of resolvedSearchOptions) {
+          if (option.matchType === "like") {
+            const opts = option.caseSensitive ? "" : "i";
+            searchConditions.push({
+              [option.field]: { $regex: escapedTerm, $options: opts },
+            });
+          } else if (option.matchType === "exact") {
+            searchConditions.push({ [option.field]: searchTerm });
+          } else if (option.matchType === "objectId" && isValidObjectId) {
+            searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
+          }
         }
-        query.$or = searchConditions;
+        if (searchConditions.length > 0) {
+          if (query.$or) {
+            const existingOr = query.$or;
+            delete query.$or;
+            query.$and = query.$and || [];
+            query.$and.push({ $or: existingOr }, { $or: searchConditions });
+          } else {
+            query.$or = searchConditions;
+          }
+        }
       }
     }
 
-    // Map sort parameter to schema field (commentCount resolved via aggregation)
-    const sortFieldMap = {
-      title: "title",
-      status: "status",
-      date: "submittedAt",
-      updatedAt: "updatedAt",
-      totalBudget: "totalBudget",
-      commentCount: "commentCount",
-    };
-    const sortParamNorm = sortParam ? sortParam.trim().toLowerCase() : "date";
-    const sortKey = Object.keys(sortFieldMap).find(
-      (k) => k.toLowerCase() === sortParamNorm
+    const resolvedSortOptions = voteDoc.sortOptions;
+
+    const sortValue = sortParam ? String(sortParam).trim() : resolvedSortOptions[0]?.value ?? "title";
+    const sortOptionDef = resolvedSortOptions.find(
+      (o) => o.value === sortValue
     );
-    if (!sortKey) {
+    if (!sortOptionDef) {
       return res.status(400).json({
         status: "error",
-        message: `Invalid sort parameter. Must be one of: ${Object.keys(sortFieldMap).join(", ")}.`,
+        message: `Invalid sort parameter. Must be one of: ${resolvedSortOptions.map((o) => o.value).join(", ")}.`,
       });
     }
 
@@ -911,14 +926,14 @@ router.get("/", async (req, res) => {
     }
 
     const sortDirection = directionNorm === "asc" ? 1 : -1;
-    const sortField = sortKey === "title" ? "title" : sortFieldMap[sortKey];
+    const sortField = sortOptionDef.field;
     const sortOption = { [sortField]: sortDirection };
 
     const skip = (pageNum - 1) * limitNum;
     const totalItems = await Proposal.countDocuments(query);
 
     let proposals;
-    if (sortKey === "commentCount") {
+    if (sortField === "commentCount") {
       const pipeline = [
         { $match: query },
         {
