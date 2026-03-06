@@ -72,7 +72,7 @@
   function saveDraft() {
     if (!getPayload || !onSave) return;
     const payload = getPayload("draft");
-    Promise.resolve(onSave(payload))
+    Promise.resolve(onSave(payload, { fromAutoSave: false }))
       .then(() => {
         initialSnapshot = JSON.stringify(payload);
       })
@@ -110,7 +110,7 @@
       return;
     const id = setInterval(() => {
       const payload = getPayload("draft");
-      Promise.resolve(onSave(payload))
+      Promise.resolve(onSave(payload, { fromAutoSave: true }))
         .then(() => {
           initialSnapshot = JSON.stringify(payload);
         })

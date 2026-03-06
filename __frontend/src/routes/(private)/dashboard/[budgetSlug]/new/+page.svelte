@@ -78,7 +78,8 @@
         formRef?.clearDirty?.();
         await tick();
         await invalidateAll();
-        goto("/dashboard");
+        if (payload.status === "live" || (payload.status === "draft" && !options?.fromAutoSave))
+          goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const onlyLegalErrors =
