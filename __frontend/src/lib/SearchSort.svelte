@@ -107,6 +107,7 @@
                   <RadioGroup.Item
                     value={option.value}
                     id="sort-{option.value}"
+                    class="border border-muted-foreground/80"
                   />
                   <Label
                     for="sort-{option.value}"
