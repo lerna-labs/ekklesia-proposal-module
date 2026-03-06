@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 1 draft.
+ * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 2 drafts (one minimal, one "Ready to submit proposal" for stake_test1...43wf with full data except treasury hash).
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Proposal, Comment, User.
  *
@@ -597,6 +597,35 @@ async function createDummyData() {
         });
         console.log(`Draft proposal created: ${draftProposal._id} (proposerId: ${draftProposer.id}, ${draftProposer.name})`);
 
+        // Draft "Ready to submit proposal" — same vote, proposer stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf, full metaData except treasuryDonationTxHash
+        const readyToSubmitStakeId = "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf";
+        const readyToSubmitTemplate = {
+            title: "Ready to submit proposal",
+            summary: "This draft has all sections completed and is ready to submit once the treasury donation transaction hash is entered.",
+            totalBudget: 75000,
+            contactName: "Test Proposer 43wf",
+            contactEmail: "proposal-ready@example.com",
+        };
+        const readyToSubmitCategoryIds = [pillars[0]._id];
+        const readyToSubmitMetaData = buildBudget2026MetaData(readyToSubmitTemplate, readyToSubmitCategoryIds, 0);
+        readyToSubmitMetaData.treasuryDonationTxHash = "";
+        readyToSubmitMetaData.treasuryDonationConfirmed = false;
+        const readyToSubmitTotalBudget = readyToSubmitMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+            const rows = wp.budgetBreakdown || [];
+            return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
+        }, 0) ?? 0;
+        readyToSubmitMetaData.totalBudget = readyToSubmitTotalBudget;
+        console.log("Creating draft 'Ready to submit proposal'...");
+        const readyToSubmitProposal = await Proposal.create({
+            proposerId: readyToSubmitStakeId,
+            voteId: vote._id,
+            title: readyToSubmitTemplate.title,
+            summary: readyToSubmitTemplate.summary,
+            status: "draft",
+            metaData: readyToSubmitMetaData,
+        });
+        console.log(`  Ready to submit proposal created: ${readyToSubmitProposal._id} (proposerId: ${readyToSubmitStakeId})`);
+
         // 5. Create comments only on "Comment test proposal": one per COMMENT_USERS user + one withdrawn
         const commentBodies = [
             "This looks like a great proposal! I fully support this initiative.",
@@ -644,6 +673,7 @@ async function createDummyData() {
         console.log(`  Withdrawn proposal: ${withdrawnProposal._id} (${withdrawnProposal.title})`);
         console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${draftProposer.id})`);
+        console.log(`  Ready to submit proposal (draft): ${readyToSubmitProposal._id} (proposerId: ${readyToSubmitStakeId})`);
         console.log(`  Comments: ${createdComments.length} (on "${COMMENT_TEST_PROPOSAL_TITLE}" only)`);
     } catch (error) {
         console.error("Error creating dummy data:", error);
