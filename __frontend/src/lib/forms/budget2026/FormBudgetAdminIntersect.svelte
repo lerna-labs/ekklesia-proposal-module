@@ -3,26 +3,31 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Input from "$lib/components/form/Input.svelte";
   import SelectCountries from "$lib/components/form/SelectCountries.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
 
-  const metaErrors = $derived(validationErrors?.properties?.metaData?.properties ?? {});
+  const metaErrors = $derived(
+    validationErrors?.properties?.metaData?.properties ?? {},
+  );
   const feeConsentErrors = $derived({ properties: metaErrors });
   const contractingPartyErrors = $derived({
-    properties: validationErrors?.properties?.metaData?.properties?.contractingParty?.properties ?? {},
+    properties:
+      validationErrors?.properties?.metaData?.properties?.contractingParty
+        ?.properties ?? {},
   });
   const primaryContactErrors = $derived({
-    properties: validationErrors?.properties?.metaData?.properties?.primaryContact?.properties ?? {},
+    properties:
+      validationErrors?.properties?.metaData?.properties?.primaryContact
+        ?.properties ?? {},
   });
   const signatoryContactErrors = $derived({
-    properties: validationErrors?.properties?.metaData?.properties?.signatoryContact?.properties ?? {},
+    properties:
+      validationErrors?.properties?.metaData?.properties?.signatoryContact
+        ?.properties ?? {},
   });
   const kycInfoErrors = $derived({
-    properties: validationErrors?.properties?.metaData?.properties?.kycInfo?.properties ?? {},
+    properties:
+      validationErrors?.properties?.metaData?.properties?.kycInfo?.properties ??
+      {},
   });
 </script>
 
@@ -40,7 +45,9 @@
   validationErrors={feeConsentErrors}
 />
 
-<h3 class="mt-8">Are you applying as a registered company or as an individual?</h3>
+<h3 class="mt-8"
+  >Are you applying as a registered company or as an individual?</h3
+>
 
 <RadioGroup
   id="legalEntityType"
@@ -60,10 +67,10 @@
   <section class="mb-8">
     <h3>Entity Details</h3>
     <p class="text-sm text-muted-foreground mb-4">
-      This section collects the legal and registration details of the entity that
-      will receive funds if the proposal is approved. The information provided
-      here must match official registration and KYC records and will be used for
-      contracting and payment purposes.
+      This section collects the legal and registration details of the entity
+      that will receive funds if the proposal is approved. The information
+      provided here must match official registration and KYC records and will be
+      used for contracting and payment purposes.
     </p>
     <Input
       id="legalEntityName"
@@ -80,7 +87,9 @@
     <Input
       id="legalEntityRegistrationNumber"
       label="Registration Number"
-      bind:value={formData.metaData.contractingParty.legalEntityRegistrationNumber}
+      bind:value={
+        formData.metaData.contractingParty.legalEntityRegistrationNumber
+      }
       placeholder="Tax ID / UEN"
       description="The official registration or tax identification number in your jurisdiction."
       required
@@ -317,6 +326,7 @@
   type="number"
   placeholder="Enter Count"
   description="The total count of proposals submitted by this entity/individual in this funding round."
+  class="sm:w-1/4"
   notPublic
   validationErrors={kycInfoErrors}
 />

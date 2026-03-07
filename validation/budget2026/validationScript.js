@@ -213,7 +213,13 @@ const signatoryContactSchema = z.object({
 const kycInfoSchema = z.object({
   submitted: z.string().optional().default(""),
   email: z.string().max(100).optional().default(""),
-  totalProposalsSubmitted: z.string().max(100).optional().default(""),
+  /** Number of proposals submitted by this entity in this round (0–99999). Frontend may send number or string. */
+  totalProposalsSubmitted: z
+    .union([z.string(), z.number()])
+    .transform((v) => (v === "" || v === undefined || v === null ? 0 : Number(v)))
+    .pipe(z.number().int().min(0, "Must be 0 or greater").max(99999, "Must be 99999 or less"))
+    .optional()
+    .default(0),
 });
 
 const metaDataSchema = z.object({
