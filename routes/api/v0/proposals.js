@@ -740,8 +740,8 @@ router.get("/:proposalId", async (req, res) => {
  * @query {string} [proposer] - Filter by proposer ID (exact match, must be valid User ObjectId). Returns all proposals for the specified proposer. When authenticated and proposer matches the authenticated user's ID, all proposal statuses are returned (including draft and archived).
  * @query {string} [status=live] - Filter by proposal status. Valid values: 'live' or 'withdrawn' (includes both withdrawnByProposer and withdrawnByAdmin). Defaults to 'live' if not provided. When authenticated and proposer matches authenticated user's ID, all statuses are allowed.
  * @query {string} [search] - Search term matched using the vote's searchOptions (e.g. title, summary, proposerId, _id; partial case-insensitive or exact per option)
- * @query {string} [sort] - Sort value from vote's sortOptions (e.g. title, submittedAt, updatedAt, commentCount). Default: first option.
- * @query {string} [direction=desc] - Sort direction: asc or desc
+ * @query {string} [sort] - Sort value from vote's sortOptions (e.g. title, submittedAt, updatedAt, commentCount). Default: submittedAt.
+ * @query {string} [direction=desc] - Sort direction: asc or desc. Default when sort omitted: desc.
  * @query {number} [page=1] - Page number for pagination (default: 1)
  * @query {number} [limit=10] - Number of results per page (default: 10, max: 100)
  *
@@ -1019,18 +1019,7 @@ router.get("/", async (req, res) => {
       }
     }
 
-    const resolvedSortOptions = voteDoc.sortOptions;
-
-    const sortValue = sortParam ? String(sortParam).trim() : resolvedSortOptions[0]?.value ?? "title";
-    const sortOptionDef = resolvedSortOptions.find(
-      (o) => o.value === sortValue
-    );
-    if (!sortOptionDef) {
-      return res.status(400).json({
-        status: "error",
-        message: `Invalid sort parameter. Must be one of: ${resolvedSortOptions.map((o) => o.value).join(", ")}.`,
-      });
-    }
+    const resolvedSortOptions = voteDoc.sortOptions ?? [];
 
     // Validate direction parameter
     const directionNorm = String(direction).trim().toLowerCase();
@@ -1042,7 +1031,25 @@ router.get("/", async (req, res) => {
     }
 
     const sortDirection = directionNorm === "asc" ? 1 : -1;
-    const sortField = sortOptionDef.field;
+    let sortField;
+
+    if (!sortParam || String(sortParam).trim() === "") {
+      // Default sort is always submittedAt desc, regardless of sortOptions
+      sortField = "submittedAt";
+    } else {
+      const sortValue = String(sortParam).trim();
+      const sortOptionDef = resolvedSortOptions.find(
+        (o) => o.value === sortValue
+      );
+      if (!sortOptionDef) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid sort parameter. Must be one of: ${resolvedSortOptions.map((o) => o.value).join(", ")}.`,
+        });
+      }
+      sortField = sortOptionDef.field;
+    }
+
     const sortOption = { [sortField]: sortDirection };
 
     const skip = (pageNum - 1) * limitNum;
