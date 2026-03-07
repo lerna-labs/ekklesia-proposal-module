@@ -7,6 +7,8 @@
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import * as Field from "$lib/components/ui/field/index.js";
   import BoxIcon from "@lucide/svelte/icons/box";
+  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+  import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import FormWorkPackagesMilestones from "./FormWorkPackagesMilestones.svelte";
@@ -31,6 +33,7 @@
 
   const displayName = $derived(name || "Unnamed work package");
 
+  let expanded = $state(true);
   let confirmRemoveMilestonesOpen = $state(false);
   let confirmClearAlternativeOpen = $state(false);
   let localMilestoneAlternative = $state(milestoneAlternative ?? "");
@@ -136,7 +139,7 @@
   });
 </script>
 
-<Card.Root class="py-2 pb-0 bg-slate-50">
+<Card.Root class="py-2 {expanded ? 'pb-0' : 'pb-2'} bg-slate-50">
   <Card.Header class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm">
     <button
       type="button"
@@ -152,6 +155,22 @@
       variant="outline"
       size="icon"
       class="shrink-0 size-8 cursor-pointer"
+      title={expanded ? "Collapse work package" : "Expand work package"}
+      aria-label={expanded ? "Collapse work package" : "Expand work package"}
+      onclick={() => (expanded = !expanded)}
+    >
+      {#if expanded}
+        <ChevronUpIcon class="size-4" />
+      {:else}
+        <ChevronDownIcon class="size-4" />
+      {/if}
+    </Button>
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      class="shrink-0 size-8 cursor-pointer"
+      title="Edit work package"
       aria-label="Edit work package"
       onclick={onEdit}
     >
@@ -162,104 +181,108 @@
       variant="outline"
       size="icon"
       class="shrink-0 size-8 cursor-pointer"
+      title="Remove work package"
       aria-label="Remove work package"
       onclick={onDelete}
     >
       <TrashIcon class="size-4" />
     </Button>
   </Card.Header>
-  <Card.Content class="p-4 pt-0">
-    <section>
-      <div class={sectionRingClass}>
-        <h1 class="text-normal font-medium mb-2">
-          How will this work package be delivered?
-        </h1>
-        <p class="text-sm text-muted-foreground">
-          Break this Work Package into milestones or delivery phases. This helps
-          reviewers understand how progress will be structured and validated,
-          and provides a clear basis for contracting and payment if the proposal
-          is approved.
-        </p>
+  {#if expanded}
+    <Card.Content class="p-4 pt-0">
+      <section>
+        <div class={sectionRingClass}>
+          <h1 class="text-normal font-medium mb-2">
+            How will this work package be delivered?
+          </h1>
+          <p class="text-sm text-muted-foreground">
+            Break this Work Package into milestones or delivery phases. This
+            helps reviewers understand how progress will be structured and
+            validated, and provides a clear basis for contracting and payment if
+            the proposal is approved.
+          </p>
 
-        <Field.Field class="gap-2 mb-4">
-          <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
-          <div
-            class="flex items-start gap-2 cursor-pointer"
-            role="button"
-            tabindex="0"
-            onclick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
-            }}
-            onkeydown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
+          <Field.Field class="gap-2 mb-4">
+            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+            <div
+              class="flex items-start gap-2 cursor-pointer"
+              role="button"
+              tabindex="0"
+              onclick={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
-              }
-            }}
-          >
-            <Checkbox
-              id="noMilestonesBreakdown"
-              checked={noMilestonesBreakdown}
-              class="shrink-0 mt-0.5 pointer-events-none"
-            />
-            <Field.Label
-              for="noMilestonesBreakdown"
-              class="text-sm cursor-pointer mb-0 pb-0 pointer-events-none"
+              }}
+              onkeydown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleNoMilestonesBreakdownChange(!noMilestonesBreakdown);
+                }
+              }}
             >
-              I can't break down my work in Milestones
-            </Field.Label>
-          </div>
-        </Field.Field>
+              <Checkbox
+                id="noMilestonesBreakdown"
+                checked={noMilestonesBreakdown}
+                class="shrink-0 mt-0.5 pointer-events-none"
+              />
+              <Field.Label
+                for="noMilestonesBreakdown"
+                class="text-sm cursor-pointer mb-0 pb-0 pointer-events-none"
+              >
+                I can't break down my work in Milestones
+              </Field.Label>
+            </div>
+          </Field.Field>
 
-        {#if noMilestonesBreakdown}
-          <Textarea
-            id="milestoneAlternative"
-            label="Milestone Alternative"
-            bind:value={localMilestoneAlternative}
-            placeholder="Provide a rationale and alternative way to track progress..."
-            description="Provide a rationale and alternative to track progress"
-            required
-            maxLength={4000}
-            validationErrors={validationErrorsWithoutMilestoneAlternativeError}
-          />
-        {:else}
-          <FormWorkPackagesMilestones
-            value={milestones}
-            onvaluechange={onMilestonesChange}
-            validationErrors={validationErrors?.properties?.milestones}
-            hideSectionError
-          />
+          {#if noMilestonesBreakdown}
+            <Textarea
+              id="milestoneAlternative"
+              label="Milestone Alternative"
+              bind:value={localMilestoneAlternative}
+              placeholder="Provide a rationale and alternative way to track progress..."
+              description="Provide a rationale and alternative to track progress"
+              required
+              maxLength={4000}
+              validationErrors={validationErrorsWithoutMilestoneAlternativeError}
+            />
+          {:else}
+            <FormWorkPackagesMilestones
+              value={milestones}
+              onvaluechange={onMilestonesChange}
+              validationErrors={validationErrors?.properties?.milestones}
+              hideSectionError
+            />
+          {/if}
+        </div>
+        {#if milestoneSectionError}
+          <Field.Error class="text-xs mt-3">{milestoneSectionError}</Field.Error
+          >
         {/if}
-      </div>
-      {#if milestoneSectionError}
-        <Field.Error class="text-xs mt-3">{milestoneSectionError}</Field.Error>
-      {/if}
-    </section>
+      </section>
 
-    <section class="mt-8">
-      <div class={budgetSectionRingClass}>
-        <h1 class="text-normal font-medium mb-2">
-          What's the budget estimated for this Work Package?
-        </h1>
-        <p class="text-sm text-muted-foreground">
-          Breakdown your estimated budget into the appropriate categories. Make
-          sure to provide context so DReps can understand why each item is added
-          and how it is calculated.
-        </p>
+      <section class="mt-8">
+        <div class={budgetSectionRingClass}>
+          <h1 class="text-normal font-medium mb-2">
+            What's the budget estimated for this Work Package?
+          </h1>
+          <p class="text-sm text-muted-foreground">
+            Breakdown your estimated budget into the appropriate categories.
+            Make sure to provide context so DReps can understand why each item
+            is added and how it is calculated.
+          </p>
 
-        <FormWorkPackagesBudget
-          value={budgetBreakdown}
-          onvaluechange={onBudgetBreakdownChange}
-          conversionRate={conversionRate}
-        />
-      </div>
-      {#if budgetBreakdownError}
-        <Field.Error class="text-xs mt-3">{budgetBreakdownError}</Field.Error>
-      {/if}
-    </section>
-  </Card.Content>
+          <FormWorkPackagesBudget
+            value={budgetBreakdown}
+            onvaluechange={onBudgetBreakdownChange}
+            {conversionRate}
+          />
+        </div>
+        {#if budgetBreakdownError}
+          <Field.Error class="text-xs mt-3">{budgetBreakdownError}</Field.Error>
+        {/if}
+      </section>
+    </Card.Content>
+  {/if}
 </Card.Root>
 
 <AlertDialog.Root bind:open={confirmRemoveMilestonesOpen}>

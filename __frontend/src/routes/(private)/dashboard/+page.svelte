@@ -282,6 +282,8 @@
                             variant="outline"
                             size="icon"
                             href={viewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             aria-label="View proposal"
                             title="View proposal"
                           >

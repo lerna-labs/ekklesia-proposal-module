@@ -198,6 +198,11 @@
               >
                 Total (ADA)
               </th>
+              <th
+                class="h-9 px-3 text-right align-middle font-medium w-[72px]"
+                aria-label="Actions"
+              >
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -237,6 +242,30 @@
                 <td class="p-3 text-right align-top tabular-nums">
                   {formatAda(totalAda)}
                 </td>
+                <td class="p-3 text-right align-top">
+                  <div class="flex items-center justify-end gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      class="shrink-0 size-8 cursor-pointer"
+                      aria-label="Edit budget item"
+                      onclick={() => openDialog(index)}
+                    >
+                      <PencilIcon class="size-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      class="shrink-0 size-8 cursor-pointer"
+                      aria-label="Remove budget item"
+                      onclick={() => requestDelete(index)}
+                    >
+                      <TrashIcon class="size-4" />
+                    </Button>
+                  </div>
+                </td>
               </tr>
             {/each}
           </tbody>
@@ -246,6 +275,7 @@
               <td class="p-3 text-right tabular-nums">
                 {formatAda(totalPackageAda)}
               </td>
+              <td class="p-3"></td>
             </tr>
           </tfoot>
         </table>
