@@ -47,7 +47,9 @@
 {#if (comment.replyCount ?? 0) > 0 && repliesByParent[comment._id]}
   {@const replyState = repliesByParent[comment._id]}
   {#if replyState.error}
-    <div class="ml-6 mb-4 pl-4 border-l-2 border-muted text-sm text-destructive">
+    <div
+      class="ml-6 mb-4 pl-4 border-l-2 border-muted text-sm text-destructive"
+    >
       {replyState.error}
     </div>
   {:else if replyState.loading}

@@ -2,7 +2,11 @@
   import { Button } from "$lib/components/ui/button";
   import { toast } from "svelte-sonner";
   import { untrack } from "svelte";
-  import { user, showLogin, pendingCommentAction } from "$stores/sessionManager.js";
+  import {
+    user,
+    showLogin,
+    pendingCommentAction,
+  } from "$stores/sessionManager.js";
   import { fetchJson } from "./fetchJson.js";
   import { shortenString } from "$lib/utils.js";
   import CommentsHeader from "./CommentsHeader.svelte";
@@ -12,6 +16,7 @@
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
+  import PlusIcon from "@lucide/svelte/icons/plus";
 
   let { proposalId, proposal, vote } = $props();
 
@@ -465,7 +470,7 @@
   }
 </script>
 
-<section class="mt-8" id="comments">
+<section class="mt-4" id="comments">
   <CommentsHeader
     total={proposal?.commentCount ?? commentsState.meta?.total}
     bind:sortPopoverOpen
@@ -482,6 +487,7 @@
     onResetSort={resetSort}
     onApplyFilter={applyFilter}
     onResetFilter={resetFilter}
+    onAddComment={showAddCommentButton ? openAddDialog : null}
   />
 
   {#if commentsState.loading}
@@ -529,10 +535,11 @@
 
     {#if showAddCommentButton}
       <Button
-        variant="default"
-        class="mt-4 cursor-pointer"
+        variant="outline"
+        class="add-item-btn cursor-pointer gap-1.5 text-white"
         onclick={() => openAddDialog()}
       >
+        <PlusIcon class="size-4" />
         Add Comment
       </Button>
     {/if}

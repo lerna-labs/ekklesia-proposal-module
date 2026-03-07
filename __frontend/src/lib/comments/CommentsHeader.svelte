@@ -10,6 +10,7 @@
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
+  import PlusIcon from "@lucide/svelte/icons/plus";
 
   let {
     total = null,
@@ -27,6 +28,8 @@
     onResetSort,
     onApplyFilter,
     onResetFilter,
+    /** When set, show a small "Add comment" button in front of filter/sort that calls this. */
+    onAddComment = null,
   } = $props();
 
   const SORT_OPTIONS = [
@@ -36,7 +39,9 @@
   ];
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+<div
+  class="flex flex-wrap items-center justify-between gap-2 mb-2 sticky top-0 bg-white pt-4 pb-2 z-10 outline-2 outline-white"
+>
   <h2 class="text-xl font-medium">
     Comments
     {#if total != null}
@@ -44,6 +49,18 @@
     {/if}
   </h2>
   <div class="flex items-center gap-1 ml-auto">
+    {#if onAddComment}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        class="add-item-btn cursor-pointer text-xs h-8 gap-1 text-white"
+        onclick={onAddComment}
+      >
+        <PlusIcon class="size-3.5" />
+        Add comment
+      </Button>
+    {/if}
     <Popover.Root bind:open={filterPopoverOpen}>
       <Popover.Trigger
         class={buttonVariants({
@@ -72,7 +89,10 @@
                 for="comment-filter-proposer"
                 class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
               >
-                <Checkbox id="comment-filter-proposer" bind:checked={pendingProposer} />
+                <Checkbox
+                  id="comment-filter-proposer"
+                  bind:checked={pendingProposer}
+                />
                 <span class="font-normal">Proposer</span>
               </label>
               <label
@@ -86,7 +106,10 @@
                 for="comment-filter-admin"
                 class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
               >
-                <Checkbox id="comment-filter-admin" bind:checked={pendingAdmin} />
+                <Checkbox
+                  id="comment-filter-admin"
+                  bind:checked={pendingAdmin}
+                />
                 <span class="font-normal">Admin</span>
               </label>
             </div>
@@ -106,7 +129,13 @@
               Reset
             </Button>
           {/if}
-          <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplyFilter}>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            class="flex-1 text-xs"
+            onclick={onApplyFilter}
+          >
             <CheckIcon class="size-4" />
             Apply
           </Button>
@@ -138,9 +167,17 @@
             <Label class="text-xs text-muted-foreground">Sort by</Label>
             <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
               {#each SORT_OPTIONS as option (option.value)}
-                <div class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50">
-                  <RadioGroup.Item value={option.value} id="comment-sort-{option.value}" />
-                  <Label for="comment-sort-{option.value}" class="cursor-pointer font-normal">
+                <div
+                  class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                >
+                  <RadioGroup.Item
+                    value={option.value}
+                    id="comment-sort-{option.value}"
+                  />
+                  <Label
+                    for="comment-sort-{option.value}"
+                    class="cursor-pointer font-normal"
+                  >
                     {option.label}
                   </Label>
                 </div>
@@ -151,7 +188,10 @@
             <Label class="text-xs text-muted-foreground">Direction</Label>
             <div class="flex items-center gap-2">
               <Switch id="comment-sort-dir" bind:checked={pendingDescending} />
-              <Label for="comment-sort-dir" class="cursor-pointer text-sm font-normal">
+              <Label
+                for="comment-sort-dir"
+                class="cursor-pointer text-sm font-normal"
+              >
                 {pendingDescending ? "Descending" : "Ascending"}
               </Label>
             </div>
@@ -170,7 +210,13 @@
                 Reset
               </Button>
             {/if}
-            <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplySort}>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              class="flex-1 text-xs"
+              onclick={onApplySort}
+            >
               <CheckIcon class="size-4" />
               Apply
             </Button>
