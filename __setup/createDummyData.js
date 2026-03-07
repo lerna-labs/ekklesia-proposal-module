@@ -167,6 +167,11 @@ function buildBudget2026AdminMetaData(template, index) {
     };
 }
 
+/** Random conversion rate per proposal in [0.2, 1.2], rounded to 2 decimals. */
+function randomConversionRate() {
+    return Math.round((0.2 + Math.random() * 1) * 100) / 100;
+}
+
 /** Build metaData for a live Budget 2026 proposal (matches validation/budget2026/validationScript.js). */
 function buildBudget2026MetaData(template, categoryIds, proposalIndex = 0) {
     const ids = Array.isArray(categoryIds) ? categoryIds : (categoryIds ? [categoryIds] : []);
@@ -184,7 +189,7 @@ function buildBudget2026MetaData(template, categoryIds, proposalIndex = 0) {
             kpiAlignment: "KPIs aligned with roadmap deliverables.",
         },
         proposalDetails: {
-            conversionRate: 0.4,
+            conversionRate: randomConversionRate(),
             workPackages: [
                 {
                     name: `WP1 – ${template.title.slice(0, 30)}`,
