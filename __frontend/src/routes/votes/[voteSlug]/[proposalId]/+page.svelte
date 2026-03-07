@@ -1,10 +1,14 @@
 <script>
+  import { goto } from "$app/navigation";
+  import { page } from "$app/state";
   import { Button } from "$lib/components/ui/button";
   import ProposalCard from "$lib/ProposalCard.svelte";
   import Comments from "$lib/comments/Comments.svelte";
   let { data } = $props();
 
   let { vote, proposal, pillars = [], commentCount } = $derived(data);
+  const voteSlug = $derived(page.params.voteSlug ?? "");
+  const voteUrl = $derived(voteSlug ? `/votes/${voteSlug}` : "/votes");
 
   const isWithdrawn = $derived(
     proposal?.status === "withdrawnByAdmin" ||
@@ -23,7 +27,7 @@
       type="button"
       variant="ghost"
       size="sm"
-      onclick={() => history.back()}
+      onclick={() => goto(voteUrl)}
     >
       ← Back to vote
     </Button>
