@@ -425,15 +425,15 @@ router.delete("/:proposalId", async (req, res) => {
 
 /**
  * @route PUT /api/v0/proposals/:proposalId
- * @description Update a proposal (same body as POST). Only proposer or vote admin (draft only).
+ * @description Update a proposal (same body as POST). Only the proposer can update.
  * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
  * status is immutable (400 if body tries to change it); updates are locked after the vote's
  * reviewEndDate (400); the current version is archived (new doc with status "archived") and
  * a reference is appended to versions before applying the update.
- * @access Private (proposer or vote admin for draft only)
+ * @access Private (proposer only)
  * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
  * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
- * @returns {Object} 403 - Not the proposer or a vote admin for this draft
+ * @returns {Object} 403 - Not the proposer
  * @returns {Object} 404 - Proposal not found
  */
 router.put("/:proposalId", async (req, res) => {
@@ -493,17 +493,10 @@ router.put("/:proposalId", async (req, res) => {
     }
 
     const isProposer = proposal.proposerId && String(proposal.proposerId).trim() === userId;
-    let isVoteAdmin = false;
-    if (proposal.voteId && proposal.status === "draft") {
-      const voteDoc = await Vote.findById(proposal.voteId).lean();
-      if (voteDoc?.admins && Array.isArray(voteDoc.admins)) {
-        isVoteAdmin = voteDoc.admins.some((id) => String(id).trim() === userId);
-      }
-    }
-    if (!isProposer && !isVoteAdmin) {
+    if (!isProposer) {
       return res.status(403).json({
         status: "error",
-        message: "Only the proposer or a vote admin can update this proposal.",
+        message: "Only the proposer can update this proposal.",
       });
     }
 
@@ -962,8 +955,10 @@ router.get("/", async (req, res) => {
       }
     }
 
-    // Add proposer filter only if vote's filterOptions include proposer (exact match, must be valid bech32 address)
-    if (proposer && filterParamSet.has("proposer")) {
+    // Apply proposer filter whenever proposer param is present (security: never return other users' drafts).
+    // Supports both public "proposals by X" (live/withdrawn) and dashboard "my proposals" (incl. own drafts).
+    // Does not depend on vote's filterOptions.
+    if (proposer) {
       const proposerTerm = proposer.trim();
       // Validate bech32 address format - try stake first, then drep
       const stakeValidation = validateAddress(proposerTerm, "stake");

@@ -53,6 +53,8 @@ export async function load({ fetch, url, parent }) {
 			itemsPerPage: meta.limit ?? 10,
 		},
 	};
+	// Defense-in-depth: only show proposals that belong to the current user
+	proposals.data = proposals.data.filter((p) => String(p.proposerId ?? '') === String(userId));
 
 	// If current page is empty but there are still proposals (e.g. after deletions), redirect to page 1
 	const totalItems = proposals.pagination.totalItems ?? 0;
