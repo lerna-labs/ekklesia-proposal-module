@@ -92,10 +92,32 @@
     ],
   };
 
-  let sectionErrorCounts = $derived.by(() => {
+  /** Section-6 paths depend on administrator: only count errors for fields that apply to the chosen type. */
+  const sectionErrorCounts = $derived.by(() => {
     const root = validationErrors;
+    const admin = formData.metaData?.administrator ?? "";
+    const section6Paths =
+      admin === "Intersect"
+        ? [
+            ["metaData", "administrator"],
+            ["metaData", "intersectAdministratorFeeConsent"],
+            ["metaData", "contractingParty"],
+            ["metaData", "primaryContact"],
+            ["metaData", "signatoryContact"],
+            ["metaData", "kycInfo"],
+            ["metaData", "independentAudits"],
+          ]
+        : admin === "Other"
+          ? [
+              ["metaData", "administrator"],
+              ["metaData", "otherAdministrator"],
+              ["metaData", "contractingParty"],
+              ["metaData", "independentAudits"],
+            ]
+          : SECTION_ERROR_PATHS["section-6"];
+    const pathsBySection = { ...SECTION_ERROR_PATHS, "section-6": section6Paths };
     const counts = {};
-    for (const [section, paths] of Object.entries(SECTION_ERROR_PATHS)) {
+    for (const [section, paths] of Object.entries(pathsBySection)) {
       counts[section] = paths.reduce(
         (sum, path) => sum + countErrorsInTree(getNodeAtPath(root, path)),
         0,

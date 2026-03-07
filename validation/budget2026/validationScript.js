@@ -298,52 +298,61 @@ const metaDataSchema = z.object({
         message: "Other administrator details are required when not selecting Intersect",
       });
     }
+    // Other: only contracting party type (company or individual) is required
+    const cpOther = data.contractingParty ?? {};
+    const entityTypeOther = (cpOther.legalEntityType ?? "").trim();
+    if (entityTypeOther !== "company" && entityTypeOther !== "individual") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["contractingParty", "legalEntityType"],
+        message: "Please select Company or Individual",
+      });
+    }
   }
-  // Contracting party type required; conditional company/individual fields
-  const cp = data.contractingParty ?? {};
-  const entityType = (cp.legalEntityType ?? "").trim();
-  if (entityType !== "company" && entityType !== "individual") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["contractingParty", "legalEntityType"],
-      message: "Please select Company or Individual",
-    });
-  }
-  if (entityType === "company") {
-    if (!(cp.legalEntityName ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityName"], message: "Legal entity name is required" });
-    if (!(cp.legalEntityRegistrationNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityRegistrationNumber"], message: "Registration number is required" });
-    if (!(cp.legalEntityCountry ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityCountry"], message: "Country of incorporation is required" });
-    if (!(cp.legalEntityAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityAddressLine1"], message: "Registered address line 1 is required" });
-  }
-  if (entityType === "individual") {
-    if (!(cp.govtIssuedIdNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "govtIssuedIdNumber"], message: "Government-issued ID number is required" });
-    if (!(cp.countryOfResidence ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "countryOfResidence"], message: "Country of residence is required" });
-    if (!(cp.residentialAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "residentialAddressLine1"], message: "Residential address line 1 is required" });
-  }
-  // Primary contact
-  const pc = data.primaryContact ?? {};
-  if (!(pc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "name"], message: "Primary contact name is required" });
-  const pcEmail = (pc.email ?? "").trim();
-  if (!pcEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Primary contact email is required" });
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pcEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Enter a valid email" });
-  // Signatory
-  const sc = data.signatoryContact ?? {};
-  if (!(sc.title ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "title"], message: "Signatory title is required" });
-  if (!(sc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "name"], message: "Signatory name is required" });
-  const scEmail = (sc.email ?? "").trim();
-  if (!scEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Signatory email is required" });
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Enter a valid email" });
-  if (sc.authorization !== true) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "authorization"], message: "You must confirm signatory authorization" });
-  // KYC
-  const kyc = data.kycInfo ?? {};
-  const kycSubmitted = (kyc.submitted ?? "").trim();
-  if (kycSubmitted !== "Yes" && kycSubmitted !== "No") {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "submitted"], message: "KYC/KYB submission status is required (Yes or No)" });
-  }
-  if (kycSubmitted === "No") {
-    const kycEmail = (kyc.email ?? "").trim();
-    if (!kycEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "KYC contact email is required when KYC has not been submitted" });
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "Enter a valid email" });
+  if (admin === "Intersect") {
+    // Intersect: full contracting party, primary contact, signatory, KYC required
+    const cp = data.contractingParty ?? {};
+    const entityType = (cp.legalEntityType ?? "").trim();
+    if (entityType !== "company" && entityType !== "individual") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["contractingParty", "legalEntityType"],
+        message: "Please select Company or Individual",
+      });
+    }
+    if (entityType === "company") {
+      if (!(cp.legalEntityName ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityName"], message: "Legal entity name is required" });
+      if (!(cp.legalEntityRegistrationNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityRegistrationNumber"], message: "Registration number is required" });
+      if (!(cp.legalEntityCountry ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityCountry"], message: "Country of incorporation is required" });
+      if (!(cp.legalEntityAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityAddressLine1"], message: "Registered address line 1 is required" });
+    }
+    if (entityType === "individual") {
+      if (!(cp.govtIssuedIdNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "govtIssuedIdNumber"], message: "Government-issued ID number is required" });
+      if (!(cp.countryOfResidence ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "countryOfResidence"], message: "Country of residence is required" });
+      if (!(cp.residentialAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "residentialAddressLine1"], message: "Residential address line 1 is required" });
+    }
+    const pc = data.primaryContact ?? {};
+    if (!(pc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "name"], message: "Primary contact name is required" });
+    const pcEmail = (pc.email ?? "").trim();
+    if (!pcEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Primary contact email is required" });
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pcEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Enter a valid email" });
+    const sc = data.signatoryContact ?? {};
+    if (!(sc.title ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "title"], message: "Signatory title is required" });
+    if (!(sc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "name"], message: "Signatory name is required" });
+    const scEmail = (sc.email ?? "").trim();
+    if (!scEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Signatory email is required" });
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Enter a valid email" });
+    if (sc.authorization !== true) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "authorization"], message: "You must confirm signatory authorization" });
+    const kyc = data.kycInfo ?? {};
+    const kycSubmitted = (kyc.submitted ?? "").trim();
+    if (kycSubmitted !== "Yes" && kycSubmitted !== "No") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "submitted"], message: "KYC/KYB submission status is required (Yes or No)" });
+    }
+    if (kycSubmitted === "No") {
+      const kycEmail = (kyc.email ?? "").trim();
+      if (!kycEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "KYC contact email is required when KYC has not been submitted" });
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "Enter a valid email" });
+    }
   }
   // Third party assurers (independent audits) required when administrator is selected
   const independentAuditsVal = (data.independentAudits ?? "").trim();
