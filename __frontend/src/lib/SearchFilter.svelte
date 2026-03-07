@@ -47,23 +47,30 @@
 
   /** Options with optionsPath: resolve option list from vote and build { value, label }[] */
   const optionsFromVoteByParam = $derived.by(() => {
-    const out = /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
+    const out =
+      /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
     for (const opt of filterOptions) {
       if (!opt.optionsPath || !vote) continue;
       const list = getByPath(vote, opt.optionsPath);
       if (!Array.isArray(list)) continue;
       const valueKey = opt.optionValueKey ?? "_id";
       const labelKey = opt.optionLabelKey ?? "title";
-      out[opt.param] = list.map((item) => ({
-        value: String(item[valueKey] ?? ""),
-        label: String(item[labelKey] ?? item[valueKey] ?? ""),
-      })).filter((o) => o.value);
+      out[opt.param] = list
+        .map((item) => ({
+          value: String(item[valueKey] ?? ""),
+          label: String(item[labelKey] ?? item[valueKey] ?? ""),
+        }))
+        .filter((o) => o.value);
     }
     return out;
   });
 
-  const categoryOption = $derived(filterOptions.find((o) => o.param === "category"));
-  const categoryOptionsList = $derived(optionsFromVoteByParam["category"] ?? []);
+  const categoryOption = $derived(
+    filterOptions.find((o) => o.param === "category"),
+  );
+  const categoryOptionsList = $derived(
+    optionsFromVoteByParam["category"] ?? [],
+  );
 
   const ALL_CATEGORIES_VALUE = "__all_categories__";
   let open = $state(false);
@@ -86,7 +93,9 @@
     pendingCategories.length === 0
       ? "All Categories"
       : pendingCategories.length === 1
-        ? (categoryOptionsList.find((c) => String(c.value) === pendingCategories[0])?.label ?? pendingCategories[0])
+        ? (categoryOptionsList.find(
+            (c) => String(c.value) === pendingCategories[0],
+          )?.label ?? pendingCategories[0])
         : `${pendingCategories.length} Categories`,
   );
 
@@ -102,7 +111,10 @@
     if (categoryOption) {
       const catParam = page.url.searchParams.get("category") ?? "";
       pendingCategories = catParam
-        ? catParam.split(",").map((id) => id.trim()).filter(Boolean)
+        ? catParam
+            .split(",")
+            .map((id) => id.trim())
+            .filter(Boolean)
         : [];
     }
   });
@@ -128,7 +140,9 @@
     }
 
     if (categoryOption) {
-      const categoryIds = pendingCategories.filter((id) => id !== ALL_CATEGORIES_VALUE);
+      const categoryIds = pendingCategories.filter(
+        (id) => id !== ALL_CATEGORIES_VALUE,
+      );
       if (categoryIds.length > 0) {
         searchParams.set("category", categoryIds.join(","));
       } else {
@@ -189,15 +203,21 @@
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           {#if statusOption}
-            <div class="space-y-2">
-              <Label class="text-xs text-muted-foreground">{statusOption.label}</Label>
-              <div class="space-y-0">
+            <div class="space-y-1">
+              <Label class="text-xs text-muted-foreground"
+                >{statusOption.label}</Label
+              >
+              <div class="grid gap-0">
                 {#if statusOption.allowedValues?.includes("live")}
                   <label
                     for="filter-status-live"
                     class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
                   >
-                    <Checkbox id="filter-status-live" bind:checked={pendingLive} class="border border-muted-foreground/80" />
+                    <Checkbox
+                      id="filter-status-live"
+                      bind:checked={pendingLive}
+                      class="border border-muted-foreground/80"
+                    />
                     <span class="cursor-pointer font-normal">Live</span>
                   </label>
                 {/if}
@@ -206,7 +226,11 @@
                     for="filter-status-withdrawn"
                     class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
                   >
-                    <Checkbox id="filter-status-withdrawn" bind:checked={pendingWithdrawn} class="border border-muted-foreground/80" />
+                    <Checkbox
+                      id="filter-status-withdrawn"
+                      bind:checked={pendingWithdrawn}
+                      class="border border-muted-foreground/80"
+                    />
                     <span class="cursor-pointer font-normal">Withdrawn</span>
                   </label>
                 {/if}
@@ -215,7 +239,11 @@
                     for="filter-status-draft"
                     class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
                   >
-                    <Checkbox id="filter-status-draft" bind:checked={pendingDraft} class="border border-muted-foreground/80" />
+                    <Checkbox
+                      id="filter-status-draft"
+                      bind:checked={pendingDraft}
+                      class="border border-muted-foreground/80"
+                    />
                     <span class="cursor-pointer font-normal">Draft</span>
                   </label>
                 {/if}
@@ -224,17 +252,24 @@
           {/if}
           {#if categoryOption && categoryOptionsList.length > 0}
             <div class="space-y-2">
-              <Label class="text-xs text-muted-foreground">{categoryOption.label}</Label>
+              <Label class="text-xs text-muted-foreground"
+                >{categoryOption.label}</Label
+              >
               <Select.Root type="multiple" bind:value={pendingCategories}>
                 <Select.Trigger
                   class="w-full min-w-0 text-foreground data-placeholder:text-foreground"
                   aria-label={categoryOption.label}
                 >
-                  <span class="truncate block min-w-0">{categoryTriggerLabel}</span>
+                  <span class="truncate block min-w-0"
+                    >{categoryTriggerLabel}</span
+                  >
                 </Select.Trigger>
                 <Select.Content>
                   <Select.Group aria-label="Categories">
-                    <Select.Item value={ALL_CATEGORIES_VALUE} label="All Categories">
+                    <Select.Item
+                      value={ALL_CATEGORIES_VALUE}
+                      label="All Categories"
+                    >
                       All Categories
                     </Select.Item>
                     {#each categoryOptionsList as opt (opt.value)}

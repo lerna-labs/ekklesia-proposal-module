@@ -113,7 +113,7 @@
         <h3 class="text-sm font-medium mb-2">Sort Options</h3>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
-          <div class="space-y-2">
+          <div class="space-y-1">
             <Label class="text-xs text-muted-foreground">Sort by</Label>
             <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
               {#each sortOptions as option (option.value)}
