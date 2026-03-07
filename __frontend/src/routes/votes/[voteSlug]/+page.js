@@ -5,6 +5,9 @@ import { getJWT } from '$stores/sessionManager.js';
 export async function load({ params, url, fetch }) {
 	const { voteSlug } = params;
 	const pageNum = url.searchParams.get('page') || '1';
+	const limitParam = url.searchParams.get('limit') || '10';
+	const validLimits = [10, 25, 50, 100];
+	const limit = validLimits.includes(Number(limitParam)) ? limitParam : '10';
 	const search = url.searchParams.get('search') || '';
 	const direction = url.searchParams.get('direction') || 'asc';
 	const category = url.searchParams.get('category') || '';
@@ -34,7 +37,7 @@ export async function load({ params, url, fetch }) {
 	const proposalsSearchParams = new URLSearchParams({
 		vote: voteData._id,
 		page: pageNum,
-		limit: '10',
+		limit,
 		sort,
 		direction,
 	});
