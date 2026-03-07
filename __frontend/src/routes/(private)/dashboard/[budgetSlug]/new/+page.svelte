@@ -49,6 +49,8 @@
   let openTreasuryModal = $state(false);
   let treasuryAcknowledged = $state(false);
   let formRef = $state({});
+  /** Set after first successful create (manual or auto-save) so the form can show Preview. */
+  let createdProposal = $state(null);
   let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
   const showForm = $derived(
@@ -68,12 +70,18 @@
     if (!options?.fromLegalModal) openLegalDialog = false;
     try {
       const body = { ...payload, voteId: vote._id };
-      const res = await api.fetch(fetch, "/proposals", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      const isUpdate = createdProposal?._id && payload.status === "draft";
+      const res = await api.fetch(
+        fetch,
+        isUpdate ? `/proposals/${createdProposal._id}` : "/proposals",
+        {
+          method: isUpdate ? "PUT" : "POST",
+          body: JSON.stringify(body),
+        },
+      );
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
+        if (json?._id) createdProposal = json;
         toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
         formRef?.clearDirty?.();
         await tick();
@@ -135,5 +143,5 @@
 {/if}
 
 {#if vote && showForm}
-  <FormComponent {vote} {pillars} {onSave} {showLegalErrors} {formRef} bind:validationErrors bind:openLegalDialog />
+  <FormComponent {vote} {pillars} proposal={createdProposal} {onSave} {showLegalErrors} {formRef} bind:validationErrors bind:openLegalDialog />
 {/if}

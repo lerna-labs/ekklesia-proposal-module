@@ -2,14 +2,38 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Switch from "$lib/components/ui/switch/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Popover from "$lib/components/ui/popover/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
+  import InfoIcon from "@lucide/svelte/icons/info";
 
   let {
     formData,
     getPayload,
     onSave,
     autoSaveEnabled = $bindable(true),
+    /** If set, show "Preview Proposal" button that opens this URL in a new window. */
+    previewHref = null,
+    /** True when creating a new proposal (no existing id). Auto-save is off and toggle disabled until title is entered; preference is not overwritten. */
+    isNewUnsaved = false,
   } = $props();
+
+  /** On new unsaved proposals we keep auto-save off locally; parent preference is unchanged. */
+  let newPageAutoSaveEnabled = $state(false);
+
+  const hasTitle = $derived(
+    typeof formData?.title === "string" && formData.title.trim() !== "",
+  );
+  const effectiveAutoSaveEnabled = $derived(
+    isNewUnsaved ? newPageAutoSaveEnabled : autoSaveEnabled,
+  );
+  const toggleDisabled = $derived(isNewUnsaved && !hasTitle);
+
+  /** Keep toggle in sync with actual state: when title is cleared on a new proposal, auto-save stops so show off. */
+  $effect(() => {
+    if (isNewUnsaved && !hasTitle) {
+      newPageAutoSaveEnabled = false;
+    }
+  });
 
   const AUTO_SAVE_INTERVAL_MS = 120 * 1000; // 2 minutes
 
@@ -96,20 +120,23 @@
 
   /** Reset dirty baseline to current form state. Call after loading/prefilling proposal data so the form is not considered dirty on first paint. */
   export function resetDirtyBaseline() {
-    if (getPayload) initialSnapshot = JSON.stringify(getPayload(formData.status));
+    if (getPayload)
+      initialSnapshot = JSON.stringify(getPayload(formData.status));
   }
 
-  /** Auto-save draft at interval when enabled. */
+  /** Auto-save draft at interval when enabled and (for new proposals) title is present. */
   $effect(() => {
     if (
-      !autoSaveEnabled ||
+      !effectiveAutoSaveEnabled ||
       formData.status !== "draft" ||
+      !hasTitle ||
       !onSave ||
       !getPayload
     )
       return;
     const id = setInterval(() => {
       const payload = getPayload("draft");
+      if (!payload?.title?.trim()) return;
       Promise.resolve(onSave(payload, { fromAutoSave: true }))
         .then(() => {
           initialSnapshot = JSON.stringify(payload);
@@ -133,14 +160,59 @@
     <Button type="button" class="cursor-pointer" onclick={submitLive}>
       {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
     </Button>
-    {#if formData.status === "draft" && onSave && getPayload}
-      <label
-        class="ml-auto flex h-9 items-center gap-2 rounded-md border bg-white px-4 py-2 shadow-xs cursor-pointer select-none text-sm font-medium"
-      >
-        <Switch.Root bind:checked={autoSaveEnabled} />
-        <span>Auto-save</span>
-      </label>
-    {/if}
+    <div class="ml-auto flex flex-wrap items-center gap-2">
+      {#if previewHref}
+        <Button
+          type="button"
+          variant="outline"
+          class="cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300"
+          href={previewHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Preview Proposal
+        </Button>
+      {/if}
+      {#if formData.status === "draft" && onSave && getPayload}
+        <div
+          class="flex h-9 items-center gap-1.5 rounded-md border bg-white px-4 py-2 shadow-xs text-sm font-medium"
+        >
+          {#if isNewUnsaved}
+            <Switch.Root
+              bind:checked={newPageAutoSaveEnabled}
+              disabled={toggleDisabled}
+              class="data-disabled:opacity-50"
+            />
+          {:else}
+            <Switch.Root bind:checked={autoSaveEnabled} />
+          {/if}
+          <span
+            class="select-none {toggleDisabled ? 'text-muted-foreground' : ''}"
+            >Auto-save</span
+          >
+          <Popover.Root>
+            <Popover.Trigger
+              class="rounded p-0.5 cursor-pointer text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+              aria-label="Auto-save info"
+            >
+              <InfoIcon class="size-4" />
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content class="w-72 p-3 text-sm" side="top" align="end">
+                <p class="text-muted-foreground">
+                  {#if isNewUnsaved && !hasTitle}
+                    Enter a title for your proposal to enable auto-save.
+                  {:else}
+                    When enabled, your draft is saved automatically every 2
+                    minutes.
+                  {/if}
+                </p>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        </div>
+      {/if}
+    </div>
   </div>
 </section>
 

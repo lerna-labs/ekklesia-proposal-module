@@ -177,6 +177,11 @@
   let autoSaveEnabled = $state(true);
   let formControlsRef = $state(null);
 
+  const previewHref = $derived(
+    proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}` : null,
+  );
+  const isNewUnsaved = $derived(!proposal?._id);
+
   /** Expose clearDirty so parent can reset dirty state before navigating after save (avoids "unsaved changes" dialog). */
   $effect(() => {
     if (formRef && formControlsRef) {
@@ -595,6 +600,8 @@
     {getPayload}
     {onSave}
     bind:autoSaveEnabled
+    {previewHref}
+    {isNewUnsaved}
   />
 </form>
 
