@@ -5,8 +5,8 @@
  * @module helper/koios
  */
 
-const API_URL = process.env.API_URL;
-const API_TOKEN = process.env.API_TOKEN;
+const API_URL = (process.env.API_URL || "").trim();
+const API_TOKEN = (process.env.API_TOKEN || "").trim();
 
 if (!API_URL) {
     console.error("API_URL is not set in the environment variables.");
