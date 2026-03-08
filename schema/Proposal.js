@@ -47,6 +47,8 @@ const proposalSchema = new Schema(
         createdAt: { type: Date, required: true },
       },
     ],
+    /** When status is "archived", the id of the live proposal this version was superseded by. */
+    currentProposalId: { type: mongoose.Schema.Types.ObjectId, required: false },
     submittedAt: { type: Date, required: false },
     version: { type: Number, default: 1 },
   },
