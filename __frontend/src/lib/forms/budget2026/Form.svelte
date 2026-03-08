@@ -435,7 +435,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormProjectDefinition
           bind:formData
           {vote}
@@ -456,7 +456,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormStrategyFramework
           bind:formData
           {vote}
@@ -478,7 +478,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormProposalDetails
           bind:formData
           {vote}
@@ -499,7 +499,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormBudgetSummary
           bind:formData
           {vote}
@@ -520,7 +520,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormProposerDetails
           bind:formData
           {vote}
@@ -541,7 +541,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormBudgetAdmin
           bind:formData
           {vote}
@@ -562,7 +562,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormAdditionalInfo
           bind:formData
           {vote}
@@ -583,7 +583,7 @@
           {/if}
         </span>
       </Accordion.Trigger>
-      <Accordion.Content>
+      <Accordion.Content class="pt-[3px] px-[3px]">
         <FormTreasuryDonation
           bind:formData
           {vote}
