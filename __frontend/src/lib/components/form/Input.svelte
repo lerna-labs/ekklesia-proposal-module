@@ -23,13 +23,7 @@
   } = $props();
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
-  let trimmedLength = $derived((value ?? "").toString().trim().length);
-  let minLengthError = $derived(
-    minLength != null && trimmedLength > 0 && trimmedLength < minLength
-      ? `Must be at least ${minLength} characters`
-      : null,
-  );
-  let displayError = $derived(schemaError ?? minLengthError);
+  let displayError = $derived(schemaError);
 </script>
 
 <Field.Field class="gap-2 {className}">

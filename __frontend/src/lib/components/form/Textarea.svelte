@@ -18,13 +18,7 @@
   } = $props();
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
-  let trimmedLength = $derived((value ?? "").toString().trim().length);
-  let minLengthError = $derived(
-    minLength != null && trimmedLength > 0 && trimmedLength < minLength
-      ? `Must be at least ${minLength} characters`
-      : null,
-  );
-  let displayError = $derived(schemaError ?? minLengthError);
+  let displayError = $derived(schemaError);
 
   /** Strip markdown syntax to get visible character count (for limit display). */
   function stripMarkdownForCount(text) {
@@ -74,7 +68,7 @@
     <Editor bind:value />
     {#if placeholder && (value == null || String(value).trim() === "")}
       <span
-        class="absolute inset-0 flex items-start pt-12 pl-3 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
+        class="absolute inset-0 flex items-start pt-11 pl-3 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
         aria-hidden="true"
       >
         {placeholder}
