@@ -57,27 +57,25 @@
   );
 </script>
 
-<!-- Back button -->
-<div class="mb-6">
-  {#if currentVersionHref}
-    <Button.Root href={currentVersionHref} variant="ghost" size="sm">
-      See current version of this proposal
-    </Button.Root>
-  {:else if backToVoteUrl}
-    <Button.Root
-      type="button"
-      variant="ghost"
-      size="sm"
-      onclick={() => history.back()}
-    >
-      ← Back to vote
-    </Button.Root>
-  {:else}
-    <Button.Root href={voteUrl} variant="ghost" size="sm">
-      ← Back to vote
-    </Button.Root>
-  {/if}
-</div>
+{#if !currentVersionHref}
+  <!-- Back button (when archived, "See current version" is in the route's full-width orange bar) -->
+  <div class="mb-6">
+    {#if backToVoteUrl}
+      <Button.Root
+        type="button"
+        variant="ghost"
+        size="sm"
+        onclick={() => history.back()}
+      >
+        ← Back to vote
+      </Button.Root>
+    {:else}
+      <Button.Root href={voteUrl} variant="ghost" size="sm">
+        ← Back to vote
+      </Button.Root>
+    {/if}
+  </div>
+{/if}
 
 <!-- Proposal summary (no card wrapper) -->
 <div
