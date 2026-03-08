@@ -46,7 +46,7 @@
     comment: z
       .string()
       .min(1, "Comment is required.")
-      .max(2000, "Comment must be at most 2000 characters.")
+      .max(1000, "Comment must be at most 1000 characters.")
       .meta({ label: "Comment", required: true }),
   });
 
