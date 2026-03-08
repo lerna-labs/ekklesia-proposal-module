@@ -14,8 +14,49 @@
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let pillars = $derived(data.pillars ?? []);
+  const defaultSort = $derived(vote?.sortOptions?.[0]?.value ?? "title");
+  const sortFromData = $derived(data.listState?.sort ?? defaultSort);
+  const ascendingFromData = $derived((data.listState?.direction ?? "asc") !== "desc");
   let sort = $state("title");
   let ascending = $state(true);
+  $effect(() => {
+    sort = sortFromData;
+    ascending = ascendingFromData;
+  });
+
+  const voteSlug = $derived(page.params.voteSlug ?? "");
+  const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
+  const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
+  function hasListParams(searchParams) {
+    return LIST_PARAM_KEYS.some((k) => searchParams.get(k));
+  }
+  function getListQueryString(searchParams) {
+    const q = new URLSearchParams();
+    for (const k of LIST_PARAM_KEYS) {
+      const v = searchParams.get(k);
+      if (v) q.set(k, v);
+    }
+    return q.toString();
+  }
+  let hasTriggeredRestore = false;
+  $effect(() => {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const searchParams = page.url.searchParams;
+    if (hasListParams(searchParams)) {
+      hasTriggeredRestore = false;
+      const qs = getListQueryString(searchParams);
+      if (qs) localStorage.setItem(listStateKey, qs);
+    } else {
+      const saved = localStorage.getItem(listStateKey);
+      if (saved && !hasTriggeredRestore) {
+        hasTriggeredRestore = true;
+        const restored = new URLSearchParams(saved);
+        restored.set("page", "1");
+        const path = page.url.pathname;
+        goto(`${path}?${restored.toString()}`, { replaceState: true });
+      }
+    }
+  });
 
   const proposerId = $derived(page.url.searchParams.get("proposer") ?? "");
   const shortProposerId = $derived(shortenString(proposerId, 12, true));
@@ -27,6 +68,17 @@
     const url = `${pathname}?${searchParams.toString()}`;
     goto(url);
   }
+
+  /** Capture scroll position so it can be restored when navigating back (e.g. from proposal page). */
+  export const snapshot = {
+    capture: () =>
+      typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 },
+    restore: (value) => {
+      if (typeof window !== "undefined" && value?.y != null) {
+        requestAnimationFrame(() => window.scrollTo(0, value.y));
+      }
+    },
+  };
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">

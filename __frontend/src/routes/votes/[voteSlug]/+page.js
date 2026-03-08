@@ -72,5 +72,7 @@ export async function load({ params, url, fetch }) {
 		vote: voteData,
 		proposals,
 		pillars,
+		/** Resolved list state from URL for initial UI (sort, direction). */
+		listState: { sort, direction },
 	};
 }

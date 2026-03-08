@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "$app/navigation";
+  import { afterNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import { Button } from "$lib/components/ui/button";
   import ProposalCard from "$lib/ProposalCard.svelte";
@@ -8,7 +8,19 @@
 
   let { vote, proposal, pillars = [], commentCount } = $derived(data);
   const voteSlug = $derived(page.params.voteSlug ?? "");
-  const voteUrl = $derived(voteSlug ? `/votes/${voteSlug}` : "/votes");
+  const listPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
+
+  let backToVoteUrl = $state("");
+
+  afterNavigate(({ from, to }) => {
+    if (!listPath || !to?.url) return;
+    const toPath = to.url.pathname;
+    if (from?.url && from.url.pathname === listPath && toPath === page.url.pathname) {
+      backToVoteUrl = from.url.pathname + (from.url.search || "");
+    }
+  });
+
+  const voteUrl = $derived(backToVoteUrl || (voteSlug ? `/votes/${voteSlug}` : "/votes"));
   const isArchived = $derived(proposal?.status === "archived");
   const currentVersionHref = $derived(
     isArchived && proposal?.currentProposalId && voteSlug
@@ -34,13 +46,17 @@
       <Button href={currentVersionHref} variant="ghost" size="sm">
         See current version of this proposal
       </Button>
-    {:else}
+    {:else if backToVoteUrl}
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        onclick={() => goto(voteUrl)}
+        onclick={() => history.back()}
       >
+        ← Back to vote
+      </Button>
+    {:else}
+      <Button href={voteUrl} variant="ghost" size="sm">
         ← Back to vote
       </Button>
     {/if}
