@@ -36,7 +36,7 @@
   let expanded = $state(true);
   let confirmRemoveMilestonesOpen = $state(false);
   let confirmClearAlternativeOpen = $state(false);
-  let localMilestoneAlternative = $state(milestoneAlternative ?? "");
+  let localMilestoneAlternative = $state("");
 
   $effect(() => {
     localMilestoneAlternative = milestoneAlternative ?? "";
