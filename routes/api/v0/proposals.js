@@ -509,6 +509,7 @@ router.put("/:proposalId", async (req, res) => {
     }
 
     const { voteId, title, summary, status, metaData } = validation.data;
+    const previousStatus = proposal.status;
 
     // When proposal is already live: reject status change; enforce reviewEndDate lock; archive current version then apply update
     if (proposal.status === "live") {
@@ -587,6 +588,12 @@ router.put("/:proposalId", async (req, res) => {
     proposal.metaData = sanitizedMetaData;
     if (status === "live") {
       proposal.submittedAt = proposal.submittedAt || new Date();
+      // Version is set only by the backend, never from request body. 1 on first submit, increment on re-submit.
+      if (previousStatus === "draft") {
+        proposal.version = 1;
+      } else if (previousStatus === "live") {
+        proposal.version = (proposal.version ?? 1) + 1;
+      }
     }
     await proposal.save();
 
@@ -1145,7 +1152,7 @@ router.get("/", async (req, res) => {
           totalBudget: metaData.totalBudget,
         }
         : null;
-      return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };
+      return { ...rest, metaData: shortenedMetaData, versions, commentCount: commentCount ?? 0 };
     });
 
     // Calculate pagination metadata

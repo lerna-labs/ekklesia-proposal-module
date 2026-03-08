@@ -60,13 +60,5 @@ proposalSchema.index({ voteId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 });
 
-proposalSchema.pre("save", function () {
-  if (this.isNew) {
-    this.version = 1;
-  } else {
-    this.version = (this.version ?? 0) + 1;
-  }
-});
-
 const Proposal = mongoose.model("Proposal", proposalSchema);
 export { Proposal };
