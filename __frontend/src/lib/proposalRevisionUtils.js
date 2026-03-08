@@ -32,48 +32,74 @@ export function getChangedPaths(a, b, prefix = "") {
   return out;
 }
 
-/** Map proposal paths to human-readable section labels (top-level section for grouping). */
-const PATH_TO_SECTION = {
-  title: "Title",
-  summary: "Summary",
-  "metaData.trackRecord": "Track record",
-  "metaData.estimatedDuration": "Estimated duration",
-  "metaData.strategyFramework": "Strategy framework",
-  "metaData.proposalDetails": "Proposal details",
-  "metaData.executionRoadmap": "Execution roadmap",
-  "metaData.financialAndAdministrative": "Financial & administrative",
-  "metaData.contractingParty": "Contracting party",
-  "metaData.primaryContact": "Primary contact",
-  "metaData.signatoryContact": "Signatory contact",
-  "metaData.proposerDetails": "Proposer details",
-  "metaData.kycInfo": "KYC info",
-  "metaData.legalDeclarations": "Legal declarations",
-  "metaData.supportingInfoLinks": "Supporting info",
-  "metaData.administrator": "Budget administration",
-  "metaData.intersectAdministratorFeeConsent": "Budget administration",
-  "metaData.otherAdministrator": "Budget administration",
-  "metaData.independentAudits": "Budget administration",
-  "metaData.treasuryRepayment": "Treasury repayment",
-  "metaData.treasuryRepaymentCircumstances": "Treasury repayment",
-  "metaData.priorFunding": "Prior funding",
-  "metaData.totalBudget": "Budget summary",
-};
+/**
+ * Build the comparable payload for a proposal (top-level keys only).
+ * Used for diffing; metaData is passed through as-is so any vote-specific structure is compared.
+ * @param {object} proposal
+ * @returns {{ title: any, summary: any, metaData: any, totalBudget: any }}
+ */
+export function buildProposalPayload(proposal) {
+  if (proposal == null) return { title: undefined, summary: undefined, metaData: undefined, totalBudget: undefined };
+  return {
+    title: proposal.title,
+    summary: proposal.summary,
+    metaData: proposal.metaData,
+    totalBudget: proposal.metaData?.totalBudget ?? proposal.totalBudget,
+  };
+}
 
 /**
- * Reduce changed paths to unique section labels (using PATH_TO_SECTION; unknown paths use first matching prefix or last segment).
- * @param {string[]} paths
- * @returns {string[]} Sorted unique section labels
+ * Map a single path to a section label using optional prefix-based mapping.
+ * Longest matching prefix wins; fallback is last path segment or the path itself.
+ * @param {string} path
+ * @param {Record<string, string>} [sectionMapping] Prefix → section label
+ * @returns {string}
  */
-export function pathsToSectionLabels(paths) {
-  const labels = new Set();
+export function pathToSectionLabel(path, sectionMapping) {
+  if (!sectionMapping || typeof path !== "string") return path.split(".").pop() ?? path ?? "";
+  const prefixes = Object.keys(sectionMapping).filter((p) => path === p || path.startsWith(p + "."));
+  if (prefixes.length === 0) return path.split(".").pop() ?? path;
+  const longest = prefixes.reduce((a, b) => (a.length >= b.length ? a : b));
+  return sectionMapping[longest] ?? path.split(".").pop() ?? path;
+}
+
+/**
+ * Reduce changed paths to unique section labels. Labels are returned in form order when sectionOrder is provided.
+ * @param {string[]} paths
+ * @param {{ sectionMapping?: Record<string, string>, sectionOrder?: string[] }} [options] Optional vote/form-specific mapping and sort order
+ * @returns {string[]} Unique section labels (in sectionOrder order when provided, else alphabetical)
+ */
+export function pathsToSectionLabels(paths, options = {}) {
+  const { sectionMapping, sectionOrder } = options;
+  const seen = new Set();
+  const labels = [];
   for (const p of paths) {
-    let label = PATH_TO_SECTION[p];
-    if (label == null && p.startsWith("metaData.")) {
-      const two = p.split(".").slice(0, 2).join(".");
-      label = PATH_TO_SECTION[two];
+    const label = pathToSectionLabel(p, sectionMapping);
+    if (typeof label === "string" && label && !seen.has(label)) {
+      seen.add(label);
+      labels.push(label);
     }
-    if (label == null) label = p.split(".").pop() ?? p;
-    if (typeof label === "string") labels.add(label);
   }
-  return [...labels].sort();
+  if (sectionOrder && sectionOrder.length > 0) {
+    return labels.sort(
+      (a, b) =>
+        (sectionOrder.indexOf(a) >= 0 ? sectionOrder.indexOf(a) : sectionOrder.length) -
+        (sectionOrder.indexOf(b) >= 0 ? sectionOrder.indexOf(b) : sectionOrder.length),
+    );
+  }
+  return labels.sort();
+}
+
+/**
+ * Get changed section labels between two proposals. Uses comparable payload; optional vote-specific mapping.
+ * @param {object} proposalA
+ * @param {object} proposalB
+ * @param {{ sectionMapping?: Record<string, string>, sectionOrder?: string[] }} [options] Optional vote/form-specific mapping and sort order
+ * @returns {string[]} Unique section labels in form order (when sectionOrder provided)
+ */
+export function getChangedSectionLabels(proposalA, proposalB, options = {}) {
+  const payloadA = buildProposalPayload(proposalA);
+  const payloadB = buildProposalPayload(proposalB);
+  const paths = getChangedPaths(payloadA, payloadB);
+  return pathsToSectionLabels(paths, options);
 }

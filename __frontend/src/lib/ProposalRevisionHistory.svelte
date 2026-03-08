@@ -2,7 +2,8 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import * as Button from "$lib/components/ui/button";
   import { api } from "$stores/sessionManager.js";
-  import { getChangedPaths, pathsToSectionLabels } from "$lib/proposalRevisionUtils.js";
+  import { getChangedSectionLabels } from "$lib/proposalRevisionUtils.js";
+  import { sectionMapping as budget2026SectionMapping, sectionOrder as budget2026SectionOrder } from "$lib/forms/budget2026/revisionSectionMapping.js";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -96,6 +97,12 @@
 
   const currentVersion = $derived(proposal?.version ?? 1);
 
+  const revisionOptions = $derived(
+    vote?.form === "budget2026"
+      ? { sectionMapping: budget2026SectionMapping, sectionOrder: budget2026SectionOrder }
+      : {},
+  );
+
   /** For each version entry: { versionNumber, createdAt, changedLabels } (compared to next version or current). */
   const versionEntries = $derived.by(() => {
     if (!proposal || archivedDocs.length === 0) return [];
@@ -104,14 +111,8 @@
       const ver = versions[i];
       const archived = archivedDocs[i];
       const compareTo = i === 0 ? proposal : archivedDocs[i - 1];
-      const changedPaths =
-        archived && compareTo
-          ? getChangedPaths(
-              { title: archived.title, summary: archived.summary, metaData: archived.metaData },
-              { title: compareTo.title, summary: compareTo.summary, metaData: compareTo.metaData },
-            )
-          : [];
-      const changedLabels = pathsToSectionLabels(changedPaths);
+      const changedLabels =
+        archived && compareTo ? getChangedSectionLabels(archived, compareTo, revisionOptions) : [];
       const versionNumber = currentVersion - 1 - i;
       entries.push({
         _id: ver._id,
@@ -180,10 +181,12 @@
             </div>
             {#if entry.changedLabels.length > 0}
               <div class="pt-1">
-                <span class="text-xs font-medium text-muted-foreground">Changed: </span>
-                <span class="text-xs text-muted-foreground">
-                  {entry.changedLabels.join(", ")}
-                </span>
+                <span class="text-xs font-medium text-muted-foreground">Changed:</span>
+                <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+                  {#each entry.changedLabels as label}
+                    <li>{label}</li>
+                  {/each}
+                </ul>
               </div>
             {/if}
           </div>
