@@ -1,55 +1,60 @@
 /* Ensure svelte-lexical lists display properly */
 .svelte-lexical {
-    margin:0 !important;  
-    padding: 0 !important;
-    border:0 !important;
-  }
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
 
-  .editor-shell {
-    border: 0 !important;
-    background:white;
-    border-radius: 0.3rem !important;
-  }
+.editor-shell {
+  border: 0 !important;
+  background: white;
+  border-radius: 0.3rem !important;
+}
 
-  .editor-shell .editor-container {
-    background:white;
-    border-radius: 0.3rem !important;
-    border:0 !important;
-  }
+.editor-shell .editor-container {
+  background: white;
+  border-radius: 0.3rem !important;
+  border: 0 !important;
+}
 
-  .svelte-lexical .toolbar {
-    border: 0 !important;
-    border-bottom: 1px solid #eee !important;
-  }
-  
-  .svelte-lexical ul {
-    list-style-type: disc;
-    padding-left: 0em;
-  }
-  
-  .svelte-lexical ol {
-    list-style-type: decimal;
-    padding-left: 0em;
-  }
-  
-  .svelte-lexical li {
-    display: list-item;
-  }
-  
-  .svelte-lexical blockquote {
-    border-left: 2px solid var(--mbo-grey);
-    padding-left: 0.5em;
-    margin-left: 0.5em;
-  }
+.editor-shell .editor-container .editor-scroller {
+  max-height: 60vh;
+  overflow-y: auto;
+}
 
-  .svelte-lexical a {
-    color: var(--mbo-electric-blue);
-    text-decoration: none;
-    border-bottom: 1px dashed var(--mbo-electric-blue);
-    padding-bottom: 2px;
-  }
+.svelte-lexical .toolbar {
+  border: 0 !important;
+  border-bottom: 1px solid #eee !important;
+}
 
-  .svelte-lexical a:hover {
-    color: var(--mbo-cardano-blue);
-    border-bottom: 1px dashed var(--mbo-cardano-blue);
-  }
+.svelte-lexical ul {
+  list-style-type: disc;
+  padding-left: 0em;
+}
+
+.svelte-lexical ol {
+  list-style-type: decimal;
+  padding-left: 0em;
+}
+
+.svelte-lexical li {
+  display: list-item;
+}
+
+.svelte-lexical blockquote {
+  border-left: 2px solid var(--mbo-grey);
+  padding-left: 0.5em;
+  margin-left: 0.5em;
+}
+
+.svelte-lexical a {
+  color: var(--mbo-electric-blue);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--mbo-electric-blue);
+  padding-bottom: 2px;
+}
+
+.svelte-lexical a:hover {
+  color: var(--mbo-cardano-blue);
+  border-bottom: 1px dashed var(--mbo-cardano-blue);
+}
