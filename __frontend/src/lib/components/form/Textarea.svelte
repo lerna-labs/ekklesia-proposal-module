@@ -1,8 +1,16 @@
 <script>
   import * as Field from "$lib/components/ui/field/index.js";
-  import Editor from "$lib/editor/Editor.svelte";
   import ToolTip from "./ToolTip.svelte";
   import PrivateFieldIndicator from "./PrivateFieldIndicator.svelte";
+
+  let EditorComponent = $state(null);
+  $effect(() => {
+    if (EditorComponent) return;
+    import("$lib/editor/Editor.svelte").then((m) => {
+      EditorComponent = m.default;
+    });
+  });
+
   let {
     id,
     label = "",
@@ -65,8 +73,14 @@
     class="relative rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
     aria-invalid={displayError ? true : false}
   >
-    <Editor bind:value />
-    {#if placeholder && (value == null || String(value).trim() === "")}
+    {#if EditorComponent}
+      <EditorComponent bind:value />
+    {:else}
+      <div class="min-h-[120px] flex items-center justify-center text-muted-foreground text-sm p-4">
+        Loading editor…
+      </div>
+    {/if}
+    {#if EditorComponent && placeholder && (value == null || String(value).trim() === "")}
       <span
         class="absolute inset-0 flex items-start pt-11 pl-3 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
         aria-hidden="true"

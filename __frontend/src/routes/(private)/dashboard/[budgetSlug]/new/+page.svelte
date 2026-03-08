@@ -2,15 +2,17 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
-  import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
-  import DefaultForm from "$lib/forms/default/Form.svelte";
   import TreasuryDonationAcknowledgmentModal from "$lib/forms/budget2026/TreasuryDonationAcknowledgmentModal.svelte";
   import { api } from "$stores/sessionManager.js";
 
-  const FORM_MAP = {
-    budget2026: Budget2026Form,
-    default: DefaultForm,
+  const FORM_CHUNKS = {
+    budget2026: () => import("$lib/forms/budget2026/Form.svelte"),
+    default: () => import("$lib/forms/default/Form.svelte"),
   };
+
+  let FormComponent = $state(null);
+  let formLoading = $state(false);
+  let loadedFormKey = $state(null);
 
   /** Count all errors in validation error tree (errors array + recursive properties + items). */
   function countErrorsInTree(node) {
@@ -51,8 +53,8 @@
   let formRef = $state({});
   /** Set after first successful create (manual or auto-save) so the form can show Preview. */
   let createdProposal = $state(null);
-  let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
 
+  const formKey = $derived(vote?.form ?? "default");
   const showForm = $derived(
     vote?.form !== "budget2026" || treasuryAcknowledged,
   );
@@ -61,6 +63,25 @@
     if (vote?.form === "budget2026" && !treasuryAcknowledged) {
       openTreasuryModal = true;
     }
+  });
+
+  $effect(() => {
+    if (!showForm || !formKey) return;
+    const loader = FORM_CHUNKS[formKey] ?? FORM_CHUNKS.default;
+    if (loadedFormKey === formKey && FormComponent) return;
+    const keyAtLoad = formKey;
+    loadedFormKey = null;
+    FormComponent = null;
+    formLoading = true;
+    loader()
+      .then((m) => {
+        if (keyAtLoad !== (vote?.form ?? "default")) return;
+        FormComponent = m.default;
+        loadedFormKey = formKey;
+      })
+      .finally(() => {
+        if (keyAtLoad === (vote?.form ?? "default")) formLoading = false;
+      });
   });
 
   async function onSave(payload, options) {
@@ -143,5 +164,20 @@
 {/if}
 
 {#if vote && showForm}
-  <FormComponent {vote} {pillars} proposal={createdProposal} {onSave} {showLegalErrors} bind:formRef bind:validationErrors bind:openLegalDialog />
+  {#if formLoading}
+    <div class="container mx-auto max-w-4xl py-8 px-4 flex items-center justify-center min-h-[200px]">
+      <p class="text-muted-foreground">Loading form…</p>
+    </div>
+  {:else if FormComponent}
+    <FormComponent
+      {vote}
+      {pillars}
+      proposal={createdProposal}
+      {onSave}
+      {showLegalErrors}
+      bind:formRef
+      bind:validationErrors
+      bind:openLegalDialog
+    />
+  {/if}
 {/if}

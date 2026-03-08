@@ -2,14 +2,16 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
-  import Budget2026Form from "$lib/forms/budget2026/Form.svelte";
-  import DefaultForm from "$lib/forms/default/Form.svelte";
   import { api } from "$stores/sessionManager.js";
 
-  const FORM_MAP = {
-    budget2026: Budget2026Form,
-    default: DefaultForm,
+  const FORM_CHUNKS = {
+    budget2026: () => import("$lib/forms/budget2026/Form.svelte"),
+    default: () => import("$lib/forms/default/Form.svelte"),
   };
+
+  let FormComponent = $state(null);
+  let formLoading = $state(false);
+  let loadedFormKey = $state(null);
 
   /** Count all errors in validation error tree (errors array + recursive properties + items). */
   function countErrorsInTree(node) {
@@ -47,7 +49,26 @@
   let openLegalDialog = $state(false);
   let showLegalErrors = $state(false);
   let formRef = $state({});
-  let FormComponent = $derived(FORM_MAP[vote?.form] ?? DefaultForm);
+  const formKey = $derived(vote?.form ?? "default");
+
+  $effect(() => {
+    if (!formKey) return;
+    const loader = FORM_CHUNKS[formKey] ?? FORM_CHUNKS.default;
+    if (loadedFormKey === formKey && FormComponent) return;
+    const keyAtLoad = formKey;
+    loadedFormKey = null;
+    FormComponent = null;
+    formLoading = true;
+    loader()
+      .then((m) => {
+        if (keyAtLoad !== (vote?.form ?? "default")) return;
+        FormComponent = m.default;
+        loadedFormKey = formKey;
+      })
+      .finally(() => {
+        if (keyAtLoad === (vote?.form ?? "default")) formLoading = false;
+      });
+  });
 
   async function onSave(payload, options) {
     if (!proposal?._id) return;
@@ -114,13 +135,19 @@
   <h1 class="text-2xl font-semibold mb-6">Edit proposal</h1>
 </div>
 
-<FormComponent
-  {vote}
-  {pillars}
-  {proposal}
-  {onSave}
-  {showLegalErrors}
-  bind:formRef
-  bind:validationErrors
-  bind:openLegalDialog
-/>
+{#if formLoading}
+  <div class="container mx-auto max-w-4xl py-8 px-4 flex items-center justify-center min-h-[200px]">
+    <p class="text-muted-foreground">Loading form…</p>
+  </div>
+{:else if FormComponent}
+  <FormComponent
+    {vote}
+    {pillars}
+    {proposal}
+    {onSave}
+    {showLegalErrors}
+    bind:formRef
+    bind:validationErrors
+    bind:openLegalDialog
+  />
+{/if}
