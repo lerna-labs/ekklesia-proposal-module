@@ -1152,7 +1152,7 @@ router.get("/", async (req, res) => {
           totalBudget: metaData.totalBudget,
         }
         : null;
-      return { ...rest, metaData: shortenedMetaData, commentCount: commentCount ?? 0 };
+      return { ...rest, metaData: shortenedMetaData, versions, commentCount: commentCount ?? 0 };
     });
 
     // Calculate pagination metadata

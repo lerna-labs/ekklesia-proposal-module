@@ -1,36 +1,4 @@
-/**
- * Get paths where two objects differ (shallow comparison at each level; arrays/objects compared by JSON stringify).
- * @param {object} a
- * @param {object} b
- * @param {string} [prefix]
- * @returns {string[]} Paths like "title", "metaData.proposalDetails"
- */
-export function getChangedPaths(a, b, prefix = "") {
-  if (a == null && b == null) return [];
-  if (a == null || b == null) return [prefix ? prefix : "root"].filter(Boolean);
-  if (typeof a !== "object" || typeof b !== "object") {
-    const aVal = a === b || (Number.isNaN(a) && Number.isNaN(b));
-    return aVal ? [] : [prefix].filter(Boolean);
-  }
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return JSON.stringify(a) === JSON.stringify(b) ? [] : [prefix].filter(Boolean);
-  }
-  if (Array.isArray(a) || Array.isArray(b)) return [prefix].filter(Boolean);
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  const out = [];
-  for (const k of keys) {
-    const p = prefix ? `${prefix}.${k}` : k;
-    const aVal = a[k];
-    const bVal = b[k];
-    if (typeof aVal === "object" && aVal !== null && typeof bVal === "object" && bVal !== null && !Array.isArray(aVal) && !Array.isArray(bVal)) {
-      out.push(...getChangedPaths(aVal, bVal, p));
-    } else {
-      const same = JSON.stringify(aVal) === JSON.stringify(bVal);
-      if (!same) out.push(p);
-    }
-  }
-  return out;
-}
+import { diff, atomizeChangeset } from "json-diff-ts";
 
 /**
  * Build the comparable payload for a proposal (top-level keys only).
@@ -91,15 +59,39 @@ export function pathsToSectionLabels(paths, options = {}) {
 }
 
 /**
- * Get changed section labels between two proposals. Uses comparable payload; optional vote-specific mapping.
- * @param {object} proposalA
- * @param {object} proposalB
+ * Get changed section labels between two proposals. Uses json-diff-ts for comparison; optional vote-specific mapping.
+ * @param {object} proposalA - New/current proposal (e.g. live).
+ * @param {object} proposalB - Previous proposal (e.g. archived).
  * @param {{ sectionMapping?: Record<string, string>, sectionOrder?: string[] }} [options] Optional vote/form-specific mapping and sort order
  * @returns {string[]} Unique section labels in form order (when sectionOrder provided)
  */
 export function getChangedSectionLabels(proposalA, proposalB, options = {}) {
   const payloadA = buildProposalPayload(proposalA);
   const payloadB = buildProposalPayload(proposalB);
-  const paths = getChangedPaths(payloadA, payloadB);
+  // diff(old, new) = changes to transform old into new; proposalA is "new", proposalB is "previous"
+  const changeset = diff(payloadB, payloadA);
+  const atomic = atomizeChangeset(changeset);
+  const paths = atomic
+    .map((c) => (c.path && typeof c.path === "string" ? c.path.replace(/^\$\.?/, "") : ""))
+    .filter(Boolean);
   return pathsToSectionLabels(paths, options);
+}
+
+/**
+ * Get raw atomic changes between two proposals (for temp/debug display).
+ * @param {object} proposalA - New/current proposal.
+ * @param {object} proposalB - Previous proposal.
+ * @returns {{ path: string, type: string, value?: unknown, oldValue?: unknown }[]}
+ */
+export function getChangedDetails(proposalA, proposalB) {
+  const payloadA = buildProposalPayload(proposalA);
+  const payloadB = buildProposalPayload(proposalB);
+  const changeset = diff(payloadB, payloadA);
+  const atomic = atomizeChangeset(changeset);
+  return atomic.map((c) => ({
+    path: c.path && typeof c.path === "string" ? c.path.replace(/^\$\.?/, "") : "",
+    type: c.type ?? "",
+    value: c.value,
+    oldValue: c.oldValue,
+  })).filter((c) => c.path);
 }

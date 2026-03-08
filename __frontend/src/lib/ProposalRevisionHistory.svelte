@@ -2,7 +2,7 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import * as Button from "$lib/components/ui/button";
   import { api } from "$stores/sessionManager.js";
-  import { getChangedSectionLabels } from "$lib/proposalRevisionUtils.js";
+  import { getChangedSectionLabels, getChangedDetails } from "$lib/proposalRevisionUtils.js";
   import { sectionMapping as budget2026SectionMapping, sectionOrder as budget2026SectionOrder } from "$lib/forms/budget2026/revisionSectionMapping.js";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
@@ -10,8 +10,12 @@
 
   let { proposal, vote, pillars = [], open = $bindable(false) } = $props();
 
-  /** Versions from the proposal prop (e.g. when opened from proposal detail page). */
-  const propVersions = $derived(
+  const voteSlug = $derived(vote?.slug ?? "");
+  const proposalId = $derived(proposal?._id ?? proposal?.id ?? null);
+  const currentVersion = $derived(proposal?.version ?? 1);
+
+  /** Versions from proposal (list endpoint now returns versions). Sorted by createdAt desc. */
+  const versions = $derived(
     Array.isArray(proposal?.versions) && proposal.versions.length > 0
       ? [...proposal.versions].sort(
           (a, b) =>
@@ -20,118 +24,139 @@
       : [],
   );
 
-  const voteSlug = $derived(vote?.slug ?? "");
-  const proposalId = $derived(proposal?._id ?? proposal?.id ?? null);
-  const hasVersionInfo = $derived((proposal?.version ?? 1) > 1);
-
-  let archivedDocs = $state([]);
-  let loading = $state(false);
-  /** When opened from list, proposal may not include versions; we fetch full proposal and store its versions here. */
-  let fetchedVersions = $state([]);
-
-  $effect(() => {
-    if (!open) {
-      archivedDocs = [];
-      fetchedVersions = [];
-    }
-  });
-
-  /** Effective list of version entries to use (from prop or from fetched full proposal). */
-  const versions = $derived(
-    propVersions.length > 0 ? propVersions : fetchedVersions,
-  );
-
-  async function fetchFullProposalIfNeeded() {
-    if (!proposalId || !hasVersionInfo || propVersions.length > 0) return;
-    loading = true;
-    try {
-      const res = await api.fetch(fetch, `/proposals/${proposalId}`);
-      if (!res.ok) return;
-      const full = await res.json();
-      const raw = full?.versions ?? [];
-      fetchedVersions = raw.length > 0
-        ? [...raw].sort(
-            (a, b) =>
-              new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
-          )
-        : [];
-    } finally {
-      loading = false;
-    }
-  }
-
-  async function loadArchivedVersions() {
-    if (versions.length === 0) return;
-    loading = true;
-    archivedDocs = [];
-    try {
-      const results = await Promise.all(
-        versions.map((v) =>
-          api.fetch(fetch, `/proposals/${v._id}`).then(async (res) => {
-            if (!res.ok) return null;
-            return res.json();
-          }),
-        ),
-      );
-      archivedDocs = results.filter(Boolean);
-    } finally {
-      loading = false;
-    }
-  }
-
-  $effect(() => {
-    if (!open) return;
-    if (propVersions.length > 0) {
-      if (archivedDocs.length === 0 && !loading) loadArchivedVersions();
-      return;
-    }
-    if (hasVersionInfo && proposalId && fetchedVersions.length === 0 && !loading) {
-      loading = true;
-      fetchFullProposalIfNeeded();
-      return;
-    }
-    if (fetchedVersions.length > 0 && archivedDocs.length === 0 && !loading) {
-      loadArchivedVersions();
-    }
-  });
-
-  const currentVersion = $derived(proposal?.version ?? 1);
-
-  /** Changes in the current version compared to the previous one (when there are prior versions). */
-  const currentVersionChangedLabels = $derived.by(() => {
-    if (!proposal || archivedDocs.length === 0) return [];
-    const previousVersion = archivedDocs[0];
-    return getChangedSectionLabels(proposal, previousVersion, revisionOptions);
-  });
-
   const revisionOptions = $derived(
     vote?.form === "budget2026"
       ? { sectionMapping: budget2026SectionMapping, sectionOrder: budget2026SectionOrder }
       : {},
   );
 
-  /** For each version entry: { versionNumber, createdAt, changedLabels } (changes in this version vs the previous one; v1 has none). */
-  const versionEntries = $derived.by(() => {
-    if (!proposal || archivedDocs.length === 0) return [];
-    const entries = [];
-    for (let i = 0; i < versions.length; i++) {
-      const ver = versions[i];
-      const archived = archivedDocs[i];
-      const previousVersion = i + 1 < archivedDocs.length ? archivedDocs[i + 1] : null;
-      const changedLabels =
-        archived && previousVersion
-          ? getChangedSectionLabels(archived, previousVersion, revisionOptions)
-          : [];
-      const versionNumber = currentVersion - 1 - i;
-      entries.push({
-        _id: ver._id,
-        versionNumber,
-        createdAt: ver.createdAt,
-        changedLabels,
-      });
+  let fullCurrentProposal = $state(null);
+  let cachedArchivedDocs = $state(new Map());
+  let firstArchivedDoc = $state(null);
+  let loadingCurrent = $state(false);
+  let expandedVersionId = $state(null);
+  let expandedEntryChanges = $state(/** @type {{ labels: string[], details: Array<{ path: string, type: string, value?: unknown, oldValue?: unknown }>, isFirstVersion?: boolean } | null */ (null));
+  let loadingExpanded = $state(false);
+
+  $effect(() => {
+    if (!open) {
+      fullCurrentProposal = null;
+      cachedArchivedDocs = new Map();
+      firstArchivedDoc = null;
+      expandedVersionId = null;
+      expandedEntryChanges = null;
     }
-    return entries;
   });
+
+  /** Fetch full current proposal when drawer is open and we need it for the current-vs-previous diff. */
+  async function ensureFullCurrentProposal() {
+    if (!proposalId || !open || versions.length === 0 || fullCurrentProposal != null) return;
+    loadingCurrent = true;
+    try {
+      const res = await api.fetch(fetch, `/proposals/${proposalId}`);
+      if (!res.ok) return;
+      const full = await res.json();
+      if (open && (proposal?._id ?? proposal?.id) === proposalId) {
+        fullCurrentProposal = full;
+      }
+    } finally {
+      if (open && (proposal?._id ?? proposal?.id) === proposalId) {
+        loadingCurrent = false;
+      }
+    }
+  }
+
+  /** Return archived doc from cache or fetch and cache. Guard: only update cache if still open and same proposal context. */
+  async function ensureArchivedDoc(id) {
+    const key = String(id);
+    const cached = cachedArchivedDocs.get(key);
+    if (cached) return cached;
+    const res = await api.fetch(fetch, `/proposals/${id}`);
+    if (!res.ok) return null;
+    const doc = await res.json();
+    if (open) {
+      cachedArchivedDocs = new Map(cachedArchivedDocs);
+      cachedArchivedDocs.set(key, doc);
+    }
+    return doc;
+  }
+
+  /** Fetch first (most recent) archived doc for current-vs-previous diff. */
+  async function ensureFirstArchivedDoc() {
+    if (!open || versions.length === 0) return;
+    const id = versions[0]._id;
+    if (firstArchivedDoc != null && (firstArchivedDoc._id ?? firstArchivedDoc.id) === id) return;
+    loadingCurrent = true;
+    try {
+      const doc = await ensureArchivedDoc(id);
+      if (open && doc && (proposal?._id ?? proposal?.id) === proposalId) {
+        firstArchivedDoc = doc;
+      }
+    } finally {
+      if (open && (proposal?._id ?? proposal?.id) === proposalId) {
+        loadingCurrent = false;
+      }
+    }
+  }
+
+  $effect(() => {
+    if (!open || versions.length === 0) return;
+    ensureFullCurrentProposal();
+    ensureFirstArchivedDoc();
+  });
+
+  const effectiveCurrentProposal = $derived(fullCurrentProposal ?? proposal);
+
+  const currentVersionChangedLabels = $derived.by(() => {
+    if (!effectiveCurrentProposal || !firstArchivedDoc) return [];
+    return getChangedSectionLabels(effectiveCurrentProposal, firstArchivedDoc, revisionOptions);
+  });
+
+  const currentVersionChangedDetails = $derived.by(() => {
+    if (!effectiveCurrentProposal || !firstArchivedDoc) return [];
+    return getChangedDetails(effectiveCurrentProposal, firstArchivedDoc);
+  });
+
+  /** Version entries from versions array only (no precomputed changes). */
+  const versionEntries = $derived.by(() => {
+    if (!proposal) return [];
+    return versions.map((ver, i) => ({
+      _id: ver._id,
+      versionNumber: currentVersion - 1 - i,
+      createdAt: ver.createdAt,
+      index: i,
+    }));
+  });
+
+  async function loadAndCompare(entry) {
+    const i = entry.index;
+    expandedVersionId = entry._id;
+    expandedEntryChanges = null;
+    if (i + 1 >= versions.length) {
+      expandedEntryChanges = { labels: [], details: [], isFirstVersion: true };
+      return;
+    }
+    loadingExpanded = true;
+    try {
+      const [archived, previous] = await Promise.all([
+        ensureArchivedDoc(versions[i]._id),
+        ensureArchivedDoc(versions[i + 1]._id),
+      ]);
+      if (!open || expandedVersionId !== entry._id) return;
+      if (archived && previous) {
+        expandedEntryChanges = {
+          labels: getChangedSectionLabels(archived, previous, revisionOptions),
+          details: getChangedDetails(archived, previous),
+        };
+      } else {
+        expandedEntryChanges = { labels: [], details: [] };
+      }
+    } finally {
+      if (open && expandedVersionId === entry._id) {
+        loadingExpanded = false;
+      }
+    }
+  }
 
   function formatTimestamp(d) {
     if (!d) return "";
@@ -139,6 +164,13 @@
       dateStyle: "long",
       timeStyle: "short",
     });
+  }
+
+  function formatChangeValue(v) {
+    if (v === undefined) return "undefined";
+    if (v === null) return "null";
+    if (typeof v === "object") return JSON.stringify(v).slice(0, 80) + (JSON.stringify(v).length > 80 ? "…" : "");
+    return String(v);
   }
 </script>
 
@@ -170,22 +202,44 @@
             View
           </Button.Root>
         </div>
-        {#if currentVersionChangedLabels.length > 0}
-          <div class="pt-1">
-            <span class="text-xs font-medium text-muted-foreground">Changed from v{currentVersion - 1}:</span>
-            <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
-              {#each currentVersionChangedLabels as label}
-                <li>{label}</li>
-              {/each}
-            </ul>
-          </div>
+        {#if versions.length > 0 && !firstArchivedDoc && loadingCurrent}
+          <p class="text-xs text-muted-foreground pt-1">Loading changes…</p>
+        {:else if firstArchivedDoc}
+          {#if currentVersionChangedLabels.length > 0}
+            <div class="pt-1">
+              <span class="text-xs font-medium text-muted-foreground">Changed from v{currentVersion - 1}:</span>
+              <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+                {#each currentVersionChangedLabels as label}
+                  <li>{label}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+          {#if currentVersionChangedDetails.length > 0}
+            <div class="pt-2 mt-2 border-t border-border">
+              <span class="text-xs font-medium text-muted-foreground">Exact changes (temp):</span>
+              <ul class="text-xs text-muted-foreground mt-1 space-y-1 pl-0 list-none font-mono break-all">
+                {#each currentVersionChangedDetails as d}
+                  <li class="rounded bg-muted/50 px-1.5 py-0.5">
+                    <span class="text-foreground">{d.path}</span>
+                    <span class="text-muted-foreground"> [{d.type}]</span>
+                    {#if d.type === "UPDATE"}
+                      <span class="block text-muted-foreground mt-0.5">{formatChangeValue(d.oldValue)} → {formatChangeValue(d.value)}</span>
+                    {:else if d.type === "ADD"}
+                      <span class="block text-muted-foreground mt-0.5">+ {formatChangeValue(d.value)}</span>
+                    {:else if d.type === "REMOVE"}
+                      <span class="block text-muted-foreground mt-0.5">− {formatChangeValue(d.oldValue)}</span>
+                    {/if}
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
         {/if}
       </div>
 
       {#if versions.length === 0}
         <p class="text-sm text-muted-foreground">No previous versions.</p>
-      {:else if loading}
-        <p class="text-sm text-muted-foreground">Loading versions…</p>
       {:else}
         {#each versionEntries as entry (entry._id)}
           <div class="rounded-lg border p-3 pb-4 pl-4 space-y-2">
@@ -210,15 +264,55 @@
               />
               {formatTimestamp(entry.createdAt)}
             </div>
-            {#if entry.changedLabels.length > 0}
-              <div class="pt-1">
-                <span class="text-xs font-medium text-muted-foreground">Changed:</span>
-                <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
-                  {#each entry.changedLabels as label}
-                    <li>{label}</li>
-                  {/each}
-                </ul>
-              </div>
+            {#if entry.index + 1 < versions.length}
+              <Button.Root
+                variant="ghost"
+                size="sm"
+                class="h-8 text-xs"
+                onclick={() => loadAndCompare(entry)}
+                disabled={loadingExpanded && expandedVersionId === entry._id}
+                aria-label="Load and compare version {entry.versionNumber}"
+              >
+                {loadingExpanded && expandedVersionId === entry._id ? "Loading…" : "Load and compare"}
+              </Button.Root>
+            {:else}
+              <span class="text-xs text-muted-foreground">First version</span>
+            {/if}
+            {#if expandedVersionId === entry._id && expandedEntryChanges !== null}
+              {#if expandedEntryChanges.isFirstVersion}
+                <p class="text-xs text-muted-foreground">First version (no previous to compare).</p>
+              {:else}
+                {#if expandedEntryChanges.labels.length > 0}
+                  <div class="pt-1">
+                    <span class="text-xs font-medium text-muted-foreground">Changed:</span>
+                    <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+                      {#each expandedEntryChanges.labels as label}
+                        <li>{label}</li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
+                {#if expandedEntryChanges.details.length > 0}
+                  <div class="pt-2 mt-2 border-t border-border">
+                    <span class="text-xs font-medium text-muted-foreground">Exact changes (temp):</span>
+                    <ul class="text-xs text-muted-foreground mt-1 space-y-1 pl-0 list-none font-mono break-all">
+                      {#each expandedEntryChanges.details as d}
+                        <li class="rounded bg-muted/50 px-1.5 py-0.5">
+                          <span class="text-foreground">{d.path}</span>
+                          <span class="text-muted-foreground"> [{d.type}]</span>
+                          {#if d.type === "UPDATE"}
+                            <span class="block text-muted-foreground mt-0.5">{formatChangeValue(d.oldValue)} → {formatChangeValue(d.value)}</span>
+                          {:else if d.type === "ADD"}
+                            <span class="block text-muted-foreground mt-0.5">+ {formatChangeValue(d.value)}</span>
+                          {:else if d.type === "REMOVE"}
+                            <span class="block text-muted-foreground mt-0.5">− {formatChangeValue(d.oldValue)}</span>
+                          {/if}
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
+              {/if}
             {/if}
           </div>
         {/each}
