@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 2 drafts (one minimal, one "Ready to submit proposal" for stake_test1...43wf with full data except treasury hash).
+ * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 1 live "Proposal with multiple versions (revision history)" (version 3, 2 archived), 2 drafts (one minimal, one "Ready to submit proposal" for stake_test1...43wf with full data except treasury hash).
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Proposal, Comment, User.
  *
@@ -576,6 +576,17 @@ async function createDummyData() {
         multiVersionMetaData.totalBudget = multiVersionTotalBudget;
 
         console.log("Creating proposal with multiple versions (revision history)...");
+        // Current live proposal (v3) — create first so we can set currentProposalId on archived docs
+        const multiVersionProposal = await Proposal.create({
+            proposerId: multiVersionProposer.id,
+            voteId: vote._id,
+            title: multiVersionTitle,
+            summary: multiVersionTemplate.summary,
+            status: "live",
+            submittedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+            metaData: multiVersionMetaData,
+        });
+        const currentProposalId = multiVersionProposal._id;
         // Archived version 1 (oldest)
         const arch1 = await Proposal.create({
             proposerId: multiVersionProposer.id,
@@ -586,6 +597,7 @@ async function createDummyData() {
             submittedAt: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
             metaData: { ...multiVersionMetaData, totalBudget: 60000 },
             versions: [],
+            currentProposalId,
         });
         console.log(`  Archived v1: ${arch1._id}`);
         // Archived version 2
@@ -598,18 +610,9 @@ async function createDummyData() {
             submittedAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
             metaData: { ...multiVersionMetaData, totalBudget: 63000 },
             versions: [],
+            currentProposalId,
         });
         console.log(`  Archived v2: ${arch2._id}`);
-        // Current live proposal (v3)
-        const multiVersionProposal = await Proposal.create({
-            proposerId: multiVersionProposer.id,
-            voteId: vote._id,
-            title: multiVersionTitle,
-            summary: multiVersionTemplate.summary,
-            status: "live",
-            submittedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
-            metaData: multiVersionMetaData,
-        });
         await Proposal.findByIdAndUpdate(multiVersionProposal._id, {
             $set: {
                 version: 3,
@@ -740,6 +743,7 @@ async function createDummyData() {
         console.log(`  Live proposals: 12 (for pagination; random proposer, varying category per proposal)`);
         liveProposals.forEach((p, i) => console.log(`    ${i + 1}. ${p.title}: ${p._id}`));
         console.log(`  Withdrawn proposal: ${withdrawnProposal._id} (${withdrawnProposal.title})`);
+        console.log(`  Proposal with multiple versions (revision history): ${multiVersionProposal._id} (version 3, 2 archived)`);
         console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${draftProposer.id})`);
         console.log(`  Ready to submit proposal (draft): ${readyToSubmitProposal._id} (proposerId: ${readyToSubmitStakeId})`);
