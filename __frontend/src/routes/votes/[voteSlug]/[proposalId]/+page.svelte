@@ -9,6 +9,12 @@
   let { vote, proposal, pillars = [], commentCount } = $derived(data);
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const voteUrl = $derived(voteSlug ? `/votes/${voteSlug}` : "/votes");
+  const isArchived = $derived(proposal?.status === "archived");
+  const currentVersionHref = $derived(
+    isArchived && proposal?.currentProposalId && voteSlug
+      ? `/votes/${voteSlug}/${proposal.currentProposalId}`
+      : null,
+  );
 
   const isWithdrawn = $derived(
     proposal?.status === "withdrawnByAdmin" ||
@@ -17,23 +23,28 @@
   const showComments = $derived(
     proposal &&
       proposal.status !== "draft" &&
+      proposal.status !== "archived" &&
       (!isWithdrawn || (commentCount ?? 0) > 0),
   );
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
   <div class="mb-6">
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onclick={() => goto(voteUrl)}
-    >
-      ← Back to vote
-    </Button>
+    {#if currentVersionHref}
+      <Button href={currentVersionHref} variant="ghost" size="sm">
+        See current version of this proposal
+      </Button>
+    {:else}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onclick={() => goto(voteUrl)}
+      >
+        ← Back to vote
+      </Button>
+    {/if}
   </div>
-
-  <ProposalCard {proposal} {vote} {pillars} showLink={false} />
 
   {#if showComments}
     <Comments proposalId={proposal._id} {proposal} {vote} />

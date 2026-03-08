@@ -2,7 +2,6 @@
   import { invalidateAll } from "$app/navigation";
   import * as Card from "$lib/components/ui/card";
   import * as Button from "$lib/components/ui/button";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
@@ -16,6 +15,7 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardBudget from "$lib/ProposalCardBudget.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
+  import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
   import { toast } from "svelte-sonner";
   let {
     proposal,
@@ -24,6 +24,8 @@
     showLink = true,
     class: className,
   } = $props();
+
+  let revisionDrawerOpen = $state(false);
 
   const isOwnProposal = $derived(
     $user?.userId &&
@@ -78,6 +80,11 @@
   );
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
+
+  const showVersionBadge = $derived(
+    (proposal?.version != null && proposal.version > 1) ||
+      (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
+  );
 </script>
 
 <Card.Root
@@ -95,6 +102,17 @@
         class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0"
       >
         <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
+        {#if showVersionBadge}
+          <button
+            type="button"
+            onclick={(e) => { e.preventDefault(); e.stopPropagation(); revisionDrawerOpen = true; }}
+            class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors"
+            aria-label="View revision history"
+            title="View revision history"
+          >
+            Version {proposal?.version ?? 1}
+          </button>
+        {/if}
         {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
           <button
             type="button"
@@ -226,45 +244,55 @@
           {/each}
         </div>
       {/if}
-      {#if proposal.updatedAt != null}
+      {#if (showVersionBadge && proposal.updatedAt != null) || proposal.submittedAt != null}
         <div class="flex items-center gap-1 text-xs text-muted-foreground">
           <ClockIcon
             class="size-3.5 shrink-0 text-muted-foreground"
             aria-hidden="true"
           />
-          <span class={labelClass}>Last updated:</span>
-          <Popover.Root>
-            <Popover.Trigger
-              type="button"
-              class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-              title="Click to see submitted date"
-              aria-label="Show submitted date"
-            >
-              {new Date(proposal.updatedAt).toLocaleString(undefined, {
+          {#if showVersionBadge && proposal.updatedAt != null}
+            <span class={labelClass}>Last updated:</span>
+            <Popover.Root>
+              <Popover.Trigger
+                type="button"
+                class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                title="Click to see submitted date"
+                aria-label="Show submitted date"
+              >
+                {new Date(proposal.updatedAt).toLocaleString(undefined, {
+                  dateStyle: "long",
+                  timeStyle: "short",
+                })}
+              </Popover.Trigger>
+              <Popover.Content class="w-auto p-3" align="start">
+                <div class="text-xs space-y-1">
+                  {#if proposal.submittedAt != null}
+                    <p>
+                      <span class="font-medium text-muted-foreground">
+                        Submitted:
+                      </span>
+                      {new Date(proposal.submittedAt).toLocaleString(undefined, {
+                        dateStyle: "long",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  {:else}
+                    <p class="text-muted-foreground">
+                      Submitted date not available
+                    </p>
+                  {/if}
+                </div>
+              </Popover.Content>
+            </Popover.Root>
+          {:else if proposal.submittedAt != null}
+            <span class={labelClass}>Submitted at:</span>
+            <span>
+              {new Date(proposal.submittedAt).toLocaleString(undefined, {
                 dateStyle: "long",
                 timeStyle: "short",
               })}
-            </Popover.Trigger>
-            <Popover.Content class="w-auto p-3" align="start">
-              <div class="text-xs space-y-1">
-                {#if proposal.submittedAt != null}
-                  <p>
-                    <span class="font-medium text-muted-foreground">
-                      Submitted:
-                    </span>
-                    {new Date(proposal.submittedAt).toLocaleString(undefined, {
-                      dateStyle: "long",
-                      timeStyle: "short",
-                    })}
-                  </p>
-                {:else}
-                  <p class="text-muted-foreground">
-                    Submitted date not available
-                  </p>
-                {/if}
-              </div>
-            </Popover.Content>
-          </Popover.Root>
+            </span>
+          {/if}
         </div>
       {/if}
     </div>
@@ -359,3 +387,10 @@
 {#if proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"}
   <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
 {/if}
+
+<ProposalRevisionHistory
+  {proposal}
+  {vote}
+  {pillars}
+  bind:open={revisionDrawerOpen}
+/>
