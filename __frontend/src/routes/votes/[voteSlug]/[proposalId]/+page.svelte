@@ -1,9 +1,13 @@
 <script>
   import { afterNavigate } from "$app/navigation";
   import { page } from "$app/state";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalCard from "$lib/ProposalCard.svelte";
-  import Comments from "$lib/comments/Comments.svelte";
+  import Budget2026ProposalPage from "$lib/votes/budget2026/ProposalPage.svelte";
+  import DefaultProposalPage from "$lib/votes/default/ProposalPage.svelte";
+
+  const PROPOSAL_PAGE_MAP = {
+    budget2026: Budget2026ProposalPage,
+  };
+
   let { data } = $props();
 
   let { vote, proposal, pillars = [], commentCount } = $derived(data);
@@ -38,31 +42,24 @@
       proposal.status !== "archived" &&
       (!isWithdrawn || (commentCount ?? 0) > 0),
   );
+
+  const ProposalPageComponent = $derived(
+    PROPOSAL_PAGE_MAP[vote?.form] ?? DefaultProposalPage,
+  );
+
+  const commentsHref = $derived(`${page.url.pathname}#comments`);
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
-  <div class="mb-6">
-    {#if currentVersionHref}
-      <Button href={currentVersionHref} variant="ghost" size="sm">
-        See current version of this proposal
-      </Button>
-    {:else if backToVoteUrl}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onclick={() => history.back()}
-      >
-        ← Back to vote
-      </Button>
-    {:else}
-      <Button href={voteUrl} variant="ghost" size="sm">
-        ← Back to vote
-      </Button>
-    {/if}
-  </div>
-
-  {#if showComments}
-    <Comments proposalId={proposal._id} {proposal} {vote} />
-  {/if}
+  <ProposalPageComponent
+    {proposal}
+    {vote}
+    pillars={pillars}
+    {commentCount}
+    {backToVoteUrl}
+    {voteUrl}
+    {currentVersionHref}
+    {showComments}
+    {commentsHref}
+  />
 </div>
