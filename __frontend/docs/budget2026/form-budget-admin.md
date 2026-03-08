@@ -37,13 +37,13 @@ Describes the form fields used in the Budget Administration section: path in `fo
 | Residential Address line 2 | `formData.metaData.contractingParty.residentialAddressLine2` | text (Input) | 100 | no | no |
 | Residential Address line 3 | `formData.metaData.contractingParty.residentialAddressLine3` | text (Input) | 100 | no | no |
 | Primary Contact Full Name | `formData.metaData.primaryContact.name` | text (Input) | 100 | yes | no |
-| Primary Contact Email | `formData.metaData.primaryContact.email` | text (Input) | 100 | yes | no |
+| Primary Contact Email | `formData.metaData.primaryContact.email` | text (Input) | 254 | yes | no |
 | Signatory Title or Role | `formData.metaData.signatoryContact.title` | text (Input) | 100 | yes | no |
 | Authorized signatory name | `formData.metaData.signatoryContact.name` | text (Input) | 100 | yes | no |
-| Authorized signatory email | `formData.metaData.signatoryContact.email` | text (Input) | 100 | yes | no |
+| Authorized signatory email | `formData.metaData.signatoryContact.email` | text (Input) | 254 | yes | no |
 | Signatory authorization | `formData.metaData.signatoryContact.authorization` | checkbox | — | yes | no |
 | KYC/KYB Submitted? | `formData.metaData.kycInfo.submitted` | choice (radio) | — | yes | no |
-| KYC Contact Email | `formData.metaData.kycInfo.email` | text (Input) | 100 | yes (when submitted No) | no |
+| KYC Contact Email | `formData.metaData.kycInfo.email` | text (Input) | 254 | yes (when submitted No) | no |
 | Total Proposals Submitted | `formData.metaData.kycInfo.totalProposalsSubmitted` | number (Input) | — | no | no |
 | Third Party Assurers | `formData.metaData.independentAudits` | textarea (Textarea) | 1000 | yes | yes |
 
@@ -112,21 +112,21 @@ Shown when contracting party type is **individual**.
 
 ### Primary Contact
 - **Primary Contact Full Name** — `formData.metaData.primaryContact.name`. Input, max 100, required, not public. Placeholder: Enter Name.
-- **Email** — `formData.metaData.primaryContact.email`. Input, max 100, required, not public. Placeholder: Enter Email.
+- **Email** — `formData.metaData.primaryContact.email`. Input, max 254, required, not public. Placeholder: Enter Email.
 
 Shown in FormBudgetAdminIntersect (and shared structure allows same in Other if needed).
 
 ### Authorized Signatory Details
 - **Signatory Title or Role** — `formData.metaData.signatoryContact.title`. Input, max 100, required, not public. Placeholder: Enter Title.
 - **Authorized signatory name** — `formData.metaData.signatoryContact.name`. Input, max 100, required, not public. Placeholder: Enter Name.
-- **Authorized signatory email** — `formData.metaData.signatoryContact.email`. Input, max 100, required, not public. Placeholder: Enter Email.
+- **Authorized signatory email** — `formData.metaData.signatoryContact.email`. Input, max 254, required, not public. Placeholder: Enter Email.
 - **Signatory authorization** — `formData.metaData.signatoryContact.authorization`. Checkbox, required, not public. Label: I confirm that the above individual is authorized to execute a binding agreement on behalf of the vendor entity, subject to selection and contract execution.
 
 Shown in FormBudgetAdminIntersect.
 
 ### KYC/KYB Submission Status
 - **KYC/KYB Submitted?** — `formData.metaData.kycInfo.submitted`. RadioGroup, options Yes/No, required, not public.
-- **KYC Contact Email** — `formData.metaData.kycInfo.email`. Input, max 100, required when submitted is No, not public. Placeholder: Enter Email. Shown only when submitted is **No**.
+- **KYC Contact Email** — `formData.metaData.kycInfo.email`. Input, max 254, required when submitted is No, not public. Placeholder: Enter Email. Shown only when submitted is **No**.
 - **Total Proposals Submitted** — `formData.metaData.kycInfo.totalProposalsSubmitted`. Input type number, not required, not public. Placeholder: Enter Count.
 
 Shown in FormBudgetAdminIntersect.

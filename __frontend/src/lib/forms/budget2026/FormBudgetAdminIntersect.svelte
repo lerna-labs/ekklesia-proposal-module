@@ -230,7 +230,7 @@
   placeholder="Enter Email"
   description="Primary email for notifications and official correspondence."
   required
-  maxLength={100}
+  maxLength={254}
   notPublic
   validationErrors={primaryContactErrors}
   class="mb-8"
@@ -271,7 +271,7 @@
   placeholder="Enter Email"
   description="Direct email address for the authorized signatory."
   required
-  maxLength={100}
+  maxLength={254}
   notPublic
   validationErrors={signatoryContactErrors}
   class="mb-4"
@@ -307,14 +307,14 @@
 />
 {#if formData.metaData.kycInfo.submitted === "No"}
   <Input
-    id="email"
+id="email"
     label="KYC Contact Email (If No)"
     bind:value={formData.metaData.kycInfo.email}
     placeholder="Enter Email"
     description="Contact email for submitting KYC/KYB if not already done."
     required
-    maxLength={100}
-    notPublic
+    maxLength={254}
+  notPublic
     validationErrors={kycInfoErrors}
     class="mb-4"
   />

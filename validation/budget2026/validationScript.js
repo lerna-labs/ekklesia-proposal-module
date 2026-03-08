@@ -127,8 +127,8 @@ const proposerDetailsSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Primary contact email is required" });
         return;
       }
-      if (val.length > 255) {
-        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 255, type: "string", message: "Email must be at most 255 characters" });
+      if (val.length > 254) {
+        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 254, type: "string", message: "Email must be at most 254 characters" });
         return;
       }
       const emailSchema = z.string().email("Enter a valid email");
@@ -160,7 +160,7 @@ const legalDeclarationsSchema = z.object({
   authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   submitterName: z.string().min(1, "Name is required").max(100),
   submitterRole: z.string().min(1, "Role is required").max(100),
-  submitterEmail: z.string().trim().min(1, "Email is required").max(100).email("Enter a valid email"),
+  submitterEmail: z.string().trim().min(1, "Email is required").max(254).email("Enter a valid email"),
 });
 
 const strategyFrameworkSchema = z.object({
@@ -200,19 +200,19 @@ const contractingPartySchema = z.object({
 
 const primaryContactSchema = z.object({
   name: z.string().max(100).optional().default(""),
-  email: z.string().max(255).optional().default(""),
+  email: z.string().max(254).optional().default(""),
 });
 
 const signatoryContactSchema = z.object({
   title: z.string().max(100).optional().default(""),
   name: z.string().max(100).optional().default(""),
-  email: z.string().max(255).optional().default(""),
+  email: z.string().max(254).optional().default(""),
   authorization: z.boolean().optional().default(false),
 });
 
 const kycInfoSchema = z.object({
   submitted: z.string().optional().default(""),
-  email: z.string().max(100).optional().default(""),
+  email: z.string().max(254).optional().default(""),
   /** Number of proposals submitted by this entity in this round (0–99999). Frontend may send number or string. */
   totalProposalsSubmitted: z
     .union([z.string(), z.number()])

@@ -23,7 +23,7 @@ Describes the form fields used in this section: path in `formData`, type, constr
 |-------|----------------|------|-----------|----------|--------|
 | Proposer Public Name | `formData.metaData.proposerDetails.name` | text (Input) | 100 | yes | yes |
 | Social Media Links | `formData.metaData.proposerDetails.links` | array of link | per item: title 100, url — | no (list optional) | yes |
-| Primary Contact Email | `formData.metaData.proposerDetails.email` | email (Input) | 255 | yes | no |
+| Primary Contact Email | `formData.metaData.proposerDetails.email` | email (Input) | 254 | yes | no |
 
 Each **link** item in `links` has:
 - **title:** text, required, max 100 characters
@@ -58,7 +58,7 @@ Each **link** item in `links` has:
 - **Description:** The primary email address used for notifications and official correspondence related to this proposal. Used for anything related to this proposal submission.
 - **Type:** email (Input, type="email")
 - **Placeholder:** Enter Email
-- **maxLength:** 255
+- **maxLength:** 254
 - **required:** yes
 - **public:** no
 

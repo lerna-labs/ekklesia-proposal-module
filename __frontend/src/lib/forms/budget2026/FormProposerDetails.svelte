@@ -61,7 +61,7 @@
   label="Primary Contact Email"
   description="The primary email address used for notifications and official correspondence related to this proposal."
   required
-  maxLength={255}
+  maxLength={254}
   type="email"
   validationErrors={emailErrors}
   class="mb-8"

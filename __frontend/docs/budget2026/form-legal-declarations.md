@@ -26,7 +26,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 | Data processing consent | `formData.metaData.legalDeclarations.dataProcessingConsent` | checkbox | — | yes | no |
 | Public visibility consent | `formData.metaData.legalDeclarations.publicVisibilityConsent` | checkbox | — | yes | no |
 | Submitter name | `formData.metaData.legalDeclarations.submitterName` | text (Input) | 100 | yes | no |
-| Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 100 | yes | no |
+| Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 254 | yes | no |
 | Submitter role | `formData.metaData.legalDeclarations.submitterRole` | text (Input) | 100 | yes | no |
 | Authorization (entity) | `formData.metaData.legalDeclarations.authorizationEntity` | checkbox | — | yes | no |
 | Authorization (attestation) | `formData.metaData.legalDeclarations.authorizationAttestation` | checkbox | — | yes | no |
@@ -65,7 +65,7 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 - **Label:** Email
 - **Description:** Email of the submitter for the Declaration of Submitter (section 8).
 - **Type:** email (Input, type="email")
-- **maxLength:** 100
+- **maxLength:** 254
 - **required:** yes
 - **public:** no
 

@@ -212,7 +212,7 @@
                 label="Email"
                 placeholder="Enter Email"
                 required
-                maxLength={100}
+                maxLength={254}
                 type="email"
                 notPublic
                 {validationErrors}
