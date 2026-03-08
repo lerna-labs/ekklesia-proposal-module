@@ -62,7 +62,149 @@
   padding-bottom: 2px;
 }
 
+.svelte-lexical ::selection {
+  background: var(--mbo-sky-blue);
+  color: black;
+}
+
 .svelte-lexical a:hover {
+  text-decoration: none;
   color: var(--mbo-cardano-blue);
   border-bottom: 1px dashed var(--mbo-cardano-blue);
+}
+
+/* Floating link editor: container and toolbar-style buttons */
+.svelte-lexical .link-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  max-width: 400px;
+  width: 100%;
+  min-height: 0;
+  opacity: 0;
+  background-color: var(--background, #fff);
+  border: 1px solid var(--border, #eee);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+
+/* Hide when popover has no content (package shows container before $isLink is true) */
+.svelte-lexical .link-editor:not(:has(.link-input)):not(:has(.link-view)) {
+  opacity: 0 !important;
+  transform: translate(-10000px, -10000px) !important;
+  pointer-events: none;
+}
+
+/* Add form: input + cancel/confirm actions (no extra padding) */
+.svelte-lexical .link-editor .link-input + div {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+.svelte-lexical .link-editor .link-cancel,
+.svelte-lexical .link-editor .link-confirm,
+.svelte-lexical .link-editor .link-edit,
+.svelte-lexical .link-editor .link-trash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  cursor: pointer;
+  color: var(--foreground);
+  flex-shrink: 0;
+}
+.svelte-lexical .link-editor .link-cancel:hover,
+.svelte-lexical .link-editor .link-confirm:hover,
+.svelte-lexical .link-editor .link-edit:hover,
+.svelte-lexical .link-editor .link-trash:hover {
+  background-color: var(--muted, #f4f4f5);
+}
+
+/* Edit form: same layout as add form (URL field + action buttons), no extra padding */
+.svelte-lexical .link-editor .link-view {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+
+/* Match project Input (ui/input): add and edit URL field */
+.svelte-lexical .link-editor .link-input {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  height: 2.25rem; /* h-9 */
+  width: 100%;
+  padding: 0.25rem 0.75rem; /* px-3 py-1 */
+  font-size: 1rem; /* text-base, md:text-sm */
+  line-height: 1.5rem;
+  border-radius: 0.375rem; /* rounded-md */
+  border: 1px solid var(--input);
+  background-color: transparent;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-xs */
+  transition: color, border-color, box-shadow;
+  margin: 0;
+  outline: none;
+  font-family: inherit;
+  color: inherit;
+}
+.svelte-lexical .link-editor .link-input::placeholder {
+  color: var(--muted-foreground);
+}
+.svelte-lexical .link-editor .link-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+  border-color: var(--ring);
+}
+.svelte-lexical .link-editor .link-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* URL display in edit form: identical to .link-input (add form) */
+.svelte-lexical .link-editor .link-view > a {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  height: 2.25rem;
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--input);
+  background-color: transparent;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  color: var(--foreground);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.svelte-lexical .link-editor .link-view > a:hover {
+  color: var(--primary);
+  text-decoration: underline;
 }
