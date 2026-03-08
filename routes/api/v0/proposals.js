@@ -532,6 +532,7 @@ router.put("/:proposalId", async (req, res) => {
       delete currentState.updatedAt;
       currentState.status = "archived";
       currentState.versions = [];
+      currentState.currentProposalId = proposal._id;
       const archivedDoc = new Proposal(currentState);
       await archivedDoc.save();
       if (!Array.isArray(proposal.versions)) proposal.versions = [];
@@ -613,14 +614,14 @@ router.put("/:proposalId", async (req, res) => {
 
 /**
  * @route GET /api/v0/proposals/:proposalId
- * @description Get a single proposal by ID (full data). Same permission logic as GET /proposals: public can see live/withdrawn; authenticated proposer can see all; vote admin can see draft for their vote.
+ * @description Get a single proposal by ID (full data). Public can see live, withdrawn, and archived; draft is restricted to proposer or vote admin.
  * @access Public (visibility depends on proposal status and optional auth)
  *
  * @param {string} proposalId - The ID of the proposal to retrieve (must be valid ObjectId)
  *
  * @returns {Object} 200 - Full proposal document with category (when found)
  * @returns {Object} 400 - Invalid proposalId format
- * @returns {Object} 403 - Proposal exists but requester is not the proposer or a vote admin (draft/archived)
+ * @returns {Object} 403 - Proposal exists but requester is not the proposer or a vote admin (draft only)
  * @returns {Object} 404 - Proposal not found (invalid ID or no document)
  */
 router.get("/:proposalId", async (req, res) => {
@@ -651,8 +652,10 @@ router.get("/:proposalId", async (req, res) => {
       status === "live" ||
       status === "withdrawnByProposer" ||
       status === "withdrawnByAdmin";
+    const isArchived = status === "archived";
+    const isPubliclyVisible = isLiveOrWithdrawn || isArchived;
 
-    // Resolve auth for both access control (draft/archived) and field exclusion
+    // Resolve auth for access control (draft only) and field exclusion
     let authenticatedUserId = null;
     const tokenResult = verifyToken(req);
     if (tokenResult.status === "success" && tokenResult.userId) {
@@ -681,9 +684,9 @@ router.get("/:proposalId", async (req, res) => {
       );
     }
 
-    if (!isLiveOrWithdrawn) {
-      const allowed =
-        isProposer || (status === "draft" && isVoteAdmin);
+    // Only draft is restricted; live, withdrawn, and archived are visible to anyone
+    if (!isPubliclyVisible) {
+      const allowed = isProposer || (status === "draft" && isVoteAdmin);
       if (!allowed) {
         return res.status(403).json({
           status: "error",
