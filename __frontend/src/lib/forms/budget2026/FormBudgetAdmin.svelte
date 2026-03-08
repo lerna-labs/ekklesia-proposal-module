@@ -3,14 +3,10 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import FormBudgetAdministrationIntersect from "./FormBudgetAdminIntersect.svelte";
   import FormBudgetAdminOther from "./FormBudgetAdminOther.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
 
   const INITIAL_CONTRACTING_PARTY = {
     legalEntityType: "",
@@ -110,10 +106,13 @@
     properties: validationErrors?.properties?.metaData?.properties ?? {},
   });
 
+  /** Display value for the radio; kept in sync with formData when not in "pending change" state. */
   let localAdministrator = $state(formData.metaData.administrator ?? "");
   let openResetDialog = $state(false);
+  /** When set, user requested a change but we showed the dialog; formData is unchanged until Confirm. */
   let pendingAdministrator = $state("");
 
+  /** Sync radio display from formData when dialog is closed and there is no pending change. */
   $effect(() => {
     const current = formData.metaData.administrator ?? "";
     if (!openResetDialog && pendingAdministrator === "") {
@@ -121,6 +120,11 @@
     }
   });
 
+  /**
+   * Intercept radio change: never write to formData here when section has data.
+   * Open dialog and store intent in pendingAdministrator; revert radio to current so formData is unchanged.
+   * Only on Confirm do we update formData.
+   */
   $effect(() => {
     const current = formData.metaData.administrator ?? "";
     if (openResetDialog || pendingAdministrator !== "") return;
@@ -128,14 +132,14 @@
     if (hasAdminSectionData(formData)) {
       pendingAdministrator = localAdministrator;
       openResetDialog = true;
-      localAdministrator = current;
+      localAdministrator = current; // revert radio so formData is not changed
     } else {
       formData.metaData.administrator = localAdministrator;
     }
   });
 
+  /** On Cancel: do nothing to formData; only close dialog and clear pending intent. */
   function cancelReset() {
-    localAdministrator = formData.metaData.administrator ?? "";
     pendingAdministrator = "";
     openResetDialog = false;
   }
@@ -188,12 +192,7 @@
 {/if}
 
 {#if formData.metaData.administrator === "Other"}
-  <FormBudgetAdminOther
-    bind:formData
-    {vote}
-    {proposal}
-    {validationErrors}
-  />
+  <FormBudgetAdminOther bind:formData {vote} {proposal} {validationErrors} />
 {/if}
 
 <h3 class="mt-8">
@@ -230,9 +229,9 @@
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
-      <AlertDialog.Cancel class="cursor-pointer" onclick={cancelReset}>
+      <Button type="button" variant="outline" class="cursor-pointer" onclick={cancelReset}>
         Cancel
-      </AlertDialog.Cancel>
+      </Button>
       <AlertDialog.Action class="cursor-pointer" onclick={confirmReset}>
         Continue
       </AlertDialog.Action>
