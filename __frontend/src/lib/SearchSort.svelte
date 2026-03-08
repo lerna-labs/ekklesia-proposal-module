@@ -109,7 +109,10 @@
           ></span>
         {/if}
       </Popover.Trigger>
-      <Popover.Content align="end" class="w-64 min-w-0 max-w-[calc(100vw-1rem)] p-3 overflow-hidden">
+      <Popover.Content
+        align="end"
+        class="w-72 min-w-0 max-w-[calc(100vw-1rem)] p-3 overflow-hidden"
+      >
         <h3 class="text-sm font-medium mb-2">Sort Options</h3>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
@@ -136,15 +139,21 @@
             </RadioGroup.Root>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 min-w-0">
-            <div class="space-y-2 min-w-0">
+          <div class="grid grid-cols-2 gap-3 min-w-0 overflow-hidden">
+            <div class="space-y-2 min-w-0 overflow-hidden">
               <Label class="text-xs text-muted-foreground">Direction</Label>
-              <Select.Root type="single" bind:value={pendingDirection} class="min-w-0">
+              <Select.Root
+                type="single"
+                bind:value={pendingDirection}
+                class="min-w-0 overflow-hidden"
+              >
                 <Select.Trigger
-                  class="w-full min-w-0 justify-between text-sm truncate"
+                  class="sort-select-trigger w-full min-w-0 max-w-full justify-between text-sm overflow-hidden pl-2 [&>span]:min-w-0 [&>span]:truncate [&>span]:block"
                   aria-label="Sort direction"
                 >
-                  {pendingDirection === "down" ? "Descending" : "Ascending"}
+                  <span class="min-w-0 truncate">
+                    {pendingDirection === "down" ? "Descending" : "Ascending"}
+                  </span>
                 </Select.Trigger>
                 <Select.Content>
                   <Select.Item value="up" label="Ascending">
@@ -156,19 +165,25 @@
                 </Select.Content>
               </Select.Root>
             </div>
-            <div class="space-y-2 min-w-0">
-              <Label class="text-xs text-muted-foreground">Entries per Page</Label>
-              <Select.Root type="single" bind:value={pendingLimit} class="min-w-0">
+            <div class="space-y-2 min-w-0 overflow-hidden">
+              <Label class="text-xs text-muted-foreground"
+                >Entries per Page</Label
+              >
+              <Select.Root
+                type="single"
+                bind:value={pendingLimit}
+                class="min-w-0 overflow-hidden"
+              >
                 <Select.Trigger
-                  class="w-full min-w-0 justify-between text-sm truncate"
+                  class="sort-select-trigger w-full min-w-0 max-w-full justify-between text-sm overflow-hidden pl-2 [&>span]:min-w-0 [&>span]:truncate [&>span]:block"
                   aria-label="Entries per page"
                 >
-                  {pendingLimit} Entries
+                  <span class="min-w-0 truncate">{pendingLimit} Entries</span>
                 </Select.Trigger>
                 <Select.Content>
                   {#each PER_PAGE_OPTIONS as option (option)}
                     {@const value = String(option)}
-                    <Select.Item value={value} label={`${value} Entries`}>
+                    <Select.Item {value} label={`${value} Entries`}>
                       {value} Entries
                     </Select.Item>
                   {/each}
@@ -207,3 +222,16 @@
     </Popover.Root>
   {/if}
 </div>
+
+<style>
+  /* Ensure select trigger value truncates in narrow grid (e.g. "100 Entries") */
+  :global(.sort-select-trigger) {
+    overflow: hidden;
+  }
+  :global(.sort-select-trigger > *:first-child) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
