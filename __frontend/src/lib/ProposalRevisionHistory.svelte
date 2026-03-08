@@ -97,22 +97,31 @@
 
   const currentVersion = $derived(proposal?.version ?? 1);
 
+  /** Changes in the current version compared to the previous one (when there are prior versions). */
+  const currentVersionChangedLabels = $derived.by(() => {
+    if (!proposal || archivedDocs.length === 0) return [];
+    const previousVersion = archivedDocs[0];
+    return getChangedSectionLabels(proposal, previousVersion, revisionOptions);
+  });
+
   const revisionOptions = $derived(
     vote?.form === "budget2026"
       ? { sectionMapping: budget2026SectionMapping, sectionOrder: budget2026SectionOrder }
       : {},
   );
 
-  /** For each version entry: { versionNumber, createdAt, changedLabels } (compared to next version or current). */
+  /** For each version entry: { versionNumber, createdAt, changedLabels } (changes in this version vs the previous one; v1 has none). */
   const versionEntries = $derived.by(() => {
     if (!proposal || archivedDocs.length === 0) return [];
     const entries = [];
     for (let i = 0; i < versions.length; i++) {
       const ver = versions[i];
       const archived = archivedDocs[i];
-      const compareTo = i === 0 ? proposal : archivedDocs[i - 1];
+      const previousVersion = i + 1 < archivedDocs.length ? archivedDocs[i + 1] : null;
       const changedLabels =
-        archived && compareTo ? getChangedSectionLabels(archived, compareTo, revisionOptions) : [];
+        archived && previousVersion
+          ? getChangedSectionLabels(archived, previousVersion, revisionOptions)
+          : [];
       const versionNumber = currentVersion - 1 - i;
       entries.push({
         _id: ver._id,
@@ -146,9 +155,31 @@
     </Sheet.Header>
     <div class="flex-1 overflow-y-auto p-4 space-y-4">
       <!-- Current version (reference) -->
-      <div class="rounded-lg border bg-muted/30 p-3">
-        <div class="text-sm font-medium">Version {currentVersion} (current)</div>
-        <div class="text-xs text-muted-foreground mt-0.5">This is the live version.</div>
+      <div class="rounded-lg border bg-muted/30 p-3 pb-4 pl-4">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-sm font-medium">Version {currentVersion} (current)</span>
+          <Button.Root
+            href={voteSlug && proposalId ? `/votes/${voteSlug}/${proposalId}` : undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outline"
+            size="sm"
+            aria-label="View current version in new tab"
+          >
+            <FileTextIcon class="size-3.5 mr-1" aria-hidden="true" />
+            View
+          </Button.Root>
+        </div>
+        {#if currentVersionChangedLabels.length > 0}
+          <div class="pt-1">
+            <span class="text-xs font-medium text-muted-foreground">Changed from v{currentVersion - 1}:</span>
+            <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+              {#each currentVersionChangedLabels as label}
+                <li>{label}</li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
       </div>
 
       {#if versions.length === 0}
@@ -157,7 +188,7 @@
         <p class="text-sm text-muted-foreground">Loading versions…</p>
       {:else}
         {#each versionEntries as entry (entry._id)}
-          <div class="rounded-lg border p-3 space-y-2">
+          <div class="rounded-lg border p-3 pb-4 pl-4 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm font-medium">Version {entry.versionNumber}</span>
               <Button.Root

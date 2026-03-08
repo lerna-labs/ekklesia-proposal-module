@@ -5,7 +5,7 @@
 export const sectionMapping = {
   title: "Title",
   summary: "Summary",
-  totalBudget: "Budget summary",
+  totalBudget: "Budget amount",
   "metaData.trackRecord": "Track record",
   "metaData.estimatedDuration": "Estimated duration",
   "metaData.strategyFramework": "Strategy framework",
@@ -26,7 +26,7 @@ export const sectionMapping = {
   "metaData.treasuryRepayment": "Treasury repayment",
   "metaData.treasuryRepaymentCircumstances": "Treasury repayment",
   "metaData.priorFunding": "Prior funding",
-  "metaData.totalBudget": "Budget summary",
+  "metaData.totalBudget": "Budget amount",
 };
 
 /** Order of section labels as they appear on the budget2026 proposal form (accordion order). */
