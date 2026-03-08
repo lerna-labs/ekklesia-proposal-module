@@ -15,6 +15,8 @@
     previewHref = null,
     /** True when creating a new proposal (no existing id). Auto-save is off and toggle disabled until title is entered; preference is not overwritten. */
     isNewUnsaved = false,
+    /** When true, auto-save interval is paused (e.g. while legal declarations modal is open). */
+    autoSavePaused = false,
   } = $props();
 
   /** On new unsaved proposals we keep auto-save off locally; parent preference is unchanged. */
@@ -128,6 +130,7 @@
   $effect(() => {
     if (
       !effectiveAutoSaveEnabled ||
+      autoSavePaused ||
       formData.status !== "draft" ||
       !hasTitle ||
       !onSave ||

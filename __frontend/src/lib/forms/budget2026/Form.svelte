@@ -624,6 +624,7 @@
     bind:autoSaveEnabled
     {previewHref}
     {isNewUnsaved}
+    autoSavePaused={openLegalDialog}
   />
 </form>
 
