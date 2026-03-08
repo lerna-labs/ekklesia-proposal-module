@@ -143,5 +143,5 @@
 {/if}
 
 {#if vote && showForm}
-  <FormComponent {vote} {pillars} proposal={createdProposal} {onSave} {showLegalErrors} {formRef} bind:validationErrors bind:openLegalDialog />
+  <FormComponent {vote} {pillars} proposal={createdProposal} {onSave} {showLegalErrors} bind:formRef bind:validationErrors bind:openLegalDialog />
 {/if}

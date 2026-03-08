@@ -120,7 +120,7 @@
   {proposal}
   {onSave}
   {showLegalErrors}
-  {formRef}
+  bind:formRef
   bind:validationErrors
   bind:openLegalDialog
 />

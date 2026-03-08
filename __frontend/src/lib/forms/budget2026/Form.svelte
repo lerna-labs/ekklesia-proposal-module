@@ -25,7 +25,7 @@
     validationErrors,
     openLegalDialog = $bindable(false),
     showLegalErrors = false,
-    formRef,
+    formRef = $bindable(),
   } = $props();
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
