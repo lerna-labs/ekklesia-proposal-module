@@ -130,7 +130,7 @@
         >
           <Select.Trigger
             id="withdraw-reason"
-            class="w-full aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+            class="w-full aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
             aria-invalid={validationErrors?.properties?.category?.errors
               ?.length > 0}
             aria-label="Withdrawal reason"
