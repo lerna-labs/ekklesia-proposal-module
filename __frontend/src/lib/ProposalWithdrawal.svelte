@@ -2,10 +2,9 @@
   import { z } from "zod";
   import { toast } from "svelte-sonner";
   import { api } from "$stores/sessionManager.js";
-  import * as Dialog from "$lib/components/ui/dialog";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import * as Label from "$lib/components/ui/label";
   import * as Select from "$lib/components/ui/select";
-  import { Button } from "$lib/components/ui/button";
   import * as Field from "$lib/components/ui/field";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -99,11 +98,11 @@
   }
 </script>
 
-<Dialog.Root bind:open>
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>Withdraw Proposal</Dialog.Title>
-      <Dialog.Description>
+<AlertDialog.Root bind:open>
+  <AlertDialog.Content class="sm:max-w-md max-h-[90dvh] overflow-y-auto flex flex-col">
+    <AlertDialog.Header>
+      <AlertDialog.Title>Withdraw Proposal</AlertDialog.Title>
+      <AlertDialog.Description>
         {#if proposal}
           <div
             class="mt-2 outline-destructive p-2 rounded-md border-destructive border-2 text-destructive text-medium"
@@ -116,8 +115,8 @@
             undone.
           </div>
         {/if}
-      </Dialog.Description>
-    </Dialog.Header>
+      </AlertDialog.Description>
+    </AlertDialog.Header>
     <div class="grid gap-4">
       <div class="grid gap-2">
         <Label.Root for="withdraw-reason" class="gap-0">
@@ -164,22 +163,18 @@
         />
       </div>
     </div>
-    <Dialog.Footer class="gap-1">
-      <Button
-        variant="outline"
-        disabled={submitting}
-        onclick={() => (open = false)}
-      >
+    <AlertDialog.Footer class="gap-1">
+      <AlertDialog.Cancel disabled={submitting} class="cursor-pointer">
         Cancel
-      </Button>
-      <Button
-        variant="destructive"
+      </AlertDialog.Cancel>
+      <AlertDialog.Action
         disabled={submitting}
+        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
         onclick={confirmWithdraw}
       >
         <Trash2Icon class="size-4" />
         {submitting ? "Withdrawing…" : "Withdraw proposal"}
-      </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

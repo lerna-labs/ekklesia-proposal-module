@@ -21,7 +21,7 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[500px]">
+  <Dialog.Content class="sm:max-w-[500px] max-h-[90dvh] overflow-y-auto flex flex-col">
     <form
       onsubmit={(e) => {
         e.preventDefault();
