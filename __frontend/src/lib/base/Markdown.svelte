@@ -139,12 +139,14 @@
     list-style-type: disc;
     padding-left: 1.5rem;
     margin: 0.5rem 0;
+    margin-bottom: 1rem;
   }
 
   :global(div.markdown ol) {
     list-style-type: decimal;
     padding-left: 1.5rem;
     margin: 0.5rem 0;
+    margin-bottom: 1rem;
   }
 
   :global(div.markdown blockquote) {
