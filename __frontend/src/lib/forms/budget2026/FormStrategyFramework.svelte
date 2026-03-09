@@ -3,6 +3,7 @@
   import * as Field from "$lib/components/ui/field/index.js";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import FormPillarCard from "./FormPillarCard.svelte";
 
   let {
     formData = $bindable(),
@@ -77,14 +78,10 @@
     >
       {#each pillarOptions as pillarOption (pillarOption._id)}
         {@const selectedPillarIds = formData.metaData.strategyFramework?.pillars ?? []}
-        <button
-          type="button"
-          class="w-full text-left p-4 rounded-md border items-start cursor-pointer space-y-2 {selectedPillarIds.includes(
-            pillarOption._id,
-          )
-            ? 'bg-(--mbo-electric-blue) text-white border-(--mbo-electric-blue) hover:opacity-90'
-            : 'border-muted-foreground/20 bg-muted-foreground/10 hover:bg-muted-foreground/20'}"
-          onclick={() => {
+        <FormPillarCard
+          pillar={pillarOption}
+          selected={selectedPillarIds.includes(pillarOption._id)}
+          onselect={() => {
             const arr = formData.metaData.strategyFramework.pillars;
             if (arr.includes(pillarOption._id)) {
               arr.splice(arr.indexOf(pillarOption._id), 1);
@@ -92,16 +89,7 @@
               arr.push(pillarOption._id);
             }
           }}
-        >
-          <div class="text font-medium w-full">{pillarOption.title}</div>
-          <p
-            class="text-xs mb-0! {selectedPillarIds.includes(pillarOption._id)
-              ? 'text-white/80'
-              : 'text-muted-foreground'}"
-          >
-            {pillarOption.description}
-          </p>
-        </button>
+        />
       {/each}
     </div>
     {#if pillarsError}
