@@ -280,6 +280,12 @@ router.put("/:proposalId/withdraw", async (req, res) => {
         message: "comment is required and must be a non-empty string.",
       });
     }
+    if (commentStr.length > 1000) {
+      return res.status(400).json({
+        status: "error",
+        message: "comment must be at most 1000 characters.",
+      });
+    }
 
     const proposal = await Proposal.findById(proposalId);
     if (!proposal) {

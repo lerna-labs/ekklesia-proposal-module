@@ -70,7 +70,7 @@
     {/if}
   </div>
   <div
-    class="relative rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="relative w-full rounded-md border border-input bg-background shadow-xs transition-colors focus-within:outline-none focus-within:ring-[3px] focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
     aria-invalid={displayError ? true : false}
   >
     {#if EditorComponent}

@@ -194,7 +194,7 @@
 
 <!-- Add / Edit objective (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content class="sm:max-w-lg">
+  <AlertDialog.Content class="sm:max-w-lg max-h-[90dvh] overflow-y-auto flex flex-col">
     <AlertDialog.Header class="text-left">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}

@@ -158,6 +158,14 @@
     margin: 0.25rem 0;
   }
 
+  :global(div.markdown p) {
+    margin-bottom: 1rem;
+  }
+
+  :global(div.markdown p:last-child) {
+    margin-bottom: 0;
+  }
+
   :global(div.markdown blockquote p:first-child),
   :global(div.markdown blockquote p:last-child) {
     margin: 0;

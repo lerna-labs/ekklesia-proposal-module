@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { getContext } from "svelte";
   import {
     BoldButton,
     ItalicButton,
     UnderlineButton,
-    InsertLink,
     Divider,
     Toolbar,
     UndoButton,
@@ -13,8 +13,13 @@
     formatQuote,
     formatParagraph,
   } from "svelte-lexical";
+  import { TOGGLE_LINK_COMMAND } from "@lexical/link";
+  import { sanitizeUrl } from "svelte-lexical";
 
   let { quote = false } = $props();
+  const isLink = getContext("isLink") as {
+    subscribe: (fn: (v: boolean) => void) => () => void;
+  };
 </script>
 
 <Toolbar>
@@ -48,7 +53,22 @@
     </button>
 
     <Divider />
-    <InsertLink />
+    <button
+      type="button"
+      class="toolbar-item spaced"
+      class:active={$isLink}
+      title="Add Link"
+      aria-label="Add Link"
+      onclick={() => {
+        if ($isLink) {
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+        } else {
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, sanitizeUrl("https://"));
+        }
+      }}
+    >
+      <i class="format link"></i>
+    </button>
 
     {#if quote}
       <Divider />

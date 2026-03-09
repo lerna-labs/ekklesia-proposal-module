@@ -1,55 +1,421 @@
 /* Ensure svelte-lexical lists display properly */
 .svelte-lexical {
-    margin:0 !important;  
-    padding: 0 !important;
-    border:0 !important;
-  }
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
 
-  .editor-shell {
-    border: 0 !important;
-    background:white;
-    border-radius: 0.3rem !important;
-  }
+/* No border on .editor-shell: parent (e.g. Textarea wrapper) matches Shadcn input and has border + focus ring */
+.editor-shell {
+  border: none !important;
+  background: var(--background) !important;
+  border-radius: var(--radius) !important;
+}
 
-  .editor-shell .editor-container {
-    background:white;
-    border-radius: 0.3rem !important;
-    border:0 !important;
-  }
+/* Single border: only editor-shell; theme adds border to .editor-container, override it */
+.editor-shell.svelte-lexical .editor-container {
+  background: var(--background) !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+}
 
-  .svelte-lexical .toolbar {
-    border: 0 !important;
-    border-bottom: 1px solid #eee !important;
-  }
-  
-  .svelte-lexical ul {
-    list-style-type: disc;
-    padding-left: 0em;
-  }
-  
-  .svelte-lexical ol {
-    list-style-type: decimal;
-    padding-left: 0em;
-  }
-  
-  .svelte-lexical li {
-    display: list-item;
-  }
-  
-  .svelte-lexical blockquote {
-    border-left: 2px solid var(--mbo-grey);
-    padding-left: 0.5em;
-    margin-left: 0.5em;
-  }
+.editor-shell .editor-container .editor-scroller {
+  max-height: 60vh;
+  overflow-y: auto;
+}
 
-  .svelte-lexical a {
-    color: var(--mbo-electric-blue);
-    text-decoration: none;
-    border-bottom: 1px dashed var(--mbo-electric-blue);
-    padding-bottom: 2px;
-  }
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
 
-  .svelte-lexical a:hover {
-    color: var(--mbo-cardano-blue);
-    border-bottom: 1px dashed var(--mbo-cardano-blue);
-  }
+.link-editor-toolbar-slot {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 0;
+}
+
+/* Theme adds border to .toolbar; remove so only editor-shell has one border */
+.editor-shell.svelte-lexical .toolbar {
+  border: none !important;
+  border-bottom: none !important;
+  background: var(--background) !important;
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  min-height: 2.5rem !important;
+  height: auto !important;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+/* Toolbar buttons: match LinkListEditor outline style (variant="outline" size="icon" size-8) */
+.svelte-lexical button.toolbar-item {
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color, border-color;
+}
+.svelte-lexical button.toolbar-item:hover:not([disabled]) {
+  background-color: var(--accent) !important;
+  border-color: var(--input);
+}
+.svelte-lexical button.toolbar-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.svelte-lexical button.toolbar-item.active {
+  background-color: var(--accent) !important;
+  border-color: var(--input);
+}
+
+.svelte-lexical .toolbar > .divider {
+  width: 1px;
+  background-color: var(--border) !important;
+  margin: 0 0.25rem;
+  align-self: stretch;
+}
+
+/* Toolbar icons: Lucide SVGs, centered in button (reset package vertical-align) */
+.svelte-lexical .toolbar i.format.bold,
+.svelte-lexical .toolbar i.format.italic,
+.svelte-lexical .toolbar i.format.underline,
+.svelte-lexical .toolbar i.format.link,
+.svelte-lexical .toolbar i.format.undo,
+.svelte-lexical .toolbar i.format.redo {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  vertical-align: middle;
+  background-image: url(/images/icons/editor/bold.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+}
+.svelte-lexical .toolbar i.format.italic {
+  background-image: url(/images/icons/editor/italic.svg);
+}
+.svelte-lexical .toolbar i.format.underline {
+  background-image: url(/images/icons/editor/underline.svg);
+}
+.svelte-lexical .toolbar i.format.link {
+  background-image: url(/images/icons/editor/link.svg);
+}
+.svelte-lexical .toolbar i.format.undo {
+  background-image: url(/images/icons/editor/undo-2.svg);
+}
+.svelte-lexical .toolbar i.format.redo {
+  background-image: url(/images/icons/editor/redo-2.svg);
+}
+
+.svelte-lexical .toolbar .icon.bullet-list,
+.svelte-lexical .toolbar .icon.numbered-list,
+.svelte-lexical .toolbar .icon.quote {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+}
+/* List icons: slightly smaller so stroke weight matches other toolbar icons */
+.svelte-lexical .toolbar .icon.bullet-list,
+.svelte-lexical .toolbar .icon.numbered-list {
+  background-size: 0.875rem 0.875rem;
+}
+.svelte-lexical .toolbar .icon.bullet-list {
+  background-image: url(/images/icons/editor/list.svg) !important;
+}
+.svelte-lexical .toolbar .icon.numbered-list {
+  background-image: url(/images/icons/editor/list-ordered.svg) !important;
+}
+.svelte-lexical .toolbar .icon.quote {
+  background-size: contain;
+  background-image: url(/images/icons/editor/quote.svg) !important;
+}
+
+.svelte-lexical ul {
+  list-style-type: disc;
+  padding-left: 0em;
+}
+
+.svelte-lexical ol {
+  list-style-type: decimal;
+  padding-left: 0em;
+}
+
+.svelte-lexical li {
+  display: list-item;
+}
+
+.svelte-lexical p {
+  margin-bottom: 1rem;
+}
+
+.svelte-lexical p:last-child {
+  margin-bottom: 0;
+}
+
+.svelte-lexical blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.5em;
+  margin-left: 0.5em;
+  color: var(--muted-foreground);
+}
+
+.svelte-lexical a {
+  color: var(--mbo-electric-blue);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--mbo-electric-blue);
+  padding-bottom: 2px;
+}
+
+.svelte-lexical ::selection {
+  background: var(--mbo-sky-blue);
+  color: black;
+}
+
+.svelte-lexical a:hover {
+  text-decoration: none;
+  color: var(--mbo-cardano-blue);
+  border-bottom: 1px dashed var(--mbo-cardano-blue);
+}
+
+/* Floating link editor: container and toolbar-style buttons (shadcn tokens + Lucide icons) */
+.svelte-lexical .link-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  max-width: 400px;
+  width: 100%;
+  min-height: 0;
+  opacity: 0;
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+
+/* Hide when popover has no content (package shows container before $isLink is true) */
+.svelte-lexical .link-editor:not(:has(.link-input)):not(:has(.link-view)) {
+  opacity: 0 !important;
+  transform: translate(-10000px, -10000px) !important;
+  pointer-events: none;
+}
+
+/* Add form: one combined field – input fills area, buttons on the right with equal padding top/bottom/right, same button gap as toolbar (0.125rem) */
+.svelte-lexical .link-editor:has(.link-input) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  min-height: 2.5rem !important;
+}
+/* Buttons sit on the input with equal padding top/bottom (0.25rem), more padding right (0.5rem); gap between buttons = toolbar gap (0.125rem) */
+.svelte-lexical .link-editor .link-input + div {
+  position: absolute !important;
+  right: 0.5rem;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.125rem !important; /* same as .toolbar */
+  flex-shrink: 0;
+  z-index: 1;
+}
+/* Reset theme's absolute positioning on cancel/confirm so they sit in the wrapper */
+.svelte-lexical .link-editor .link-input + div .link-cancel,
+.svelte-lexical .link-editor .link-input + div .link-confirm {
+  position: static !important;
+  margin: 0 !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+/* Hide cancel button on add/edit form (input visible) */
+.svelte-lexical .link-editor .link-input + div .link-cancel {
+  display: none !important;
+}
+/* Link editor buttons: match LinkListEditor outline style (variant="outline" size="icon" size-8) */
+.svelte-lexical .link-editor .link-cancel,
+.svelte-lexical .link-editor .link-confirm,
+.svelte-lexical .link-editor .link-edit,
+.svelte-lexical .link-editor .link-open-external,
+.svelte-lexical .link-editor .link-trash {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  background-color: var(--background);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1rem 1rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color, border-color;
+  color: var(--foreground);
+}
+.svelte-lexical .link-editor .link-cancel:hover,
+.svelte-lexical .link-editor .link-confirm:hover,
+.svelte-lexical .link-editor .link-edit:hover,
+.svelte-lexical .link-editor .link-open-external:hover,
+.svelte-lexical .link-editor .link-trash:hover {
+  background-color: var(--accent);
+  border-color: var(--input);
+}
+.svelte-lexical .link-editor .link-cancel:focus-visible,
+.svelte-lexical .link-editor .link-confirm:focus-visible,
+.svelte-lexical .link-editor .link-edit:focus-visible,
+.svelte-lexical .link-editor .link-open-external:focus-visible,
+.svelte-lexical .link-editor .link-trash:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+/* Link editor icons: Lucide SVGs via background-image. Use div.link-* and !important so we override the theme's LinkEditor.css (same selector specificity, our file loads first). */
+.svelte-lexical .link-editor div.link-cancel {
+  background-image: url(/images/icons/editor/x.svg) !important;
+}
+.svelte-lexical .link-editor div.link-confirm {
+  background-image: url(/images/icons/editor/check.svg) !important;
+}
+.svelte-lexical .link-editor div.link-edit {
+  background-image: url(/images/icons/editor/pencil.svg) !important;
+}
+.svelte-lexical .link-editor div.link-trash {
+  background-image: url(/images/icons/editor/trash-2.svg) !important;
+}
+.svelte-lexical .link-editor div.link-open-external {
+  background-image: url(/images/icons/editor/external-link.svg) !important;
+}
+
+/* Edit form: same layout and sizing as add form (2.5rem row, 0.8125rem font, buttons on right with same padding/gap) */
+.svelte-lexical .link-editor:has(.link-view) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  min-height: 2.5rem !important;
+}
+.svelte-lexical .link-editor .link-view {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.125rem !important; /* same as toolbar / add form buttons */
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 0.5rem 0 0.75rem !important; /* match add form */
+  min-height: 2.5rem !important;
+}
+/* Reset theme's absolute positioning on edit/trash so they sit in the row */
+.svelte-lexical .link-editor .link-view .link-edit,
+.svelte-lexical .link-editor .link-view .link-trash {
+  position: static !important;
+  margin: 0 !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* Link URL input: no ring/border (field is the whole popover row); padding-right for buttons; equal padding top/bottom/right for button area. !important overrides theme. */
+.svelte-lexical .link-editor .link-input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  margin: 0 !important;
+  padding: 0 0.5rem 0 0.75rem !important;
+  /* one 2rem button + 0.5rem right padding (cancel hidden) */
+  padding-right: calc(2rem + 0.5rem) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  transition: color;
+  outline: none;
+  font-family: inherit;
+  color: inherit;
+}
+.svelte-lexical .link-editor .link-input::placeholder {
+  color: var(--muted-foreground);
+}
+.svelte-lexical .link-editor .link-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.svelte-lexical .link-editor .link-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* URL display in edit form: same as add form (no ring, same font size and height) */
+.svelte-lexical .link-editor .link-view > a {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex !important;
+  align-items: center;
+  height: 2.5rem !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+.svelte-lexical .link-editor .link-view > a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Invalid link: red outline on the popover */
+.svelte-lexical .link-editor.link-invalid {
+  box-shadow: 0 0 0 2px var(--destructive, #ef4444) !important;
+}
