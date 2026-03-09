@@ -1,0 +1,82 @@
+/* Show Cancel (add mode) and Confirm; in edit mode show Open in new tab instead of Cancel */
+.svelte-lexical .link-editor.custom-link-editor .link-input + div .link-cancel,
+.svelte-lexical .link-editor.custom-link-editor .link-input + div .link-confirm,
+.svelte-lexical .link-editor.custom-link-editor .link-input + div .link-open-external {
+  display: inline-flex !important;
+}
+
+/* Keep all three buttons in a row (cancel, confirm, trash) – same position reset as cancel/confirm so trash doesn’t overlap */
+.svelte-lexical .link-editor.custom-link-editor .link-input + div .link-trash {
+  position: static !important;
+  margin: 0 !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* Link editor container: no padding, no shadow; structure: input first, then buttons */
+.link-editor-toolbar-slot .link-editor.custom-link-editor,
+.svelte-lexical .link-editor.custom-link-editor {
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Same gap as .toolbar (0.125rem); center input and buttons vertically */
+.svelte-lexical .link-editor-toolbar-slot .link-editor.custom-link-editor {
+  position: static !important;
+  opacity: 1 !important;
+  transform: none !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.125rem !important;
+}
+
+/* Input: match button outline style and height (2rem), align with buttons */
+.link-editor-toolbar-slot .link-editor.custom-link-editor .link-input,
+.svelte-lexical .link-editor.custom-link-editor .link-input {
+  order: 1;
+  min-width: 12rem;
+  width: auto !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  max-height: 2rem !important;
+  margin: 0 !important;
+  padding: 0 0.5rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 2rem !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+  outline: none !important;
+}
+
+.svelte-lexical .link-editor.custom-link-editor .link-input:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring) !important;
+}
+
+/* Invalid: red outline only on the input, not the container */
+.svelte-lexical .link-editor.custom-link-editor.link-invalid {
+  box-shadow: none !important;
+}
+.svelte-lexical .link-editor.custom-link-editor.link-invalid .link-input {
+  box-shadow: 0 0 0 2px var(--destructive, #ef4444) !important;
+}
+
+/* Buttons wrapper: same gap as toolbar icons (0.125rem), center with input */
+.svelte-lexical
+  .link-editor-toolbar-slot
+  .link-editor.custom-link-editor
+  .link-input
+  + div {
+  order: 2;
+  position: static !important;
+  right: auto !important;
+  top: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.125rem !important;
+}
