@@ -21,7 +21,9 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[500px] max-h-[90dvh] overflow-y-auto flex flex-col">
+  <Dialog.Content
+    class="sm:max-w-[650px] max-h-[90dvh] overflow-y-auto flex flex-col"
+  >
     <form
       onsubmit={(e) => {
         e.preventDefault();
@@ -38,16 +40,18 @@
         </Dialog.Title>
       </Dialog.Header>
       <div class="py-4">
-        {#key open && replyTo ? replyTo._id : open ? "add" : "closed"}
-          <Textarea
-            id="comment-content"
-            label="Comment"
-            bind:value
-            placeholder="Write your comment (markdown supported)"
-            required
-            maxLength={2000}
-          />
-        {/key}
+        {#if open}
+          {#key replyTo ? replyTo._id : "add"}
+            <Textarea
+              id="comment-content"
+              label="Comment"
+              bind:value
+              placeholder="Write your comment (markdown supported)"
+              required
+              maxLength={2000}
+            />
+          {/key}
+        {/if}
         {#if submitError}
           <p class="text-sm text-destructive mt-2">{submitError}</p>
         {/if}
