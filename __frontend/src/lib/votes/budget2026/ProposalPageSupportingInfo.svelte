@@ -1,12 +1,10 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Button from "$lib/components/ui/button";
-  import * as InputGroup from "$lib/components/ui/input-group";
-  import { Copy } from "lucide-svelte";
+  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 
   let { proposal } = $props();
+  let linkWarningDialog;
 
   const links = $derived(
     Array.isArray(proposal?.metaData?.supportingInfoLinks)
@@ -15,36 +13,6 @@
         )
       : [],
   );
-
-  let linkDialogOpen = $state(false);
-  let pendingLink = $state(null);
-
-  function openLinkWarning(href, title) {
-    pendingLink = { href, title: title || href };
-    linkDialogOpen = true;
-  }
-
-  function confirmOpenLink() {
-    if (pendingLink?.href) {
-      window.open(pendingLink.href, "_blank", "noopener,noreferrer");
-    }
-    linkDialogOpen = false;
-    pendingLink = null;
-  }
-
-  function cancelOpenLink() {
-    linkDialogOpen = false;
-    pendingLink = null;
-  }
-
-  async function copyLink() {
-    if (!pendingLink?.href) return;
-    try {
-      await navigator.clipboard.writeText(pendingLink.href);
-    } catch {
-      // clipboard API unavailable
-    }
-  }
 </script>
 
 {#if links.length > 0}
@@ -60,7 +28,7 @@
             class="text-primary hover:underline inline-flex items-center gap-1 text-sm cursor-pointer"
             onclick={(e) => {
               e.preventDefault();
-              openLinkWarning(link.url, link.title?.trim() || link.url);
+              linkWarningDialog.show(link.url, link.title?.trim() || link.url);
             }}
           >
             <ChevronRightIcon class="size-4 shrink-0" aria-hidden="true" />
@@ -73,40 +41,4 @@
   </section>
 {/if}
 
-<Dialog.Root bind:open={linkDialogOpen}>
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>Be Careful!</Dialog.Title>
-      <Dialog.Description>
-        You are about to open an external link to:
-        {#if pendingLink}
-          <InputGroup.Root class="my-2">
-            <InputGroup.Input
-              value={pendingLink.href}
-              readonly
-              class="font-mono text-sm"
-            />
-            <InputGroup.Addon align="inline-end">
-              <InputGroup.Button
-                type="button"
-                size="icon-sm"
-                aria-label="Copy link"
-                onclick={copyLink}
-              >
-                <Copy class="size-4" />
-              </InputGroup.Button>
-            </InputGroup.Addon>
-          </InputGroup.Root>
-        {/if}
-        Exercise caution and verify the website's authenticity before sharing personal
-        information. To proceed, click 'Continue' otherwise click 'Cancel'.
-      </Dialog.Description>
-    </Dialog.Header>
-    <Dialog.Footer class="gap-2">
-      <Button.Root variant="outline" onclick={cancelOpenLink}>
-        Cancel
-      </Button.Root>
-      <Button.Root onclick={confirmOpenLink}>Continue</Button.Root>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+<LinkWarningDialog bind:this={linkWarningDialog} />
