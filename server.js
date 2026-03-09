@@ -35,9 +35,9 @@ app.set("trust proxy", 1);
 
 const PORT = process.env.SERVER_PORT || 3000;
 
-// Middleware (2mb limit allows large proposal POST/PUT bodies; default is 100kb)
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+// Middleware (1mb limit allows large proposal POST/PUT bodies; default is 100kb)
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser()); // cookie parser
 app.use(
   cors({
