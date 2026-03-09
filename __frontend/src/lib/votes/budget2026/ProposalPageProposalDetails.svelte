@@ -1,10 +1,9 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import * as Popover from "$lib/components/ui/popover";
-  import * as Dialog from "$lib/components/ui/dialog";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import MarkdownModal from "$lib/components/MarkdownModal.svelte";
   import { formatAda } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import HashIcon from "@lucide/svelte/icons/hash";
@@ -186,51 +185,6 @@
       </div>
     {/if}
 
-    <Dialog.Root bind:open={otherAdminModalOpen}>
-      <Dialog.Content class="sm:max-w-md">
-        <Dialog.Header>
-          <Dialog.Title>Details about other administrator</Dialog.Title>
-          <Dialog.Description>
-            {#if otherAdministrator.trim()}
-              <p class="whitespace-pre-wrap text-sm"
-                >{otherAdministrator.trim()}</p
-              >
-            {:else}
-              <p class="text-muted-foreground">No details provided.</p>
-            {/if}
-          </Dialog.Description>
-        </Dialog.Header>
-        <Dialog.Footer>
-          <Button onclick={() => (otherAdminModalOpen = false)}>
-            Close
-          </Button>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
-
-    <Dialog.Root bind:open={repaymentCircumstancesModalOpen}>
-      <Dialog.Content class="sm:max-w-md">
-        <Dialog.Header>
-          <Dialog.Title>Repayment circumstances</Dialog.Title>
-          <Dialog.Description>
-            {#if treasuryRepaymentCircumstances.trim()}
-              <p class="whitespace-pre-wrap text-sm"
-                >{treasuryRepaymentCircumstances.trim()}</p
-              >
-            {:else}
-              <p class="text-muted-foreground">No details provided.</p>
-            {/if}
-          </Dialog.Description>
-        </Dialog.Header>
-        <Dialog.Footer>
-          <Button
-            onclick={() => (repaymentCircumstancesModalOpen = false)}
-          >
-            Close
-          </Button>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
     {#if hasProposerContent}
       <Card.Root>
         <Card.Header>
@@ -380,20 +334,21 @@
   </Card.Content>
 </Card.Root>
 
-<Dialog.Root bind:open={trackRecordOpen}>
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>Track Record</Dialog.Title>
-      <Dialog.Description>
-        <div class="text-sm [&_.markdown]:text-inherit">
-          <Markdown content={trackRecord} />
-        </div>
-      </Dialog.Description>
-    </Dialog.Header>
-    <Dialog.Footer>
-      <Button onclick={() => (trackRecordOpen = false)}>
-        Close
-      </Button>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+<MarkdownModal
+  bind:open={otherAdminModalOpen}
+  title="Details about other administrator"
+  content={otherAdministrator.trim() || "No details provided."}
+/>
+<MarkdownModal
+  bind:open={repaymentCircumstancesModalOpen}
+  title="Repayment circumstances"
+  content={treasuryRepaymentCircumstances.trim() || "No details provided."}
+/>
+<MarkdownModal
+  bind:open={trackRecordOpen}
+  title="Track Record"
+  content={trackRecord}
+  contentClass="text-sm [&_.markdown]:text-inherit"
+  class="sm:max-w-lg max-h-[90dvh] overflow-y-auto flex flex-col"
+  description="Proposer's track record and relevant experience"
+/>
