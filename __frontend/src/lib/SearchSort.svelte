@@ -2,12 +2,11 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
   import * as Popover from "$lib/components/ui/popover";
-  import * as Button from "$lib/components/ui/button";
+  import { Button, buttonVariants } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Separator from "$lib/components/ui/separator";
-  import { buttonVariants } from "$lib/components/ui/button";
   import ArrowUpDownIcon from "@lucide/svelte/icons/arrow-up-down";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
@@ -194,7 +193,7 @@
 
           <div class="border-t pt-3 flex gap-1">
             {#if hasActiveSort}
-              <Button.Root
+              <Button
                 type="button"
                 variant="destructive"
                 size="sm"
@@ -204,9 +203,9 @@
               >
                 <Trash2Icon class="size-4" />
                 Reset
-              </Button.Root>
+              </Button>
             {/if}
-            <Button.Root
+            <Button
               type="button"
               variant="default"
               size="sm"
@@ -215,7 +214,7 @@
             >
               <CheckIcon class="size-4" />
               Apply
-            </Button.Root>
+            </Button>
           </div>
         </div>
       </Popover.Content>

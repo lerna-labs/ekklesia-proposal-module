@@ -2,7 +2,7 @@
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import * as Card from "$lib/components/ui/card";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import * as Pagination from "$lib/components/ui/pagination";
 
   let { data } = $props();
@@ -76,9 +76,9 @@
                 </dl>
               </Card.Content>
               <Card.Footer class="border-t pt-4">
-                <Button.Root variant="ghost" size="sm" class="w-fit">
+                <Button variant="ghost" size="sm" class="w-fit">
                   View proposals →
-                </Button.Root>
+                </Button>
               </Card.Footer>
             </a>
           </Card.Root>

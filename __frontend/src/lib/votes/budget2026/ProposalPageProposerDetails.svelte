@@ -1,7 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import * as Dialog from "$lib/components/ui/dialog";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import Markdown from "$lib/base/Markdown.svelte";
   import HomeIcon from "@lucide/svelte/icons/home";
   import UserIcon from "@lucide/svelte/icons/user";
@@ -87,14 +87,14 @@
     {/if}
     {#if hasTrackRecord}
       <div>
-        <Button.Root
+        <Button
           type="button"
           variant="outline"
           size="sm"
           onclick={() => (trackRecordOpen = true)}
         >
           Track Record
-        </Button.Root>
+        </Button>
       </div>
     {/if}
     {#if !proposerName.trim() && !legalEntityType.trim() && links.length === 0 && !hasTrackRecord}

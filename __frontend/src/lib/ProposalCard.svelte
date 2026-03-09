@@ -1,7 +1,7 @@
 <script>
   import { invalidateAll } from "$app/navigation";
   import * as Card from "$lib/components/ui/card";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
@@ -344,7 +344,7 @@
       {#if commentsHref || (showLink && proposalHref)}
         <div class="flex items-center gap-2 flex-wrap">
           {#if showLink && proposalHref}
-            <Button.Root
+            <Button
               href={proposalHref}
               variant="secondary"
               size="sm"
@@ -352,10 +352,10 @@
             >
               <FileTextIcon class="size-4 mr-1" />
               Read Proposal
-            </Button.Root>
+            </Button>
           {/if}
           {#if commentsHref}
-            <Button.Root
+            <Button
               href={commentsHref}
               variant="outline"
               size="sm"
@@ -367,7 +367,7 @@
               <MessageSquareIcon class="size-4 mr-1" />
               {commentCount != null ? commentCount : "—"}
               {commentCount === 1 ? "Comment" : "Comments"}
-            </Button.Root>
+            </Button>
           {/if}
         </div>
       {/if}

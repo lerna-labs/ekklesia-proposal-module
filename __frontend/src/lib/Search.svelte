@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
   import * as Input from "$lib/components/ui/input";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";
 
@@ -66,7 +66,7 @@
   />
   <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-0.5">
     {#if value.trim()}
-      <Button.Root
+      <Button
         type="button"
         variant="ghost"
         size="icon"
@@ -76,9 +76,9 @@
         title="Clear search"
       >
         <XIcon class="size-4" />
-      </Button.Root>
+      </Button>
     {/if}
-    <Button.Root
+    <Button
       type="button"
       variant="ghost"
       size="icon"
@@ -88,6 +88,6 @@
       title="Search"
     >
       <SearchIcon class="size-4" />
-    </Button.Root>
+    </Button>
   </div>
 </div>

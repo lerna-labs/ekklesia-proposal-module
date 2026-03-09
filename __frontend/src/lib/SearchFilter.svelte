@@ -2,12 +2,11 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
   import * as Popover from "$lib/components/ui/popover";
-  import * as Button from "$lib/components/ui/button";
+  import { Button, buttonVariants } from "$lib/components/ui/button";
   import * as Select from "$lib/components/ui/select/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Separator from "$lib/components/ui/separator";
-  import { buttonVariants } from "$lib/components/ui/button";
   import { user } from "$stores/sessionManager.js";
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -284,7 +283,7 @@
           {/if}
           <div class="border-t pt-3 flex gap-1">
             {#if hasActiveFilters}
-              <Button.Root
+              <Button
                 type="button"
                 variant="destructive"
                 size="sm"
@@ -294,9 +293,9 @@
               >
                 <Trash2Icon class="size-4" />
                 Reset
-              </Button.Root>
+              </Button>
             {/if}
-            <Button.Root
+            <Button
               type="button"
               variant="default"
               size="sm"
@@ -305,7 +304,7 @@
             >
               <CheckIcon class="size-4" />
               Apply
-            </Button.Root>
+            </Button>
           </div>
         </div>
       </Popover.Content>

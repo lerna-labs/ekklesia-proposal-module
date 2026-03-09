@@ -2,7 +2,7 @@
   import * as Card from "$lib/components/ui/card";
   import * as Popover from "$lib/components/ui/popover";
   import * as Dialog from "$lib/components/ui/dialog";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatAda } from "$lib/utils.js";
@@ -201,9 +201,9 @@
           </Dialog.Description>
         </Dialog.Header>
         <Dialog.Footer>
-          <Button.Root onclick={() => (otherAdminModalOpen = false)}>
+          <Button onclick={() => (otherAdminModalOpen = false)}>
             Close
-          </Button.Root>
+          </Button>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog.Root>
@@ -223,11 +223,11 @@
           </Dialog.Description>
         </Dialog.Header>
         <Dialog.Footer>
-          <Button.Root
+          <Button
             onclick={() => (repaymentCircumstancesModalOpen = false)}
           >
             Close
-          </Button.Root>
+          </Button>
         </Dialog.Footer>
       </Dialog.Content>
     </Dialog.Root>
@@ -275,7 +275,7 @@
           {#if hasTrackRecord || proposerHref}
             <div class="flex flex-wrap gap-2">
               {#if hasTrackRecord}
-                <Button.Root
+                <Button
                   type="button"
                   variant="outline"
                   size="sm"
@@ -283,10 +283,10 @@
                   onclick={() => (trackRecordOpen = true)}
                 >
                   Track Record
-                </Button.Root>
+                </Button>
               {/if}
               {#if proposerHref}
-                <Button.Root
+                <Button
                   href={proposerHref}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -295,7 +295,7 @@
                   class="text-xs"
                 >
                   Show All Proposals
-                </Button.Root>
+                </Button>
               {/if}
             </div>
           {/if}
@@ -391,9 +391,9 @@
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer>
-      <Button.Root onclick={() => (trackRecordOpen = false)}>
+      <Button onclick={() => (trackRecordOpen = false)}>
         Close
-      </Button.Root>
+      </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>

@@ -1,6 +1,6 @@
 <script>
   import * as Card from "$lib/components/ui/card";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
   import { formatAda } from "$lib/utils.js";
   import Markdown from "$lib/base/Markdown.svelte";
@@ -106,7 +106,7 @@
                   </span>
                 </div>
               </div>
-              <Button.Root
+              <Button
                 type="button"
                 variant="outline"
                 size="icon"
@@ -125,7 +125,7 @@
                 {:else}
                   <ChevronDownIcon class="size-4" aria-hidden="true" />
                 {/if}
-              </Button.Root>
+              </Button>
             </Card.Header>
             {#if isExpanded}
               <Card.Content class="pl-4 pr-3 pt-0 pb-4 -mt-4">
@@ -291,7 +291,7 @@
                                 {/if}
                               </button>
                               {#if hasDetails}
-                                <Button.Root
+                                <Button
                                   type="button"
                                   variant="outline"
                                   size="icon"
@@ -316,7 +316,7 @@
                                       aria-hidden="true"
                                     />
                                   {/if}
-                                </Button.Root>
+                                </Button>
                               {/if}
                             </Card.Header>
                             {#if msExpanded && hasDetails}

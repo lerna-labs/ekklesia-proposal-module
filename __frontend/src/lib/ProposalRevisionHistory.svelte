@@ -1,6 +1,6 @@
 <script>
   import * as Sheet from "$lib/components/ui/sheet";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import { api } from "$stores/sessionManager.js";
   import { getChangedSectionLabels, getChangedDetails } from "$lib/proposalRevisionUtils.js";
   import { sectionMapping as budget2026SectionMapping, sectionOrder as budget2026SectionOrder } from "$lib/forms/budget2026/revisionSectionMapping.js";
@@ -190,7 +190,7 @@
       <div class="rounded-lg border bg-muted/30 p-3 pb-4 pl-4">
         <div class="flex items-center justify-between gap-2">
           <span class="text-sm font-medium">Version {currentVersion} (current)</span>
-          <Button.Root
+          <Button
             href={voteSlug && proposalId ? `/votes/${voteSlug}/${proposalId}` : undefined}
             target="_blank"
             rel="noopener noreferrer"
@@ -200,7 +200,7 @@
           >
             <FileTextIcon class="size-3.5 mr-1" aria-hidden="true" />
             View
-          </Button.Root>
+          </Button>
         </div>
         {#if versions.length > 0 && !firstArchivedDoc && loadingCurrent}
           <p class="text-xs text-muted-foreground pt-1">Loading changes…</p>
@@ -245,7 +245,7 @@
           <div class="rounded-lg border p-3 pb-4 pl-4 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <span class="text-sm font-medium">Version {entry.versionNumber}</span>
-              <Button.Root
+              <Button
                 href={voteSlug ? `/votes/${voteSlug}/${entry._id}` : undefined}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -255,7 +255,7 @@
               >
                 <FileTextIcon class="size-3.5 mr-1" aria-hidden="true" />
                 View
-              </Button.Root>
+              </Button>
             </div>
             <div class="flex items-center gap-1 text-xs text-muted-foreground">
               <ClockIcon
@@ -265,7 +265,7 @@
               {formatTimestamp(entry.createdAt)}
             </div>
             {#if entry.index + 1 < versions.length}
-              <Button.Root
+              <Button
                 variant="ghost"
                 size="sm"
                 class="h-8 text-xs"
@@ -274,7 +274,7 @@
                 aria-label="Load and compare version {entry.versionNumber}"
               >
                 {loadingExpanded && expandedVersionId === entry._id ? "Loading…" : "Load and compare"}
-              </Button.Root>
+              </Button>
             {:else}
               <span class="text-xs text-muted-foreground">First version</span>
             {/if}

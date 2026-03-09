@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import * as Card from '$lib/components/ui/card';
-	import * as Button from '$lib/components/ui/button';
+	import { Button } from '$lib/components/ui/button';
 
 	const getErrorTitle = () => {
 		if (page.status === 404) {
@@ -48,13 +48,13 @@
 			{/if}
 		</Card.Content>
 		<Card.Footer class="flex gap-2">
-			<Button.Root variant="outline" onclick={() => goto('/')}>
+			<Button variant="outline" onclick={() => goto('/')}>
 				Go Home
-			</Button.Root>
+			</Button>
 			{#if page.status !== 404}
-				<Button.Root variant="default" onclick={() => window.location.reload()}>
+				<Button variant="default" onclick={() => window.location.reload()}>
 					Try Again
-				</Button.Root>
+				</Button>
 			{/if}
 		</Card.Footer>
 	</Card.Root>
