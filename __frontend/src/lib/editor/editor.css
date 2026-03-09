@@ -28,6 +28,7 @@
   display: flex;
   align-items: center;
   width: 100%;
+  min-width: 0;
   height: 2.5rem;
   min-height: 2.5rem;
   border-bottom: 1px solid var(--border);
@@ -35,10 +36,13 @@
 
 .link-editor-toolbar-slot {
   margin-left: auto;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   min-height: 2.5rem;
   padding: 0.25rem 0.25rem 0.25rem 0;
+  overflow: hidden;
 }
 
 /* Theme adds border to .toolbar; remove so only editor-shell has one border */
