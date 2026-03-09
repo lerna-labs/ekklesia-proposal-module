@@ -46,7 +46,7 @@
 
 <Card.Root
   class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails
-    ? 'bg-muted/50'
+    ? 'bg-white opacity-50'
     : ''}"
 >
   <Card.Header>
@@ -94,14 +94,25 @@
   <Card.Content class="text-sm">
     {#if comment?.withdrawalDetails}
       <div class="space-y-2">
-        <div class="text-muted-foreground line-through">
+        <div class="text-black line-through">
           <Markdown content={comment?.content ?? ""} class="text-sm" />
         </div>
-        <p class="text-muted-foreground italic">
+        <p class="text-black italic">
           Withdrawn. Reason: {comment.withdrawalDetails.category}
           {#if comment.withdrawalDetails.comment}
             — {comment.withdrawalDetails.comment}
           {/if}
+        </p>
+
+        <p class="text-black italic text-xs">
+          Withdrawn on {new Date(comment.withdrawalDetails.date).toLocaleString(
+            undefined,
+            {
+              dateStyle: "long",
+              timeStyle: "short",
+            },
+          )}
+          by {shortenString(comment.withdrawalDetails.userId, 12, true)}
         </p>
       </div>
     {:else}

@@ -532,17 +532,6 @@
         Load more
       </Button>
     {/if}
-
-    {#if showAddCommentButton}
-      <Button
-        variant="outline"
-        class="add-item-btn cursor-pointer gap-1.5 text-white"
-        onclick={() => openAddDialog()}
-      >
-        <PlusIcon class="size-4" />
-        Add Comment
-      </Button>
-    {/if}
   {/if}
 </section>
 
