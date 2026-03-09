@@ -429,8 +429,12 @@
         if (Number.isFinite(t)) grandTotalAda += t;
       }
     }
+    const isIntersect = formData.metaData?.administrator === "Intersect";
+    const totalBudget = isIntersect
+      ? Math.round(grandTotalAda * 1.03)
+      : Math.round(grandTotalAda);
     const payload = { ...formData, status };
-    payload.metaData = { ...payload.metaData, totalBudget: grandTotalAda };
+    payload.metaData = { ...payload.metaData, totalBudget };
     return payload;
   }
 

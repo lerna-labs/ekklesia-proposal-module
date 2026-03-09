@@ -363,7 +363,7 @@ const metaDataSchema = z.object({
       message: "Third party assurers (independent audits) is required",
     });
   }
-  // Total budget must equal sum of work package budget breakdown rows (round to 3 decimals)
+  // Total budget must equal sum of work package budget rows (whole ADA); when Intersect, sum includes 3% admin fee
   const workPackages = data.proposalDetails?.workPackages ?? [];
   let sumAda = 0;
   for (const pkg of workPackages) {
@@ -373,13 +373,20 @@ const metaDataSchema = z.object({
       if (Number.isFinite(ada)) sumAda += ada;
     }
   }
-  const sumRounded = Math.round(sumAda * 1000) / 1000;
-  const totalBudgetRounded = typeof data.totalBudget === "number" && Number.isFinite(data.totalBudget) ? Math.round(data.totalBudget * 1000) / 1000 : data.totalBudget;
-  if (Number.isFinite(totalBudgetRounded) && Math.abs(totalBudgetRounded - sumRounded) > 1e-9) {
+  const adminForTotal = (data.administrator ?? "").trim();
+  const expectedTotal = adminForTotal === "Intersect"
+    ? Math.round(sumAda * 1.03)
+    : Math.round(sumAda);
+  const totalBudgetRounded = typeof data.totalBudget === "number" && Number.isFinite(data.totalBudget)
+    ? Math.round(data.totalBudget)
+    : data.totalBudget;
+  if (Number.isFinite(totalBudgetRounded) && Math.abs(totalBudgetRounded - expectedTotal) > 1e-9) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["totalBudget"],
-      message: "Total budget must equal the sum of all work package budget line items",
+      message: adminForTotal === "Intersect"
+        ? "Total budget must equal the sum of all work package budget line items plus 3% Intersect administration fee."
+        : "Total budget must equal the sum of all work package budget line items",
     });
   }
 });
