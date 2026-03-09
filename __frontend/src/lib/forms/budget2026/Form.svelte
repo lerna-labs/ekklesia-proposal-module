@@ -151,7 +151,7 @@
       treasuryRepayment: "",
       treasuryRepaymentCircumstances: "",
       priorFunding: "",
-      administrator: "",
+      administrator: "Intersect",
       intersectAdministratorFeeConsent: false,
       otherAdministrator: "",
       contractingParty: {
