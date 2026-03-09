@@ -40,7 +40,7 @@
 </script>
 
 <div
-  class="flex flex-wrap items-center justify-between gap-2 mb-2 sticky top-0 bg-white pt-4 pb-2 z-10 outline-2 outline-white"
+  class="flex flex-wrap items-center justify-between gap-2 mb-2 sticky top-0 bg-inherit pb-2 z-10"
 >
   <h2 class="text-xl font-medium">
     Comments

@@ -470,7 +470,7 @@
   }
 </script>
 
-<section class="mt-4" id="comments">
+<section class="" id="comments">
   <CommentsHeader
     total={proposal?.commentCount ?? commentsState.meta?.total}
     bind:sortPopoverOpen
