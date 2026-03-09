@@ -59,7 +59,7 @@
         onclick={() => onAddComment()}
       >
         <PlusIcon class="size-3.5" />
-        Add comment
+        New <span class="hidden sm:inline">Comment</span>
       </Button>
     {/if}
     <Popover.Root bind:open={filterPopoverOpen}>
