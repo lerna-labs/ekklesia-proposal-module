@@ -44,6 +44,22 @@
     conversionRateNum != null ? grandTotalAda * conversionRateNum : null,
   );
 
+  const administrator = $derived(formData.metaData?.administrator ?? "");
+  const isIntersect = $derived(administrator === "Intersect");
+  // When Intersect: 3% admin fee and total with fee (whole ADA)
+  const adminFeeAda = $derived(Math.round(grandTotalAda * 0.03));
+  const totalWithFeeAda = $derived(Math.round(grandTotalAda * 1.03));
+  const adminFeeUsd = $derived(
+    conversionRateNum != null ? adminFeeAda * conversionRateNum : null,
+  );
+  const totalWithFeeUsd = $derived(
+    conversionRateNum != null ? totalWithFeeAda * conversionRateNum : null,
+  );
+  const totalDisplayAda = $derived(isIntersect ? totalWithFeeAda : Math.round(grandTotalAda));
+  const totalDisplayUsd = $derived(
+    isIntersect ? totalWithFeeUsd : (conversionRateNum != null ? totalDisplayAda * conversionRateNum : null),
+  );
+
   const metaErrors = $derived(
     validationErrors?.properties?.metaData?.properties ?? {},
   );
@@ -98,13 +114,24 @@
         {/each}
       </tbody>
       <tfoot>
+        {#if isIntersect}
+          <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
+            <td class="p-3 font-medium">Intersect Admin Fee</td>
+            <td class="p-3 text-right tabular-nums">
+              {formatAda(adminFeeAda)}
+            </td>
+            <td class="p-3 text-right tabular-nums">
+              {adminFeeUsd != null ? "$" + formatUsd(adminFeeUsd) : "—"}
+            </td>
+          </tr>
+        {/if}
         <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
           <td class="p-3 font-medium">Total budget</td>
           <td class="p-3 text-right tabular-nums">
-            {formatAda(grandTotalAda)}
+            {formatAda(totalDisplayAda)}
           </td>
           <td class="p-3 text-right tabular-nums">
-            {grandTotalUsd != null ? "$" + formatUsd(grandTotalUsd) : "—"}
+            {totalDisplayUsd != null ? "$" + formatUsd(totalDisplayUsd) : "—"}
           </td>
         </tr>
       </tfoot>
