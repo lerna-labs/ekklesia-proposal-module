@@ -64,8 +64,7 @@
   const showComments = $derived(
     proposal &&
       proposal.status !== "draft" &&
-      proposal.status !== "archived" &&
-      (!isWithdrawn || (commentCount ?? 0) > 0),
+      proposal.status !== "archived",
   );
 
   const ProposalPageComponent = $derived(
@@ -131,5 +130,6 @@
     {currentVersionHref}
     {showComments}
     {commentsHref}
+    {isWithdrawn}
   />
 </div>
