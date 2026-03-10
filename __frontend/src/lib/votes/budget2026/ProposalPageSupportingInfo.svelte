@@ -1,6 +1,5 @@
 <script>
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 
   let { proposal } = $props();
@@ -25,15 +24,19 @@
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="text-primary hover:underline inline-flex items-center gap-1 text-sm cursor-pointer"
+            class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
             onclick={(e) => {
               e.preventDefault();
               linkWarningDialog.show(link.url, link.title?.trim() || link.url);
             }}
           >
-            <ChevronRightIcon class="size-4 shrink-0" aria-hidden="true" />
-            {link.title?.trim() || link.url}
-            <ExternalLinkIcon class="size-3.5 shrink-0" aria-hidden="true" />
+            <ExternalLinkIcon
+              class="size-3.5 shrink-0 mt-0.5"
+              aria-hidden="true"
+            />
+            <span class="min-w-0 wrap-break-word">
+              {link.title?.trim() || link.url}
+            </span>
           </a>
         </li>
       {/each}
