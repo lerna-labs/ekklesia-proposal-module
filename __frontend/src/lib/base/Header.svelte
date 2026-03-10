@@ -23,7 +23,8 @@
             size="sm"
             class="text-xs text-black"
           >
-            View Proposals
+            <span class="hidden sm:block">View Proposals</span>
+            <span class="block sm:hidden">Proposals</span>
           </Button>
         </li>
         <li>
@@ -36,7 +37,13 @@
               class="bg-white text-black hover:bg-gray-200 text-xs"
             >
               <User />
-              {shortenString($user?.userId, 10, true)}
+              <div class="hidden sm:block">
+                {shortenString($user?.userId, 10, true)}
+              </div>
+
+              <div class="block sm:hidden">
+                ...{($user?.userId).slice(-3)}
+              </div>
             </Button>
           {/if}
         </li>
