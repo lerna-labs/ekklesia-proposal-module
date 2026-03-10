@@ -172,64 +172,187 @@ function randomConversionRate() {
     return Math.round((0.2 + Math.random() * 1) * 100) / 100;
 }
 
+/** Trim string to target length (for dummy data field limits). No padding. */
+function toLength(str, targetLen) {
+    const s = String(str ?? "").trim();
+    return s.length > targetLen ? s.slice(0, targetLen) : s;
+}
+
+/** Pillar rationale: actual markdown text (bold, lists; no headings – editor does not support headings). */
+const PILLAR_RATIONALE_MARKDOWN = `**Alignment with strategic pillars**
+
+This proposal has been designed to align with the budget priorities and strategic pillars of the Cardano ecosystem. Our objectives map directly to the framework set out for this funding round.
+
+**How this proposal supports the pillars**
+
+- **Technical delivery**: We will deliver measurable outputs that advance the stated priorities, with clear milestones and quarterly reporting.
+- **Community impact**: Our work will support broader adoption and utility through documented outcomes, open materials, and engagement with the community.
+- **Governance and transparency**: We are committed to public reporting, open documentation where appropriate, and responsiveness to DRep and community feedback.
+
+**Reporting and KPIs**
+
+We will report against the relevant KPIs and provide evidence of progress. Our approach ensures that the community can assess impact and that funds are used as intended.`;
+
+const COST_CATEGORIES = [
+    "Resources (Labor)",
+    "Development",
+    "Infrastructure",
+    "Security & Audits",
+    "Legal & Compliance",
+    "Engagement & Ecosystem support",
+    "Research",
+    "Operations",
+    "Governance",
+];
+
+/**
+ * Build multiple work packages with data near field limits. totalBudgetAda is distributed across WPs.
+ * Returns { workPackages, totalFromBreakdown }.
+ */
+function buildWorkPackages(template, totalBudgetAda, proposalIndex = 0) {
+    const numWps = 3;
+    const shares = [0.4, 0.35, 0.25];
+    const workPackages = [];
+    let totalFromBreakdown = 0;
+
+    const longSummary = toLength(
+        template.summary + "\n\nThis work package contributes to the overall proposal objectives. We will coordinate with other work streams and report progress quarterly. Deliverables will be documented and made available to the community.",
+        9800,
+    );
+    const objectiveBase = "Deliver measurable outcomes aligned with the proposal scope; report progress and metrics; ensure transparency and community visibility; maintain documentation and handover materials.";
+    const expectedValueBase = "This work package will deliver value to the Cardano ecosystem through measurable outputs, community engagement, and sustainable practices. ROI will be tracked via KPIs and reported in quarterly reviews.";
+    const metricBase = "Success will be measured by on-time delivery of milestones, quality of outputs, community feedback, and adherence to the agreed budget. We will use a combination of quantitative metrics and qualitative assessments.";
+
+    for (let w = 0; w < numWps; w++) {
+        const wpShare = shares[w];
+        const wpBudget = Math.round(totalBudgetAda * wpShare);
+        const numRows = w === 0 ? 3 : 2;
+        const rowAmount = Math.floor(wpBudget / numRows);
+        const remainder = wpBudget - rowAmount * numRows;
+
+        const budgetBreakdown = [];
+        for (let r = 0; r < numRows; r++) {
+            const amount = r === 0 ? rowAmount + remainder : rowAmount;
+            const category = COST_CATEGORIES[(proposalIndex + w + r) % COST_CATEGORIES.length];
+            budgetBreakdown.push({
+                costCategory: category,
+                name: toLength(`Budget item ${w + 1}.${r + 1} – ${category}`, 195),
+                description: toLength(
+                    `This line item covers ${category.toLowerCase()} for work package ${w + 1}. Scope includes labour, materials, and overhead as described in the proposal. We will track spend and report against this category.`,
+                    590,
+                ),
+                quantity: 1,
+                unitPrice: amount,
+                total: amount,
+            });
+        }
+        const wpTotal = budgetBreakdown.reduce((s, row) => s + (row.total ?? 0), 0);
+        totalFromBreakdown += wpTotal;
+
+        const wpName = toLength(`WP${w + 1} – ${template.title}`, 97);
+        workPackages.push({
+            name: wpName,
+            summary: longSummary,
+            initiativeType: w % 2 === 0 ? "New Initiative" : "Maintenance",
+            proposalType: w % 2 === 0 ? "Technical (software/IT)" : "Non-technical",
+            supportingDocuments: [
+                { title: toLength("Design document and technical specification", 98), url: "https://example.com/design-wp" + (w + 1) + ".pdf" },
+                { title: toLength("Project plan and timeline", 98), url: "https://example.com/plan-wp" + (w + 1) + ".pdf" },
+            ],
+            coreObjectives: [
+                toLength(objectiveBase + " (WP" + (w + 1) + ")", 998),
+                toLength("Second objective: ensure quality and sustainability of deliverables.", 998),
+            ],
+            expectedValue: toLength(expectedValueBase, 998),
+            metric: toLength(metricBase, 598),
+            milestones: [
+                {
+                    name: toLength(`Milestone ${w + 1}.1 – Kickoff and planning`, 98),
+                    deliverables: toLength(
+                        `Deliverables for this milestone include a detailed plan, resource allocation, and approval from stakeholders. We will document scope, timeline, and success criteria. This milestone sets the foundation for the work package.`,
+                        3990,
+                    ),
+                    acceptanceCriteria: toLength(
+                        `Acceptance criteria: plan reviewed and approved; resources assigned; timeline agreed; risks documented and mitigated where possible.`,
+                        3990,
+                    ),
+                    duration: "2 weeks",
+                },
+                {
+                    name: toLength(`Milestone ${w + 1}.2 – Delivery and review`, 98),
+                    deliverables: toLength(
+                        `Final deliverables as per the scope: outputs completed, tested, and documented. Handover materials and runbooks prepared for ongoing maintenance.`,
+                        3990,
+                    ),
+                    acceptanceCriteria: toLength(
+                        `Acceptance criteria: all deliverables completed; quality checks passed; documentation and handover completed.`,
+                        3990,
+                    ),
+                    duration: "4 weeks",
+                },
+            ],
+            budgetBreakdown,
+            noMilestonesBreakdown: false,
+            milestoneAlternative: "",
+        });
+    }
+
+    return { workPackages, totalFromBreakdown };
+}
+
 /** Build metaData for a live Budget 2026 proposal (matches validation/budget2026/validationScript.js). */
 function buildBudget2026MetaData(template, categoryIds, proposalIndex = 0) {
     const ids = Array.isArray(categoryIds) ? categoryIds : (categoryIds ? [categoryIds] : []);
     const pillars = ids.map((id) => String(id));
-    const wpBudget = Math.floor(template.totalBudget * 0.6);
+    const { workPackages, totalFromBreakdown } = buildWorkPackages(template, template.totalBudget, proposalIndex);
     const adminMeta = buildBudget2026AdminMetaData(template, proposalIndex);
+
+    const pillarRationale = PILLAR_RATIONALE_MARKDOWN;
+    const kpiAlignment = toLength(
+        "KPIs aligned with roadmap deliverables: we will track delivery milestones, community engagement, and budget utilisation. Quarterly reports will include metrics on scope, timeline, and outcomes. " +
+        "This ensures transparency and allows the community to assess impact.",
+        9900,
+    );
+    const trackRecord = toLength(
+        "Previous community projects delivered on time and within budget. Our team has experience with governance tooling, documentation, and open-source collaboration. " +
+        "We have contributed to Cardano ecosystem projects and understand the reporting and compliance requirements.",
+        9900,
+    );
+    const priorFunding = toLength(
+        "None previously from Cardano Treasury or Catalyst. Team members have received grants from other ecosystems; we will disclose any relevant overlaps and ensure no double-funding. " +
+        "This proposal is our first submission to this specific funding round.",
+        9900,
+    );
+
     return {
         treasuryDonationTxHash: "abc123def456789",
         treasuryDonationConfirmed: true,
-        trackRecord: "Previous community projects delivered on time.",
+        trackRecord,
         estimatedDuration: 6,
         strategyFramework: {
             pillars,
-            pillarRationale: "Alignment with test budget priorities.",
-            kpiAlignment: "KPIs aligned with roadmap deliverables.",
+            pillarRationale,
+            kpiAlignment,
         },
         proposalDetails: {
             conversionRate: randomConversionRate(),
-            workPackages: [
-                {
-                    name: `WP1 – ${template.title.slice(0, 30)}`,
-                    summary: template.summary,
-                    initiativeType: "New Initiative",
-                    proposalType: "Technical (software/IT)",
-                    supportingDocuments: [{ title: "Design doc", url: "https://example.com/design.pdf" }],
-                    coreObjectives: ["Deliver scope", "Report progress"],
-                    expectedValue: "Value for community.",
-                    metric: "On-time delivery.",
-                    milestones: [
-                        {
-                            name: "M1 – Kickoff",
-                            deliverables: "Plan and approval",
-                            acceptanceCriteria: "Approved",
-                            duration: "2 weeks",
-                        },
-                    ],
-                    budgetBreakdown: [
-                        {
-                            costCategory: "Development",
-                            name: "Core development",
-                            description: "Core work",
-                            quantity: 1,
-                            unitPrice: wpBudget,
-                            total: wpBudget,
-                        },
-                    ],
-                },
-            ],
+            workPackages,
         },
         proposerDetails: {
             name: template.contactName,
             email: template.contactEmail || "proposal@example.com",
-            links: [{ title: "Project", url: "https://example.com" }],
+            links: [
+                { title: toLength("Project repository and documentation", 98), url: "https://example.com" },
+                { title: toLength("Community forum and updates", 98), url: "https://example.com/forum" },
+            ],
         },
-        supportingInfoLinks: [{ title: "Project plan", url: "https://example.com/plan.pdf" }],
+        supportingInfoLinks: [
+            { title: toLength("Project plan and budget breakdown", 98), url: "https://example.com/plan.pdf" },
+            { title: toLength("Technical specification and architecture", 98), url: "https://example.com/spec.pdf" },
+        ],
         treasuryRepayment: "No",
         treasuryRepaymentCircumstances: "",
-        priorFunding: "None",
+        priorFunding,
         ...adminMeta,
         legalDeclarations: LEGAL_DECLARATIONS,
     };
@@ -380,29 +503,21 @@ async function createDummyData() {
         const COMMENT_TEST_PROPOSAL_TITLE = "Comment test proposal";
         const SUMMARY_MAX_LENGTH = 2000; // budget2026 validation: Executive Summary max 2000
 
-        /** Build a summary at max allowed length (2000 chars) with paragraphs and markdown for line-clamp testing. */
+        /** Build a summary with allowed markdown only (bold, lists; no headings). Trim to max 2000 chars. */
         function buildFullLengthSummary() {
             const sections = [
-                "## Executive summary\n\nThis proposal requests funding for a **governance dashboard** and analytics platform. The dashboard will aggregate voting activity, proposal lifecycle data, and treasury-related metrics so that DReps, proposers, and the community can make informed decisions.\n\n",
-                "### Problem statement\n\nToday, stakeholders lack a single place to view participation rates, outcome trends, and treasury flows. Data is scattered across tools and reports. This makes it harder to assess impact and to hold the process accountable.\n\n",
-                "### Solution\n\nWe will deliver a public dashboard with:\n\n- **Real-time metrics**: votes cast, proposals by status, budget allocated vs spent.\n- **Charts and filters**: by category, proposer, time period.\n- **Exports** for auditors and researchers (CSV/API).\n- Transparent, auditable data sources and methodology.\n\n",
-                "### Implementation\n\nPhase 1 (months 1–3): data pipeline and core metrics. Phase 2 (months 4–6): visualisations and filters. Phase 3 (months 7–9): exports and documentation. We will use open-source stack and publish the code.\n\n",
-                "### Impact\n\nDReps can evaluate participation and outcomes at a glance. Proposers can see how their proposals compare. The community can track treasury usage over time. Transparency and accountability improve across the ecosystem.\n\n",
-                "### Team and budget\n\nOur team has delivered similar dashboards for other governance contexts. The budget covers design, development, hosting, and maintenance for 12 months. We will report quarterly and hand over documentation for long-term sustainability. _This summary uses the full allowed length (2000 characters) to test rendering and line clamping._",
+                "**Executive summary**\n\nThis proposal requests funding for a **governance dashboard** and analytics platform. The dashboard will aggregate voting activity, proposal lifecycle data, and treasury-related metrics so that DReps, proposers, and the community can make informed decisions.\n\n",
+                "**Problem statement**\n\nToday, stakeholders lack a single place to view participation rates, outcome trends, and treasury flows. Data is scattered across tools and reports. This makes it harder to assess impact and to hold the process accountable.\n\n",
+                "**Solution**\n\nWe will deliver a public dashboard with:\n\n- **Real-time metrics**: votes cast, proposals by status, budget allocated vs spent.\n- **Charts and filters**: by category, proposer, time period.\n- **Exports** for auditors and researchers (CSV/API).\n- Transparent, auditable data sources and methodology.\n\n",
+                "**Implementation**\n\nPhase 1 (months 1–3): data pipeline and core metrics. Phase 2 (months 4–6): visualisations and filters. Phase 3 (months 7–9): exports and documentation. We will use an open-source stack and publish the code.\n\n",
+                "**Impact**\n\nDReps can evaluate participation and outcomes at a glance. Proposers can see how their proposals compare. The community can track treasury usage over time. Transparency and accountability improve across the ecosystem.\n\n",
+                "**Team and budget**\n\nOur team has delivered similar dashboards for other governance contexts. The budget covers design, development, hosting, and maintenance for 12 months. We will report quarterly and hand over documentation for long-term sustainability.",
             ];
             let s = sections.join("");
-            if (s.length > SUMMARY_MAX_LENGTH) {
-                s = s.slice(0, SUMMARY_MAX_LENGTH);
-            } else if (s.length < SUMMARY_MAX_LENGTH) {
-                const filler = " Additional context and supporting detail for testing. ";
-                while (s.length < SUMMARY_MAX_LENGTH) {
-                    s += filler;
-                }
-                s = s.slice(0, SUMMARY_MAX_LENGTH);
-            }
-            return s;
+            return s.length > SUMMARY_MAX_LENGTH ? s.slice(0, SUMMARY_MAX_LENGTH) : s;
         }
 
+        // totalBudget in ADA: range 50,000 to 98,000,000 across proposals
         const LIVE_PROPOSAL_TEMPLATES = [
             {
                 title: COMMENT_TEST_PROPOSAL_TITLE,
@@ -413,78 +528,78 @@ async function createDummyData() {
             },
             {
                 title: "Community Website and Documentation Hub",
-                summary: "Build a community website and documentation hub.",
+                summary: "**Executive summary**\n\nWe propose building a **community website** and documentation hub with full localisation and accessibility.\n\n**Scope**\n\n- Maintain and update content; run feedback loops with the community.\n- Integrate with governance tools and provide API docs for developers.\n- Deliverables: live site, API documentation, and contributor guides.\n\n**Impact**\n\nA single, well-maintained hub will make it easier for newcomers and contributors to find accurate, up-to-date information.",
                 totalBudget: 150000,
                 contactName: "Test Proposer",
                 contactEmail: "proposal-1@example.com",
             },
             {
                 title: "Open-Source Tooling and Developer Experience",
-                summary: "## Aim\n\nImprove **developer experience** and maintain open-source tooling.\n\n### Plan\n\n1. Extend existing CLI and SDKs\n2. Add integration tests and CI templates\n3. Publish guides and _best practices_\n\nTarget: reduce time-to-first-contribution and improve reliability of community-built tooling.",
-                totalBudget: 85000,
+                summary: "**Aim**\n\nImprove **developer experience** and maintain open-source tooling.\n\n**Plan**\n\n1. Extend existing CLI and SDKs\n2. Add integration tests and CI templates\n3. Publish guides and _best practices_\n\nTarget: reduce time-to-first-contribution and improve reliability of community-built tooling.",
+                totalBudget: 850000,
                 contactName: "Stake Test Proposer",
                 contactEmail: "proposal-2@example.com",
             },
             {
                 title: "Governance Dashboard and Analytics",
                 summary: buildFullLengthSummary(),
-                totalBudget: 120000,
+                totalBudget: 1200000,
                 contactName: "Gov Lead",
                 contactEmail: "proposal-3@example.com",
             },
             {
                 title: "Security Audits and Best Practices",
-                summary: "Fund **security audits** and publish best-practice guides. We will commission independent audits for critical components and document findings. Outputs: audit reports (redacted where needed), **hardening checklists** for node and wallet operators, and response playbooks. This reduces risk and raises the bar for ecosystem security.",
-                totalBudget: 95000,
+                summary: "**Executive summary**\n\nThis proposal funds **security audits** and the publication of best-practice guides for the ecosystem.\n\n**Approach**\n\n- Commission independent audits for critical components and document findings.\n- Outputs: audit reports (redacted where needed), **hardening checklists** for node and wallet operators, and incident response playbooks.\n\n**Impact**\n\nReducing risk and raising the bar for ecosystem security benefits all participants and strengthens trust in the infrastructure.",
+                totalBudget: 5500000,
                 contactName: "Security Lead",
                 contactEmail: "proposal-4@example.com",
             },
             {
                 title: "Education and Onboarding Program",
                 summary: "Create an education and onboarding program for new contributors.\n\n**Goals:** Structured learning paths (technical and non-technical), mentorship and office hours, _certification_ or recognition for completed tracks. We will partner with existing initiatives and fill gaps so that newcomers can ramp up quickly and sustainably.",
-                totalBudget: 78000,
+                totalBudget: 780000,
                 contactName: "Education Lead",
                 contactEmail: "proposal-5@example.com",
             },
             {
                 title: "Research and Standards Working Group",
-                summary: "Run a **research and standards** working group with quarterly reports. We will coordinate with academia and industry, publish specs and reference implementations, and liaise with other standardisation bodies. The working group will maintain a roadmap, run open calls, and produce quarterly reports so that research outputs are visible and standards evolve in a coordinated way.",
-                totalBudget: 110000,
+                summary: "**Executive summary**\n\nWe propose running a **research and standards** working group with quarterly public reports.\n\n**Activities**\n\n- Coordinate with academia and industry; publish specs and reference implementations.\n- Liaise with other standardisation bodies.\n- Maintain a roadmap, run open calls, and produce quarterly reports.\n\n**Impact**\n\nResearch outputs become visible and standards evolve in a coordinated way, supporting long-term interoperability and innovation.",
+                totalBudget: 11000000,
                 contactName: "Research Lead",
                 contactEmail: "proposal-6@example.com",
             },
             {
                 title: "Infrastructure and DevOps Support",
-                summary: "Provide **infrastructure** and DevOps support for core projects: CI/CD, monitoring, incident response, cost-effective and reproducible setups, and documentation for runbooks and _disaster recovery_. This keeps critical services stable and frees maintainers to focus on product work.",
-                totalBudget: 135000,
+                summary: "**Executive summary**\n\nThis proposal provides **infrastructure** and DevOps support for core projects.\n\n**Scope**\n\n- **CI/CD**, monitoring, and incident response.\n- Cost-effective and reproducible setups; documentation for runbooks and _disaster recovery_.\n\n**Impact**\n\nCritical services remain stable and maintainers can focus on product work instead of undifferentiated infrastructure tasks.",
+                totalBudget: 25000000,
                 contactName: "DevOps Lead",
                 contactEmail: "proposal-7@example.com",
             },
             {
                 title: "Community Events and Meetups",
-                summary: "Organise community events, **meetups** and hackathons over 12 months. Quarterly online summits, regional in-person meetups where possible, and one flagship hackathon with prizes and mentorship. We will work with local organisers and track attendance and feedback to iterate and grow engagement.",
-                totalBudget: 65000,
+                summary: "**Executive summary**\n\nWe will organise community events, **meetups**, and hackathons over 12 months.\n\n**Plan**\n\n- Quarterly online summits and regional in-person meetups where possible.\n- One flagship hackathon with prizes and mentorship.\n- Work with local organisers; track attendance and feedback to iterate and grow engagement.",
+                totalBudget: 650000,
                 contactName: "Events Lead",
                 contactEmail: "proposal-8@example.com",
             },
             {
                 title: "Multilingual Documentation and Localisation",
-                summary: "Expand documentation and **localise** key resources. Prioritise high-traffic pages and tutorials; use community translators and review workflows; maintain glossaries and style guides. Target languages will be chosen with community input so that non-English speakers can contribute and learn effectively.",
-                totalBudget: 88000,
+                summary: "**Executive summary**\n\nWe propose expanding documentation and **localising** key resources.\n\n**Approach**\n\n- Prioritise high-traffic pages and tutorials.\n- Use community translators and review workflows; maintain glossaries and style guides.\n- Target languages chosen with community input.\n\n**Impact**\n\nNon-English speakers can contribute and learn effectively, broadening participation and adoption.",
+                totalBudget: 4200000,
                 contactName: "Localisation Lead",
                 contactEmail: "proposal-9@example.com",
             },
             {
                 title: "Developer Grants and Bounty Program",
-                summary: "Run a **developer grants** and bounty program. Open rounds with clear criteria and deadlines; bounties for specific bugs, features, or docs; transparent selection and payment. The program will publish guidelines, accept applications, and disburse funds in ADA with clear reporting so that builders are rewarded and the community can see where funds go.",
-                totalBudget: 200000,
+                summary: "**Executive summary**\n\nThis proposal runs a **developer grants** and bounty program.\n\n**Structure**\n\n- Open rounds with clear criteria and deadlines.\n- Bounties for specific bugs, features, or docs; transparent selection and payment.\n- Publish guidelines, accept applications, disburse funds in ADA with clear reporting.\n\n**Impact**\n\nBuilders are rewarded for concrete contributions and the community can see where funds go.",
+                totalBudget: 68000000,
                 contactName: "Grants Lead",
                 contactEmail: "proposal-10@example.com",
             },
             {
                 title: "Node Operations and Monitoring Tools",
-                summary: "Deliver **node operations** tooling and monitoring dashboards: deployment and config automation, health checks, alerts, and _metrics_, plus runbooks for common operations. Operators get a single place to see status and act, reducing downtime and operational burden.",
-                totalBudget: 98000,
+                summary: "**Executive summary**\n\nWe will deliver **node operations** tooling and monitoring dashboards.\n\n**Scope**\n\n- Deployment and config automation; health checks, alerts, and _metrics_.\n- Runbooks for common operations.\n\n**Impact**\n\nOperators get a single place to see status and act, reducing downtime and operational burden.",
+                totalBudget: 98000000,
                 contactName: "Ops Lead",
                 contactEmail: "proposal-11@example.com",
             },
@@ -503,11 +618,14 @@ async function createDummyData() {
             const categoryTitles = categoryIds.map((id) => pillars.find((p) => String(p._id) === String(id))?.title ?? id).join(", ");
             console.log(`Creating live proposal ${i + 1}/12: ${t.title} (proposer: ${proposer.name}, pillars: ${categoryTitles})...`);
             const metaData = buildBudget2026MetaData(t, categoryIds, i);
-            const totalBudget = metaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+            const sumWpAda = metaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
                 const rows = wp.budgetBreakdown || [];
                 return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
             }, 0) ?? 0;
-            metaData.totalBudget = totalBudget;
+            metaData.totalBudget =
+                metaData.administrator === "Intersect"
+                    ? Math.round(sumWpAda * 1.03)
+                    : Math.round(sumWpAda);
             // Stagger submittedAt so each proposal has a distinct timestamp (oldest = index 0, newest = last)
             const submittedAt = new Date(now.getTime() - (LIVE_PROPOSAL_TEMPLATES.length - 1 - i) * 24 * 60 * 60 * 1000);
             const p = await Proposal.create({
@@ -528,17 +646,20 @@ async function createDummyData() {
         const withdrawnTemplate = {
             title: "Withdrawn proposal (no longer active)",
             summary: "This proposal was **withdrawn** by the proposer.\n\n_Reason:_ Decided to resubmit in a later round with updated scope and budget.\n\nWe will incorporate feedback from the community and DReps, revise the work packages, and resubmit when the next funding round opens. Thank you to everyone who commented.",
-            totalBudget: 72000,
+            totalBudget: 720000,
             contactName: "Withdrawn Proposer",
             contactEmail: "withdrawn@example.com",
         };
         const withdrawnCategoryIds = [pillars[0]._id];
         const withdrawnMetaData = buildBudget2026MetaData(withdrawnTemplate, withdrawnCategoryIds, 12);
-        const withdrawnTotalBudget = withdrawnMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+        const withdrawnSumWpAda = withdrawnMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
             const rows = wp.budgetBreakdown || [];
             return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
         }, 0) ?? 0;
-        withdrawnMetaData.totalBudget = withdrawnTotalBudget;
+        withdrawnMetaData.totalBudget =
+            withdrawnMetaData.administrator === "Intersect"
+                ? Math.round(withdrawnSumWpAda * 1.03)
+                : Math.round(withdrawnSumWpAda);
         console.log("Creating withdrawn proposal...");
         const withdrawnProposal = await Proposal.create({
             proposerId: withdrawnProposer.id,
@@ -564,16 +685,19 @@ async function createDummyData() {
         const multiVersionTemplate = {
             title: multiVersionTitle,
             summary: "Current version (v3). Use this proposal to test the revision history section and the Version badge on the card.",
-            totalBudget: 66000,
+            totalBudget: 660000,
             contactName: "Multi-Version Proposer",
             contactEmail: "multiversion@example.com",
         };
         const multiVersionMetaData = buildBudget2026MetaData(multiVersionTemplate, multiVersionCategoryIds, 0);
-        const multiVersionTotalBudget = multiVersionMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+        const multiVersionSumWpAda = multiVersionMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
             const rows = wp.budgetBreakdown || [];
             return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
         }, 0) ?? 0;
-        multiVersionMetaData.totalBudget = multiVersionTotalBudget;
+        multiVersionMetaData.totalBudget =
+            multiVersionMetaData.administrator === "Intersect"
+                ? Math.round(multiVersionSumWpAda * 1.03)
+                : Math.round(multiVersionSumWpAda);
 
         console.log("Creating proposal with multiple versions (revision history)...");
         // Current live proposal (v3) — create first so we can set currentProposalId on archived docs
@@ -674,7 +798,7 @@ async function createDummyData() {
         const readyToSubmitTemplate = {
             title: "Ready to submit proposal",
             summary: "This draft has all sections completed and is ready to submit once the treasury donation transaction hash is entered.",
-            totalBudget: 75000,
+            totalBudget: 750000,
             contactName: "Test Proposer 43wf",
             contactEmail: "proposal-ready@example.com",
         };
@@ -682,11 +806,14 @@ async function createDummyData() {
         const readyToSubmitMetaData = buildBudget2026MetaData(readyToSubmitTemplate, readyToSubmitCategoryIds, 0);
         readyToSubmitMetaData.treasuryDonationTxHash = "";
         readyToSubmitMetaData.treasuryDonationConfirmed = false;
-        const readyToSubmitTotalBudget = readyToSubmitMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
+        const readyToSubmitSumWpAda = readyToSubmitMetaData.proposalDetails?.workPackages?.reduce((sum, wp) => {
             const rows = wp.budgetBreakdown || [];
             return sum + rows.reduce((s, r) => s + (Number(r.total) || 0), 0);
         }, 0) ?? 0;
-        readyToSubmitMetaData.totalBudget = readyToSubmitTotalBudget;
+        readyToSubmitMetaData.totalBudget =
+            readyToSubmitMetaData.administrator === "Intersect"
+                ? Math.round(readyToSubmitSumWpAda * 1.03)
+                : Math.round(readyToSubmitSumWpAda);
         console.log("Creating draft 'Ready to submit proposal'...");
         const readyToSubmitProposal = await Proposal.create({
             proposerId: readyToSubmitStakeId,

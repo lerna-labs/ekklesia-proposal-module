@@ -76,13 +76,15 @@
     {#if EditorComponent}
       <EditorComponent bind:value />
     {:else}
-      <div class="min-h-[120px] flex items-center justify-center text-muted-foreground text-sm p-4">
+      <div
+        class="min-h-[120px] flex items-center justify-center text-muted-foreground text-sm p-4"
+      >
         Loading editor…
       </div>
     {/if}
     {#if EditorComponent && placeholder && (value == null || String(value).trim() === "")}
       <span
-        class="absolute inset-0 flex items-start pt-11 pl-3 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
+        class="absolute inset-0 flex items-start pt-13 pl-2 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
         aria-hidden="true"
       >
         {placeholder}

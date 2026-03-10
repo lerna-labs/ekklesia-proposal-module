@@ -1,6 +1,6 @@
 <script>
   import * as Card from "$lib/components/ui/card";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
 
@@ -33,7 +33,7 @@
     </Card.Description>
   </Card.Header>
   <Card.Content class="p-0 px-0 pt-0">
-    <Button.Root
+    <Button
       variant="destructive"
       size="sm"
       class="text-xs bg-destructive text-white hover:bg-destructive/90 px-3"
@@ -43,7 +43,7 @@
     >
       <Trash2Icon class="size-4 mr-1" />
       Withdraw Proposal
-    </Button.Root>
+    </Button>
   </Card.Content>
 </Card.Root>
 

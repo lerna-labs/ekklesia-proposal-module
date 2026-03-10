@@ -4,6 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* No scroll-behavior: smooth on html so list ↔ proposal navigation does not animate. */
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);

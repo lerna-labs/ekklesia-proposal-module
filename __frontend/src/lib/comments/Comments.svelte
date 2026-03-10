@@ -18,7 +18,7 @@
   import CommentThread from "./CommentThread.svelte";
   import PlusIcon from "@lucide/svelte/icons/plus";
 
-  let { proposalId, proposal, vote } = $props();
+  let { proposalId, proposal, vote, readOnly = false } = $props();
 
   let currentUserId = $derived($user?.userId ?? null);
 
@@ -470,7 +470,7 @@
   }
 </script>
 
-<section class="mt-4" id="comments">
+<section class="" id="comments">
   <CommentsHeader
     total={proposal?.commentCount ?? commentsState.meta?.total}
     bind:sortPopoverOpen
@@ -487,7 +487,7 @@
     onResetSort={resetSort}
     onApplyFilter={applyFilter}
     onResetFilter={resetFilter}
-    onAddComment={showAddCommentButton ? openAddDialog : null}
+    onAddComment={!readOnly && showAddCommentButton ? openAddDialog : null}
   />
 
   {#if commentsState.loading}
@@ -503,13 +503,13 @@
           {repliesByParent}
           {currentUserId}
           {canComment}
-          showReplyButton={showAddCommentButton}
+          showReplyButton={!readOnly && showAddCommentButton}
           showLikeButton={showAddCommentButton}
           showReplyCountButton={showAddCommentButton}
           {canLike}
-          {isVoteAdmin}
+          isVoteAdmin={!readOnly && isVoteAdmin}
           {authorLabel}
-          {canEditComment}
+          canEditComment={readOnly ? () => false : canEditComment}
           onToggleLike={toggleLike}
           onToggleReplies={toggleReplies}
           onReply={openAddDialog}
@@ -530,17 +530,6 @@
         }}
       >
         Load more
-      </Button>
-    {/if}
-
-    {#if showAddCommentButton}
-      <Button
-        variant="outline"
-        class="add-item-btn cursor-pointer gap-1.5 text-white"
-        onclick={() => openAddDialog()}
-      >
-        <PlusIcon class="size-4" />
-        Add Comment
       </Button>
     {/if}
   {/if}

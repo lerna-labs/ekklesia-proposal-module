@@ -1,9 +1,7 @@
 <script>
   import MarkdownIt from "markdown-it";
-  import { Copy } from "lucide-svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import * as Button from "$lib/components/ui/button";
-  import * as InputGroup from "$lib/components/ui/input-group";
+  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+
   const md = new MarkdownIt({ html: false, linkify: true });
 
   function renderMarkdown(text) {
@@ -12,41 +10,29 @@
   }
 
   let { content = "", class: className = "" } = $props();
+  let linkWarningDialog;
   const html = $derived(renderMarkdown(content ?? ""));
-
-  let linkDialogOpen = $state(false);
-  let pendingLink = $state(null);
 
   function handleContainerClick(event) {
     const anchor = event.target.closest("a");
     if (!anchor || !anchor.href) return;
     event.preventDefault();
-    pendingLink = {
-      href: anchor.href,
-      title: anchor.title || anchor.textContent?.trim() || anchor.href,
-    };
-    linkDialogOpen = true;
+    linkWarningDialog.show(
+      anchor.href,
+      anchor.title || anchor.textContent?.trim() || anchor.href,
+    );
   }
 
-  function confirmOpenLink() {
-    if (pendingLink?.href) {
-      window.open(pendingLink.href, "_blank");
-    }
-    linkDialogOpen = false;
-    pendingLink = null;
-  }
-
-  function cancelOpenLink() {
-    linkDialogOpen = false;
-    pendingLink = null;
-  }
-
-  async function copyLink() {
-    if (!pendingLink?.href) return;
-    try {
-      await navigator.clipboard.writeText(pendingLink.href);
-    } catch {
-      // clipboard API unavailable (e.g. non-HTTPS)
+  function handleContainerKeydown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      const anchor = e.target.closest("a");
+      if (anchor?.href) {
+        e.preventDefault();
+        linkWarningDialog.show(
+          anchor.href,
+          anchor.title || anchor.textContent?.trim() || anchor.href,
+        );
+      }
     }
   }
 </script>
@@ -58,19 +44,7 @@
     data-slot="markdown"
     role="article"
     onclick={handleContainerClick}
-    onkeydown={(e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        const anchor = e.target.closest("a");
-        if (anchor?.href) {
-          e.preventDefault();
-          pendingLink = {
-            href: anchor.href,
-            title: anchor.title || anchor.textContent?.trim() || anchor.href,
-          };
-          linkDialogOpen = true;
-        }
-      }
-    }}
+    onkeydown={handleContainerKeydown}
   >
     {@html html}
   </div>
@@ -78,43 +52,7 @@
   <span class="text-muted-foreground">—</span>
 {/if}
 
-<Dialog.Root bind:open={linkDialogOpen}>
-  <Dialog.Content class="sm:max-w-md">
-    <Dialog.Header>
-      <Dialog.Title>Be Careful!</Dialog.Title>
-      <Dialog.Description>
-        You are about to open an external link to:
-        {#if pendingLink}
-          <InputGroup.Root class="my-2">
-            <InputGroup.Input
-              value={pendingLink.href}
-              readonly
-              class="font-mono text-sm"
-            />
-            <InputGroup.Addon align="inline-end">
-              <InputGroup.Button
-                type="button"
-                size="icon-sm"
-                aria-label="Copy link"
-                onclick={copyLink}
-              >
-                <Copy class="size-4" />
-              </InputGroup.Button>
-            </InputGroup.Addon>
-          </InputGroup.Root>
-        {/if}
-        Exercise caution and verify the website's authenticity before sharing personal
-        information. To proceed, click 'Continue' otherwise click 'Cancel'.
-      </Dialog.Description>
-    </Dialog.Header>
-    <Dialog.Footer class="gap-2">
-      <Button.Root variant="outline" onclick={cancelOpenLink}>
-        Cancel
-      </Button.Root>
-      <Button.Root onclick={confirmOpenLink}>Continue</Button.Root>
-    </Dialog.Footer>
-  </Dialog.Content>
-</Dialog.Root>
+<LinkWarningDialog bind:this={linkWarningDialog} />
 
 <style>
   /* Propagate wrapper font-size/line-height to rendered markdown content (e.g. when class="text-[0.65rem]" is passed). */
@@ -139,12 +77,14 @@
     list-style-type: disc;
     padding-left: 1.5rem;
     margin: 0.5rem 0;
+    margin-bottom: 1rem;
   }
 
   :global(div.markdown ol) {
     list-style-type: decimal;
     padding-left: 1.5rem;
     margin: 0.5rem 0;
+    margin-bottom: 1rem;
   }
 
   :global(div.markdown blockquote) {

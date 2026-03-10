@@ -2,7 +2,7 @@
   import { toast } from "svelte-sonner";
   import { api } from "$stores/sessionManager.js";
   import * as Dialog from "$lib/components/ui/dialog";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
 
   let {
     open = $bindable(false),
@@ -46,20 +46,20 @@
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer class="gap-2">
-      <Button.Root
+      <Button
         variant="outline"
         disabled={submitting}
         onclick={() => (open = false)}
       >
         Cancel
-      </Button.Root>
-      <Button.Root
+      </Button>
+      <Button
         variant="destructive"
         disabled={submitting}
         onclick={confirmDelete}
       >
         {submitting ? "Deleting…" : "Delete proposal"}
-      </Button.Root>
+      </Button>
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>

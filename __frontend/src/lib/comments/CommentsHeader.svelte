@@ -40,12 +40,13 @@
 </script>
 
 <div
-  class="flex flex-wrap items-center justify-between gap-2 mb-2 sticky top-0 bg-white pt-4 pb-2 z-10 outline-2 outline-white"
+  class="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 pb-3 pt-3 mb-2 bg-slate-100"
 >
   <h2 class="text-xl font-medium">
-    Comments
-    {#if total != null}
-      ({total})
+    {#if total != null && total > 0}
+      Comments ({total})
+    {:else}
+      No Comments yet
     {/if}
   </h2>
   <div class="flex items-center gap-1 ml-auto">
@@ -55,10 +56,10 @@
         variant="outline"
         size="sm"
         class="add-item-btn cursor-pointer text-xs h-8 gap-1 text-white"
-        onclick={onAddComment}
+        onclick={() => onAddComment()}
       >
         <PlusIcon class="size-3.5" />
-        Add comment
+        New <span class="hidden sm:inline">Comment</span>
       </Button>
     {/if}
     <Popover.Root bind:open={filterPopoverOpen}>

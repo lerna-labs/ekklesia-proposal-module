@@ -7,7 +7,7 @@
   import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
-  import * as Button from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
@@ -84,7 +84,7 @@
           class="flex flex-row flex-wrap items-center justify-between gap-3"
         >
           <Card.Title>Account</Card.Title>
-          <Button.Root
+          <Button
             variant="outline"
             class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
             aria-label="Log out"
@@ -93,7 +93,7 @@
           >
             <LogOutIcon class="size-4" />
             Log out
-          </Button.Root>
+          </Button>
         </Card.Header>
         <Card.Content class="flex flex-col gap-2">
           {#if user.name}
@@ -121,7 +121,7 @@
           </span>
         </Card.Title>
         {#if votes.length === 1}
-          <Button.Root
+          <Button
             variant="outline"
             class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
             href="/dashboard/{votes[0].slug}/new"
@@ -130,10 +130,10 @@
           >
             <PlusIcon class="size-4" />
             New proposal
-          </Button.Root>
+          </Button>
         {:else if votes.length > 1}
           <div class="flex items-center gap-1">
-            <Button.Root
+            <Button
               variant="outline"
               class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
               href="/dashboard/{votes[0].slug}/new"
@@ -142,7 +142,7 @@
             >
               <PlusIcon class="size-4" />
               New proposal
-            </Button.Root>
+            </Button>
             <!-- TODO: dropdown for other votes -->
           </div>
         {/if}
@@ -247,7 +247,7 @@
                     <td class="py-3 pr-0 pl-4 text-right align-middle">
                       <div class="flex items-center justify-end gap-1">
                         {#if isWithdrawn}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             disabled
@@ -255,9 +255,9 @@
                             title="Cannot edit withdrawn proposal"
                           >
                             <PencilIcon class="size-4" />
-                          </Button.Root>
+                          </Button>
                         {:else if editHref}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             href={editHref}
@@ -265,9 +265,9 @@
                             title="Edit proposal"
                           >
                             <PencilIcon class="size-4" />
-                          </Button.Root>
+                          </Button>
                         {:else}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             disabled
@@ -275,10 +275,10 @@
                             title="Edit (vote slug unknown)"
                           >
                             <PencilIcon class="size-4" />
-                          </Button.Root>
+                          </Button>
                         {/if}
                         {#if viewUrl}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             href={viewUrl}
@@ -288,9 +288,9 @@
                             title="View proposal"
                           >
                             <EyeIcon class="size-4" />
-                          </Button.Root>
+                          </Button>
                         {:else}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             disabled
@@ -298,10 +298,10 @@
                             title="View proposal (no vote slug)"
                           >
                             <EyeIcon class="size-4" />
-                          </Button.Root>
+                          </Button>
                         {/if}
                         {#if proposal.status === "draft"}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             aria-label="Delete draft"
@@ -309,9 +309,9 @@
                             onclick={() => openDeleteDialog(proposal)}
                           >
                             <Trash2Icon class="size-4 text-black" />
-                          </Button.Root>
+                          </Button>
                         {:else if proposal.status === "live"}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             aria-label="Withdraw proposal"
@@ -319,9 +319,9 @@
                             onclick={() => openWithdrawDialog(proposal)}
                           >
                             <Trash2Icon class="size-4 text-black" />
-                          </Button.Root>
+                          </Button>
                         {:else if isWithdrawn}
-                          <Button.Root
+                          <Button
                             variant="outline"
                             size="icon"
                             disabled
@@ -329,7 +329,7 @@
                             title="Cannot delete withdrawn proposal"
                           >
                             <Trash2Icon class="size-4 text-black" />
-                          </Button.Root>
+                          </Button>
                         {/if}
                       </div>
                     </td>
