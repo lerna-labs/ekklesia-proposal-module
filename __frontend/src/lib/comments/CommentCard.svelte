@@ -22,6 +22,7 @@
     showLikeButton = false,
     showReplyCountButton = false,
     canLike = false,
+    likeDisabled = false,
     isVoteAdmin = false,
     repliesData = [],
     authorLabel = (c) => {
@@ -126,7 +127,7 @@
           variant="outline"
           size="sm"
           class="text-xs"
-          disabled={isOwn}
+          disabled={isOwn || likeDisabled}
           onclick={() => onToggleLike?.(comment)}
         >
           <Heart

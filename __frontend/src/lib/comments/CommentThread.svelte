@@ -14,6 +14,7 @@
     showReplyCountButton = false,
     canLike = false,
     isVoteAdmin = false,
+    readOnly = false,
     authorLabel,
     canEditComment,
     onToggleLike,
@@ -29,14 +30,15 @@
   {isReply}
   {currentUserId}
   {canComment}
-  {showReplyButton}
+  showReplyButton={!readOnly && showReplyButton}
   {showLikeButton}
   {showReplyCountButton}
   {canLike}
-  {isVoteAdmin}
+  likeDisabled={readOnly}
+  isVoteAdmin={!readOnly && isVoteAdmin}
   repliesData={repliesByParent[comment._id]?.data ?? []}
   {authorLabel}
-  {canEditComment}
+  canEditComment={readOnly ? () => false : canEditComment}
   {onToggleLike}
   {onToggleReplies}
   {onReply}
@@ -68,6 +70,7 @@
           {showReplyCountButton}
           {canLike}
           {isVoteAdmin}
+          {readOnly}
           {authorLabel}
           {canEditComment}
           {onToggleLike}
