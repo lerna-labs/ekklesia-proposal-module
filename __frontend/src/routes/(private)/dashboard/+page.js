@@ -31,7 +31,7 @@ export async function load({ fetch, url, parent }) {
 	const selectedVote = votes[0];
 	const sortOptions = selectedVote.sortOptions ?? [];
 	const validSortValues = new Set(sortOptions.map((o) => o.value));
-	const defaultSort = sortOptions[0]?.value ?? 'title';
+	const defaultSort = validSortValues.has('updatedAt') ? 'updatedAt' : (sortOptions[0]?.value ?? 'title');
 
 	// URL params with defaults and validation
 	const pageNum = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
