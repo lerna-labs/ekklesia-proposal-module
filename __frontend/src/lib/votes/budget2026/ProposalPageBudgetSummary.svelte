@@ -14,6 +14,9 @@
     proposal?.metaData?.treasuryRepaymentCircumstances ?? "",
   );
   const priorFunding = $derived(proposal?.metaData?.priorFunding ?? "");
+  const thirdPartyAssurers = $derived(
+    proposal?.metaData?.independentAudits ?? "",
+  );
 
   const workPackages = $derived(
     proposal?.metaData?.proposalDetails?.workPackages ?? [],
@@ -187,6 +190,17 @@
           <ItemContainer>
             <div class="text-sm">
               <Markdown content={priorFunding.trim() || "—"} />
+            </div>
+          </ItemContainer>
+        </section>
+
+        <section class="mt-6 space-y-2">
+          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
+            Third Party Assurers
+          </h3>
+          <ItemContainer>
+            <div class="text-sm">
+              <Markdown content={thirdPartyAssurers.trim() || "—"} />
             </div>
           </ItemContainer>
         </section>
