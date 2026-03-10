@@ -4,8 +4,11 @@
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
   import MarkdownModal from "$lib/components/MarkdownModal.svelte";
+  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import { formatAda } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
+  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import HashIcon from "@lucide/svelte/icons/hash";
   import HomeIcon from "@lucide/svelte/icons/home";
   import ShieldCheckIcon from "@lucide/svelte/icons/shield-check";
@@ -18,7 +21,7 @@
 
   let trackRecordOpen = $state(false);
   let otherAdminModalOpen = $state(false);
-  let repaymentCircumstancesModalOpen = $state(false);
+  let linkWarningDialog;
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
   const showVersionBadge = $derived(
@@ -27,12 +30,6 @@
   );
 
   const totalBudget = $derived(proposal?.metaData?.totalBudget ?? null);
-  const treasuryRepayment = $derived(
-    proposal?.metaData?.treasuryRepayment ?? "",
-  );
-  const treasuryRepaymentCircumstances = $derived(
-    proposal?.metaData?.treasuryRepaymentCircumstances ?? "",
-  );
   const administrator = $derived(proposal?.metaData?.administrator ?? "");
   const otherAdministrator = $derived(
     proposal?.metaData?.otherAdministrator ?? "",
@@ -79,7 +76,7 @@
   const dateOptions = { dateStyle: "long", timeStyle: "short" };
 </script>
 
-<Card.Root class="h-full">
+<Card.Root class="h-full bg-slate-50">
   <Card.Content class="space-y-3 text-sm">
     {#if totalBudget != null}
       <div
@@ -100,29 +97,6 @@
             >
           </div>
         </div>
-        <div class="px-4 pb-4 pt-0 flex gap-1 min-w-0">
-          <span class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-          <div class="min-w-0">
-            {#if treasuryRepayment === "Yes"}
-              <button
-                type="button"
-                class="cursor-pointer rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label="Show repayment circumstances"
-                onclick={() => (repaymentCircumstancesModalOpen = true)}
-              >
-                <Badge
-                  class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal cursor-pointer hover:opacity-90"
-                  >Treasury Repayment</Badge
-                >
-              </button>
-            {:else}
-              <Badge
-                class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0 font-normal"
-                >No Treasury Repayment</Badge
-              >
-            {/if}
-          </div>
-        </div>
       </div>
     {/if}
     {#if administratorLabel || (estimatedDuration != null && estimatedDuration !== "")}
@@ -138,7 +112,7 @@
             <p class="text-xs font-medium text-muted-foreground mb-1"
               >Estimated duration</p
             >
-            <p>
+            <span class="font-medium">
               {#if estimatedDuration != null && estimatedDuration !== ""}
                 {Number(estimatedDuration) === 1
                   ? "1 month"
@@ -146,7 +120,7 @@
               {:else}
                 <span class="text-muted-foreground">—</span>
               {/if}
-            </p>
+            </span>
           </div>
         </div>
         <div class="p-4 min-w-0 flex gap-1.5">
@@ -167,7 +141,7 @@
                     aria-label="Show other administrator details"
                     onclick={() => (otherAdminModalOpen = true)}
                   >
-                    <span>{administratorLabel}</span>
+                    <span class="font-medium">{administratorLabel}</span>
                     <InfoIcon
                       class="size-4 shrink-0 text-muted-foreground"
                       aria-hidden="true"
@@ -186,40 +160,64 @@
     {/if}
 
     {#if hasProposerContent}
-      <Card.Root>
-        <Card.Header>
-          <Card.Title class="flex items-center gap-2">
-            {#if legalEntityType === "company"}
-              <HomeIcon class="size-4 shrink-0" aria-hidden="true" />
-            {:else if legalEntityType.trim()}
-              <UserIcon class="size-4 shrink-0" aria-hidden="true" />
-            {/if}
-            {#if proposerHref}
-              <a
-                href={proposerHref}
-                class="font-semibold text-foreground hover:underline"
-              >
-                {proposerName.trim() || "Proposer"}
-              </a>
-            {:else}
-              <span>{proposerName.trim() || "Proposer"}</span>
-            {/if}
-          </Card.Title>
-        </Card.Header>
-        <Card.Content class="space-y-3 text-sm">
+      <div
+        class="rounded-lg border bg-white text-card-foreground overflow-hidden"
+      >
+        <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
+          {#if legalEntityType === "company"}
+            <HomeIcon
+              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {:else}
+            <UserIcon
+              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {/if}
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-muted-foreground mb-1"
+              >Proposer</p
+            >
+            <p class="font-medium text-foreground">
+              {#if proposerHref}
+                <a href={proposerHref} class="hover:underline">
+                  {proposerName.trim() || "Proposer"}
+                </a>
+              {:else}
+                <span>{proposerName.trim() || "Proposer"}</span>
+              {/if}
+            </p>
+          </div>
+        </div>
+        <div class="px-4 pb-4 space-y-3 text-sm">
           {#if links.length > 0}
-            <div>
-              <p class="font-medium text-muted-foreground mb-0.5">Links</p>
-              <ul class="space-y-1">
+            <div class="border-t pt-3">
+              <ul class="space-y-0.5 list-none p-0">
                 {#each links as link (link.url)}
                   <li>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-primary hover:underline"
+                      class="text-primary hover:underline inline-flex items-center gap-1 text-sm cursor-pointer"
+                      onclick={(e) => {
+                        e.preventDefault();
+                        linkWarningDialog.show(
+                          link.url,
+                          (link.title ?? "").trim() || link.url,
+                        );
+                      }}
                     >
+                      <ChevronRightIcon
+                        class="size-4 shrink-0"
+                        aria-hidden="true"
+                      />
                       {link.title || link.url}
+                      <ExternalLinkIcon
+                        class="size-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
                     </a>
                   </li>
                 {/each}
@@ -253,8 +251,8 @@
               {/if}
             </div>
           {/if}
-        </Card.Content>
-      </Card.Root>
+        </div>
+      </div>
     {/if}
     {#if (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null}
       <div class="mt-4 space-y-1">
@@ -340,11 +338,6 @@
   content={otherAdministrator.trim() || "No details provided."}
 />
 <MarkdownModal
-  bind:open={repaymentCircumstancesModalOpen}
-  title="Repayment circumstances"
-  content={treasuryRepaymentCircumstances.trim() || "No details provided."}
-/>
-<MarkdownModal
   bind:open={trackRecordOpen}
   title="Track Record"
   content={trackRecord}
@@ -352,3 +345,4 @@
   class="sm:max-w-lg max-h-[90dvh] overflow-y-auto flex flex-col"
   description="Proposer's track record and relevant experience"
 />
+<LinkWarningDialog bind:this={linkWarningDialog} />

@@ -58,7 +58,7 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-3 mb-2! mt-8" id="work-packages">
+  <section class="text-sm space-y-3 mb-2! mt-12" id="work-packages">
     <h2 class="text-2xl font-medium mb-4">Work Packages Breakdown</h2>
 
     <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
@@ -100,8 +100,10 @@
                 aria-label="Work package budget"
               >
                 <div class="flex items-center divide-x divide-border">
-                  <span class="pr-2 text-muted-foreground pl-1">Budget</span>
-                  <span class="pl-2 font-semibold tabular-nums">
+                  <span class="pr-2 text-muted-foreground pl-1 hidden sm:block"
+                    >Budget</span
+                  >
+                  <span class="sm:pl-2 font-semibold tabular-nums">
                     {formatAda(totalAda)} ADA
                   </span>
                 </div>

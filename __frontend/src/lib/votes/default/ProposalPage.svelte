@@ -1,4 +1,5 @@
 <script>
+  import { goto } from "$app/navigation";
   import { Button } from "$lib/components/ui/button";
   import Comments from "$lib/comments/Comments.svelte";
 
@@ -12,29 +13,32 @@
     currentVersionHref = null,
     showComments = false,
     commentsHref = "",
+    isWithdrawn = false,
   } = $props();
+
+  function goBackToList() {
+    if (backToVoteUrl) {
+      window.history.back();
+    } else {
+      goto(voteUrl);
+    }
+  }
 </script>
 
 {#if !currentVersionHref}
-  <!-- Back button (when archived, "See current version" is in the route's full-width orange bar) -->
+  <!-- Back to list (above title): history.back() when coming from list, else goto vote -->
   <div class="mb-6">
-    {#if backToVoteUrl}
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onclick={() => history.back()}
-      >
-        ← Back to vote
-      </Button>
-    {:else}
-      <Button href={voteUrl} variant="ghost" size="sm">
-        ← Back to vote
-      </Button>
-    {/if}
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onclick={goBackToList}
+    >
+      ← Back to {vote?.title ?? vote?.name ?? "vote"}
+    </Button>
   </div>
 {/if}
 
 {#if showComments && proposal}
-  <Comments proposalId={proposal._id} {proposal} {vote} />
+  <Comments proposalId={proposal._id} {proposal} {vote} readOnly={isWithdrawn} />
 {/if}
