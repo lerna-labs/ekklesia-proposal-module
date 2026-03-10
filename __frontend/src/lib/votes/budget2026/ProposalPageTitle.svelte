@@ -11,23 +11,25 @@
   );
 </script>
 
-<h1 class="text-4xl font-medium flex flex-wrap items-center gap-1 min-w-0">
-  <span>{proposal?.title || proposal?.name || "Untitled Proposal"}</span>
-  {#if showVersionBadge}
-    <button
-      type="button"
-      onclick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        revisionDrawerOpen = true;
-      }}
-      class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors"
-      aria-label="View revision history"
-      title="View revision history"
-    >
-      Version {proposal?.version ?? 1}
-    </button>
-  {/if}
+<h1 class="text-4xl font-medium min-w-0">
+  <span class="inline min-w-0">
+    <span>{proposal?.title || proposal?.name || "Untitled Proposal"}</span>
+    {#if showVersionBadge}
+      <button
+        type="button"
+        onclick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          revisionDrawerOpen = true;
+        }}
+        class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors align-baseline ml-0 -top-1 relative"
+        aria-label="View revision history"
+        title="View revision history"
+      >
+        Version {proposal?.version ?? 1}
+      </button>
+    {/if}
+  </span>
 </h1>
 
 <ProposalRevisionHistory

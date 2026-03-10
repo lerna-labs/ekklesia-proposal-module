@@ -25,8 +25,10 @@
     aria-label="View USD equivalent"
   >
     <div class="flex items-center divide-x divide-border text-xs">
-      <span class="pr-2 text-muted-foreground nowrap">Requested Budget</span>
-      <span class="pl-2 font-semibold tabular-nums nowrap">
+      <span class="pr-2 text-muted-foreground text-nowrap"
+        >Requested Budget</span
+      >
+      <span class="pl-2 font-semibold tabular-nums text-nowrap">
         {formatAda(adaAmount)} ADA
       </span>
     </div>

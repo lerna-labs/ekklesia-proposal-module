@@ -96,23 +96,31 @@
 >
   <Card.Header class="relative pb-0 px-4 sm:px-6">
     <div
-      class="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center"
+      class="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start"
     >
       <Card.Title
         class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0"
       >
-        <span>{proposal.title || proposal.name || "Untitled Proposal"}</span>
-        {#if showVersionBadge}
-          <button
-            type="button"
-            onclick={(e) => { e.preventDefault(); e.stopPropagation(); revisionDrawerOpen = true; }}
-            class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors"
-            aria-label="View revision history"
-            title="View revision history"
+        <span class="inline min-w-0">
+          <a href={proposalHref} class="hover:underline cursor-pointer"
+            >{proposal.title || proposal.name || "Untitled Proposal"}</a
           >
-            Version {proposal?.version ?? 1}
-          </button>
-        {/if}
+          {#if showVersionBadge}
+            <button
+              type="button"
+              onclick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                revisionDrawerOpen = true;
+              }}
+              class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors ml-0 align-baseline"
+              aria-label="View revision history"
+              title="View revision history"
+            >
+              Version {proposal?.version ?? 1}
+            </button>
+          {/if}
+        </span>
         {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
           <button
             type="button"
@@ -150,7 +158,7 @@
           <span class={labelClass}>Proposal ID:</span>
           <button
             type="button"
-            class="text-muted-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit text-inherit"
+            class="hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit text-inherit"
             title="Copy proposal ID"
             onclick={() => {
               navigator.clipboard.writeText(proposalIdStr).then(
@@ -164,7 +172,8 @@
         </div>
       {/if}
       {#if proposal.metaData?.proposerDetails?.name != null && String(proposal.metaData.proposerDetails.name).trim() !== ""}
-        {@const legalEntityType = proposal.metaData?.contractingParty?.legalEntityType}
+        {@const legalEntityType =
+          proposal.metaData?.contractingParty?.legalEntityType}
         <div class="flex items-center gap-1 text-xs text-muted-foreground">
           {#if legalEntityType != null && String(legalEntityType).trim() !== ""}
             <Popover.Root>
@@ -186,7 +195,9 @@
                 {/if}
               </Popover.Trigger>
               <Popover.Content class="w-auto p-2 text-xs" align="start">
-                <span class="font-medium text-muted-foreground">Proposer type:</span>
+                <span class="font-medium text-muted-foreground"
+                  >Proposer type:</span
+                >
                 <span class="ml-1">{legalEntityType}</span>
               </Popover.Content>
             </Popover.Root>
@@ -271,10 +282,13 @@
                       <span class="font-medium text-muted-foreground">
                         Submitted:
                       </span>
-                      {new Date(proposal.submittedAt).toLocaleString(undefined, {
-                        dateStyle: "long",
-                        timeStyle: "short",
-                      })}
+                      {new Date(proposal.submittedAt).toLocaleString(
+                        undefined,
+                        {
+                          dateStyle: "long",
+                          timeStyle: "short",
+                        },
+                      )}
                     </p>
                   {:else}
                     <p class="text-muted-foreground">
@@ -298,7 +312,7 @@
     </div>
 
     {#if proposal.summary}
-      <div class="text-sm line-clamp-10 [&_:first-child]:mt-0 pt-4">
+      <div class="text-sm line-clamp-10 ++:first:mt-0 pt-4">
         <Markdown content={proposal.summary} />
       </div>
     {/if}
