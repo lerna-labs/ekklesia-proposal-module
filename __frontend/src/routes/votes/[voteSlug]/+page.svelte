@@ -75,7 +75,9 @@
       typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 },
     restore: (value) => {
       if (typeof window !== "undefined" && value?.y != null) {
-        requestAnimationFrame(() => window.scrollTo(0, value.y));
+        requestAnimationFrame(() =>
+          window.scrollTo({ top: value.y, behavior: "instant" }),
+        );
       }
     },
   };
