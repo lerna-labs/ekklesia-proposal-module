@@ -7,7 +7,6 @@
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import BoxIcon from "@lucide/svelte/icons/box";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import ItemContainer from "./ItemContainer.svelte";
@@ -212,21 +211,19 @@
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              class="text-primary hover:underline inline-flex items-center gap-1 text-sm cursor-pointer"
+                              class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
                               onclick={(e) => {
                                 e.preventDefault();
                                 linkWarningDialog.show(url, title);
                               }}
                             >
-                              <ChevronRightIcon
-                                class="size-4 shrink-0"
-                                aria-hidden="true"
-                              />
-                              {title}
                               <ExternalLinkIcon
-                                class="size-3.5 shrink-0"
+                                class="size-3.5 shrink-0 mt-0.5"
                                 aria-hidden="true"
                               />
+                              <span class="min-w-0 wrap-break-word">
+                                {title}
+                              </span>
                             </a>
                           </li>
                         {/if}
