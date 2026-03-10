@@ -5,10 +5,12 @@
   import * as Pagination from "$lib/components/ui/pagination";
   import * as Separator from "$lib/components/ui/separator";
   import ProposalCard from "$lib/ProposalCard.svelte";
+  import { Button } from "$lib/components/ui/button";
   import Search from "$lib/Search.svelte";
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
   import { shortenString } from "$lib/utils.js";
+  import XIcon from "@lucide/svelte/icons/x";
   let { data } = $props();
   let vote = $derived(data.vote);
   let proposals = $derived(data.proposals.data);
@@ -16,7 +18,9 @@
   let pillars = $derived(data.pillars ?? []);
   const defaultSort = $derived(vote?.sortOptions?.[0]?.value ?? "title");
   const sortFromData = $derived(data.listState?.sort ?? defaultSort);
-  const ascendingFromData = $derived((data.listState?.direction ?? "asc") !== "desc");
+  const ascendingFromData = $derived(
+    (data.listState?.direction ?? "asc") !== "desc",
+  );
   let sort = $state("title");
   let ascending = $state(true);
   $effect(() => {
@@ -26,7 +30,15 @@
 
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
-  const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
+  const LIST_PARAM_KEYS = [
+    "search",
+    "sort",
+    "direction",
+    "limit",
+    "status",
+    "category",
+    "proposer",
+  ];
   function hasListParams(searchParams) {
     return LIST_PARAM_KEYS.some((k) => searchParams.get(k));
   }
@@ -67,6 +79,18 @@
     searchParams.set("page", String(pageNum));
     const url = `${pathname}?${searchParams.toString()}`;
     goto(url);
+  }
+
+  function clearProposerFilter() {
+    const pathname = page.url.pathname;
+    const searchParams = new URLSearchParams(page.url.searchParams);
+    searchParams.delete("proposer");
+    searchParams.set("page", "1");
+    const qs = searchParams.toString();
+    if (listStateKey && typeof window !== "undefined") {
+      localStorage.setItem(listStateKey, qs);
+    }
+    goto(qs ? `${pathname}?${qs}` : pathname);
   }
 
   /** Capture scroll position so it can be restored when navigating back (e.g. from proposal page). */
@@ -123,7 +147,7 @@
     <div
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <h2 class="text-xl font-medium">
+      <h2 class="text-xl font-medium flex flex-wrap items-center gap-2">
         {#if shortProposerId}
           Proposals from {shortProposerId}
         {:else}
@@ -132,11 +156,31 @@
         <span class="text-muted-foreground font-normal">
           ({proposalPagination.totalItems})
         </span>
+        {#if shortProposerId}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="text-xs h-7 pl-0 pr-2 gap-1 bg-(--mbo-orange) text-white border-(--mbo-orange) hover:bg-(--mbo-dark-orange) hover:text-white hover:border-(--mbo-dark-orange)"
+            onclick={clearProposerFilter}
+          >
+            <XIcon class="size-3.5 shrink-0 -ml-1" aria-hidden="true" />
+            Show all
+          </Button>
+        {/if}
       </h2>
       <div class="flex items-center gap-1">
         <Search placeholder="Search proposals..." class="w-full sm:w-64" />
-        <SearchFilter filterOptions={vote.filterOptions ?? []} vote={vote} voteId={vote._id} />
-        <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
+        <SearchFilter
+          filterOptions={vote.filterOptions ?? []}
+          {vote}
+          voteId={vote._id}
+        />
+        <SearchSort
+          sortOptions={vote?.sortOptions ?? []}
+          bind:sort
+          bind:ascending
+        />
       </div>
     </div>
 
