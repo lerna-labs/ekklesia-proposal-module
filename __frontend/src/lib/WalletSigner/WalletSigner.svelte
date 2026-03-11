@@ -30,7 +30,23 @@
   let selected = $state("wallet");
   let noWallets = $state(false);
   let walletLoading = $state(false);
-  let signType = $state("");
+  const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
+  const allowedTypes = (
+    import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake"
+  ).split(",");
+  const defaultFromEnv =
+    import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const storedSignType =
+    typeof window !== "undefined"
+      ? localStorage.getItem(SIGNTYPE_STORAGE_KEY)
+      : null;
+  const initialSignType =
+    storedSignType && allowedTypes.includes(storedSignType)
+      ? storedSignType
+      : allowedTypes.includes(defaultFromEnv)
+        ? defaultFromEnv
+        : (allowedTypes[0] || "stake");
+  let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
   let scriptAddress = $derived.by(() => {
@@ -92,6 +108,9 @@
 
   function onSignTypeChange(e) {
     signType = e.detail;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SIGNTYPE_STORAGE_KEY, e.detail);
+    }
     log("Sign type selected", e.detail);
   }
 </script>
