@@ -115,7 +115,10 @@
               ["metaData", "independentAudits"],
             ]
           : SECTION_ERROR_PATHS["section-6"];
-    const pathsBySection = { ...SECTION_ERROR_PATHS, "section-6": section6Paths };
+    const pathsBySection = {
+      ...SECTION_ERROR_PATHS,
+      "section-6": section6Paths,
+    };
     const counts = {};
     for (const [section, paths] of Object.entries(pathsBySection)) {
       counts[section] = paths.reduce(
@@ -175,7 +178,7 @@
         email: "",
         authorization: false,
       },
-      kycInfo: { submitted: "", email: "", totalProposalsSubmitted: "" },
+      kycInfo: { submitted: "", email: "" },
       independentAudits: "",
       proposalDetails: { conversionRate: "", workPackages: [] },
       proposerDetails: {
@@ -331,7 +334,6 @@
         formData.metaData.kycInfo = {
           submitted: kyc.submitted ?? "",
           email: kyc.email ?? "",
-          totalProposalsSubmitted: kyc.totalProposalsSubmitted ?? "",
         };
       }
       const adm = p.metaData.administrator;
@@ -526,12 +528,7 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormBudgetSummary
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
+        <FormBudgetSummary bind:formData {vote} {proposal} {validationErrors} />
       </Accordion.Content>
     </Accordion.Item>
 
@@ -568,12 +565,7 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormBudgetAdmin
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
+        <FormBudgetAdmin bind:formData {vote} {proposal} {validationErrors} />
       </Accordion.Content>
     </Accordion.Item>
 
