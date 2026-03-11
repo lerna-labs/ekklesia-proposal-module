@@ -134,7 +134,16 @@
   }
 
   /** First accordion section (Project Definition) open by default. */
-  let accordionValue = $state(["section-1"]);
+  let accordionValue = $state([
+    "section-1",
+    "section-2",
+    "section-3",
+    "section-4",
+    "section-5",
+    "section-6",
+    "section-7",
+    "section-8",
+  ]);
 
   let formData = $state({
     status: "draft",
