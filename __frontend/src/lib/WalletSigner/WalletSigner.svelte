@@ -11,6 +11,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
   import { invalidateAll } from "$app/navigation";
+  import { log } from "$lib/WalletSigner/logger.js";
   let {
     ballot = false,
     mode,
@@ -21,6 +22,7 @@
   let open = $state(false);
   let selected = $state("wallet");
   let noWallets = $state(false);
+  let walletLoading = $state(false);
   let signType = $state("");
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
@@ -79,6 +81,11 @@
     open = false;
     showLogin.set(false);
     pendingCommentAction.set(null);
+  }
+
+  function onSignTypeChange(e) {
+    signType = e.detail;
+    log("Sign type selected", e.detail);
   }
 </script>
 
@@ -142,7 +149,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
           {:else}
             <!-- display VoterId -->
@@ -151,7 +159,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
           {/if}
         {/if}
@@ -162,7 +171,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
             <!-- ENTER POOL ID -->
             {#if signType === "pool" && selected === "wallet"}
@@ -184,6 +194,7 @@
         <!-- CONNECT WALLET -->
         <Tabs.Content value="wallet">
           <Wallet
+            bind:loading={walletLoading}
             {signType}
             {mode}
             {ballot}
