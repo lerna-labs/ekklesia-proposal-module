@@ -1,7 +1,14 @@
 <script>
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
-  import { api, loggedIn, user, setJWT, showLogin, pendingCommentAction } from "$stores/sessionManager.js";
+  import {
+    api,
+    loggedIn,
+    user,
+    setJWT,
+    showLogin,
+    pendingCommentAction,
+  } from "$stores/sessionManager.js";
   import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
   import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
   import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
@@ -11,6 +18,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
   import { invalidateAll } from "$app/navigation";
+  import { log } from "$lib/WalletSigner/logger.js";
   let {
     ballot = false,
     mode,
@@ -21,7 +29,24 @@
   let open = $state(false);
   let selected = $state("wallet");
   let noWallets = $state(false);
-  let signType = $state("");
+  let walletLoading = $state(false);
+  const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
+  const allowedTypes = (
+    import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake"
+  ).split(",");
+  const defaultFromEnv =
+    import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const storedSignType =
+    typeof window !== "undefined"
+      ? localStorage.getItem(SIGNTYPE_STORAGE_KEY)
+      : null;
+  const initialSignType =
+    storedSignType && allowedTypes.includes(storedSignType)
+      ? storedSignType
+      : allowedTypes.includes(defaultFromEnv)
+        ? defaultFromEnv
+        : (allowedTypes[0] || "stake");
+  let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
   let scriptAddress = $derived.by(() => {
@@ -31,8 +56,14 @@
     return "";
   });
 
-  const USER_TYPES = import.meta.env.VITE_USER_TYPES;
+  const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
   const userTypes = USER_TYPES.split(",");
+  const multisigEnabledByEnv =
+    import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+
+  $effect(() => {
+    if (!multisigEnabledByEnv) multiSig = false;
+  });
 
   $effect(() => {
     if ($user?.userId.startsWith("stake")) signType = "stake";
@@ -80,6 +111,14 @@
     showLogin.set(false);
     pendingCommentAction.set(null);
   }
+
+  function onSignTypeChange(e) {
+    signType = e.detail;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(SIGNTYPE_STORAGE_KEY, e.detail);
+    }
+    log("Sign type selected", e.detail);
+  }
 </script>
 
 <AlertDialog.Root bind:open on:openChange={close}>
@@ -98,15 +137,17 @@
     <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
-        <div class="flex items-center gap-2">
-          <Label
-            for="multisigsupport"
-            class="ml-2 text-sm {multiSig ? 'text-black' : 'text-slate-500'}"
-          >
-            MultiSig
-          </Label>
-          <Switch id="multisigsupport" bind:checked={multiSig} />
-        </div>
+        {#if multisigEnabledByEnv}
+          <div class="flex items-center gap-2">
+            <Label
+              for="multisigsupport"
+              class="ml-2 text-sm {multiSig ? 'text-black' : 'text-slate-500'}"
+            >
+              MultiSig
+            </Label>
+            <Switch id="multisigsupport" bind:checked={multiSig} />
+          </div>
+        {/if}
       </AlertDialog.Title>
       <AlertDialog.Description>
         Use your CIP-95 compatible wallet or the
@@ -142,7 +183,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
           {:else}
             <!-- display VoterId -->
@@ -151,7 +193,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
           {/if}
         {/if}
@@ -162,7 +205,8 @@
             <SelectSignType
               value={signType}
               mode={selected}
-              on:change={(e) => (signType = e.detail)}
+              disabled={walletLoading}
+              on:change={onSignTypeChange}
             />
             <!-- ENTER POOL ID -->
             {#if signType === "pool" && selected === "wallet"}
@@ -184,6 +228,7 @@
         <!-- CONNECT WALLET -->
         <Tabs.Content value="wallet">
           <Wallet
+            bind:loading={walletLoading}
             {signType}
             {mode}
             {ballot}

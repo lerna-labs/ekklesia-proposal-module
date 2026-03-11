@@ -7,7 +7,7 @@
 	const dispatch = createEventDispatcher();
 	const NETWORK_ID = $derived.by(() => $page.data.serverStatus.networkId);
 
-	let { signType = 'stake' } = $props();
+	let { signType = 'stake', loading = $bindable(false) } = $props();
 	let allWallets = $state([]);
 	let wallets = $derived.by(() => {
 		if (signType === 'pool') {
@@ -18,7 +18,6 @@
 	let selectedWallet = $state(undefined);
 	let connectedWallet = $state(undefined);
 	let walletApi = $state(undefined);
-	let loading = $state(false);
 
 	onMount(async () => {
 		const walletList = await getWallets();

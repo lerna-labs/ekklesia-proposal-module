@@ -5,7 +5,7 @@
   const dispatch = createEventDispatcher();
   let { value = undefined, disabled = false, mode = "signer" } = $props();
 
-  const USER_TYPES = import.meta.env.VITE_USER_TYPES;
+  const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
   const userTypes = USER_TYPES.split(",");
 
   function handleValueChange(newValue) {
