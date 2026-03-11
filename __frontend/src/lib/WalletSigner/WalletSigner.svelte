@@ -1,7 +1,14 @@
 <script>
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
-  import { api, loggedIn, user, setJWT, showLogin, pendingCommentAction } from "$stores/sessionManager.js";
+  import {
+    api,
+    loggedIn,
+    user,
+    setJWT,
+    showLogin,
+    pendingCommentAction,
+  } from "$stores/sessionManager.js";
   import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
   import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
   import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
@@ -33,7 +40,7 @@
     return "";
   });
 
-  const USER_TYPES = import.meta.env.VITE_USER_TYPES;
+  const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
   const userTypes = USER_TYPES.split(",");
 
   $effect(() => {
