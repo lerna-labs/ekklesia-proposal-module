@@ -307,26 +307,15 @@
 />
 {#if formData.metaData.kycInfo.submitted === "No"}
   <Input
-id="email"
+    id="email"
     label="KYC Contact Email (If No)"
     bind:value={formData.metaData.kycInfo.email}
     placeholder="Enter Email"
     description="Contact email for submitting KYC/KYB if not already done."
     required
     maxLength={254}
-  notPublic
+    notPublic
     validationErrors={kycInfoErrors}
     class="mb-4"
   />
 {/if}
-<Input
-  id="totalProposalsSubmitted"
-  label="Total Proposals Submitted"
-  bind:value={formData.metaData.kycInfo.totalProposalsSubmitted}
-  type="number"
-  placeholder="Enter Count"
-  description="The total count of proposals submitted by this entity/individual in this funding round."
-  class="sm:w-1/4"
-  notPublic
-  validationErrors={kycInfoErrors}
-/>

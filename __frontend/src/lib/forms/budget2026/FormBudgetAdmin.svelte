@@ -35,7 +35,7 @@
         email: "",
         authorization: false,
       },
-      kycInfo: { submitted: "", email: "", totalProposalsSubmitted: "" },
+      kycInfo: { submitted: "", email: "" },
     };
   }
 
@@ -93,8 +93,7 @@
     if (kyc && typeof kyc === "object") {
       if (
         (kyc.submitted ?? "").toString().trim() !== "" ||
-        (kyc.email ?? "").toString().trim() !== "" ||
-        (kyc.totalProposalsSubmitted ?? "").toString().trim() !== ""
+        (kyc.email ?? "").toString().trim() !== ""
       )
         return true;
     }
@@ -229,7 +228,12 @@
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
-      <Button type="button" variant="outline" class="cursor-pointer" onclick={cancelReset}>
+      <Button
+        type="button"
+        variant="outline"
+        class="cursor-pointer"
+        onclick={cancelReset}
+      >
         Cancel
       </Button>
       <AlertDialog.Action class="cursor-pointer" onclick={confirmReset}>

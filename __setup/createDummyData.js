@@ -161,7 +161,6 @@ function buildBudget2026AdminMetaData(template, index) {
         kycInfo: {
             submitted: kycSubmitted,
             email: kycSubmitted === "No" ? "kyc-submit@example.com" : "",
-            totalProposalsSubmitted: (index % 5) + 1,
         },
         independentAudits: "Third-party audit firm TBD; 5% of budget reserved for annual audit.",
     };
@@ -787,7 +786,7 @@ async function createDummyData() {
                 },
                 primaryContact: { name: "", email: "" },
                 signatoryContact: { title: "", name: "", email: "", authorization: false },
-                kycInfo: { submitted: "", email: "", totalProposalsSubmitted: 0 },
+                kycInfo: { submitted: "", email: "" },
                 independentAudits: "",
             },
         });

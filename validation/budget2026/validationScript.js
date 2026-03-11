@@ -81,8 +81,8 @@ const workPackageSchema = z
     }),
     supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
     coreObjectives: z
-    .array(z.string().min(1).max(1000))
-    .min(1, "At least one core objective is required"),
+      .array(z.string().min(1).max(1000))
+      .min(1, "At least one core objective is required"),
     expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
     metric: z.string().min(1, "Metric is required").max(600),
     milestones: z.array(milestoneSchema).optional().default([]),
@@ -213,13 +213,6 @@ const signatoryContactSchema = z.object({
 const kycInfoSchema = z.object({
   submitted: z.string().optional().default(""),
   email: z.string().max(254).optional().default(""),
-  /** Number of proposals submitted by this entity in this round (0–99999). Frontend may send number or string. */
-  totalProposalsSubmitted: z
-    .union([z.string(), z.number()])
-    .transform((v) => (v === "" || v === undefined || v === null ? 0 : Number(v)))
-    .pipe(z.number().int().min(0, "Must be 0 or greater").max(99999, "Must be 99999 or less"))
-    .optional()
-    .default(0),
 });
 
 const metaDataSchema = z.object({
