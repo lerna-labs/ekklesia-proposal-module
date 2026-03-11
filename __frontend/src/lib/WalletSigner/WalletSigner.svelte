@@ -58,6 +58,12 @@
 
   const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
   const userTypes = USER_TYPES.split(",");
+  const multisigEnabledByEnv =
+    import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+
+  $effect(() => {
+    if (!multisigEnabledByEnv) multiSig = false;
+  });
 
   $effect(() => {
     if ($user?.userId.startsWith("stake")) signType = "stake";
@@ -131,15 +137,17 @@
     <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
-        <div class="flex items-center gap-2">
-          <Label
-            for="multisigsupport"
-            class="ml-2 text-sm {multiSig ? 'text-black' : 'text-slate-500'}"
-          >
-            MultiSig
-          </Label>
-          <Switch id="multisigsupport" bind:checked={multiSig} />
-        </div>
+        {#if multisigEnabledByEnv}
+          <div class="flex items-center gap-2">
+            <Label
+              for="multisigsupport"
+              class="ml-2 text-sm {multiSig ? 'text-black' : 'text-slate-500'}"
+            >
+              MultiSig
+            </Label>
+            <Switch id="multisigsupport" bind:checked={multiSig} />
+          </div>
+        {/if}
       </AlertDialog.Title>
       <AlertDialog.Description>
         Use your CIP-95 compatible wallet or the
