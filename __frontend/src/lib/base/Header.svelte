@@ -1,8 +1,8 @@
 <script>
-  import { api, user, loggedIn } from "$stores/sessionManager.js";
+  import { api, user, loggedIn, logout } from "$stores/sessionManager.js";
   import Button from "$lib/components/ui/button/button.svelte";
   import WalletSigner from "$lib/WalletSigner/WalletSigner.svelte";
-  import { User } from "lucide-svelte";
+  import { User, LogOut, FileText } from "lucide-svelte";
   import { shortenString } from "$lib/utils.js";
   import Logo from "$lib/base/Logo.svelte";
 </script>
@@ -23,11 +23,12 @@
             size="sm"
             class="text-xs text-black"
           >
+            <FileText class="size-4" />
             <span class="hidden sm:block">View Proposals</span>
             <span class="block sm:hidden">Proposals</span>
           </Button>
         </li>
-        <li>
+        <li class="flex items-center gap-2">
           {#if !$loggedIn}
             <WalletSigner mode="login" dark={true} />
           {:else}
@@ -37,13 +38,16 @@
               class="bg-white text-black hover:bg-gray-200 text-xs"
             >
               <User />
-              <div class="hidden sm:block">
-                {shortenString($user?.userId, 10, true)}
-              </div>
-
-              <div class="block sm:hidden">
-                ...{($user?.userId).slice(-3)}
-              </div>
+              <div class="hidden sm:block">My Dashboard </div>
+            </Button>
+            <Button
+              size="sm"
+              class="bg-white text-black hover:bg-gray-200 text-xs"
+              onclick={() => logout()}
+              aria-label="Log out"
+            >
+              <LogOut class="size-4" />
+              <span class="hidden sm:inline">Log out</span>
             </Button>
           {/if}
         </li>
