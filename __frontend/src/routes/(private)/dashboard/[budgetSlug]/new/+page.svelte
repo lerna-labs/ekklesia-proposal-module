@@ -2,7 +2,6 @@
   import { goto, invalidateAll } from "$app/navigation";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
-  import TreasuryDonationAcknowledgmentModal from "$lib/forms/budget2026/TreasuryDonationAcknowledgmentModal.svelte";
   import { api } from "$stores/sessionManager.js";
 
   const FORM_CHUNKS = {
@@ -43,30 +42,18 @@
 
   let { data } = $props();
   let vote = $derived(data.vote);
-  let pillars = $derived(data.pillars ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
   let openLegalDialog = $state(false);
   let showLegalErrors = $state(false);
-  let openTreasuryModal = $state(false);
-  let treasuryAcknowledged = $state(false);
   let formRef = $state({});
   /** Set after first successful create (manual or auto-save) so the form can show Preview. */
   let createdProposal = $state(null);
 
   const formKey = $derived(vote?.form ?? "default");
-  const showForm = $derived(
-    vote?.form !== "budget2026" || treasuryAcknowledged,
-  );
 
   $effect(() => {
-    if (vote?.form === "budget2026" && !treasuryAcknowledged) {
-      openTreasuryModal = true;
-    }
-  });
-
-  $effect(() => {
-    if (!showForm || !formKey) return;
+    if (!formKey) return;
     const loader = FORM_CHUNKS[formKey] ?? FORM_CHUNKS.default;
     if (loadedFormKey === formKey && FormComponent) return;
     const keyAtLoad = formKey;
@@ -147,23 +134,7 @@
   }
 </script>
 
-<div class="container mx-auto max-w-4xl py-8 px-4">
-  <h1 class="text-2xl font-semibold mb-6">New proposal</h1>
-  <p>Introduction text here...</p>
-</div>
-
-{#if vote?.form === "budget2026"}
-  <TreasuryDonationAcknowledgmentModal
-    bind:open={openTreasuryModal}
-    onContinue={() => {
-      treasuryAcknowledged = true;
-      openTreasuryModal = false;
-    }}
-    onCancel={() => goto("/dashboard")}
-  />
-{/if}
-
-{#if vote && showForm}
+{#if vote && formKey}
   {#if formLoading}
     <div class="container mx-auto max-w-4xl py-8 px-4 flex items-center justify-center min-h-[200px]">
       <p class="text-muted-foreground">Loading form…</p>
@@ -171,13 +142,13 @@
   {:else if FormComponent}
     <FormComponent
       {vote}
-      {pillars}
       proposal={createdProposal}
       {onSave}
       {showLegalErrors}
       bind:formRef
       bind:validationErrors
       bind:openLegalDialog
+      onCancel={() => goto("/dashboard")}
     />
   {/if}
 {/if}
