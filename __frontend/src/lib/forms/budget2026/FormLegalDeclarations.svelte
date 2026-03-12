@@ -42,7 +42,11 @@
     let parent = el.parentElement;
     while (parent) {
       const overflowY = getComputedStyle(parent).overflowY;
-      if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay")
+      if (
+        overflowY === "auto" ||
+        overflowY === "scroll" ||
+        overflowY === "overlay"
+      )
         return parent;
       parent = parent.parentElement;
     }
@@ -88,7 +92,9 @@
       class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
     >
       <AlertDialog.Header>
-        <AlertDialog.Title>Proposal submission legal declarations</AlertDialog.Title>
+        <AlertDialog.Title
+          >Proposal submission legal declarations</AlertDialog.Title
+        >
         <AlertDialog.Description>
           Confirm the legal declarations below before submitting your proposal.
           These must be confirmed on every submit or re-submit.
@@ -99,11 +105,18 @@
         <section class="space-y-3">
           <h3 class="text-base font-medium">1. Data Protection</h3>
           <p class="text-sm text-muted-foreground">
-            The proposer acknowledges that personal data submitted in this form may be
-            shared with relevant internal stakeholders solely for proposal evaluation,
-            voting, contracting, and treasury execution.
+            The proposer acknowledges and consents that personal data submitted
+            in this form may be shared with relevant internal stakeholders
+            solely for the purposes of proposal evaluation, voting, contracting,
+            and treasury execution.
           </p>
-          <Checkbox
+
+          <p class="text-sm text-muted-foreground">
+            The proposer also acknowledges and agrees that the display name and
+            other social media links entered will be publicly visible in
+            connection with this budget request.
+          </p>
+          <!-- <Checkbox
             id="dataProcessingConsent"
             bind:value={value.dataProcessingConsent}
             label="I acknowledge and consent to the above data processing and sharing."
@@ -118,15 +131,17 @@
             required
             notPublic
             {validationErrors}
-          />
+          /> -->
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">2. Anti-Bribery and Anti-Corruption</h3>
+          <h3 class="text-base font-medium"
+            >2. Anti-Bribery and Anti-Corruption</h3
+          >
           <p class="text-sm text-muted-foreground">
-            The vendor confirms that neither they nor any of their representatives
-            have offered, nor will offer, any bribes, improper payments, or
-            inducements in connection with this proposal.
+            The vendor confirms that neither they nor any of their
+            representatives have offered, nor will offer, any bribes, improper
+            payments, or inducements in connection with this proposal.
           </p>
         </section>
 
@@ -136,14 +151,14 @@
           </h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms that this proposal is original, all information
-            provided is accurate and complete to the best of their knowledge, and no
-            third party owns or has rights that would prevent execution of the
-            proposed work.
+            provided is accurate and complete to the best of their knowledge,
+            and no third party owns or has rights that would prevent execution
+            of the proposed work.
           </p>
           <p class="text-sm text-muted-foreground">
-            The vendor retains ownership of all pre-existing intellectual property.
-            Submitted proposals will be treated as confidential and used solely for
-            evaluation purposes.
+            The vendor retains ownership of all pre-existing intellectual
+            property. Submitted proposals will be treated as confidential and
+            used solely for evaluation purposes.
           </p>
         </section>
 
@@ -152,8 +167,8 @@
             4. Conflicts with Existing Obligations
           </h3>
           <p class="text-sm text-muted-foreground">
-            The vendor confirms that accepting this contract (if awarded) would not
-            violate any existing obligations to other parties.
+            The vendor confirms that accepting this contract (if awarded) would
+            not violate any existing obligations to other parties.
           </p>
         </section>
 
@@ -162,17 +177,19 @@
             5. Compliance with Laws and Regulations
           </h3>
           <p class="text-sm text-muted-foreground">
-            The vendor confirms compliance with all applicable laws, regulations, and
-            export controls in connection with this proposal.
+            The vendor confirms compliance with all applicable laws,
+            regulations, and export controls in connection with this proposal.
           </p>
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">6. Sanctions / Restricted Parties</h3>
+          <h3 class="text-base font-medium"
+            >6. Sanctions / Restricted Parties</h3
+          >
           <p class="text-sm text-muted-foreground">
             The vendor confirms that neither they nor any associated parties are
-            located in, or otherwise subject to, countries or individuals on relevant
-            sanctions lists
+            located in, or otherwise subject to, countries or individuals on
+            relevant sanctions lists
           </p>
         </section>
 
@@ -181,14 +198,14 @@
             7. No Contract Formation / Limitation of Liability
           </h3>
           <p class="text-sm text-muted-foreground">
-            The vendor acknowledges that submission of this proposal does not create a
-            contract, obligation, or entitlement to award.
+            The vendor acknowledges that submission of this proposal does not
+            create a contract, obligation, or entitlement to award.
           </p>
           <p class="text-sm text-muted-foreground">
             The vendor acknowledges that submission of this proposal does not
-            guarantee approval and that only the delegated representatives ("DReps")
-            have authority to vote on and approve proposals. DReps reserve sole
-            discretion over evaluation, voting, and approval.
+            guarantee approval and that only the delegated representatives
+            ("DReps") have authority to vote on and approve proposals. DReps
+            reserve sole discretion over evaluation, voting, and approval.
           </p>
         </section>
 
