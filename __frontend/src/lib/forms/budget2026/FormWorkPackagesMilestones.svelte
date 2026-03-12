@@ -148,7 +148,9 @@
                       {m.name || "Unnamed milestone"}
                     </span>
                     {#if m.duration}
-                      <span class="text-muted-foreground">— {m.duration}</span>
+                      <span class="text-muted-foreground"
+                        >— {m.duration} weeks</span
+                      >
                     {/if}
                   </span>
                 </div>
