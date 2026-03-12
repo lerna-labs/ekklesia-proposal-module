@@ -3,12 +3,7 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
 
   const workPackages = $derived(
     formData.metaData?.proposalDetails?.workPackages ?? [],
@@ -55,9 +50,15 @@
   const totalWithFeeUsd = $derived(
     conversionRateNum != null ? totalWithFeeAda * conversionRateNum : null,
   );
-  const totalDisplayAda = $derived(isIntersect ? totalWithFeeAda : Math.round(grandTotalAda));
+  const totalDisplayAda = $derived(
+    isIntersect ? totalWithFeeAda : Math.round(grandTotalAda),
+  );
   const totalDisplayUsd = $derived(
-    isIntersect ? totalWithFeeUsd : (conversionRateNum != null ? totalDisplayAda * conversionRateNum : null),
+    isIntersect
+      ? totalWithFeeUsd
+      : conversionRateNum != null
+        ? totalDisplayAda * conversionRateNum
+        : null,
   );
 
   const metaErrors = $derived(
@@ -116,7 +117,7 @@
       <tfoot>
         {#if isIntersect}
           <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
-            <td class="p-3 font-medium">Intersect Admin Fee</td>
+            <td class="p-3 font-medium">Intersect Budget Administration fee</td>
             <td class="p-3 text-right tabular-nums">
               {formatAda(adminFeeAda)}
             </td>

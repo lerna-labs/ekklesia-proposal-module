@@ -34,6 +34,10 @@
   import PreventLinkNavigationPlugin from "./link/PreventLinkNavigationPlugin.svelte";
   import CustomLinkEditorPlugin from "./link/CustomLinkEditorPlugin.svelte";
   import "./editor.css";
+
+  /** Set to true to log editor link-command and validation to the console. */
+  const DEBUG_EDITOR = false;
+
   /** When true, the quote formatting option is shown in the toolbar. Default false. */
   let { quote = false, initialQuotedContent, value = $bindable("") } = $props();
 
@@ -92,7 +96,7 @@
   $effect(() => {
     if (!composer) return;
     const editor = composer.getEditor();
-    console.log("[Editor] registering TOGGLE_LINK_COMMAND listener", !!editor);
+    if (DEBUG_EDITOR) console.log("[Editor] registering TOGGLE_LINK_COMMAND listener", !!editor);
     const httpUrl = z.url({ protocol: /^https?$/, hostname: z.regexes.domain });
     const mailtoUrl = z.url({ protocol: /^mailto$/ });
     const telUrl = z.url({ protocol: /^tel$/ });
@@ -100,7 +104,7 @@
 
     function isValidUrl(url) {
       const result = linkUrl.safeParse(url);
-      console.log("[Editor] isValidUrl", {
+      if (DEBUG_EDITOR) console.log("[Editor] isValidUrl", {
         url,
         valid: result.success,
         issues: result.success ? null : result.error.issues,
@@ -116,9 +120,9 @@
     return editor.registerCommand(
       TOGGLE_LINK_COMMAND,
       (payload) => {
-        console.log("[Editor] TOGGLE_LINK_COMMAND", payload);
+        if (DEBUG_EDITOR) console.log("[Editor] TOGGLE_LINK_COMMAND", payload);
         if (payload === null) {
-          console.log("[Editor] passthrough (delete)", payload);
+          if (DEBUG_EDITOR) console.log("[Editor] passthrough (delete)", payload);
           setLinkEditorInvalid(false);
           return false;
         }
@@ -126,7 +130,7 @@
           ".link-editor .link-input",
         );
         if (payload === "https://" && !isPopoverOpen) {
-          console.log("[Editor] passthrough (open popover)", payload);
+          if (DEBUG_EDITOR) console.log("[Editor] passthrough (open popover)", payload);
           setLinkEditorInvalid(false);
           return false;
         }
@@ -139,7 +143,7 @@
           // }, 50);
           return false;
         }
-        console.log("[Editor] valid URL, applying and closing popover");
+        if (DEBUG_EDITOR) console.log("[Editor] valid URL, applying and closing popover");
         setLinkEditorInvalid(false);
         queueMicrotask(() => {
           editor.update(() => {

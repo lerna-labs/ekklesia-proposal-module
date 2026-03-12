@@ -457,9 +457,9 @@ export const createProposalBodySchema = formSchema.extend({
     .regex(/^[a-fA-F0-9]{24}$/, "voteId must be a valid ObjectId"),
 });
 
-/** Draft: only title (and voteId) required. */
+/** Draft: voteId required; title optional (can be empty). */
 export const createDraftProposalBodySchema = z.object({
-  title: z.string().min(1, "Title is required").max(100),
+  title: z.string().max(100).optional().default(""),
   voteId: z
     .string()
     .length(24, "voteId must be a valid ObjectId")
@@ -470,7 +470,7 @@ export const createDraftProposalBodySchema = z.object({
 });
 
 /**
- * Validate proposal body. For status "live" uses full schema; otherwise draft schema (title + voteId only).
+ * Validate proposal body. For status "live" uses full schema; otherwise draft schema (voteId required; title optional).
  * @param {unknown} body - Raw request body
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */

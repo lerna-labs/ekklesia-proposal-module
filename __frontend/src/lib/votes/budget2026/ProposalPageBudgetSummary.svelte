@@ -144,7 +144,9 @@
             <tfoot>
               {#if isIntersect}
                 <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
-                  <td class="p-3 font-medium">Intersect Admin Fee</td>
+                  <td class="p-3 font-medium"
+                    >Intersect Budget Administration fee</td
+                  >
                   <td class="p-3 text-right tabular-nums">
                     {formatAda(adminFeeAda)}
                   </td>

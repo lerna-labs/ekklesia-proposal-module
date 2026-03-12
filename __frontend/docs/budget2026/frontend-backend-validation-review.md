@@ -18,7 +18,7 @@
 
 ## 1. Backend validation (source of truth)
 
-The backend ([validation/budget2026/validationScript.js](../../../validation/budget2026/validationScript.js)) validates the full proposal body for **status `"live"`** (submit); for **drafts** it only requires `title` and `voteId`. Key rules:
+The backend ([validation/budget2026/validationScript.js](../../../validation/budget2026/validationScript.js)) validates the full proposal body for **status `"live"`** (submit); for **drafts** it requires `voteId` and optionally `title` (title can be empty). Key rules:
 
 - **Form-level:** `title` min 2 max 100, `summary` min 2 max 2000, `status` enum draft/live.
 - **metaData:** `trackRecord`, `estimatedDuration` (number ≥ 1), `strategyFramework` (pillars, pillarRationale max 15000, kpiAlignment max 10000), `proposalDetails` (conversionRate number > 0, workPackages min 1), `treasuryRepayment` Yes/No, `treasuryRepaymentCircumstances`, `priorFunding`, `proposerDetails`, `supportingInfoLinks`, `legalDeclarations`, etc.

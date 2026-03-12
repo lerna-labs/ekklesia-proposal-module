@@ -14,9 +14,7 @@
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import TreasuryDonationAcknowledgmentModal from "./TreasuryDonationAcknowledgmentModal.svelte";
   import { normalizeWorkPackage } from "./workPackageUtils.js";
-  import { onMount, tick } from "svelte";
-
-  const BUDGET2026_AUTOSAVE_KEY = "ekklesia.budget2026.autoSaveEnabled";
+  import { tick } from "svelte";
 
   let {
     vote,
@@ -220,30 +218,13 @@
     },
   });
 
-  let autoSaveEnabled = $state(true);
   let formControlsRef = $state(null);
-
-  const previewHref = $derived(
-    proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}` : null,
-  );
-  const isNewUnsaved = $derived(!proposal?._id);
 
   /** Expose clearDirty so parent can reset dirty state before navigating after save (avoids "unsaved changes" dialog). */
   $effect(() => {
     if (formRef && formControlsRef) {
       formRef.clearDirty = () => formControlsRef?.resetDirtyBaseline?.();
     }
-  });
-
-  onMount(() => {
-    const stored = localStorage.getItem(BUDGET2026_AUTOSAVE_KEY);
-    if (stored === "true") autoSaveEnabled = true;
-    else if (stored === "false") autoSaveEnabled = false;
-  });
-
-  $effect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(BUDGET2026_AUTOSAVE_KEY, String(autoSaveEnabled));
   });
 
   /** Prefill formData from proposal once when editing */
@@ -679,9 +660,8 @@
       {formData}
       {getPayload}
       {onSave}
-      bind:autoSaveEnabled
-      {previewHref}
-      {isNewUnsaved}
+      {proposal}
+      {vote}
     />
   </form>
 {/if}

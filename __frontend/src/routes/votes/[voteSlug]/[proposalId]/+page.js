@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
-export async function load({ params, fetch }) {
+export async function load({ params, fetch, url }) {
 	const { voteSlug, proposalId } = params;
 
 	const apiUrl = import.meta.env.VITE_API_URL || '/api/v0';
@@ -17,6 +17,18 @@ export async function load({ params, fetch }) {
 		error(404, `Vote not found`);
 	}
 
+	const pillars = voteData.metaData?.strategyFramework?.pillars ?? [];
+
+	// Preview mode: proposal comes from localStorage on the client; do not fetch proposal
+	if (url.searchParams.has('preview')) {
+		return {
+			vote: voteData,
+			pillars,
+			commentCount: 0,
+			preview: true,
+		};
+	}
+
 	// Fetch proposal (use api.fetch so auth cookie/header is sent; proposer can then view draft/archived)
 	const proposalResponse = await api.fetch(fetch, `/proposals/${proposalId}`);
 	if (!proposalResponse.ok) {
@@ -27,8 +39,6 @@ export async function load({ params, fetch }) {
 	if (!proposalData) {
 		error(404, `Proposal not found`);
 	}
-
-	const pillars = voteData.metaData?.strategyFramework?.pillars ?? [];
 
 	let commentCount;
 	const isWithdrawn =
