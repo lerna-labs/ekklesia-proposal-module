@@ -220,10 +220,6 @@
 
   let formControlsRef = $state(null);
 
-  const previewHref = $derived(
-    proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}` : null,
-  );
-
   /** Expose clearDirty so parent can reset dirty state before navigating after save (avoids "unsaved changes" dialog). */
   $effect(() => {
     if (formRef && formControlsRef) {
@@ -664,7 +660,8 @@
       {formData}
       {getPayload}
       {onSave}
-      {previewHref}
+      {proposal}
+      {vote}
     />
   </form>
 {/if}

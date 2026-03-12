@@ -2,6 +2,7 @@ import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { writable, get } from 'svelte/store';
 import Cookies from 'js-cookie';
+import { clearPreviewStorage } from '$lib/previewProposalStorage.js';
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Create a writable store to manage the session
@@ -150,6 +151,7 @@ export const logout = async () => {
 		// Clear localStorage if present
 		if (typeof window !== 'undefined') {
 			localStorage.removeItem('token');
+			clearPreviewStorage();
 		}
 
 		// Clear the session

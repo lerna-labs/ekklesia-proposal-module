@@ -2,6 +2,10 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
+  import {
+    writePreviewPayload,
+    clearPreviewStorage,
+  } from "$lib/previewProposalStorage.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
   const DEBUG_AUTOSAVE = true;
@@ -16,11 +20,27 @@
     formData,
     getPayload,
     onSave,
-    /** If set, show "Preview Proposal" button that opens this URL in a new window. */
-    previewHref = null,
+    /** When set with vote, enables "Preview Proposal" (writes to storage and opens preview tab). */
+    proposal = null,
+    /** When set with proposal, enables preview (previewHref = /votes/{slug}/{id}?preview). */
+    vote = null,
     /** When true, auto-save interval is paused (e.g. while legal declarations modal is open). */
     autoSavePaused = false,
   } = $props();
+
+  const previewHref = $derived(
+    proposal?._id && vote?.slug
+      ? `/votes/${vote.slug}/${proposal._id}?preview`
+      : null,
+  );
+
+  function onPreviewClick() {
+    if (!previewHref || !proposal?._id || !getPayload) return;
+    writePreviewPayload(proposal._id, getPayload(formData.status));
+    setTimeout(() => {
+      window.open(previewHref, "_blank", "noopener,noreferrer");
+    }, 0);
+  }
 
   const AUTO_SAVE_INTERVAL_MS = 120 * 1000; // 2 minutes
   const AUTO_SAVE_INTERVAL_MINUTES = AUTO_SAVE_INTERVAL_MS / 60000;
@@ -101,6 +121,10 @@
       .then(() => {
         initialSnapshot = JSON.stringify(payload);
         lastSaveAt = Date.now();
+        if (payload?.status === "draft" && proposal?._id) {
+          writePreviewPayload(proposal._id, payload);
+        }
+        if (exitAfterSave) clearPreviewStorage();
         autosaveLog("manual saveDraft succeeded", {
           exitAfterSave: !!exitAfterSave,
         });
@@ -116,6 +140,7 @@
     Promise.resolve(onSave(payload))
       .then(() => {
         initialSnapshot = JSON.stringify(payload);
+        clearPreviewStorage();
       })
       .catch(() => {});
   }
@@ -167,6 +192,9 @@
         .then(() => {
           initialSnapshot = JSON.stringify(payload);
           lastSaveAt = Date.now();
+          if (payload?.status === "draft" && proposal?._id) {
+            writePreviewPayload(proposal._id, payload);
+          }
           autosaveLog("auto-save succeeded", {
             lastSaveAt: new Date(lastSaveAt).toISOString(),
           });
@@ -182,6 +210,28 @@
       clearInterval(id);
       autosaveLog("auto-save interval cleared");
     };
+  });
+
+  /** Debounced write of current form payload to preview storage (so preview tab reload stays in sync). */
+  const PREVIEW_DEBOUNCE_MS = 800;
+  $effect(() => {
+    if (
+      typeof window === "undefined" ||
+      !proposal?._id ||
+      !vote?.slug ||
+      !getPayload
+    )
+      return;
+    const proposalId = proposal._id;
+    const payload = getPayload(formData.status);
+    const payloadJson = JSON.stringify(payload);
+    const id = setTimeout(() => {
+      try {
+        const p = JSON.parse(payloadJson);
+        writePreviewPayload(proposalId, p);
+      } catch (_) {}
+    }, PREVIEW_DEBOUNCE_MS);
+    return () => clearTimeout(id);
   });
 
   function formatLastSaved(ts) {
@@ -227,9 +277,7 @@
             type="button"
             variant="outline"
             class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto"
-            href={previewHref}
-            target="_blank"
-            rel="noopener noreferrer"
+            onclick={onPreviewClick}
           >
             Preview Proposal
           </Button>

@@ -1,11 +1,15 @@
 <script>
-  import { afterNavigate } from "$app/navigation";
+  import { afterNavigate, beforeNavigate } from "$app/navigation";
   import { page } from "$app/state";
   import ArrowRightIcon from "@lucide/svelte/icons/arrow-right";
   import { Badge } from "$lib/components/ui/badge";
   import Markdown from "$lib/base/Markdown.svelte";
   import Budget2026ProposalPage from "$lib/votes/budget2026/ProposalPage.svelte";
   import DefaultProposalPage from "$lib/votes/default/ProposalPage.svelte";
+  import {
+    readPreviewPayload,
+    clearPreviewStorage,
+  } from "$lib/previewProposalStorage.js";
 
   const PROPOSAL_PAGE_MAP = {
     budget2026: Budget2026ProposalPage,
@@ -13,11 +17,49 @@
 
   let { data } = $props();
 
-  let { vote, proposal, pillars = [], commentCount } = $derived(data);
+  const vote = $derived(data.vote);
+  const pillars = $derived(data.pillars ?? []);
+  const commentCount = $derived(data.commentCount ?? 0);
+  const preview = $derived(data.preview ?? false);
+
+  let previewProposal = $state(null);
+  let previewLoadAttempted = $state(false);
+
+  $effect(() => {
+    if (!preview || typeof window === "undefined") return;
+    previewLoadAttempted = true;
+    const parsed = readPreviewPayload();
+    if (
+      parsed != null &&
+      String(parsed.proposalId ?? "") === String(page.params.proposalId ?? "")
+    ) {
+      previewProposal = parsed.proposal;
+    }
+  });
+
+  const proposal = $derived(preview ? previewProposal : data.proposal);
+
+  // Clear in beforeNavigate when leaving preview; we do not clear on beforeunload/pagehide (tab close).
+  // Clear in beforeNavigate (while still on preview page); afterNavigate can run after the page unmounts so its callback may not fire.
+
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
 
   let backToVoteUrl = $state("");
+
+  beforeNavigate(({ to }) => {
+    // Use window.location: from.url can omit search params (SvelteKit #10122)
+    const currentHasPreview =
+      typeof window !== "undefined" &&
+      new URL(window.location.href).searchParams.has("preview");
+    if (
+      currentHasPreview &&
+      to?.url &&
+      !to.url.searchParams.has("preview")
+    ) {
+      clearPreviewStorage();
+    }
+  });
 
   afterNavigate(({ from, to }) => {
     if (!listPath || !to?.url) return;
@@ -72,10 +114,39 @@
   );
 
   const commentsHref = $derived(`${page.url.pathname}#comments`);
+
+  const isUnpublishedDraft = $derived(
+    !preview && proposal != null && proposal.status === "draft",
+  );
 </script>
 
 <div class="overflow-x-clip">
-  {#if currentVersionHref}
+  {#if preview}
+    <div
+      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-white text-sm font-medium"
+      role="banner"
+      aria-label="Preview mode"
+    >
+      You are viewing a preview of your proposal
+    </div>
+  {:else if isUnpublishedDraft}
+    <div
+      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-white text-sm font-medium"
+      role="banner"
+      aria-label="Draft proposal"
+    >
+      You are viewing an unpublished draft proposal
+    </div>
+  {/if}
+  {#if preview && !previewLoadAttempted}
+    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">
+      Loading preview…
+    </div>
+  {:else if preview && !proposal}
+    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">
+      Preview data not found. Close this window and click Preview again from the form.
+    </div>
+  {:else if currentVersionHref}
     <a
       href={currentVersionHref}
       class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center bg-(--mbo-orange) py-3 text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-(--mbo-orange)"
