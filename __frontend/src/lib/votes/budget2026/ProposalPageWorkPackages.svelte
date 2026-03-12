@@ -321,28 +321,32 @@
                             {#if msExpanded && hasDetails}
                               <Card.Content class="pl-4 pr-3 pt-0 pb-4">
                                 {#if (m?.deliverables ?? "").toString().trim()}
-                                  <p
+                                  <div
                                     class="text-sm text-muted-foreground mt-0 mb-1"
                                   >
                                     <span class="font-medium text-foreground"
                                       >Deliverables:</span
                                     >
-                                    <span class="block mt-0.5"
-                                      >{m.deliverables}</span
-                                    >
-                                  </p>
+                                    <Markdown
+                                      content={m.deliverables}
+                                      class="mt-0.5"
+                                    />
+                                  </div>
                                 {/if}
                                 {#if (m?.acceptanceCriteria ?? "")
                                   .toString()
                                   .trim()}
-                                  <p class="text-sm text-muted-foreground mt-3">
+                                  <div
+                                    class="text-sm text-muted-foreground mt-3"
+                                  >
                                     <span class="font-medium text-foreground"
                                       >Acceptance criteria:</span
                                     >
-                                    <span class="block mt-0.5"
-                                      >{m.acceptanceCriteria}</span
-                                    >
-                                  </p>
+                                    <Markdown
+                                      content={m.acceptanceCriteria}
+                                      class="mt-0.5"
+                                    />
+                                  </div>
                                 {/if}
                               </Card.Content>
                             {/if}
