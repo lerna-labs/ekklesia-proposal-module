@@ -8,6 +8,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import Input from "$lib/components/form/Input.svelte";
+  import InputNumber from "$lib/components/form/InputNumber.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { milestoneSchema } from "./Schema.js";
@@ -147,7 +148,9 @@
                       {m.name || "Unnamed milestone"}
                     </span>
                     {#if m.duration}
-                      <span class="text-muted-foreground">— {m.duration}</span>
+                      <span class="text-muted-foreground"
+                        >— {m.duration} weeks</span
+                      >
                     {/if}
                   </span>
                 </div>
@@ -253,14 +256,18 @@
       <h3 class="font-medium mt-2">
         How many weeks will you need to complete this milestone?
       </h3>
-      <Input
+      <InputNumber
         id="duration"
         label="Duration"
+        type="number"
         bind:value={draft.duration}
-        placeholder="e.g. 2 weeks"
+        placeholder="e.g. 2"
         description="How long do you expect it to take for this milestone to be finished?"
         required
-        maxLength={100}
+        suffix="weeks"
+        min="0"
+        step="any"
+        class="w-1/4"
         validationErrors={draftErrors}
       />
 

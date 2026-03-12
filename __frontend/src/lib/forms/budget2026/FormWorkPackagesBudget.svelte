@@ -65,7 +65,7 @@
     return Math.round(q * p * 1000) / 1000;
   });
 
-  /** Conversion rate as number (handles string from AmountInput); null if not set or invalid. */
+  /** Conversion rate as number (handles string from InputNumber); null if not set or invalid. */
   const conversionRateNum = $derived.by(() => {
     const v = conversionRate;
     if (v == null || v === "") return null;
@@ -312,19 +312,6 @@
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
-      {#if draftItemAda != null && draftItemAda > 0}
-        <span in:fade={{ duration: 400 }} class="shrink-0 inline-block">
-          <Badge
-            variant="secondary"
-            class="tabular-nums bg-(--mbo-electric-blue) text-white border-0 px-3 py-1.5"
-          >
-            Total: {formatAda(draftItemAda)} ADA
-            {#if draftItemUsd != null}
-              <span class="opacity-90">· {formatUsd(draftItemUsd)} USD</span>
-            {/if}
-          </Badge>
-        </span>
-      {/if}
     </AlertDialog.Header>
     <div class="grid gap-4 pb-4">
       <Input
@@ -402,18 +389,29 @@
           required
           validationErrors={draftErrors}
         />
-        <Input
-          id="unitPrice"
-          label="Unit Cost (ADA)"
-          description="Cost per unit, expressed in ADA."
-          type="number"
-          min="0"
-          step="any"
-          bind:value={draft.unitPrice}
-          placeholder="e.g. 1000"
-          required
-          validationErrors={draftErrors}
-        />
+        <div>
+          <Input
+            id="unitPrice"
+            label="Unit Cost (ADA)"
+            description="Cost per unit, expressed in ADA."
+            type="number"
+            min="0"
+            step="any"
+            bind:value={draft.unitPrice}
+            placeholder="e.g. 1000"
+            required
+            validationErrors={draftErrors}
+          />
+
+          {#if draftItemAda != null && draftItemAda > 0}
+            <p class="text-xs text-muted-foreground mt-2">
+              Total: {formatAda(draftItemAda)} ADA
+              {#if draftItemUsd != null}
+                <span class="opacity-90">/ {formatUsd(draftItemUsd)} USD</span>
+              {/if}
+            </p>
+          {/if}
+        </div>
       </div>
     </div>
     <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">

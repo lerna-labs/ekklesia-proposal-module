@@ -40,7 +40,7 @@ This document is a code review of the Budget 2026 form implementation. It lists 
 
 **File:** [Form.svelte](../src/lib/forms/budget2026/Form.svelte) (lines 295–297)
 
-**Issue:** `getPayload(status)` returns `{ ...formData, status }` with no coercion. `formData.metaData.estimatedDuration` is initialised and can remain `""`; `formData.metaData.proposalDetails.conversionRate` is a string from `AmountInput`. The backend expects `estimatedDuration` as a number (min 1) and `conversionRate` as a number > 0. Sending `""` or non-numeric strings can cause validation to fail with less clear errors.
+**Issue:** `getPayload(status)` returns `{ ...formData, status }` with no coercion. `formData.metaData.estimatedDuration` is initialised and can remain `""`; `formData.metaData.proposalDetails.conversionRate` is a string from `InputNumber`. The backend expects `estimatedDuration` as a number (min 1) and `conversionRate` as a number > 0. Sending `""` or non-numeric strings can cause validation to fail with less clear errors.
 
 **Fix:** In `getPayload` (or in a single place before calling `onSave`), coerce/validate and set: `estimatedDuration` to a number (e.g. `Number(formData.metaData.estimatedDuration)` or keep empty and let backend error), and `conversionRate` to a number (e.g. parse from string). Alternatively document that backend is the source of truth and rely on server errors, but then consider at least parsing so valid numeric strings are sent as numbers.
 

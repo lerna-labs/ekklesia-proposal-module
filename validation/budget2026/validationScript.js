@@ -48,7 +48,15 @@ const milestoneSchema = z.object({
   name: z.string().min(1, "Milestone name is required").max(100),
   deliverables: z.string().min(1, "Deliverables are required").max(4000),
   acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(4000),
-  duration: z.string().min(1, "Duration is required").max(100),
+  duration: z
+    .coerce.number({
+      error: (iss) =>
+        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
+          ? "Duration must be a number"
+          : undefined,
+    })
+    .int("Duration must be a whole number of weeks")
+    .min(1, "Duration must be at least 1 week"),
 });
 
 const workPackageSchema = z
@@ -215,7 +223,14 @@ const kycInfoSchema = z.object({
 
 const metaDataSchema = z.object({
   trackRecord: z.union([z.literal(""), z.string().min(2).max(650)]).optional().default(""),
-  estimatedDuration: z.coerce.number({ invalid_type_error: "Estimated duration must be a number" }).min(1, "Estimated duration is required and must be greater than 0"),
+  estimatedDuration: z
+    .coerce.number({
+      error: (iss) =>
+        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
+          ? "Estimated duration must be a number"
+          : undefined,
+    })
+    .min(1, "Estimated duration is required and must be greater than 0"),
   strategyFramework: strategyFrameworkSchema,
   proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
