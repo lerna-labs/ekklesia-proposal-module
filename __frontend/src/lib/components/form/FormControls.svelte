@@ -3,6 +3,15 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
 
+  /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
+  const DEBUG_AUTOSAVE = true;
+
+  function autosaveLog(...args) {
+    if (DEBUG_AUTOSAVE) {
+      console.log("[AUTOSAVE]", ...args);
+    }
+  }
+
   let {
     formData,
     getPayload,
@@ -37,6 +46,14 @@
   const dirtyRef = { current: false };
   $effect(() => {
     dirtyRef.current = isDirty;
+  });
+
+  let prevDirty = $state(undefined);
+  $effect(() => {
+    if (prevDirty !== isDirty) {
+      autosaveLog("dirty state changed", { was: prevDirty, isDirty });
+      prevDirty = isDirty;
+    }
   });
 
   /** Leave-confirm: intercept in-app navigation when dirty. */
@@ -77,12 +94,20 @@
   function saveDraft(exitAfterSave) {
     if (!getPayload || !onSave) return;
     const payload = getPayload("draft");
-    Promise.resolve(onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }))
+    autosaveLog("manual saveDraft", { exitAfterSave: !!exitAfterSave });
+    Promise.resolve(
+      onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }),
+    )
       .then(() => {
         initialSnapshot = JSON.stringify(payload);
         lastSaveAt = Date.now();
+        autosaveLog("manual saveDraft succeeded", {
+          exitAfterSave: !!exitAfterSave,
+        });
       })
-      .catch(() => {});
+      .catch((err) => {
+        autosaveLog("manual saveDraft failed", err);
+      });
   }
 
   function submitLive() {
@@ -102,8 +127,10 @@
 
   /** Reset dirty baseline to current form state. Call after loading/prefilling proposal data so the form is not considered dirty on first paint. */
   export function resetDirtyBaseline() {
-    if (getPayload)
+    if (getPayload) {
       initialSnapshot = JSON.stringify(getPayload(formData.status));
+      autosaveLog("resetDirtyBaseline called");
+    }
   }
 
   /** Auto-save draft at interval when draft, only when dirty. */
@@ -113,24 +140,56 @@
       formData.status !== "draft" ||
       !onSave ||
       !getPayload
-    )
+    ) {
+      autosaveLog("auto-save effect inactive", {
+        autoSavePaused,
+        status: formData?.status,
+        hasOnSave: !!onSave,
+        hasGetPayload: !!getPayload,
+      });
       return;
+    }
+    autosaveLog("auto-save interval started", {
+      intervalMs: AUTO_SAVE_INTERVAL_MS,
+      intervalMinutes: AUTO_SAVE_INTERVAL_MINUTES,
+    });
     const id = setInterval(() => {
-      if (!isDirty) return;
+      if (!isDirty) {
+        autosaveLog("auto-save tick: skipped (form not dirty)");
+        return;
+      }
       const payload = getPayload("draft");
+      autosaveLog("auto-save tick: sending save", {
+        hasPayload: !!payload,
+        titleLength: payload?.title?.length ?? 0,
+      });
       Promise.resolve(onSave(payload, { fromAutoSave: true }))
         .then(() => {
           initialSnapshot = JSON.stringify(payload);
           lastSaveAt = Date.now();
+          autosaveLog("auto-save succeeded", {
+            lastSaveAt: new Date(lastSaveAt).toISOString(),
+          });
         })
-        .catch(() => {});
+        .catch((err) => {
+          autosaveLog("auto-save failed", {
+            message: err?.message,
+            error: err,
+          });
+        });
     }, AUTO_SAVE_INTERVAL_MS);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      autosaveLog("auto-save interval cleared");
+    };
   });
 
   function formatLastSaved(ts) {
     if (ts == null) return "—";
-    return new Date(ts).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    return new Date(ts).toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 </script>
 
@@ -141,13 +200,21 @@
   <div class="max-w-4xl mx-auto flex flex-col gap-2">
     <div class="flex flex-wrap items-center gap-2">
       {#if formData.status === "draft"}
-        <Button type="button" class="cursor-pointer" onclick={() => saveDraft(true)}>
+        <Button
+          type="button"
+          class="cursor-pointer"
+          onclick={() => saveDraft(true)}
+        >
           Save & Exit
         </Button>
       {/if}
 
       {#if formData.status === "draft"}
-        <Button type="button" class="cursor-pointer" onclick={() => saveDraft(false)}>
+        <Button
+          type="button"
+          class="cursor-pointer"
+          onclick={() => saveDraft(false)}
+        >
           Save
         </Button>
       {/if}
@@ -173,8 +240,11 @@
       </div>
     </div>
     {#if formData.status === "draft"}
-      <p class="text-sm text-left text-black/80">
-        Your changes are saved automatically every {AUTO_SAVE_INTERVAL_MINUTES} minutes (Last saved: {formatLastSaved(lastSaveAt)})
+      <p class="text-xs! text-left text-black/80">
+        Your changes are saved automatically every {AUTO_SAVE_INTERVAL_MINUTES} minutes
+        {#if lastSaveAt != null}
+          (Last saved: {formatLastSaved(lastSaveAt)})
+        {/if}
       </p>
     {/if}
   </div>
