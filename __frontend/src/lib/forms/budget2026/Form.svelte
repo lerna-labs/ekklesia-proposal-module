@@ -640,10 +640,11 @@
             {/if}
           </h2>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
+        <Accordion.Content class="pt-[3px] px-[3px] pb-12">
           <FormLegalDeclarations
             bind:value={formData.metaData.legalDeclarations}
-            validationErrors={validationErrors?.properties?.metaData?.properties?.legalDeclarations}
+            validationErrors={validationErrors?.properties?.metaData?.properties
+              ?.legalDeclarations}
           />
         </Accordion.Content>
       </Accordion.Item>
