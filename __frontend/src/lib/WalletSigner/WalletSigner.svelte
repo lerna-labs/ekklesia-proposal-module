@@ -14,6 +14,7 @@
   import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Button, buttonVariants } from "$lib/components/ui/button";
+  import WalletMinimalIcon from "@lucide/svelte/icons/wallet-minimal";
   import { toast } from "svelte-sonner";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
@@ -127,6 +128,7 @@
       size="sm"
       class={dark ? "bg-white text-black hover:bg-gray-200 text-xs" : "text-xs"}
     >
+      <WalletMinimalIcon class="size-4 shrink-0" aria-hidden="true" />
       {mode == "login" ? "Connect Wallet" : buttonText}
     </Button>
   </AlertDialog.Trigger>
