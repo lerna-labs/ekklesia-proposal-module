@@ -28,11 +28,11 @@ export async function load({ params, url, fetch }) {
 		error(404, `Vote not found`);
 	}
 
+	const DEFAULT_SORT = 'submittedAt';
 	const sortOptions = voteData.sortOptions ?? [];
 	const validSortValues = new Set(sortOptions.map((o) => o.value));
-	const defaultSort = sortOptions[0]?.value ?? 'title';
-	const urlSort = url.searchParams.get('sort') || defaultSort;
-	const sort = validSortValues.has(urlSort) ? urlSort : defaultSort;
+	const urlSort = url.searchParams.get('sort');
+	const sort = urlSort && validSortValues.has(urlSort) ? urlSort : DEFAULT_SORT;
 
 	const proposalsSearchParams = new URLSearchParams({
 		vote: voteData._id,

@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 const VALID_DIRECTION = new Set(['asc', 'desc']);
+const DEFAULT_SORT = 'submittedAt';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
@@ -31,13 +32,12 @@ export async function load({ fetch, url, parent }) {
 	const selectedVote = votes[0];
 	const sortOptions = selectedVote.sortOptions ?? [];
 	const validSortValues = new Set(sortOptions.map((o) => o.value));
-	const defaultSort = validSortValues.has('updatedAt') ? 'updatedAt' : (sortOptions[0]?.value ?? 'title');
+	const urlSort = url.searchParams.get('sort');
+	const sort = urlSort && validSortValues.has(urlSort) ? urlSort : DEFAULT_SORT;
 
 	// URL params with defaults and validation
 	const pageNum = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
-	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10));
-	const urlSort = url.searchParams.get('sort') || defaultSort;
-	const sort = validSortValues.has(urlSort) ? urlSort : defaultSort;
+	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10);
 	const direction = VALID_DIRECTION.has(url.searchParams.get('direction') || '') ? url.searchParams.get('direction') : 'desc';
 
 	const proposalsUrl = `/proposals?vote=${encodeURIComponent(selectedVote._id)}&proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;

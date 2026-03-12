@@ -11,10 +11,12 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import CheckIcon from "@lucide/svelte/icons/check";
 
+  const DEFAULT_SORT = "submittedAt";
+
   /** @type {{ sortOptions: { value: string, label: string, field?: string }[], sort?: string, ascending?: boolean, class?: string }} */
   let {
     sortOptions = [],
-    sort = $bindable("title"),
+    sort = $bindable("submittedAt"),
     ascending = $bindable(true),
     class: className = "",
   } = $props();
@@ -22,20 +24,18 @@
   const PER_PAGE_OPTIONS = [10, 25, 50, 100];
   const defaultLimit = "10";
   const validSortValues = $derived(new Set(sortOptions.map((o) => o.value)));
-  const defaultSortValue = $derived(sortOptions[0]?.value ?? "title");
 
   let open = $state(false);
-  let pendingSort = $state("title");
+  let pendingSort = $state("submittedAt");
   let pendingDirection = $state("up");
   let pendingLimit = $state("10");
 
   $effect(() => {
-    const defSort = sortOptions[0]?.value ?? "title";
     const valid = new Set(sortOptions.map((o) => o.value));
-    const urlSort = page.url.searchParams.get("sort") ?? defSort;
+    const urlSort = page.url.searchParams.get("sort");
+    const resolvedSort = urlSort && valid.has(urlSort) ? urlSort : DEFAULT_SORT;
     const urlDirection = page.url.searchParams.get("direction") ?? "asc";
     const urlLimit = page.url.searchParams.get("limit") ?? defaultLimit;
-    const resolvedSort = valid.has(urlSort) ? urlSort : defSort;
     const resolvedAscending = urlDirection !== "desc";
     const resolvedDirection = urlDirection === "desc" ? "down" : "up";
     const resolvedLimit = PER_PAGE_OPTIONS.includes(Number(urlLimit))
@@ -52,11 +52,13 @@
 
   /** True when sort/limit differs from default */
   const hasActiveSort = $derived.by(() => {
-    const urlSort = page.url.searchParams.get("sort") ?? defaultSortValue;
+    const urlSort = page.url.searchParams.get("sort");
+    const valid = new Set(sortOptions.map((o) => o.value));
+    const resolvedSort = urlSort && valid.has(urlSort) ? urlSort : DEFAULT_SORT;
     const urlDirection = page.url.searchParams.get("direction") ?? "asc";
     const urlLimit = page.url.searchParams.get("limit") ?? defaultLimit;
     return (
-      urlSort !== defaultSortValue ||
+      resolvedSort !== DEFAULT_SORT ||
       urlDirection === "desc" ||
       urlLimit !== defaultLimit
     );
@@ -77,13 +79,13 @@
 
   function resetSort() {
     const searchParams = new URLSearchParams(page.url.searchParams);
-    searchParams.set("sort", defaultSortValue);
+    searchParams.set("sort", DEFAULT_SORT);
     searchParams.set("direction", "asc");
     searchParams.set("limit", defaultLimit);
     searchParams.set("page", "1");
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
-    sort = defaultSortValue;
+    sort = DEFAULT_SORT;
     ascending = true;
     open = false;
   }
