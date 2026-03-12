@@ -67,6 +67,11 @@
       : d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
   }
 
+  function displayTitle(proposal) {
+    if (proposal.status === "draft" && !proposal.title?.trim()) return "Untitled Draft";
+    return proposal.title ?? proposal._id;
+  }
+
   function viewHref(proposal) {
     const slug = voteSlugs[proposal.voteId];
     if (!slug) return null;
@@ -197,18 +202,18 @@
                       <div class="flex flex-wrap items-center gap-2">
                         {#if isWithdrawn}
                           <span class="font-medium">
-                            {proposal.title ?? proposal._id}
+                            {displayTitle(proposal)}
                           </span>
                         {:else if editHref}
                           <a
                             href={editHref}
                             class="text-primary hover:underline font-medium"
                           >
-                            {proposal.title ?? proposal._id}
+                            {displayTitle(proposal)}
                           </a>
                         {:else}
                           <span class="font-medium">
-                            {proposal.title ?? proposal._id}
+                            {displayTitle(proposal)}
                           </span>
                         {/if}
                         {#if isWithdrawn}

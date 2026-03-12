@@ -60,12 +60,15 @@
       const json = await res.json().catch(() => ({}));
       if (res.ok) {
         if (json?._id) createdProposal = json;
-        toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
+        if (payload.status === "draft" && options?.fromAutoSave) {
+          toast.success("Draft autosaved");
+        } else {
+          toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
+        }
         formRef?.clearDirty?.();
         await tick();
         await invalidateAll();
-        if (payload.status === "live" || (payload.status === "draft" && !options?.fromAutoSave))
-          goto("/dashboard");
+        if (payload.status === "live" || options?.exitAfterSave) goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to create proposal.";
