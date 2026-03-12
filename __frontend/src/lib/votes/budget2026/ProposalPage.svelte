@@ -37,7 +37,7 @@
   <div class="space-y-6 container mx-auto max-w-4xl py-8 px-4">
     {#if !currentVersionHref}
       <!-- Back to list (above title): history.back() when coming from list, else goto vote -->
-      <div class="mb-6 -ml-4">
+      <div class="mb-6">
         <Button
           type="button"
           variant="ghost"
