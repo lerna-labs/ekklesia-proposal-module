@@ -6,21 +6,17 @@
   import { user } from "$stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
-  import HashIcon from "@lucide/svelte/icons/hash";
   import UserIcon from "@lucide/svelte/icons/user";
   import HomeIcon from "@lucide/svelte/icons/home";
-  import LandmarkIcon from "@lucide/svelte/icons/landmark";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import * as Popover from "$lib/components/ui/popover";
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardBudget from "$lib/ProposalCardBudget.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
-  import { toast } from "svelte-sonner";
   let {
     proposal,
     vote,
-    pillars = [],
     showLink = true,
     class: className,
   } = $props();
@@ -61,22 +57,6 @@
     vote?.slug && proposal?.proposerId
       ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
       : null,
-  );
-
-  const pillarIds = $derived(
-    proposal?.metaData?.strategyFramework?.pillars ?? [],
-  );
-  const pillarEntries = $derived(
-    Array.isArray(pillars) && pillarIds.length > 0
-      ? pillarIds
-          .map((id) => {
-            const title = pillars.find(
-              (p) => String(p._id) === String(id),
-            )?.title;
-            return title ? { id: String(id), title } : null;
-          })
-          .filter(Boolean)
-      : [],
   );
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
@@ -148,29 +128,6 @@
   <Card.Content class="space-y-3 px-4 sm:px-6">
     <!-- Description block: medium bold labels -->
     <div class="space-y-2 leading-tight">
-      {#if (proposal?._id ?? proposal?.id) != null}
-        {@const proposalIdStr = String(proposal._id ?? proposal.id)}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <HashIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <span class={labelClass}>Proposal ID:</span>
-          <button
-            type="button"
-            class="hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit text-inherit"
-            title="Copy proposal ID"
-            onclick={() => {
-              navigator.clipboard.writeText(proposalIdStr).then(
-                () => toast.success("Proposal ID copied to clipboard"),
-                () => toast.error("Failed to copy"),
-              );
-            }}
-          >
-            {proposalIdStr}
-          </button>
-        </div>
-      {/if}
       {#if proposal.metaData?.proposerDetails?.name != null && String(proposal.metaData.proposerDetails.name).trim() !== ""}
         {@const legalEntityType =
           proposal.metaData?.contractingParty?.legalEntityType}
@@ -219,40 +176,6 @@
           {:else}
             <span>{proposal.metaData.proposerDetails.name}</span>
           {/if}
-        </div>
-      {/if}
-      {#if pillarEntries.length > 0}
-        <div
-          class="grid grid-cols-[auto_auto_1fr] sm:flex sm:flex-wrap sm:items-center gap-x-1 gap-y-2 sm:gap-1 text-xs text-muted-foreground"
-        >
-          <LandmarkIcon
-            class="size-3.5 shrink-0 text-muted-foreground mt-0.5 row-start-1 col-start-1 sm:row-auto sm:col-auto"
-            aria-hidden="true"
-          />
-          <span
-            class="{labelClass} shrink-0 row-start-1 col-start-2 sm:row-auto sm:col-auto"
-          >
-            {pillarEntries.length === 1 ? "Category:" : "Categories:"}
-          </span>
-          {#each pillarEntries as { id, title }, i}
-            {#if i > 0}<span class="hidden sm:inline">,</span>{/if}
-            <a
-              href="/votes/{vote?.slug}?category={id}&page=1"
-              class="text-muted-foreground hover:underline cursor-pointer w-fit col-start-3 sm:col-auto sm:row-auto {i ===
-              0
-                ? 'row-start-1'
-                : i === 1
-                  ? 'row-start-2'
-                  : i === 2
-                    ? 'row-start-3'
-                    : i === 3
-                      ? 'row-start-4'
-                      : 'row-start-5'}"
-              title="Show other proposals in this category"
-            >
-              {title}
-            </a>
-          {/each}
         </div>
       {/if}
       {#if (showVersionBadge && proposal.updatedAt != null) || proposal.submittedAt != null}
@@ -405,6 +328,5 @@
 <ProposalRevisionHistory
   {proposal}
   {vote}
-  {pillars}
   bind:open={revisionDrawerOpen}
 />
