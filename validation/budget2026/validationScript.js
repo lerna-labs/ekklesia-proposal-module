@@ -154,8 +154,6 @@ const proposalDetailsSchema = z.object({
 });
 
 const legalDeclarationsSchema = z.object({
-  dataProcessingConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and consent." }),
-  publicVisibilityConsent: z.boolean().refine((v) => v === true, { message: "You must acknowledge and agree." }),
   authorizationEntity: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   submitterName: z.string().min(1, "Name is required").max(100),
