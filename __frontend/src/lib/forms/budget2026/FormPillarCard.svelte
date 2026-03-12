@@ -56,7 +56,7 @@
     {/if}
     <div class="min-w-0 w-full" aria-pressed={selected}>
       <span
-        class="text-lg font-medium truncate block {selected
+        class="text-lg font-medium truncate block mt-2 {selected
           ? 'text-white'
           : 'text-foreground'}"
       >
@@ -65,7 +65,7 @@
     </div>
   </Card.Header>
   <Card.Content
-    class="pl-4 pr-4 pt-0 pb-0 -mt-4 {selected
+    class="pl-4 pr-4 pt-0 pb-0 -mt-6 {selected
       ? 'text-white/90'
       : 'text-muted-foreground'}"
   >
