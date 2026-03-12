@@ -99,8 +99,6 @@ function buildPillarsFromCsv() {
 }
 
 const LEGAL_DECLARATIONS = {
-  dataProcessingConsent: true,
-  publicVisibilityConsent: true,
   authorizationEntity: true,
   authorizationAttestation: true,
   submitterName: "Test Submitter",
