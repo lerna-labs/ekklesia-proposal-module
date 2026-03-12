@@ -1,27 +1,20 @@
 <script>
   /** @see __frontend/docs/budget2026/form-legal-declarations.md Version: 1.1.0 */
   /**
-   * Legal declarations form content for the submit dialog.
-   * Shown only on submit/re-submit when all other validation errors are cleared.
-   * Must be re-submitted on every submit or re-submit.
+   * Legal declarations form section (accordion section 9).
+   * Must be re-submitted on every submit or re-submit; never prefilled.
    */
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { tick } from "svelte";
 
   let {
     value = $bindable(),
     validationErrors,
-    open = $bindable(false),
-    onConfirm,
-    submitting = false,
   } = $props();
 
   /** Field ids in form order; first with an error is scrolled into view. */
   const FIELD_ORDER = [
-    "dataProcessingConsent",
-    "publicVisibilityConsent",
     "submitterName",
     "submitterEmail",
     "submitterRole",
@@ -37,7 +30,7 @@
     return null;
   }
 
-  /** Find nearest scrollable ancestor (overflow-y: auto | scroll) so we scroll the modal content, not the window. */
+  /** Find nearest scrollable ancestor (overflow-y: auto | scroll) so we scroll within the page. */
   function getScrollParent(el) {
     let parent = el.parentElement;
     while (parent) {
@@ -72,7 +65,7 @@
 
   $effect(() => {
     const firstId = getFirstErrorFieldId(validationErrors);
-    if (!firstId || !open) return;
+    if (!firstId) return;
     tick().then(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -84,24 +77,11 @@
   });
 </script>
 
-<AlertDialog.Root bind:open>
-  <AlertDialog.Content
-    class="fixed! inset-0! top-0! left-0! translate-x-0! translate-y-0! max-w-none! w-full min-w-0 overflow-y-auto overflow-x-hidden flex! flex-col items-center justify-start p-4 py-8 bg-transparent! rounded-none! border-0! shadow-none! pointer-events-none box-border"
-  >
-    <div
-      class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
-    >
-      <AlertDialog.Header>
-        <AlertDialog.Title
-          >Proposal submission legal declarations</AlertDialog.Title
-        >
-        <AlertDialog.Description>
-          Confirm the legal declarations below before submitting your proposal.
-          These must be confirmed on every submit or re-submit.
-        </AlertDialog.Description>
-      </AlertDialog.Header>
-
-      <div class="space-y-6 pr-2">
+<div class="space-y-6 pr-2">
+  <p class="text-sm text-muted-foreground">
+    Confirm the legal declarations below before submitting your proposal. These must be confirmed on every submit or re-submit.
+  </p>
+  <div class="space-y-6">
         <section class="space-y-3">
           <h3 class="text-base font-medium">1. Data Protection</h3>
           <p class="text-sm text-muted-foreground">
@@ -265,14 +245,5 @@
             {validationErrors}
           />
         </section>
-      </div>
-
-      <AlertDialog.Footer class="flex gap-2 shrink-0 mt-4">
-        <AlertDialog.Cancel disabled={submitting}>Cancel</AlertDialog.Cancel>
-        <AlertDialog.Action disabled={submitting} onclick={() => onConfirm?.()}>
-          {submitting ? "Submitting…" : "Confirm and submit"}
-        </AlertDialog.Action>
-      </AlertDialog.Footer>
-    </div>
-  </AlertDialog.Content>
-</AlertDialog.Root>
+  </div>
+</div>

@@ -23,8 +23,6 @@
     proposal,
     onSave,
     validationErrors,
-    openLegalDialog = $bindable(false),
-    showLegalErrors = false,
     formRef = $bindable(),
     onCancel,
   } = $props();
@@ -105,6 +103,7 @@
       ["metaData", "treasuryDonationTxHash"],
       ["metaData", "treasuryDonationConfirmed"],
     ],
+    "section-9": [["metaData", "legalDeclarations"]],
   };
 
   /** Section-6 paths depend on administrator: only count errors for fields that apply to the chosen type. */
@@ -158,6 +157,7 @@
     "section-6",
     "section-7",
     "section-8",
+    "section-9",
   ]);
 
   let formData = $state({
@@ -212,8 +212,6 @@
       },
       /** Legal declarations: never prefilled; must be re-submitted on every submit/re-submit. */
       legalDeclarations: {
-        dataProcessingConsent: false,
-        publicVisibilityConsent: false,
         submitterName: "",
         submitterEmail: "",
         submitterRole: "",
@@ -410,10 +408,8 @@
         };
       }
       // Never prefill legalDeclarations: they must be re-submitted on every submit/re-submit.
-      // Reset to full shape so no property is undefined (avoids bind:value={undefined} in dialog).
+      // Reset to full shape so no property is undefined (avoids bind:value={undefined}).
       formData.metaData.legalDeclarations = {
-        dataProcessingConsent: false,
-        publicVisibilityConsent: false,
         submitterName: "",
         submitterEmail: "",
         submitterRole: "",
@@ -424,26 +420,6 @@
     // Reset FormControls dirty baseline after prefill so opening a proposal and leaving does not show "unsaved changes".
     tick().then(() => formControlsRef?.resetDirtyBaseline?.());
   });
-
-  const legalDeclarationsErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.legalDeclarations,
-  );
-
-  let legalDialogSubmitting = $state(false);
-  async function confirmLegalAndSubmit() {
-    if (!onSave || legalDialogSubmitting) return;
-    legalDialogSubmitting = true;
-    try {
-      await Promise.resolve(
-        onSave(getPayload("live"), { fromLegalModal: true }),
-      );
-      openLegalDialog = false;
-    } catch (_) {
-      // Errors shown via validationErrors
-    } finally {
-      legalDialogSubmitting = false;
-    }
-  }
 
   function getPayload(status) {
     const workPackages = formData.metaData?.proposalDetails?.workPackages ?? [];
@@ -652,6 +628,25 @@
           />
         </Accordion.Content>
       </Accordion.Item>
+
+      <Accordion.Item value="section-9" id="legal-declarations">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            9. Legal declarations
+            {#if sectionErrorCounts["section-9"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-9"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormLegalDeclarations
+            bind:value={formData.metaData.legalDeclarations}
+            validationErrors={validationErrors?.properties?.metaData?.properties?.legalDeclarations}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
     </Accordion.Root>
 
     <FormControls
@@ -662,15 +657,6 @@
       bind:autoSaveEnabled
       {previewHref}
       {isNewUnsaved}
-      autoSavePaused={openLegalDialog}
     />
   </form>
-
-  <FormLegalDeclarations
-    bind:value={formData.metaData.legalDeclarations}
-    validationErrors={showLegalErrors ? legalDeclarationsErrors : undefined}
-    bind:open={openLegalDialog}
-    onConfirm={confirmLegalAndSubmit}
-    submitting={legalDialogSubmitting}
-  />
 {/if}
