@@ -157,7 +157,6 @@
     "section-6",
     "section-7",
     "section-8",
-    "section-9",
   ]);
 
   let formData = $state({
@@ -651,26 +650,27 @@
         </Accordion.Content>
       </Accordion.Item>
 
-      <Accordion.Item value="section-9" id="legal-declarations">
-        <Accordion.Trigger class="section-title">
-          <h2 class="flex items-center gap-2 text-xl! mb-0!">
-            9. Legal declarations
-            {#if sectionErrorCounts["section-9"] > 0}
-              <Badge variant="destructive">
-                {errorCountLabel(sectionErrorCounts["section-9"])}
-              </Badge>
-            {/if}
-          </h2>
-        </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px] pb-12">
-          <FormLegalDeclarations
-            bind:value={formData.metaData.legalDeclarations}
-            validationErrors={validationErrors?.properties?.metaData?.properties
-              ?.legalDeclarations}
-          />
-        </Accordion.Content>
-      </Accordion.Item>
     </Accordion.Root>
+
+    <div id="legal-declarations" class="max-w-4xl mx-auto px-4 w-full border-t">
+      <div class="section-title">
+        <h2 class="flex items-center gap-2 text-xl! mb-0!">
+          9. Legal declarations
+          {#if sectionErrorCounts["section-9"] > 0}
+            <Badge variant="destructive">
+              {errorCountLabel(sectionErrorCounts["section-9"])}
+            </Badge>
+          {/if}
+        </h2>
+      </div>
+      <div class="pt-[3px] px-[3px] pb-12">
+        <FormLegalDeclarations
+          bind:value={formData.metaData.legalDeclarations}
+          validationErrors={validationErrors?.properties?.metaData?.properties
+            ?.legalDeclarations}
+        />
+      </div>
+    </div>
 
     <FormControls
       bind:this={formControlsRef}

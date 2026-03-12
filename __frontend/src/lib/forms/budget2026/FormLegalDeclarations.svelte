@@ -1,7 +1,7 @@
 <script>
   /** @see __frontend/docs/budget2026/form-legal-declarations.md Version: 1.1.0 */
   /**
-   * Legal declarations form section (accordion section 9).
+   * Legal declarations form section (regular section after accordion).
    * Must be re-submitted on every submit or re-submit; never prefilled.
    */
   import Input from "$lib/components/form/Input.svelte";
