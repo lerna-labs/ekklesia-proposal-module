@@ -48,7 +48,15 @@ export const milestoneSchema = z.object({
     .string()
     .min(1, "Acceptance criteria are required")
     .max(4000),
-  duration: z.string().min(1, "Duration is required").max(100),
+  duration: z
+    .coerce.number({
+      error: (iss) =>
+        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
+          ? "Duration must be a number"
+          : undefined,
+    })
+    .int("Duration must be a whole number of weeks")
+    .min(1, "Duration must be at least 1 week"),
 });
 
 /** Single work package schema. Matches FormWorkPackages.svelte (metaData.proposalDetails.workPackages[]). */
