@@ -148,10 +148,10 @@
     formData.metaData.intersectAdministratorFeeConsent =
       initial.intersectAdministratorFeeConsent;
     formData.metaData.otherAdministrator = initial.otherAdministrator;
-    formData.metaData.contractingParty = { ...initial.contractingParty };
-    formData.metaData.primaryContact = { ...initial.primaryContact };
-    formData.metaData.signatoryContact = { ...initial.signatoryContact };
-    formData.metaData.kycInfo = { ...initial.kycInfo };
+    Object.assign(formData.metaData.contractingParty, initial.contractingParty);
+    Object.assign(formData.metaData.primaryContact, initial.primaryContact);
+    Object.assign(formData.metaData.signatoryContact, initial.signatoryContact);
+    Object.assign(formData.metaData.kycInfo, initial.kycInfo);
     formData.metaData.administrator = pendingAdministrator;
     localAdministrator = pendingAdministrator;
     pendingAdministrator = "";

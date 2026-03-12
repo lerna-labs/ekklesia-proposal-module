@@ -3,7 +3,88 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Input from "$lib/components/form/Input.svelte";
   import SelectCountries from "$lib/components/form/SelectCountries.svelte";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+
+  const COMPANY_FIELDS = [
+    "legalEntityName",
+    "legalEntityRegistrationNumber",
+    "legalEntityCountry",
+    "legalEntityAddressLine1",
+    "legalEntityAddressLine2",
+    "legalEntityAddressLine3",
+  ];
+  const INDIVIDUAL_FIELDS = [
+    "govtIssuedIdNumber",
+    "countryOfResidence",
+    "residentialAddressLine1",
+    "residentialAddressLine2",
+    "residentialAddressLine3",
+  ];
+
+  /** True if the current branch (company or individual) has any filled field. */
+  function hasContractingPartyBranchData(data, entityType) {
+    const cp = data?.metaData?.contractingParty;
+    if (!cp || typeof cp !== "object") return false;
+    const fields =
+      entityType === "company" ? COMPANY_FIELDS : INDIVIDUAL_FIELDS;
+    return fields.some(
+      (f) => (cp[f] ?? "").toString().trim() !== "",
+    );
+  }
+
+  /** Display value for legal entity type radio; kept in sync with formData when no pending change. */
+  let localLegalEntityType = $state(
+    formData.metaData.contractingParty?.legalEntityType ?? "",
+  );
+  let openLegalEntityTypeDialog = $state(false);
+  let pendingLegalEntityType = $state("");
+
+  $effect(() => {
+    const current = formData.metaData.contractingParty?.legalEntityType ?? "";
+    if (!openLegalEntityTypeDialog && pendingLegalEntityType === "") {
+      localLegalEntityType = current;
+    }
+  });
+
+  /**
+   * Intercept legal entity type change: if current branch has data, show dialog and revert; else update formData.
+   */
+  $effect(() => {
+    const current = formData.metaData.contractingParty?.legalEntityType ?? "";
+    if (openLegalEntityTypeDialog || pendingLegalEntityType !== "") return;
+    if (localLegalEntityType === current) return;
+    if (
+      (current === "company" || current === "individual") &&
+      hasContractingPartyBranchData(formData, current)
+    ) {
+      pendingLegalEntityType = localLegalEntityType;
+      openLegalEntityTypeDialog = true;
+      localLegalEntityType = current;
+    } else {
+      formData.metaData.contractingParty.legalEntityType = localLegalEntityType;
+    }
+  });
+
+  function cancelLegalEntityTypeSwitch() {
+    pendingLegalEntityType = "";
+    openLegalEntityTypeDialog = false;
+  }
+
+  function confirmLegalEntityTypeSwitch() {
+    const cp = formData.metaData.contractingParty;
+    const fromCompany = cp.legalEntityType === "company";
+    if (fromCompany) {
+      for (const f of COMPANY_FIELDS) cp[f] = "";
+    } else {
+      for (const f of INDIVIDUAL_FIELDS) cp[f] = "";
+    }
+    cp.legalEntityType = pendingLegalEntityType;
+    localLegalEntityType = pendingLegalEntityType;
+    pendingLegalEntityType = "";
+    openLegalEntityTypeDialog = false;
+  }
 
   const metaErrors = $derived(
     validationErrors?.properties?.metaData?.properties ?? {},
@@ -51,7 +132,7 @@
 
 <RadioGroup
   id="legalEntityType"
-  bind:value={formData.metaData.contractingParty.legalEntityType}
+  bind:value={localLegalEntityType}
   label="Proposal's Party Details"
   description="Are you applying as a registered company or an individual?"
   required
@@ -319,3 +400,35 @@
     class="mb-4"
   />
 {/if}
+
+<AlertDialog.Root bind:open={openLegalEntityTypeDialog}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Change party type?</AlertDialog.Title>
+      <AlertDialog.Description>
+        Changing the party type will clear the
+        {formData.metaData.contractingParty?.legalEntityType === "company"
+          ? "company"
+          : "individual"}
+        details you entered. You will need to re-enter the information for the
+        new type. Do you want to continue?
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer class="flex gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        class="cursor-pointer"
+        onclick={cancelLegalEntityTypeSwitch}
+      >
+        Cancel
+      </Button>
+      <AlertDialog.Action
+        class="cursor-pointer"
+        onclick={confirmLegalEntityTypeSwitch}
+      >
+        Continue
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

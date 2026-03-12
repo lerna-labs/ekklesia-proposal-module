@@ -1,80 +1,16 @@
 <script>
   /** @see __frontend/docs/budget2026/form-legal-declarations.md Version: 1.1.0 */
   /**
-   * Legal declarations form section (accordion section 9).
+   * Legal declarations form section (regular section after accordion).
    * Must be re-submitted on every submit or re-submit; never prefilled.
    */
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
-  import { tick } from "svelte";
 
   let {
     value = $bindable(),
     validationErrors,
   } = $props();
-
-  /** Field ids in form order; first with an error is scrolled into view. */
-  const FIELD_ORDER = [
-    "submitterName",
-    "submitterEmail",
-    "submitterRole",
-    "authorizationEntity",
-    "authorizationAttestation",
-  ];
-
-  function getFirstErrorFieldId(errors) {
-    if (!errors?.properties) return null;
-    for (const id of FIELD_ORDER) {
-      if (errors.properties[id]?.errors?.length) return id;
-    }
-    return null;
-  }
-
-  /** Find nearest scrollable ancestor (overflow-y: auto | scroll) so we scroll within the page. */
-  function getScrollParent(el) {
-    let parent = el.parentElement;
-    while (parent) {
-      const overflowY = getComputedStyle(parent).overflowY;
-      if (
-        overflowY === "auto" ||
-        overflowY === "scroll" ||
-        overflowY === "overlay"
-      )
-        return parent;
-      parent = parent.parentElement;
-    }
-    return null;
-  }
-
-  function scrollToElement(el) {
-    const scrollParent = getScrollParent(el);
-    if (scrollParent) {
-      const parentRect = scrollParent.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      const padding = 16;
-      const targetScrollTop =
-        scrollParent.scrollTop + (elRect.top - parentRect.top) - padding;
-      scrollParent.scrollTo({
-        top: Math.max(0, targetScrollTop),
-        behavior: "smooth",
-      });
-    } else {
-      el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }
-
-  $effect(() => {
-    const firstId = getFirstErrorFieldId(validationErrors);
-    if (!firstId) return;
-    tick().then(() => {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const el = document.getElementById(firstId);
-          if (el) scrollToElement(el);
-        });
-      });
-    });
-  });
 </script>
 
 <div class="space-y-6 pr-2">
