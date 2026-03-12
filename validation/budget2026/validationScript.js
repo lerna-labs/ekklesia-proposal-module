@@ -166,7 +166,22 @@ const legalDeclarationsSchema = z.object({
   authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
   submitterName: z.string().min(1, "Name is required").max(100),
   submitterRole: z.string().min(1, "Role is required").max(100),
-  submitterEmail: z.string().trim().min(1, "Email is required").max(254).email("Enter a valid email"),
+  submitterEmail: z
+    .string()
+    .trim()
+    .max(254)
+    .superRefine((val, ctx) => {
+      if (val.length < 1) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Email is required" });
+        return;
+      }
+      const emailSchema = z.string().email("Enter a valid email");
+      const result = emailSchema.safeParse(val);
+      if (!result.success) {
+        const msg = result.error.errors[0]?.message ?? "Enter a valid email";
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
+      }
+    }),
 });
 
 const strategyFrameworkSchema = z.object({
@@ -431,15 +446,6 @@ const formSchema = z
         message: "Legal declarations are required to submit",
       });
       return;
-    }
-    const ldResult = legalDeclarationsSchema.safeParse(ld);
-    if (!ldResult.success) {
-      for (const issue of ldResult.error.issues) {
-        ctx.addIssue({
-          ...issue,
-          path: ["metaData", "legalDeclarations", ...(issue.path || [])],
-        });
-      }
     }
   });
 
