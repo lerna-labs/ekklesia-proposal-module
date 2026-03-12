@@ -16,12 +16,12 @@
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let pillars = $derived(data.pillars ?? []);
-  const defaultSort = $derived(vote?.sortOptions?.[0]?.value ?? "title");
-  const sortFromData = $derived(data.listState?.sort ?? defaultSort);
+  const DEFAULT_SORT = "submittedAt";
+  const sortFromData = $derived(data.listState?.sort ?? DEFAULT_SORT);
   const ascendingFromData = $derived(
     (data.listState?.direction ?? "asc") !== "desc",
   );
-  let sort = $state("title");
+  let sort = $state("submittedAt");
   let ascending = $state(true);
   $effect(() => {
     sort = sortFromData;
