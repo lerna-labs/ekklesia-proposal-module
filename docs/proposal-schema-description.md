@@ -20,8 +20,7 @@ notes. It is based on the CBC Proposal Template FORM Final DRAFT PDF.
 Legend: **\*** = mandatory in PDF; **Not Public** = PDF marks field as not
 public (yellow).
 
-**Draft vs live:** For `status: "draft"`, only `voteId`, `title`, and `status`
-are required on create; `summary` and most `metaData` are optional. When
+**Draft vs live:** For `status: "draft"`, only `voteId` and `status` are required on create; `title` is optional (can be empty); `summary` and most `metaData` are optional. When
 submitting with `status: "live"`, the API and frontend enforce full validation (
 see [proposalCreateSchema.js](../validation/proposalCreateSchema.js)
 and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
@@ -34,7 +33,7 @@ and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
 |-------------|---------------------|---------------------|-----------------|---------------------|-------------------------------------------------------------------------|
 | —           | (proposer)          | `proposerId`        | Yes             | String (ref User)   | Set from authenticated user.                                            |
 | —           | (vote)              | `voteId`            | Yes             | ObjectId (ref Vote) | Must be valid vote.                                                     |
-| 1           | Proposal Title *    | `title`             | Yes             | 2–100 chars         | Short text.                                                             |
+| 1           | Proposal Title *    | `title`             | Yes (when live) | 2–100 chars         | Short text; optional for draft (can be empty).                           |
 | 1           | Executive Summary * | `summary`           | Yes (when live) | 2–2000 chars        | Text area; optional for draft.                                          |
 | —           | (status)            | `status`            | Yes             | enum                | `draft`, `live`, `withdrawnByProposer`, `withdrawnByAdmin`, `archived`. |
 | —           | (submitted at)      | `submittedAt`       | No              | Date                | Set on submit.                                                          |

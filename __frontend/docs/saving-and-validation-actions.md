@@ -4,7 +4,7 @@ This document describes what happens on each save and validation action in the p
 
 ## Overview
 
-- **FormControls** (`$lib/components/form/FormControls.svelte`) provides the sticky bottom bar: "Save Draft", "Submit Proposal" / "Re-Submit Proposal", and the Auto-save toggle. It calls the page's `onSave(payload, options)` and manages dirty state and leave confirmation.
+- **FormControls** (`$lib/components/form/FormControls.svelte`) provides the sticky bottom bar: "Save", "Save & Exit", "Preview Proposal", and "Submit Proposal" / "Re-Submit Proposal". Auto-save is always on for drafts (no toggle). It calls the page's `onSave(payload, options)` and manages dirty state and leave confirmation.
 - **Pages** (new proposal and edit proposal) implement `onSave`: they call the API, set `validationErrors` on failure, and decide when to navigate to `/dashboard`.
 
 ---
@@ -13,8 +13,9 @@ This document describes what happens on each save and validation action in the p
 
 | Trigger | Payload `status` | `options` | When |
 |--------|-------------------|-----------|------|
-| **Save Draft** (button) | `"draft"` | `{ fromAutoSave: false }` | User clicks "Save Draft" |
-| **Auto-save** (interval) | `"draft"` | `{ fromAutoSave: true }` | Every 2 minutes when draft, if auto-save is enabled |
+| **Save** (button) | `"draft"` | `{ fromAutoSave: false, exitAfterSave: false }` | User clicks "Save" (stays on form) |
+| **Save & Exit** (button) | `"draft"` | `{ fromAutoSave: false, exitAfterSave: true }` | User clicks "Save & Exit" (navigates to dashboard) |
+| **Auto-save** (interval) | `"draft"` | `{ fromAutoSave: true }` | Every 2 minutes when draft and form is dirty |
 | **Submit Proposal** / **Re-Submit** (button) | `"live"` | *(none)* | User clicks "Submit Proposal" or "Re-Submit Proposal" |
 | **Form submit** (e.g. Enter) | `"live"` | *(none)* | Parent form's `onsubmit` calls `formControlsRef.submit()` → same as button |
 
@@ -34,18 +35,21 @@ Both **new** (`[budgetSlug]/new/+page.svelte`) and **edit** (`[budgetSlug]/[prop
 
 ### 2.2 On success (`res.ok`)
 
-- Toast: "Proposal created." / "Draft saved." (new) or "Proposal submitted." / "Proposal saved." (edit) depending on `payload.status`
+- **Toast:**  
+  - If draft and `options?.fromAutoSave`: "Draft autosaved".  
+  - Else: "Proposal created." / "Draft saved." (new) or "Proposal submitted." / "Proposal saved." (edit) depending on `payload.status`.
 - `formRef.clearDirty()` so the form is no longer considered dirty
 - `await invalidateAll()` to refresh loaders
 - **Navigation:**  
   `goto("/dashboard")` only when:
   - `payload.status === "live"`, or  
-  - `payload.status === "draft"` and **not** auto-save (`!options?.fromAutoSave`)
+  - `options?.exitAfterSave === true` (e.g. user clicked "Save & Exit")
 
 So:
 
-- **Auto-save (draft, `fromAutoSave: true`):** no navigation; user stays on the form.
-- **Manual Save Draft (draft, `fromAutoSave: false`):** navigate to dashboard.
+- **Auto-save (draft, `fromAutoSave: true`):** toast "Draft autosaved"; no navigation.
+- **Save (draft, `exitAfterSave: false`):** toast "Draft saved." / "Proposal saved."; no navigation; user stays on the form.
+- **Save & Exit (draft, `exitAfterSave: true`):** toast "Draft saved." / "Proposal saved."; navigate to dashboard.
 - **Submit / Re-Submit (live):** navigate to dashboard on success.
 
 ### 2.3 On validation/API error (`!res.ok`)
@@ -86,8 +90,9 @@ Legal declarations are **accordion section 9** in the form. They are submitted t
 
 | User action | status | options | Navigate to dashboard? | Notes |
 |------------|--------|---------|------------------------|-------|
-| Save Draft (button) | draft | `fromAutoSave: false` | Yes | |
-| Auto-save (interval) | draft | `fromAutoSave: true` | No | Every 2 min when enabled |
+| Save (button) | draft | `exitAfterSave: false` | No | Stay on form |
+| Save & Exit (button) | draft | `exitAfterSave: true` | Yes | |
+| Auto-save (interval) | draft | `fromAutoSave: true` | No | Every 2 min (drafts only), only when dirty |
 | Submit / Re-Submit (button or form) | live | — | Yes on success | Full form including legal declarations (section 9) is submitted |
 
-Validation errors from the API are stored in the page's `validationErrors` and passed into the form. Navigation only happens on successful save, and only when the save is either a live submit or a manual draft save (not auto-save).
+Validation errors from the API are stored in the page's `validationErrors` and passed into the form. Navigation only happens on successful save when the save is a live submit or "Save & Exit" (not on "Save" or auto-save).
