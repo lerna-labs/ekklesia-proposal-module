@@ -194,7 +194,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {vote} {pillars} />
+          <ProposalCard {proposal} {vote} />
         {/each}
       </div>
 

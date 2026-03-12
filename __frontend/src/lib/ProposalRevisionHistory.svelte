@@ -8,7 +8,7 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import ClockIcon from "@lucide/svelte/icons/clock";
 
-  let { proposal, vote, pillars = [], open = $bindable(false) } = $props();
+  let { proposal, vote, open = $bindable(false) } = $props();
 
   const voteSlug = $derived(vote?.slug ?? "");
   const proposalId = $derived(proposal?._id ?? proposal?.id ?? null);

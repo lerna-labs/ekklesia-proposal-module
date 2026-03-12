@@ -1,7 +1,7 @@
 <script>
   import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
 
-  let { proposal, vote, pillars = [] } = $props();
+  let { proposal, vote } = $props();
 
   let revisionDrawerOpen = $state(false);
 
@@ -35,6 +35,5 @@
 <ProposalRevisionHistory
   {proposal}
   {vote}
-  {pillars}
   bind:open={revisionDrawerOpen}
 />

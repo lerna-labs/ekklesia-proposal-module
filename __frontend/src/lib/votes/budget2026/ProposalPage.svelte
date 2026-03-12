@@ -50,7 +50,7 @@
         </Button>
       </div>
     {/if}
-    <ProposalPageTitle {proposal} {vote} {pillars} />
+    <ProposalPageTitle {proposal} {vote} />
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
       <div class="space-y-6">
