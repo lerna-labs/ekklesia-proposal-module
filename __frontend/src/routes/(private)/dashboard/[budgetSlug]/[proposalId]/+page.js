@@ -38,7 +38,5 @@ export async function load({ fetch, params, parent }) {
 		error(404, 'Proposal does not belong to this vote');
 	}
 
-	const pillars = vote.metaData?.strategyFramework?.pillars ?? [];
-
-	return { proposal, vote, pillars };
+	return { proposal, vote };
 }

@@ -43,7 +43,6 @@
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
-  let pillars = $derived(data.pillars ?? []);
   let saving = $state(false);
   let validationErrors = $state(null);
   let openLegalDialog = $state(false);
@@ -131,10 +130,6 @@
   }
 </script>
 
-<div class="container mx-auto max-w-4xl py-8 px-4">
-  <h1 class="text-2xl font-semibold mb-6">Edit proposal</h1>
-</div>
-
 {#if formLoading}
   <div class="container mx-auto max-w-4xl py-8 px-4 flex items-center justify-center min-h-[200px]">
     <p class="text-muted-foreground">Loading form…</p>
@@ -142,12 +137,12 @@
 {:else if FormComponent}
   <FormComponent
     {vote}
-    {pillars}
     {proposal}
     {onSave}
     {showLegalErrors}
     bind:formRef
     bind:validationErrors
     bind:openLegalDialog
+    onCancel={() => goto("/dashboard")}
   />
 {/if}

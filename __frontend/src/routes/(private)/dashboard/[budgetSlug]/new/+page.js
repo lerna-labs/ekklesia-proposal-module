@@ -15,7 +15,5 @@ export async function load({ fetch, params, parent }) {
 	}
 
 	const vote = votes[0];
-	const pillars = vote.metaData?.strategyFramework?.pillars ?? [];
-
-	return { vote, pillars };
+	return { vote };
 }

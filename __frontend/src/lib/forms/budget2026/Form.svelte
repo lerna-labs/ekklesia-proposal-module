@@ -12,6 +12,7 @@
   import FormAdditionalInfo from "./FormAdditionalInfo.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
+  import TreasuryDonationAcknowledgmentModal from "./TreasuryDonationAcknowledgmentModal.svelte";
   import { normalizeWorkPackage } from "./workPackageUtils.js";
   import { onMount, tick } from "svelte";
 
@@ -19,14 +20,28 @@
 
   let {
     vote,
-    pillars,
     proposal,
     onSave,
     validationErrors,
     openLegalDialog = $bindable(false),
     showLegalErrors = false,
     formRef = $bindable(),
+    onCancel,
   } = $props();
+
+  const pillars = $derived(vote?.metaData?.strategyFramework?.pillars ?? []);
+  const formTitle = $derived(proposal?._id ? "Edit Proposal" : "New Proposal");
+  const showTreasuryModal = $derived(
+    vote?.form === "budget2026" && !proposal?._id,
+  );
+  let treasuryAcknowledged = $state(false);
+  let openTreasuryModal = $state(false);
+
+  $effect(() => {
+    if (showTreasuryModal && !treasuryAcknowledged) {
+      openTreasuryModal = true;
+    }
+  });
 
   /** Count all errors in a tree node (errors array + recursive properties + items). */
   function countErrorsInTree(node) {
@@ -455,188 +470,207 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} class="flex flex-col">
-  <Accordion.Root
-    type="multiple"
-    class="max-w-4xl mx-auto px-4 w-full"
-    bind:value={accordionValue}
-  >
-    <Accordion.Item value="section-1" id="project-definition">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          1. Proposal Overview
-          {#if sectionErrorCounts["section-1"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-1"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormProjectDefinition
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-2" id="strategy-framework">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          2. Alignment to Strategy framework
-          {#if sectionErrorCounts["section-2"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-2"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormStrategyFramework
-          bind:formData
-          {vote}
-          {pillars}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-5" id="proposer-details">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          3. Proposer
-          {#if sectionErrorCounts["section-5"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-5"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormProposerDetails
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-3" id="proposal-details">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          4. Proposal Details
-          {#if sectionErrorCounts["section-3"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-3"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormProposalDetails
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-6" id="budget-administration">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          5. Budget Administration
-          {#if sectionErrorCounts["section-6"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-6"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormBudgetAdmin bind:formData {vote} {proposal} {validationErrors} />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-4" id="budget-summary">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          6. Budget Summary
-          {#if sectionErrorCounts["section-4"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-4"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormBudgetSummary bind:formData {vote} {proposal} {validationErrors} />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-7" id="other-info">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          7. Other Supporting Info
-          {#if sectionErrorCounts["section-7"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-7"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormAdditionalInfo
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-
-    <Accordion.Item value="section-8" id="treasury-donation">
-      <Accordion.Trigger class="section-title">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
-          8. Treasury Donation Verification
-          {#if sectionErrorCounts["section-8"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-8"])}
-            </Badge>
-          {/if}
-        </h2>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px]">
-        <FormTreasuryDonation
-          bind:formData
-          {vote}
-          {proposal}
-          {validationErrors}
-        />
-      </Accordion.Content>
-    </Accordion.Item>
-  </Accordion.Root>
-
-  <FormControls
-    bind:this={formControlsRef}
-    {formData}
-    {getPayload}
-    {onSave}
-    bind:autoSaveEnabled
-    {previewHref}
-    {isNewUnsaved}
-    autoSavePaused={openLegalDialog}
+{#if showTreasuryModal && !treasuryAcknowledged}
+  <TreasuryDonationAcknowledgmentModal
+    bind:open={openTreasuryModal}
+    onContinue={() => {
+      treasuryAcknowledged = true;
+      openTreasuryModal = false;
+    }}
+    onCancel={() => onCancel?.()}
   />
-</form>
+{:else}
+  <div class="container mx-auto max-w-4xl py-8 px-4 pb-0">
+    <h1 class="text-2xl font-semibold mb-4">{formTitle}</h1>
+  </div>
+  <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
+    <Accordion.Root
+      type="multiple"
+      class="max-w-4xl mx-auto px-4 w-full"
+      bind:value={accordionValue}
+    >
+      <Accordion.Item value="section-1" id="project-definition">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            1. Proposal Overview
+            {#if sectionErrorCounts["section-1"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-1"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormProjectDefinition
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
 
-<FormLegalDeclarations
-  bind:value={formData.metaData.legalDeclarations}
-  validationErrors={showLegalErrors ? legalDeclarationsErrors : undefined}
-  bind:open={openLegalDialog}
-  onConfirm={confirmLegalAndSubmit}
-  submitting={legalDialogSubmitting}
-/>
+      <Accordion.Item value="section-2" id="strategy-framework">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            2. Alignment to Strategy framework
+            {#if sectionErrorCounts["section-2"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-2"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormStrategyFramework
+            bind:formData
+            {vote}
+            {pillars}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-5" id="proposer-details">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            3. Proposer
+            {#if sectionErrorCounts["section-5"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-5"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormProposerDetails
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-3" id="proposal-details">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            4. Proposal Details
+            {#if sectionErrorCounts["section-3"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-3"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormProposalDetails
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-6" id="budget-administration">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            5. Budget Administration
+            {#if sectionErrorCounts["section-6"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-6"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormBudgetAdmin bind:formData {vote} {proposal} {validationErrors} />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-4" id="budget-summary">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            6. Budget Summary
+            {#if sectionErrorCounts["section-4"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-4"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormBudgetSummary
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-7" id="other-info">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            7. Other Supporting Info
+            {#if sectionErrorCounts["section-7"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-7"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormAdditionalInfo
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+
+      <Accordion.Item value="section-8" id="treasury-donation">
+        <Accordion.Trigger class="section-title">
+          <h2 class="flex items-center gap-2 text-xl! mb-0!">
+            8. Treasury Donation Verification
+            {#if sectionErrorCounts["section-8"] > 0}
+              <Badge variant="destructive">
+                {errorCountLabel(sectionErrorCounts["section-8"])}
+              </Badge>
+            {/if}
+          </h2>
+        </Accordion.Trigger>
+        <Accordion.Content class="pt-[3px] px-[3px]">
+          <FormTreasuryDonation
+            bind:formData
+            {vote}
+            {proposal}
+            {validationErrors}
+          />
+        </Accordion.Content>
+      </Accordion.Item>
+    </Accordion.Root>
+
+    <FormControls
+      bind:this={formControlsRef}
+      {formData}
+      {getPayload}
+      {onSave}
+      bind:autoSaveEnabled
+      {previewHref}
+      {isNewUnsaved}
+      autoSavePaused={openLegalDialog}
+    />
+  </form>
+
+  <FormLegalDeclarations
+    bind:value={formData.metaData.legalDeclarations}
+    validationErrors={showLegalErrors ? legalDeclarationsErrors : undefined}
+    bind:open={openLegalDialog}
+    onConfirm={confirmLegalAndSubmit}
+    submitting={legalDialogSubmitting}
+  />
+{/if}
