@@ -194,10 +194,10 @@
 </script>
 
 <section
-  class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6 px-4"
+  class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
   id="controls"
 >
-  <div class="max-w-4xl mx-auto flex flex-col gap-2 container py-2 px-0 pb-0">
+  <div class="container mx-auto max-w-4xl flex flex-col gap-2 py-2 px-4 pb-0">
     <div
       class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
     >
