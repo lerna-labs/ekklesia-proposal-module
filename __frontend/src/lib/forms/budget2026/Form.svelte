@@ -257,7 +257,20 @@
     formData.summary = p.summary ?? "";
     formData.status = p.status ?? "draft";
     if (p.metaData) {
+      // Save form's nested object refs before Object.assign overwrites them (keeps bindings valid, avoids mutating proposal p)
+      const formContractingParty = formData.metaData.contractingParty;
+      const formPrimaryContact = formData.metaData.primaryContact;
+      const formSignatoryContact = formData.metaData.signatoryContact;
+      const formKycInfo = formData.metaData.kycInfo;
+
       Object.assign(formData.metaData, p.metaData);
+
+      // Restore form's objects so bindings stay valid and we don't mutate proposal p
+      formData.metaData.contractingParty = formContractingParty;
+      formData.metaData.primaryContact = formPrimaryContact;
+      formData.metaData.signatoryContact = formSignatoryContact;
+      formData.metaData.kycInfo = formKycInfo;
+
       const sf = p.metaData.strategyFramework;
       if (sf && typeof sf === "object") {
         formData.metaData.strategyFramework = {
@@ -293,7 +306,7 @@
           p.metaData.treasuryRepaymentCircumstances ?? "";
       if (p.metaData.priorFunding != null)
         formData.metaData.priorFunding = p.metaData.priorFunding ?? "";
-      // Admin section: normalize contractingParty, primaryContact, signatoryContact, kycInfo, administrator
+      // Admin section: mutate restored objects with normalized values (keeps bindings valid)
       const initialContractingParty = {
         legalEntityType: "",
         legalEntityName: "",
@@ -311,52 +324,61 @@
       const cp = p.metaData.contractingParty;
       if (cp != null) {
         if (typeof cp === "string") {
-          formData.metaData.contractingParty = {
-            ...initialContractingParty,
-            legalEntityType: cp,
-          };
+          const raw = (cp ?? "").trim().toLowerCase();
+          const legalEntityType =
+            raw === "company" || raw === "individual" ? raw : "";
+          Object.assign(formContractingParty, initialContractingParty);
+          formContractingParty.legalEntityType = legalEntityType;
         } else if (typeof cp === "object") {
-          formData.metaData.contractingParty = {
-            ...initialContractingParty,
-            ...cp,
-            legalEntityType: cp.legalEntityType ?? "",
-            legalEntityName: cp.legalEntityName ?? "",
-            legalEntityRegistrationNumber:
-              cp.legalEntityRegistrationNumber ?? "",
-            legalEntityCountry: cp.legalEntityCountry ?? "",
-            legalEntityAddressLine1: cp.legalEntityAddressLine1 ?? "",
-            legalEntityAddressLine2: cp.legalEntityAddressLine2 ?? "",
-            legalEntityAddressLine3: cp.legalEntityAddressLine3 ?? "",
-            govtIssuedIdNumber: cp.govtIssuedIdNumber ?? "",
-            countryOfResidence: cp.countryOfResidence ?? "",
-            residentialAddressLine1: cp.residentialAddressLine1 ?? "",
-            residentialAddressLine2: cp.residentialAddressLine2 ?? "",
-            residentialAddressLine3: cp.residentialAddressLine3 ?? "",
-          };
+          const raw = (cp.legalEntityType ?? "").toString().trim().toLowerCase();
+          const legalEntityType =
+            raw === "company" || raw === "individual" ? raw : "";
+          formContractingParty.legalEntityType = legalEntityType;
+          formContractingParty.legalEntityName = cp.legalEntityName ?? "";
+          formContractingParty.legalEntityRegistrationNumber =
+            cp.legalEntityRegistrationNumber ?? "";
+          formContractingParty.legalEntityCountry =
+            cp.legalEntityCountry ?? "";
+          formContractingParty.legalEntityAddressLine1 =
+            cp.legalEntityAddressLine1 ?? "";
+          formContractingParty.legalEntityAddressLine2 =
+            cp.legalEntityAddressLine2 ?? "";
+          formContractingParty.legalEntityAddressLine3 =
+            cp.legalEntityAddressLine3 ?? "";
+          formContractingParty.govtIssuedIdNumber =
+            cp.govtIssuedIdNumber ?? "";
+          formContractingParty.countryOfResidence =
+            cp.countryOfResidence ?? "";
+          formContractingParty.residentialAddressLine1 =
+            cp.residentialAddressLine1 ?? "";
+          formContractingParty.residentialAddressLine2 =
+            cp.residentialAddressLine2 ?? "";
+          formContractingParty.residentialAddressLine3 =
+            cp.residentialAddressLine3 ?? "";
         }
       }
       const pc = p.metaData.primaryContact;
       if (pc && typeof pc === "object") {
-        formData.metaData.primaryContact = {
-          name: pc.name ?? "",
-          email: pc.email ?? "",
-        };
+        formPrimaryContact.name = pc.name ?? "";
+        formPrimaryContact.email = pc.email ?? "";
       }
       const sc = p.metaData.signatoryContact;
       if (sc && typeof sc === "object") {
-        formData.metaData.signatoryContact = {
-          title: sc.title ?? "",
-          name: sc.name ?? "",
-          email: sc.email ?? "",
-          authorization: sc.authorization === true,
-        };
+        formSignatoryContact.title = sc.title ?? "";
+        formSignatoryContact.name = sc.name ?? "";
+        formSignatoryContact.email = sc.email ?? "";
+        formSignatoryContact.authorization = sc.authorization === true;
       }
       const kyc = p.metaData.kycInfo;
       if (kyc && typeof kyc === "object") {
-        formData.metaData.kycInfo = {
-          submitted: kyc.submitted ?? "",
-          email: kyc.email ?? "",
-        };
+        const kycSubmittedRaw = (kyc.submitted ?? "").trim();
+        formKycInfo.submitted =
+          kycSubmittedRaw === "yes" || kycSubmittedRaw === "Yes"
+            ? "Yes"
+            : kycSubmittedRaw === "no" || kycSubmittedRaw === "No"
+              ? "No"
+              : "";
+        formKycInfo.email = kyc.email ?? "";
       }
       const adm = p.metaData.administrator;
       if (adm !== undefined && adm !== null) {

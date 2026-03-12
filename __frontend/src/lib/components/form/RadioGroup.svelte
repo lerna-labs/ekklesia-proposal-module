@@ -16,19 +16,9 @@
     onUpdate,
   } = $props();
 
-  let internal = $state(value ?? "");
-
-  $effect(() => {
-    value = internal;
-  });
-  $effect(() => {
-    const v = value ?? "";
-    if (v !== internal) internal = v;
-  });
-
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   $effect(() => {
-    onUpdate?.(internal);
+    onUpdate?.(value ?? "");
   });
 </script>
 
@@ -54,7 +44,7 @@
       {/if}
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>
-    <RadioGroup.Root {id} bind:value={internal} class="grid gap-2">
+    <RadioGroup.Root {id} bind:value={value} class="grid gap-2">
       {#each options as option (option.value)}
         {@const itemId = `${id}-${option.value}`}
         <div class="flex items-center gap-2">
