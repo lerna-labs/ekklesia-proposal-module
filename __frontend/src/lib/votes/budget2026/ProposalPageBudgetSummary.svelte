@@ -124,7 +124,7 @@
                 <th
                   class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
                 >
-                  USD Equiv.
+                  USD Equiv.*
                 </th>
               </tr>
             </thead>
@@ -166,6 +166,12 @@
               </tr>
             </tfoot>
           </table>
+        </div>
+
+        <div class="text-xs text-muted-foreground mt-2">
+          *This proposer has specified a {conversionRateNum != null
+            ? "$" + formatUsd(conversionRateNum)
+            : "—"} USD/ADA currency conversion rate (for estimate purposes only)
         </div>
 
         {#if treasuryRepayment === "Yes"}
