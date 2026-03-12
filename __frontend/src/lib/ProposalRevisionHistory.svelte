@@ -2,13 +2,19 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import { Button } from "$lib/components/ui/button";
   import { api } from "$stores/sessionManager.js";
-  import { getChangedSectionLabels, getChangedDetails } from "$lib/proposalRevisionUtils.js";
-  import { sectionMapping as budget2026SectionMapping, sectionOrder as budget2026SectionOrder } from "$lib/forms/budget2026/revisionSectionMapping.js";
+  import {
+    getChangedSectionLabels,
+    getChangedDetails,
+  } from "$lib/proposalRevisionUtils.js";
+  import {
+    sectionMapping as budget2026SectionMapping,
+    sectionOrder as budget2026SectionOrder,
+  } from "$lib/forms/budget2026/revisionSectionMapping.js";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import ClockIcon from "@lucide/svelte/icons/clock";
 
-  let { proposal, vote, pillars = [], open = $bindable(false) } = $props();
+  let { proposal, vote, open = $bindable(false) } = $props();
 
   const voteSlug = $derived(vote?.slug ?? "");
   const proposalId = $derived(proposal?._id ?? proposal?.id ?? null);
@@ -18,15 +24,17 @@
   const versions = $derived(
     Array.isArray(proposal?.versions) && proposal.versions.length > 0
       ? [...proposal.versions].sort(
-          (a, b) =>
-            new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
+          (a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
         )
       : [],
   );
 
   const revisionOptions = $derived(
     vote?.form === "budget2026"
-      ? { sectionMapping: budget2026SectionMapping, sectionOrder: budget2026SectionOrder }
+      ? {
+          sectionMapping: budget2026SectionMapping,
+          sectionOrder: budget2026SectionOrder,
+        }
       : {},
   );
 
@@ -35,7 +43,11 @@
   let firstArchivedDoc = $state(null);
   let loadingCurrent = $state(false);
   let expandedVersionId = $state(null);
-  let expandedEntryChanges = $state(/** @type {{ labels: string[], details: Array<{ path: string, type: string, value?: unknown, oldValue?: unknown }>, isFirstVersion?: boolean } | null */ (null));
+  let expandedEntryChanges = $state(
+    /** @type {{ labels: string[], details: Array<{ path: string, type: string, value?: unknown, oldValue?: unknown }>, isFirstVersion?: boolean } | null */ (
+      null
+    ),
+  );
   let loadingExpanded = $state(false);
 
   $effect(() => {
@@ -50,7 +62,13 @@
 
   /** Fetch full current proposal when drawer is open and we need it for the current-vs-previous diff. */
   async function ensureFullCurrentProposal() {
-    if (!proposalId || !open || versions.length === 0 || fullCurrentProposal != null) return;
+    if (
+      !proposalId ||
+      !open ||
+      versions.length === 0 ||
+      fullCurrentProposal != null
+    )
+      return;
     loadingCurrent = true;
     try {
       const res = await api.fetch(fetch, `/proposals/${proposalId}`);
@@ -85,7 +103,11 @@
   async function ensureFirstArchivedDoc() {
     if (!open || versions.length === 0) return;
     const id = versions[0]._id;
-    if (firstArchivedDoc != null && (firstArchivedDoc._id ?? firstArchivedDoc.id) === id) return;
+    if (
+      firstArchivedDoc != null &&
+      (firstArchivedDoc._id ?? firstArchivedDoc.id) === id
+    )
+      return;
     loadingCurrent = true;
     try {
       const doc = await ensureArchivedDoc(id);
@@ -109,12 +131,11 @@
 
   const currentVersionChangedLabels = $derived.by(() => {
     if (!effectiveCurrentProposal || !firstArchivedDoc) return [];
-    return getChangedSectionLabels(effectiveCurrentProposal, firstArchivedDoc, revisionOptions);
-  });
-
-  const currentVersionChangedDetails = $derived.by(() => {
-    if (!effectiveCurrentProposal || !firstArchivedDoc) return [];
-    return getChangedDetails(effectiveCurrentProposal, firstArchivedDoc);
+    return getChangedSectionLabels(
+      effectiveCurrentProposal,
+      firstArchivedDoc,
+      revisionOptions,
+    );
   });
 
   /** Version entries from versions array only (no precomputed changes). */
@@ -165,17 +186,13 @@
       timeStyle: "short",
     });
   }
-
-  function formatChangeValue(v) {
-    if (v === undefined) return "undefined";
-    if (v === null) return "null";
-    if (typeof v === "object") return JSON.stringify(v).slice(0, 80) + (JSON.stringify(v).length > 80 ? "…" : "");
-    return String(v);
-  }
 </script>
 
 <Sheet.Root bind:open>
-  <Sheet.Content side="right" class="w-full sm:max-w-md flex flex-col p-0 gap-0">
+  <Sheet.Content
+    side="right"
+    class="w-full sm:max-w-md flex flex-col p-0 gap-0"
+  >
     <Sheet.Header class="p-4 border-b">
       <Sheet.Title class="flex items-center gap-2">
         <HistoryIcon class="size-4" aria-hidden="true" />
@@ -189,9 +206,13 @@
       <!-- Current version (reference) -->
       <div class="rounded-lg border bg-muted/30 p-3 pb-4 pl-4">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-sm font-medium">Version {currentVersion} (current)</span>
+          <span class="text-sm font-medium"
+            >Version {currentVersion} (current)</span
+          >
           <Button
-            href={voteSlug && proposalId ? `/votes/${voteSlug}/${proposalId}` : undefined}
+            href={voteSlug && proposalId
+              ? `/votes/${voteSlug}/${proposalId}`
+              : undefined}
             target="_blank"
             rel="noopener noreferrer"
             variant="outline"
@@ -207,30 +228,14 @@
         {:else if firstArchivedDoc}
           {#if currentVersionChangedLabels.length > 0}
             <div class="pt-1">
-              <span class="text-xs font-medium text-muted-foreground">Changed from v{currentVersion - 1}:</span>
-              <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+              <span class="text-xs font-medium text-muted-foreground"
+                >Changed from v{currentVersion - 1}:</span
+              >
+              <ul
+                class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3"
+              >
                 {#each currentVersionChangedLabels as label}
                   <li>{label}</li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-          {#if currentVersionChangedDetails.length > 0}
-            <div class="pt-2 mt-2 border-t border-border">
-              <span class="text-xs font-medium text-muted-foreground">Exact changes (temp):</span>
-              <ul class="text-xs text-muted-foreground mt-1 space-y-1 pl-0 list-none font-mono break-all">
-                {#each currentVersionChangedDetails as d}
-                  <li class="rounded bg-muted/50 px-1.5 py-0.5">
-                    <span class="text-foreground">{d.path}</span>
-                    <span class="text-muted-foreground"> [{d.type}]</span>
-                    {#if d.type === "UPDATE"}
-                      <span class="block text-muted-foreground mt-0.5">{formatChangeValue(d.oldValue)} → {formatChangeValue(d.value)}</span>
-                    {:else if d.type === "ADD"}
-                      <span class="block text-muted-foreground mt-0.5">+ {formatChangeValue(d.value)}</span>
-                    {:else if d.type === "REMOVE"}
-                      <span class="block text-muted-foreground mt-0.5">− {formatChangeValue(d.oldValue)}</span>
-                    {/if}
-                  </li>
                 {/each}
               </ul>
             </div>
@@ -244,7 +249,9 @@
         {#each versionEntries as entry (entry._id)}
           <div class="rounded-lg border p-3 pb-4 pl-4 space-y-2">
             <div class="flex items-center justify-between gap-2">
-              <span class="text-sm font-medium">Version {entry.versionNumber}</span>
+              <span class="text-sm font-medium"
+                >Version {entry.versionNumber}</span
+              >
               <Button
                 href={voteSlug ? `/votes/${voteSlug}/${entry._id}` : undefined}
                 target="_blank"
@@ -265,54 +272,50 @@
               {formatTimestamp(entry.createdAt)}
             </div>
             {#if entry.index + 1 < versions.length}
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-8 text-xs"
-                onclick={() => loadAndCompare(entry)}
-                disabled={loadingExpanded && expandedVersionId === entry._id}
-                aria-label="Load and compare version {entry.versionNumber}"
-              >
-                {loadingExpanded && expandedVersionId === entry._id ? "Loading…" : "Load and compare"}
-              </Button>
-            {:else}
-              <span class="text-xs text-muted-foreground">First version</span>
-            {/if}
-            {#if expandedVersionId === entry._id && expandedEntryChanges !== null}
-              {#if expandedEntryChanges.isFirstVersion}
-                <p class="text-xs text-muted-foreground">First version (no previous to compare).</p>
-              {:else}
-                {#if expandedEntryChanges.labels.length > 0}
+              {#if expandedVersionId === entry._id && expandedEntryChanges !== null}
+                {#if expandedEntryChanges.isFirstVersion}
+                  <p class="text-xs text-muted-foreground"
+                    >First version (no previous to compare).</p
+                  >
+                {:else if expandedEntryChanges.labels.length > 0}
                   <div class="pt-1">
-                    <span class="text-xs font-medium text-muted-foreground">Changed:</span>
-                    <ul class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3">
+                    <span class="text-xs font-medium text-muted-foreground"
+                      >Changed:</span
+                    >
+                    <ul
+                      class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3"
+                    >
                       {#each expandedEntryChanges.labels as label}
                         <li>{label}</li>
                       {/each}
                     </ul>
                   </div>
                 {/if}
-                {#if expandedEntryChanges.details.length > 0}
-                  <div class="pt-2 mt-2 border-t border-border">
-                    <span class="text-xs font-medium text-muted-foreground">Exact changes (temp):</span>
-                    <ul class="text-xs text-muted-foreground mt-1 space-y-1 pl-0 list-none font-mono break-all">
-                      {#each expandedEntryChanges.details as d}
-                        <li class="rounded bg-muted/50 px-1.5 py-0.5">
-                          <span class="text-foreground">{d.path}</span>
-                          <span class="text-muted-foreground"> [{d.type}]</span>
-                          {#if d.type === "UPDATE"}
-                            <span class="block text-muted-foreground mt-0.5">{formatChangeValue(d.oldValue)} → {formatChangeValue(d.value)}</span>
-                          {:else if d.type === "ADD"}
-                            <span class="block text-muted-foreground mt-0.5">+ {formatChangeValue(d.value)}</span>
-                          {:else if d.type === "REMOVE"}
-                            <span class="block text-muted-foreground mt-0.5">− {formatChangeValue(d.oldValue)}</span>
-                          {/if}
-                        </li>
-                      {/each}
-                    </ul>
-                  </div>
-                {/if}
               {/if}
+              <Button
+                variant="outline"
+                size="sm"
+                class="h-8 text-xs mt-2"
+                onclick={() => {
+                  if (expandedVersionId === entry._id) {
+                    expandedVersionId = null;
+                  } else {
+                    loadAndCompare(entry);
+                  }
+                }}
+                disabled={loadingExpanded && expandedVersionId === entry._id}
+                aria-label={expandedVersionId === entry._id
+                  ? `Hide changes for version ${entry.versionNumber}`
+                  : `Show changes for version ${entry.versionNumber}`}
+              >
+                {#if loadingExpanded && expandedVersionId === entry._id}
+                  Loading…
+                {:else if expandedVersionId === entry._id}
+                  Hide Changes
+                {:else}
+                  Show Changes
+                {/if}
+              </Button>
             {/if}
           </div>
         {/each}

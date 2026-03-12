@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 const VALID_DIRECTION = new Set(['asc', 'desc']);
-const DEFAULT_SORT = 'submittedAt';
+const DEFAULT_SORT = 'updatedAt';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
@@ -37,7 +37,7 @@ export async function load({ fetch, url, parent }) {
 
 	// URL params with defaults and validation
 	const pageNum = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
-	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10);
+	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10));
 	const direction = VALID_DIRECTION.has(url.searchParams.get('direction') || '') ? url.searchParams.get('direction') : 'desc';
 
 	const proposalsUrl = `/proposals?vote=${encodeURIComponent(selectedVote._id)}&proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;

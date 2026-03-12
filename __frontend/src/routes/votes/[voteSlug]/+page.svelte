@@ -10,6 +10,7 @@
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
   import { shortenString } from "$lib/utils.js";
+  import VoteCTA from "$lib/votes/VoteCTA.svelte";
   import XIcon from "@lucide/svelte/icons/x";
   let { data } = $props();
   let vote = $derived(data.vote);
@@ -113,9 +114,12 @@
     <h1 class="text-2xl font-semibold">
       {vote.name || vote.title || "Vote"}
     </h1>
-    {#if vote.description}
+    <!-- {#if vote.description}
       <p class="text-muted-foreground mt-2">{vote.description}</p>
-    {/if}
+    {/if} -->
+
+    <VoteCTA voteSlug={voteSlug} />
+
     <div class="mt-4 space-y-2">
       {#if vote.year}
         <div class="flex items-center gap-2">
@@ -194,7 +198,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {vote} {pillars} />
+          <ProposalCard {proposal} {vote} />
         {/each}
       </div>
 

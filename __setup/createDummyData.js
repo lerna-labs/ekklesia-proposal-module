@@ -1,5 +1,5 @@
 /**
- * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 1 live "Proposal with multiple versions (revision history)" (version 3, 2 archived), 2 drafts (one minimal, one "Ready to submit proposal" for stake_test1...43wf with full data except treasury hash).
+ * Create dummy data: 1 vote (with pillars from categories.csv), 12 live proposals (for pagination), 1 withdrawn proposal, 1 live "Proposal with multiple versions (revision history)" (version 3, 2 archived), 2 drafts (one minimal, one "Ready to submit proposal" for stake_test1...43wf with full data except treasury hash), and 2 proposals loaded from proposal1.json and proposal2.json (voteId and pillars remapped to the dummy vote).
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Proposal, Comment, User.
  *
@@ -26,6 +26,28 @@ import { Comment } from "../schema/Comment.js";
 import { User } from "../schema/User.js";
 
 const CSV_PATH = path.join(__dirname, "categories.csv");
+const PROPOSAL1_JSON_PATH = path.join(__dirname, "proposal1.json");
+const PROPOSAL2_JSON_PATH = path.join(__dirname, "proposal2.json");
+
+/**
+ * Convert MongoDB extended JSON (e.g. { "$oid": "..." }, { "$date": "..." }) in a parsed object to native ObjectId/Date.
+ * Mutates the object in place and returns it.
+ */
+function convertMongoExtendedJson(obj) {
+    if (obj === null || typeof obj !== "object") return obj;
+    if (Array.isArray(obj)) {
+        obj.forEach((item, i) => { obj[i] = convertMongoExtendedJson(item); });
+        return obj;
+    }
+    if (Object.keys(obj).length === 1) {
+        if ("$oid" in obj) return new mongoose.Types.ObjectId(obj.$oid);
+        if ("$date" in obj) return new Date(obj.$date);
+    }
+    for (const key of Object.keys(obj)) {
+        obj[key] = convertMongoExtendedJson(obj[key]);
+    }
+    return obj;
+}
 
 function parseCsvLine(line) {
     const fields = [];
@@ -423,10 +445,10 @@ async function createDummyData() {
                 depositAmount: 0,
             },
             sortOptions: [
+                { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
                 { value: "title", label: "Proposal Title", field: "title" },
                 { value: "totalBudget", label: "Total Budget", field: "metaData.totalBudget" },
                 { value: "commentCount", label: "Comment Count", field: "commentCount" },
-                { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
                 { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
             ],
             filterOptions: [
@@ -822,6 +844,26 @@ async function createDummyData() {
         });
         console.log(`  Ready to submit proposal created: ${readyToSubmitProposal._id} (proposerId: ${readyToSubmitStakeId})`);
 
+        // Load and restore proposal1.json and proposal2.json (remap voteId and pillars to dummy vote)
+        const proposalJsonPaths = [PROPOSAL1_JSON_PATH, PROPOSAL2_JSON_PATH];
+        for (const filePath of proposalJsonPaths) {
+            const raw = readFileSync(filePath, "utf8");
+            const doc = JSON.parse(raw);
+            convertMongoExtendedJson(doc);
+            delete doc._id;
+            delete doc.createdAt;
+            delete doc.updatedAt;
+            doc.voteId = vote._id;
+            if (doc.metaData?.strategyFramework && pillars.length > 0) {
+                doc.metaData.strategyFramework.pillars = pillars.slice(0, 5).map((p) => p._id);
+            }
+            if (doc.status === "live" && !doc.submittedAt) {
+                doc.submittedAt = new Date();
+            }
+            const restored = await Proposal.create(doc);
+            console.log(`  Restored ${path.basename(filePath)}: ${restored._id} (${doc.title})`);
+        }
+
         // 5. Create comments only on "Comment test proposal": one per COMMENT_USERS user + one withdrawn
         const commentBodies = [
             "This looks like a great proposal! I fully support this initiative.",
@@ -871,6 +913,7 @@ async function createDummyData() {
         console.log(`  Comment test proposal (has comments): ${commentTestProposal._id}`);
         console.log(`  Draft proposal: ${draftProposal._id} (proposerId: ${draftProposer.id})`);
         console.log(`  Ready to submit proposal (draft): ${readyToSubmitProposal._id} (proposerId: ${readyToSubmitStakeId})`);
+        console.log(`  Restored from JSON: proposal1.json, proposal2.json`);
         console.log(`  Comments: ${createdComments.length} (on "${COMMENT_TEST_PROPOSAL_TITLE}" only)`);
     } catch (error) {
         console.error("Error creating dummy data:", error);
