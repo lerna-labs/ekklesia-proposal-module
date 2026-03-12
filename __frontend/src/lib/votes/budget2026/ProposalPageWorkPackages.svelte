@@ -285,7 +285,7 @@
                                   <Badge
                                     class="shrink-0 font-normal text-xs bg-neutral-700 text-white border-0"
                                   >
-                                    {m.duration}
+                                    {m.duration} weeks
                                   </Badge>
                                 {/if}
                               </button>
