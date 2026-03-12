@@ -197,47 +197,53 @@
   class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6 px-4"
   id="controls"
 >
-  <div class="max-w-4xl mx-auto flex flex-col gap-2">
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="max-w-4xl mx-auto flex flex-col gap-2 container py-2 px-0 pb-0">
+    <div
+      class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
+    >
       {#if formData.status === "draft"}
-        <Button
-          type="button"
-          class="cursor-pointer"
-          onclick={() => saveDraft(true)}
-        >
-          Save & Exit
-        </Button>
+        <div class="flex gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            class="flex-1 min-w-0 cursor-pointer sm:flex-none"
+            onclick={() => saveDraft(true)}
+          >
+            Save & Exit
+          </Button>
+          <Button
+            type="button"
+            class="flex-1 min-w-0 cursor-pointer sm:flex-none"
+            onclick={() => saveDraft(false)}
+          >
+            Save
+          </Button>
+        </div>
       {/if}
-
-      {#if formData.status === "draft"}
-        <Button
-          type="button"
-          class="cursor-pointer"
-          onclick={() => saveDraft(false)}
+      {#if previewHref}
+        <div
+          class="flex flex-col gap-2 w-full sm:flex-row sm:ml-auto sm:w-auto"
         >
-          Save
-        </Button>
-      {/if}
-      <div class="ml-auto flex flex-wrap items-center gap-2">
-        {#if previewHref}
           <Button
             type="button"
             variant="outline"
-            class="cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300"
+            class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto"
             href={previewHref}
             target="_blank"
             rel="noopener noreferrer"
           >
             Preview Proposal
           </Button>
-
-          <Button type="button" class="cursor-pointer" onclick={submitLive}>
+          <Button
+            type="button"
+            class="w-full cursor-pointer sm:w-auto"
+            onclick={submitLive}
+          >
             {formData.status === "draft"
               ? "Submit Proposal"
               : "Re-Submit Proposal"}
           </Button>
-        {/if}
-      </div>
+        </div>
+      {/if}
     </div>
     {#if formData.status === "draft"}
       <p class="text-xs! text-left text-black/80">
