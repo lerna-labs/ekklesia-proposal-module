@@ -2,6 +2,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
+  import EyeIcon from "@lucide/svelte/icons/eye";
   import {
     writePreviewPayload,
     clearPreviewStorage,
@@ -276,9 +277,10 @@
           <Button
             type="button"
             variant="outline"
-            class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto"
+            class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto inline-flex items-center gap-2"
             onclick={onPreviewClick}
           >
+            <EyeIcon class="size-4 shrink-0" aria-hidden="true" />
             Preview Proposal
           </Button>
           <Button
@@ -294,11 +296,15 @@
       {/if}
     </div>
     {#if formData.status === "draft"}
-      <p class="text-xs! text-left text-black/80">
-        Your changes are saved automatically every {AUTO_SAVE_INTERVAL_MINUTES} minutes
+      <p class="text-xs! text-left text-black/80 mb-0!">
+        Your changes are saved automatically every {AUTO_SAVE_INTERVAL_MINUTES} minutes.
         {#if lastSaveAt != null}
           (Last saved: {formatLastSaved(lastSaveAt)})
         {/if}
+      </p>
+    {:else}
+      <p class="text-xs! text-right text-black/80 mb-0!">
+        Auto-save is disabled for live proposals.
       </p>
     {/if}
   </div>
