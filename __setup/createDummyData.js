@@ -295,7 +295,7 @@ function buildWorkPackages(template, totalBudgetAda, proposalIndex = 0) {
                         `Acceptance criteria: plan reviewed and approved; resources assigned; timeline agreed; risks documented and mitigated where possible.`,
                         3990,
                     ),
-                    duration: "2 weeks",
+                    duration: 2,
                 },
                 {
                     name: toLength(`Milestone ${w + 1}.2 – Delivery and review`, 98),
@@ -307,7 +307,7 @@ function buildWorkPackages(template, totalBudgetAda, proposalIndex = 0) {
                         `Acceptance criteria: all deliverables completed; quality checks passed; documentation and handover completed.`,
                         3990,
                     ),
-                    duration: "4 weeks",
+                    duration: 4,
                 },
             ],
             budgetBreakdown,
@@ -380,7 +380,8 @@ function buildBudget2026MetaData(template, categoryIds, proposalIndex = 0) {
 const ADMINS = [
     "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf", // MAD 
     "stake_test1uqvx67glm2hdjcfp9pg0d59x0595n372k8sh437vk3hda0gukg9fa", // ADAM - Hydra Voter DRep #0
-    "stake_test1ury4vups5rm3dahv3vht7lp83kdpxc0assfgwulm2z4rn4qe9ceqz" // SIMO 
+    "stake_test1ury4vups5rm3dahv3vht7lp83kdpxc0assfgwulm2z4rn4qe9ceqz", // SIMO 
+    "stake_test1urtue405zxlphdej5dmsl4x8nd6t6h78ttrkhhl88ukc3yckckjnu" // LORENZO
 ];
 
 /** Proposers used for dummy proposals; each must have a User record. */
@@ -779,7 +780,7 @@ async function createDummyData() {
             status: "draft",
             metaData: {
                 trackRecord: "",
-                estimatedDuration: 0,
+                estimatedDuration: 1,
                 strategyFramework: { pillars: [], pillarRationale: "", kpiAlignment: "" },
                 proposalDetails: { conversionRate: 0, workPackages: [] },
                 proposerDetails: { name: "", email: "", links: [] },
