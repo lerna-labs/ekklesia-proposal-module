@@ -4,16 +4,16 @@
 
 | Field            | Detail                                                                 |
 |------------------|------------------------------------------------------------------------|
-| **Version**      | 1.1.0                                                                  |
+| **Version**      | 1.2.0                                                                  |
 | **Created**      | 2025-03-02                                                             |
-| **Last Revised** | 2025-03-03                                                             |
+| **Last Revised** | 2025-03-12                                                             |
 | **Component**    | `__frontend/src/lib/forms/budget2026/FormLegalDeclarations.svelte`   |
 
 ---
 
 Form section component: `__frontend/src/lib/forms/budget2026/FormLegalDeclarations.svelte`.
 
-This section is **not** part of the accordion. It is shown in a **dialog** that opens only on submit or re-submit when all other validation errors have been cleared. Legal declarations must be re-submitted on every submit/re-submit (no prefill from proposal).
+This section is **accordion section 9** ("Legal declarations") in the budget2026 form. Legal declarations must be re-submitted on every submit/re-submit (no prefill from proposal).
 
 Describes the form fields: path in `formData`, type, constraints, and visibility.
 
@@ -23,8 +23,6 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 
 | Field | formData path | Type | maxLength | required | public |
 |-------|----------------|------|-----------|----------|--------|
-| Data processing consent | `formData.metaData.legalDeclarations.dataProcessingConsent` | checkbox | — | yes | no |
-| Public visibility consent | `formData.metaData.legalDeclarations.publicVisibilityConsent` | checkbox | — | yes | no |
 | Submitter name | `formData.metaData.legalDeclarations.submitterName` | text (Input) | 100 | yes | no |
 | Submitter email | `formData.metaData.legalDeclarations.submitterEmail` | email (Input) | 254 | yes | no |
 | Submitter role | `formData.metaData.legalDeclarations.submitterRole` | text (Input) | 100 | yes | no |
@@ -34,22 +32,6 @@ Describes the form fields: path in `formData`, type, constraints, and visibility
 ---
 
 ## Field details
-
-### Data processing consent
-- **Path:** `formData.metaData.legalDeclarations.dataProcessingConsent`
-- **Label:** I acknowledge and consent to the above data processing and sharing.
-- **Description:** Section 1 (Data Protection): personal data may be shared with internal stakeholders for evaluation, voting, contracting, and treasury execution.
-- **Type:** checkbox (Checkbox)
-- **required:** yes
-- **public:** no
-
-### Public visibility consent
-- **Path:** `formData.metaData.legalDeclarations.publicVisibilityConsent`
-- **Label:** By submitting this form, you acknowledge and agree that the legal entity name, personal name, and X (Twitter) handle entered will be publicly visible in connection with this budget request.
-- **Description:** Consent for public visibility of entity name, personal name, and X handle.
-- **Type:** checkbox (Checkbox)
-- **required:** yes
-- **public:** no
 
 ### Submitter name
 - **Path:** `formData.metaData.legalDeclarations.submitterName`
@@ -104,3 +86,4 @@ This document follows [Semantic Versioning 2.0.0](https://semver.org/). Version 
 |---------|------------|-------------|
 | 1.0.0   | 2025-03-02 | Initial doc: Fields table and field details for Legal Declarations (dialog) section. |
 | 1.1.0   | 2025-03-03 | Align with component: dataProcessingConsent (id and path); rename Data protection → Data processing consent. |
+| 1.2.0   | 2025-03-12 | Legal declarations moved to accordion section 9; dialog removed. Data processing consent and public visibility consent checkboxes removed. |
