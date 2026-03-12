@@ -13,40 +13,11 @@
   let formLoading = $state(false);
   let loadedFormKey = $state(null);
 
-  /** Count all errors in validation error tree (errors array + recursive properties + items). */
-  function countErrorsInTree(node) {
-    if (node == null) return 0;
-    let n = (node.errors?.length ?? 0);
-    if (node.properties) {
-      for (const child of Object.values(node.properties)) {
-        n += countErrorsInTree(child);
-      }
-    }
-    if (node.items) {
-      for (const item of node.items) {
-        n += countErrorsInTree(item);
-      }
-    }
-    return n;
-  }
-
-  /** True if validation errors exist and are exclusively under metaData.legalDeclarations. */
-  function areErrorsOnlyLegal(errors) {
-    if (errors == null) return false;
-    const total = countErrorsInTree(errors);
-    if (total === 0) return false;
-    const legalNode = errors?.properties?.metaData?.properties?.legalDeclarations;
-    const legalCount = countErrorsInTree(legalNode);
-    return total === legalCount;
-  }
-
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
   let saving = $state(false);
   let validationErrors = $state(null);
-  let openLegalDialog = $state(false);
-  let showLegalErrors = $state(false);
   let formRef = $state({});
   const formKey = $derived(vote?.form ?? "default");
 
@@ -77,7 +48,6 @@
     }
     saving = true;
     validationErrors = null;
-    if (!options?.fromLegalModal) openLegalDialog = false;
     try {
       const body = { ...payload, voteId: proposal.voteId };
       const res = await api.fetch(fetch, `/proposals/${proposal._id}`, {
@@ -94,35 +64,17 @@
           goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
-        const onlyLegalErrors =
-          payload.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
-        if (!onlyLegalErrors) {
-          const msg = json?.message ?? "Failed to save proposal.";
-          toast.error(msg);
-          openLegalDialog = false;
-        }
-        if (onlyLegalErrors) {
-          openLegalDialog = true;
-          showLegalErrors = options?.fromLegalModal === true;
-        }
-        throw new Error(json?.message ?? "Failed to save proposal.");
+        const msg = json?.message ?? "Failed to save proposal.";
+        toast.error(msg);
+        throw new Error(msg);
       }
     } catch (err) {
       if (err?.body?.errors != null) validationErrors = err.body.errors;
-      const onlyLegalErrors =
-        payload?.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
-      if (!onlyLegalErrors) {
-        const msg =
-          typeof err?.body === "string"
-            ? err.body
-            : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
-        toast.error(msg);
-        openLegalDialog = false;
-      }
-      if (onlyLegalErrors) {
-        openLegalDialog = true;
-        showLegalErrors = options?.fromLegalModal === true;
-      }
+      const msg =
+        typeof err?.body === "string"
+          ? err.body
+          : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
+      toast.error(msg);
       throw err;
     } finally {
       saving = false;
@@ -139,10 +91,8 @@
     {vote}
     {proposal}
     {onSave}
-    {showLegalErrors}
     bind:formRef
     bind:validationErrors
-    bind:openLegalDialog
     onCancel={() => goto("/dashboard")}
   />
 {/if}

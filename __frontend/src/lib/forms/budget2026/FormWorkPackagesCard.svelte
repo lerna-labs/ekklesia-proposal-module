@@ -192,9 +192,9 @@
     <Card.Content class="p-4 pt-0">
       <section>
         <div class={sectionRingClass}>
-          <h1 class="text-normal font-medium mb-2">
+          <h3 class="text-normal font-medium mb-2">
             How will this work package be delivered?
-          </h1>
+          </h3>
           <p class="text-sm text-muted-foreground">
             Break this Work Package into milestones or delivery phases. This
             helps reviewers understand how progress will be structured and
@@ -262,9 +262,9 @@
 
       <section class="mt-8">
         <div class={budgetSectionRingClass}>
-          <h1 class="text-normal font-medium mb-2">
+          <h3 class="text-normal font-medium mb-2">
             What's the budget estimated for this Work Package?
-          </h1>
+          </h3>
           <p class="text-sm text-muted-foreground">
             Breakdown your estimated budget into the appropriate categories.
             Make sure to provide context so DReps can understand why each item

@@ -228,9 +228,9 @@
         class="mb-4"
       />
 
-      <h2 class="font-medium">
+      <h3 class="font-medium">
         Please describe this Work Package at a high level
-      </h2>
+      </h3>
       <p class="text-sm text-muted-foreground">
         Describe the main activities and, where relevant, the key outputs or
         deliverables. The goal is to give reviewers enough context to understand
@@ -249,18 +249,18 @@
         class="mb-4"
       />
 
-      <h2 class="font-medium">
+      <h3 class="font-medium">
         What is this work package intended to achieve?
-      </h2>
+      </h3>
 
       <FormWorkPackagesObjectives
         bind:value={draft.coreObjectives}
         validationErrors={draftErrors?.properties?.coreObjectives}
       />
 
-      <h2 class="mt-4 font-medium">
+      <h3 class="mt-4 font-medium">
         Why does this work matter to Cardano, and how will success be measured?
-      </h2>
+      </h3>
       <p class="text-sm text-muted-foreground">
         Describe what will change or improve for Cardano as a result of this
         work package, and why that change justifies the investment. Then define
@@ -290,9 +290,9 @@
         validationErrors={draftErrors}
       />
 
-      <h2 class="mt-4 font-medium">
+      <h3 class="mt-4 font-medium">
         Is this a new initiative or a continuation of existing work?
-      </h2>
+      </h3>
       <p class="text-sm text-muted-foreground">
         Select the option that best describes the nature of this work package.
       </p>
@@ -309,9 +309,9 @@
         validationErrors={draftErrors ? { properties: { initiativeType: draftErrors.properties?.initiativeType } } : undefined}
       />
 
-      <h2 class="mt-4 font-medium">
+      <h3 class="mt-4 font-medium">
         How would you classify the primary nature of this work proposal?
-      </h2>
+      </h3>
       <p class="text-sm text-muted-foreground">
         This helps reviewers understand whether the work is primarily technical or non-technical.
       </p>
@@ -328,10 +328,10 @@
         validationErrors={draftErrors ? { properties: { proposalType: draftErrors.properties?.proposalType } } : undefined}
       />
 
-      <h2 class="mt-4 font-medium">
+      <h3 class="mt-4 font-medium">
         Is there any extra material you would like to share about this work
         package?
-      </h2>
+      </h3>
 
       <LinkListEditor
         bind:value={draft.supportingDocuments}

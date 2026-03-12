@@ -104,10 +104,8 @@ function buildPillarsFromCsv() {
     return pillars;
 }
 
-/** Legal declarations (Budget 2026 schema: dataProcessingConsent, submitterName, etc.). */
+/** Legal declarations (Budget 2026 schema: submitterName, authorizationEntity, etc.). */
 const LEGAL_DECLARATIONS = {
-    dataProcessingConsent: true,
-    publicVisibilityConsent: true,
     authorizationEntity: true,
     authorizationAttestation: true,
     submitterName: "Test Submitter",

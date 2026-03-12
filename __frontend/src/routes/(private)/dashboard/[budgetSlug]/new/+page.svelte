@@ -13,39 +13,10 @@
   let formLoading = $state(false);
   let loadedFormKey = $state(null);
 
-  /** Count all errors in validation error tree (errors array + recursive properties + items). */
-  function countErrorsInTree(node) {
-    if (node == null) return 0;
-    let n = (node.errors?.length ?? 0);
-    if (node.properties) {
-      for (const child of Object.values(node.properties)) {
-        n += countErrorsInTree(child);
-      }
-    }
-    if (node.items) {
-      for (const item of node.items) {
-        n += countErrorsInTree(item);
-      }
-    }
-    return n;
-  }
-
-  /** True if validation errors exist and are exclusively under metaData.legalDeclarations. */
-  function areErrorsOnlyLegal(errors) {
-    if (errors == null) return false;
-    const total = countErrorsInTree(errors);
-    if (total === 0) return false;
-    const legalNode = errors?.properties?.metaData?.properties?.legalDeclarations;
-    const legalCount = countErrorsInTree(legalNode);
-    return total === legalCount;
-  }
-
   let { data } = $props();
   let vote = $derived(data.vote);
   let saving = $state(false);
   let validationErrors = $state(null);
-  let openLegalDialog = $state(false);
-  let showLegalErrors = $state(false);
   let formRef = $state({});
   /** Set after first successful create (manual or auto-save) so the form can show Preview. */
   let createdProposal = $state(null);
@@ -75,7 +46,6 @@
     if (!vote?._id) return;
     saving = true;
     validationErrors = null;
-    if (!options?.fromLegalModal) openLegalDialog = false;
     try {
       const body = { ...payload, voteId: vote._id };
       const isUpdate = createdProposal?._id && payload.status === "draft";
@@ -98,35 +68,17 @@
           goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
-        const onlyLegalErrors =
-          payload.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
-        if (!onlyLegalErrors) {
-          const msg = json?.message ?? "Failed to create proposal.";
-          toast.error(msg);
-          openLegalDialog = false;
-        }
-        if (onlyLegalErrors) {
-          openLegalDialog = true;
-          showLegalErrors = options?.fromLegalModal === true;
-        }
-        throw new Error(json?.message ?? "Failed to create proposal.");
+        const msg = json?.message ?? "Failed to create proposal.";
+        toast.error(msg);
+        throw new Error(msg);
       }
     } catch (err) {
       if (err?.body?.errors != null) validationErrors = err.body.errors;
-      const onlyLegalErrors =
-        payload?.status === "live" && validationErrors && areErrorsOnlyLegal(validationErrors);
-      if (!onlyLegalErrors) {
-        const msg =
-          typeof err?.body === "string"
-            ? err.body
-            : (err?.body?.message ?? err?.message ?? "Failed to create proposal.");
-        toast.error(msg);
-        openLegalDialog = false;
-      }
-      if (onlyLegalErrors) {
-        openLegalDialog = true;
-        showLegalErrors = options?.fromLegalModal === true;
-      }
+      const msg =
+        typeof err?.body === "string"
+          ? err.body
+          : (err?.body?.message ?? err?.message ?? "Failed to create proposal.");
+      toast.error(msg);
       throw err;
     } finally {
       saving = false;
@@ -144,10 +96,8 @@
       {vote}
       proposal={createdProposal}
       {onSave}
-      {showLegalErrors}
       bind:formRef
       bind:validationErrors
-      bind:openLegalDialog
       onCancel={() => goto("/dashboard")}
     />
   {/if}

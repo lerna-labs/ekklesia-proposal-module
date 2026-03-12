@@ -40,7 +40,7 @@
 <Checkbox
   id="intersectAdministratorFeeConsent"
   bind:value={formData.metaData.intersectAdministratorFeeConsent}
-  label="I understand that selecting Intersect as the Administrator will result in a 3% administration fee being applied to the total budget, and I agree to this fee."
+  label="I understand and agree a 3% fee will be added to the proposal total budget."
   required
   validationErrors={feeConsentErrors}
 />

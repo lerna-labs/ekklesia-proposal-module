@@ -1,15 +1,12 @@
 <script>
   import Textarea from "$lib/components/form/Textarea.svelte";
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
 
   const contractingPartyErrors = $derived({
-    properties: validationErrors?.properties?.metaData?.properties?.contractingParty?.properties ?? {},
+    properties:
+      validationErrors?.properties?.metaData?.properties?.contractingParty
+        ?.properties ?? {},
   });
   const otherAdministratorErrors = $derived({
     properties: validationErrors?.properties?.metaData?.properties ?? {},
@@ -24,6 +21,7 @@
   required
   maxLength={4000}
   validationErrors={otherAdministratorErrors}
+  class="mb-8 mt-4"
 />
 
 <h3>Are you applying as a registered company or as an individual?</h3>
