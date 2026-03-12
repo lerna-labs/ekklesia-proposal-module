@@ -483,7 +483,7 @@
   <div class="container mx-auto max-w-4xl py-8 px-4 pb-0">
     <h1 class="text-2xl font-semibold mb-4">{formTitle}</h1>
   </div>
-  <form onsubmit={handleSubmit} class="flex flex-col">
+  <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
     <Accordion.Root
       type="multiple"
       class="max-w-4xl mx-auto px-4 w-full"
