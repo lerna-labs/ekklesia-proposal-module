@@ -42,7 +42,7 @@
             </Button>
             <Button
               size="sm"
-              class="bg-white text-black hover:bg-gray-200 text-xs"
+              class="bg-red-500 text-white hover:bg-gray-200 text-xs"
               onclick={() => logout()}
               aria-label="Log out"
             >
