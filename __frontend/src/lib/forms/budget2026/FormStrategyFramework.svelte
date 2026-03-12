@@ -28,9 +28,9 @@
 
 <Field.Set class="space-y-1">
   <div>
-    <h2 class="text-lg! font-medium">
+    <h3 class="text-lg! font-medium">
       To which strategic pillar does your proposal align the most?
-    </h2>
+    </h3>
 
     <p class="text-muted-foreground mb-0!">
       Looking at the <a
@@ -98,7 +98,7 @@
   </Field.Field>
 
   <Field.Field class="gap-2">
-    <h3>Why have you selected those pillars?</h3>
+    <h4>Why have you selected those pillars?</h4>
 
     <p>
       Provide a rationale about why those pillars align the most to your
@@ -125,9 +125,9 @@
   </Field.Field>
 
   <Field.Field class="gap-2 mb-8">
-    <h3>
+    <h4>
       Does your proposal support any of the KPIs of the strategy framework?
-    </h3>
+    </h4>
     <p>
       Looking at the <a
         href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"

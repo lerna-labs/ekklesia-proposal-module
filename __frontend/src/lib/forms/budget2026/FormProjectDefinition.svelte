@@ -23,7 +23,7 @@
   class="mb-8"
 />
 
-<h2 class="text-lg!">Please describe your whole proposal at high level</h2>
+<h3 class="text-lg!">Please describe your whole proposal at high level</h3>
 
 <p>
   Provide an high-level overview of the problem, proposed solution and value
@@ -56,7 +56,7 @@
   class="mb-8"
 />
 
-<h3>Why are you the best suited to deliver this work?</h3>
+<h4>Why are you the best suited to deliver this work?</h4>
 <p>
   Describe what previous experience and expertise you or your team have which is
   relevant for your proposal. Focus on proven history of delivery, mention
@@ -75,10 +75,10 @@
   class="mb-8"
 />
 
-<h3>
+<h4>
   How long will your proposal need to be fully delivered? Or if you are
   requesting funding for operations, how many months will this budget cover?
-</h3>
+</h4>
 <p>
   Provide an estimated duration from the start of the work to completion. Or if
   your proposal covers ongoing operations or services, specify the number of
