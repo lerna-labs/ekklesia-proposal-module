@@ -8,6 +8,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
+  import { Separator } from "$lib/components/ui/separator/index.js";
 
   let {
     open = $bindable(false),
@@ -53,12 +54,14 @@
           </strong>
         </p>
 
-        <Card.Root class="gap-2">
-          <Card.Header class="pb-0">
-            <Card.Title>IMPORTANT</Card.Title>
+        <Card.Root
+          class="w-full border-2 border-destructive rounded-xl p-4 gap-2"
+        >
+          <Card.Header class="pb-0 pt-2">
+            <Card.Title class="text-red-600">IMPORTANT</Card.Title>
           </Card.Header>
-          <Card.Content class="space-y-4 pt-0">
-            <p class="text-muted-foreground mb-3">
+          <Card.Content class="space-y-4 pt-0 text-black!">
+            <p class="mb-3">
               To reduce potential spam and confirm proposer commitment, you'll
               need to submit a non-refundable <strong>
                 1,000 ADA donation to the treasury
@@ -68,10 +71,10 @@
               In the last step of this process you'll be asked to provide proof for
               this donation.
             </p>
-            <p class="text-muted-foreground mb-3">
+            <p class="mb-3">
               A separate donation is required for each proposal.
             </p>
-            <p class="text-muted-foreground mb-4">
+            <p class="mb-4">
               Read how to in
               <a
                 href={guideUrl}
@@ -83,10 +86,13 @@
               </a>
               .
             </p>
+
+            <Separator class="my-4" />
             <Checkbox
               id="treasury-acknowledgment"
               bind:value={acknowledged}
               label="I agree this donation does not guarantee approval, success on-chain, or that Intersect will raise a governance action on your behalf, even if your proposal hits the 67% threshold."
+              class="mb-2"
             />
           </Card.Content>
         </Card.Root>
