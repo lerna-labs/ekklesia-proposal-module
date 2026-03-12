@@ -2,12 +2,15 @@
   /** @see __frontend/docs/budget2026/form-project-definition.md Version: 1.0.0 */
   import Input from "$lib/components/form/Input.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  import InputNumber from "$lib/components/form/InputNumber.svelte";
+
+  const estimatedDurationErrors = $derived({
+    properties: {
+      estimatedDuration:
+        validationErrors?.properties?.metaData?.properties?.estimatedDuration,
+    },
+  });
 </script>
 
 <Input
@@ -85,15 +88,18 @@
   months this budget is intended to support.
 </p>
 
-<Input
+<InputNumber
   id="estimatedDuration"
-  bind:value={formData.metaData.estimatedDuration}
-  label="Estimated Duration"
   type="number"
-  min={1}
-  description="Estimated duration of the project proposal"
-  placeholder="Enter Duration in Months"
+  suffix="months"
+  bind:value={formData.metaData.estimatedDuration}
+  placeholder="12"
+  decimalComma={true}
+  min="0"
+  step="any"
+  validationErrors={estimatedDurationErrors}
+  label="Estimated Duration (in months)"
   required
-  class="sm:w-1/4 mb-8"
-  validationErrors={validationErrors?.properties?.metaData}
+  description="Estimated duration of the project proposal in months."
+  class="mb-8 w-[240px]"
 />

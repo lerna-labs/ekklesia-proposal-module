@@ -65,7 +65,7 @@
     return Math.round(q * p * 1000) / 1000;
   });
 
-  /** Conversion rate as number (handles string from AmountInput); null if not set or invalid. */
+  /** Conversion rate as number (handles string from InputNumber); null if not set or invalid. */
   const conversionRateNum = $derived.by(() => {
     const v = conversionRate;
     if (v == null || v === "") return null;
