@@ -329,25 +329,25 @@
           Object.assign(formContractingParty, initialContractingParty);
           formContractingParty.legalEntityType = legalEntityType;
         } else if (typeof cp === "object") {
-          const raw = (cp.legalEntityType ?? "").toString().trim().toLowerCase();
+          const raw = (cp.legalEntityType ?? "")
+            .toString()
+            .trim()
+            .toLowerCase();
           const legalEntityType =
             raw === "company" || raw === "individual" ? raw : "";
           formContractingParty.legalEntityType = legalEntityType;
           formContractingParty.legalEntityName = cp.legalEntityName ?? "";
           formContractingParty.legalEntityRegistrationNumber =
             cp.legalEntityRegistrationNumber ?? "";
-          formContractingParty.legalEntityCountry =
-            cp.legalEntityCountry ?? "";
+          formContractingParty.legalEntityCountry = cp.legalEntityCountry ?? "";
           formContractingParty.legalEntityAddressLine1 =
             cp.legalEntityAddressLine1 ?? "";
           formContractingParty.legalEntityAddressLine2 =
             cp.legalEntityAddressLine2 ?? "";
           formContractingParty.legalEntityAddressLine3 =
             cp.legalEntityAddressLine3 ?? "";
-          formContractingParty.govtIssuedIdNumber =
-            cp.govtIssuedIdNumber ?? "";
-          formContractingParty.countryOfResidence =
-            cp.countryOfResidence ?? "";
+          formContractingParty.govtIssuedIdNumber = cp.govtIssuedIdNumber ?? "";
+          formContractingParty.countryOfResidence = cp.countryOfResidence ?? "";
           formContractingParty.residentialAddressLine1 =
             cp.residentialAddressLine1 ?? "";
           formContractingParty.residentialAddressLine2 =
@@ -649,10 +649,12 @@
           />
         </Accordion.Content>
       </Accordion.Item>
-
     </Accordion.Root>
 
-    <div id="legal-declarations" class="max-w-4xl mx-auto px-4 w-full border-t">
+    <div
+      id="legal-declarations"
+      class="max-w-4xl mx-auto px-4 w-full border-t pt-4"
+    >
       <div class="section-title">
         <h2 class="flex items-center gap-2 text-xl! mb-0!">
           9. Legal declarations
