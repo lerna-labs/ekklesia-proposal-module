@@ -34,7 +34,7 @@
 
     <p class="text-muted-foreground mb-0!">
       Looking at the <a
-        href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
+        href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
       >
@@ -50,7 +50,7 @@
       </a>, which one does your proposal support or relate to the most. Before
       selecting read the whole
       <a
-        href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
+        href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
       >
@@ -77,7 +77,8 @@
       aria-invalid={pillarsError ? true : false}
     >
       {#each pillarOptions as pillarOption (pillarOption._id)}
-        {@const selectedPillarIds = formData.metaData.strategyFramework?.pillars ?? []}
+        {@const selectedPillarIds =
+          formData.metaData.strategyFramework?.pillars ?? []}
         <FormPillarCard
           pillar={pillarOption}
           selected={selectedPillarIds.includes(pillarOption._id)}
@@ -103,7 +104,7 @@
     <p>
       Provide a rationale about why those pillars align the most to your
       proposal and how your proposal supports them. Look also at the <a
-        href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
+        href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
       >
@@ -130,7 +131,7 @@
     </h4>
     <p>
       Looking at the <a
-        href="https://ipfs.io/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
+        href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
       >

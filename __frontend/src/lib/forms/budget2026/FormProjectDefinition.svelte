@@ -38,7 +38,7 @@
   Current Drep supported Cardano's Vision: "Cardano is the most secure, reliable
   and censorship-resistant blockchain for mission critical applications to power
   economies and societies of the future." <a
-    href="https://ipfs.io/ipfs/bafkreicu4r3rowukvtrxaok3xd7bxkoig6uxmxgldjpyt6shjli5vjwhxe"
+    href="https://product-committee.mypinata.cloud/ipfs/bafkreicu4r3rowukvtrxaok3xd7bxkoig6uxmxgldjpyt6shjli5vjwhxe"
     target="_blank"
     class="link"
   >
