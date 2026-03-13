@@ -166,12 +166,24 @@
     open = false;
   }
 
+  /** Key used by the vote list page to persist list state (filters, sort, etc.). Clear it on reset so the page does not restore old filters from localStorage. */
+  const listStateKey = $derived(
+    page.params?.voteSlug
+      ? `votes.listState.${page.params.voteSlug}`
+      : "",
+  );
+
   function resetFilters() {
     const searchParams = new URLSearchParams(page.url.searchParams);
     for (const opt of filterOptions) {
       searchParams.delete(opt.param);
     }
     searchParams.set("page", "1");
+    if (typeof window !== "undefined" && listStateKey) {
+      try {
+        window.localStorage.removeItem(listStateKey);
+      } catch (_) {}
+    }
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     open = false;
@@ -299,8 +311,8 @@
               type="button"
               variant="default"
               size="sm"
-              class="flex-1 text-xs"
-              onclick={apply}
+class="flex-1 text-xs"
+            onclick={apply}
             >
               <CheckIcon class="size-4" />
               Apply
