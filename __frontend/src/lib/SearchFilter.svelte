@@ -90,12 +90,12 @@
 
   const categoryTriggerLabel = $derived(
     pendingCategories.length === 0
-      ? "All Categories"
+      ? "All Pillars"
       : pendingCategories.length === 1
         ? (categoryOptionsList.find(
             (c) => String(c.value) === pendingCategories[0],
           )?.label ?? pendingCategories[0])
-        : `${pendingCategories.length} Categories`,
+        : `${pendingCategories.length} Pillars`,
   );
 
   $effect(() => {
@@ -166,12 +166,24 @@
     open = false;
   }
 
+  /** Key used by the vote list page to persist list state (filters, sort, etc.). Clear it on reset so the page does not restore old filters from localStorage. */
+  const listStateKey = $derived(
+    page.params?.voteSlug
+      ? `votes.listState.${page.params.voteSlug}`
+      : "",
+  );
+
   function resetFilters() {
     const searchParams = new URLSearchParams(page.url.searchParams);
     for (const opt of filterOptions) {
       searchParams.delete(opt.param);
     }
     searchParams.set("page", "1");
+    if (typeof window !== "undefined" && listStateKey) {
+      try {
+        window.localStorage.removeItem(listStateKey);
+      } catch (_) {}
+    }
     const url = `${page.url.pathname}?${searchParams.toString()}`;
     goto(url);
     open = false;
@@ -252,7 +264,7 @@
           {#if categoryOption && categoryOptionsList.length > 0}
             <div class="space-y-2">
               <Label class="text-xs text-muted-foreground"
-                >{categoryOption.label}</Label
+                >Cardano 2030 Pillars</Label
               >
               <Select.Root type="multiple" bind:value={pendingCategories}>
                 <Select.Trigger
@@ -267,7 +279,7 @@
                   <Select.Group aria-label="Categories">
                     <Select.Item
                       value={ALL_CATEGORIES_VALUE}
-                      label="All Categories"
+                      label="All Pillars"
                     >
                       All Categories
                     </Select.Item>
@@ -299,8 +311,8 @@
               type="button"
               variant="default"
               size="sm"
-              class="flex-1 text-xs"
-              onclick={apply}
+class="flex-1 text-xs"
+            onclick={apply}
             >
               <CheckIcon class="size-4" />
               Apply

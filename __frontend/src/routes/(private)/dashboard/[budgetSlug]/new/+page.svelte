@@ -69,6 +69,7 @@
         await tick();
         await invalidateAll();
         if (payload.status === "live" || options?.exitAfterSave) goto("/dashboard");
+        return json;
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to create proposal.";
