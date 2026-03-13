@@ -3,13 +3,13 @@
   import { Button } from "$lib/components/ui/button";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import ProposalPageTitle from "./ProposalPageTitle.svelte";
-  import ProposalPageProposalDetails from "./ProposalPageProposalDetails.svelte";
-  import ProposalPageSummary from "./ProposalPageSummary.svelte";
+  import ProposalPageKeyDetails from "./ProposalPageKeyDetails.svelte";
   import ProposalPageStrategyFramework from "./ProposalPageStrategyFramework.svelte";
   import ProposalPageWorkPackages from "./ProposalPageWorkPackages.svelte";
   import ProposalPageBudgetSummary from "./ProposalPageBudgetSummary.svelte";
   import ProposalPageSupportingInfo from "./ProposalPageSupportingInfo.svelte";
   import ProposalPageComments from "./ProposalPageComments.svelte";
+  import * as Card from "$lib/components/ui/card";
 
   let {
     proposal,
@@ -43,7 +43,7 @@
           variant="ghost"
           size="sm"
           onclick={goBackToList}
-          class="!pl-0 gap-1.5 hover:bg-transparent hover:text-black dark:hover:bg-transparent dark:hover:text-foreground text-muted-foreground"
+          class="pl-0! gap-1.5 hover:bg-transparent hover:text-black dark:hover:bg-transparent dark:hover:text-foreground text-muted-foreground"
         >
           <ArrowLeftIcon class="size-4 shrink-0" aria-hidden="true" />
           Back to {vote?.title ?? vote?.name ?? "vote"}
@@ -52,12 +52,7 @@
     {/if}
     <ProposalPageTitle {proposal} {vote} />
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      <div class="space-y-6">
-        <ProposalPageSummary {proposal} />
-      </div>
-      <ProposalPageProposalDetails {proposal} {vote} {pillars} />
-    </div>
+    <ProposalPageKeyDetails {proposal} {vote} {pillars} />
 
     <ProposalPageStrategyFramework {proposal} {pillars} />
 
