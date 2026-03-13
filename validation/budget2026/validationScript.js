@@ -237,7 +237,7 @@ const kycInfoSchema = z.object({
 });
 
 const metaDataSchema = z.object({
-  trackRecord: z.union([z.literal(""), z.string().min(2).max(15000)]).optional().default(""),
+  trackRecord: z.union([z.literal(""), z.string().min(2).max(10000)]).optional().default(""),
   estimatedDuration: z
     .coerce.number({
       error: (iss) =>
