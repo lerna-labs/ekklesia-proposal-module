@@ -428,7 +428,7 @@ async function createDummyData() {
 
         const vote = await Vote.create({
             title: "Cardano Budget Process 2026",
-            description: "",
+            description: "-",
             slug: "cardano-budget-2026",
             admins: ADMINS,
             submissionStartDate: submissionStart,
