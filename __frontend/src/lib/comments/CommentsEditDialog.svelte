@@ -20,17 +20,18 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[500px] max-h-[90dvh] overflow-y-auto flex flex-col">
+  <Dialog.Content class="sm:max-w-[500px] max-h-[90dvh] flex flex-col min-h-0">
     <form
+      class="flex flex-col min-h-0 flex-1"
       onsubmit={(e) => {
         e.preventDefault();
         onSave?.();
       }}
     >
-      <Dialog.Header>
+      <Dialog.Header class="shrink-0">
         <Dialog.Title>Edit Comment</Dialog.Title>
       </Dialog.Header>
-      <div class="py-4">
+      <div class="py-4 overflow-y-auto min-h-0 flex-1">
         <Textarea
           id="edit-content"
           label="Comment"
@@ -39,7 +40,7 @@
           maxLength={2000}
         />
       </div>
-      <Dialog.Footer>
+      <Dialog.Footer class="shrink-0">
         <Button
           type="button"
           variant="outline"

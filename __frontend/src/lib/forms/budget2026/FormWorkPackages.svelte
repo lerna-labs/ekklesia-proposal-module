@@ -204,9 +204,9 @@
 <!-- Add / Edit work package (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
   <AlertDialog.Content
-    class="sm:max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col"
+    class="sm:max-w-2xl max-h-[90vh] flex flex-col min-h-0"
   >
-    <AlertDialog.Header class="text-left">
+    <AlertDialog.Header class="text-left shrink-0">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Work Package" : "Add Work Package"}
       </AlertDialog.Title>
@@ -215,7 +215,7 @@
         Cardano.
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-4">
+    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1">
       <Input
         id="name"
         label="Work Package Name"

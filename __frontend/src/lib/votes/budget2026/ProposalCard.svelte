@@ -11,16 +11,10 @@
   import ClockIcon from "@lucide/svelte/icons/clock";
   import * as Popover from "$lib/components/ui/popover";
   import Markdown from "$lib/base/Markdown.svelte";
-  import ProposalCardBudget from "$lib/ProposalCardBudget.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
-  import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
-  let {
-    proposal,
-    vote,
-    showLink = true,
-    class: className,
-  } = $props();
-
+  import { formatAda } from "$lib/utils.js";
+  import { formatUsd } from "$lib/utils.js";
+  let { proposal, vote, showLink = true, class: className } = $props();
   let revisionDrawerOpen = $state(false);
 
   const isOwnProposal = $derived(
@@ -60,11 +54,6 @@
   );
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
-
-  const showVersionBadge = $derived(
-    (proposal?.version != null && proposal.version > 1) ||
-      (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
-  );
 </script>
 
 <Card.Root
@@ -75,170 +64,78 @@
     : ''}"
 >
   <Card.Header class="relative pb-0 px-4 sm:px-6">
-    <div
-      class="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start"
+    <Card.Title
+      class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0 line-clamp-2"
     >
-      <Card.Title
-        class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0"
+      <a href={proposalHref} class="hover:underline cursor-pointer"
+        >{proposal.title || proposal.name || "Untitled Proposal"}</a
       >
-        <span class="inline min-w-0">
-          <a href={proposalHref} class="hover:underline cursor-pointer"
-            >{proposal.title || proposal.name || "Untitled Proposal"}</a
-          >
-          {#if showVersionBadge}
-            <button
-              type="button"
-              onclick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                revisionDrawerOpen = true;
-              }}
-              class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors ml-0 align-baseline"
-              aria-label="View revision history"
-              title="View revision history"
-            >
-              Version {proposal?.version ?? 1}
-            </button>
-          {/if}
+    </Card.Title>
+    <Card.Description>
+      <div class="line-clamp-1 text-md mb-1">
+        <span class="text-foreground-muted italic">Proposer Name:</span>
+        <span class="text-black">
+          {proposal.metaData?.proposerDetails?.name}
         </span>
-        {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
-          <button
-            type="button"
-            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium uppercase bg-destructive text-white cursor-pointer hover:bg-destructive/90 border-0 h-5 shrink-0"
-            aria-label="View withdrawal details"
-            onclick={() => (withdrawalDetailsDialogOpen = true)}
-          >
-            {proposal.status === "withdrawnByAdmin"
-              ? "Withdrawn by Admin"
-              : "Withdrawn"}
-          </button>
-        {/if}
-      </Card.Title>
-      {#if proposal.metaData?.totalBudget != null}
-        <ProposalCardBudget
-          totalBudget={proposal.metaData.totalBudget}
-          conversionRate={proposal.metaData?.conversionRate ??
-            proposal.metaData?.proposalDetails?.conversionRate ??
-            proposal.metaData?.financialAndAdministrative?.conversionRate}
-          class="shrink-0"
-        />
-      {/if}
-    </div>
+      </div>
+
+      <div class="text-xs text-foreground-muted">
+        <span class="text-foreground-muted italic">
+          Proposer type: <span class="text-black">
+            {proposal.metaData?.contractingParty?.legalEntityType}
+          </span>
+        </span>
+      </div>
+    </Card.Description>
   </Card.Header>
   <Card.Content class="space-y-3 px-4 sm:px-6">
     <!-- Description block: medium bold labels -->
-    <div class="space-y-2 leading-tight">
-      {#if proposal.metaData?.proposerDetails?.name != null && String(proposal.metaData.proposerDetails.name).trim() !== ""}
-        {@const legalEntityType =
-          proposal.metaData?.contractingParty?.legalEntityType}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          {#if legalEntityType != null && String(legalEntityType).trim() !== ""}
-            <Popover.Root>
-              <Popover.Trigger
-                type="button"
-                class="rounded outline-none focus-visible:ring-2 focus-visible:ring-ring p-0.5 -m-0.5 cursor-help"
-                aria-label="Proposer type: {legalEntityType}"
-              >
-                {#if legalEntityType === "company"}
-                  <HomeIcon
-                    class="size-3.5 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                {:else}
-                  <UserIcon
-                    class="size-3.5 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                {/if}
-              </Popover.Trigger>
-              <Popover.Content class="w-auto p-2 text-xs" align="start">
-                <span class="font-medium text-muted-foreground"
-                  >Proposer type:</span
-                >
-                <span class="ml-1">{legalEntityType}</span>
-              </Popover.Content>
-            </Popover.Root>
-          {:else}
-            <UserIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
-          {/if}
-          <span class={labelClass}>Proposer Name:</span>
-          {#if proposerHref}
-            <a
-              href={proposerHref}
-              class="text-muted-foreground hover:underline cursor-pointer"
-              title="Show all proposals by this proposer"
-            >
-              {proposal.metaData.proposerDetails.name}
-            </a>
-          {:else}
-            <span>{proposal.metaData.proposerDetails.name}</span>
-          {/if}
-        </div>
-      {/if}
-      {#if (showVersionBadge && proposal.updatedAt != null) || proposal.submittedAt != null}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <ClockIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          {#if showVersionBadge && proposal.updatedAt != null}
-            <span class={labelClass}>Last updated:</span>
-            <Popover.Root>
-              <Popover.Trigger
-                type="button"
-                class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                title="Click to see submitted date"
-                aria-label="Show submitted date"
-              >
-                {new Date(proposal.updatedAt).toLocaleString(undefined, {
-                  dateStyle: "long",
-                  timeStyle: "short",
-                })}
-              </Popover.Trigger>
-              <Popover.Content class="w-auto p-3" align="start">
-                <div class="text-xs space-y-1">
-                  {#if proposal.submittedAt != null}
-                    <p>
-                      <span class="font-medium text-muted-foreground">
-                        Submitted:
-                      </span>
-                      {new Date(proposal.submittedAt).toLocaleString(
-                        undefined,
-                        {
-                          dateStyle: "long",
-                          timeStyle: "short",
-                        },
-                      )}
-                    </p>
-                  {:else}
-                    <p class="text-muted-foreground">
-                      Submitted date not available
-                    </p>
-                  {/if}
-                </div>
-              </Popover.Content>
-            </Popover.Root>
-          {:else if proposal.submittedAt != null}
-            <span class={labelClass}>Submitted at:</span>
-            <span>
-              {new Date(proposal.submittedAt).toLocaleString(undefined, {
-                dateStyle: "long",
-                timeStyle: "short",
-              })}
-            </span>
-          {/if}
-        </div>
-      {/if}
+
+    <div class="border-2 border-black p-1 px-2 w-fit mt-2 mb-4">
+      <div class="text-black/50 italic text-xs">Requested Budget</div>
+      <div class="text-black font-semibold text-md">
+        {formatAda(proposal.metaData?.totalBudget)} ADA
+      </div>
+      <div class="text-black/50 italic text-xs">
+        USD equivalent ${formatUsd(
+          proposal.metaData?.totalBudget *
+            (proposal.metaData?.conversionRate ?? 0),
+        )} (ADA/USD {proposal.metaData?.conversionRate ?? 0})
+      </div>
     </div>
 
     {#if proposal.summary}
-      <div class="text-sm line-clamp-10 ++:first:mt-0 pt-4">
-        <Markdown content={proposal.summary} />
+      <div>
+        <div class="text-xs text-black/50 italic">Overview:</div>
+        <div class="text-sm line-clamp-10 ++:first:mt-0">
+          <Markdown
+            content={proposal.summary}
+            class="text-xs leading-tight line-clamp-10"
+          />
+        </div>
       </div>
     {/if}
+
+    <div class="flex justify-between text-xs italic mt-0">
+      <div>
+        <span class="text-black/50">Submitted on:</span>
+        <span class="text-black font-semibold"
+          >{new Date(proposal.updatedAt).toLocaleString(undefined, {
+            dateStyle: "short",
+            timeStyle: "short",
+          })}</span
+        >
+      </div>
+      <div>
+        <span class="text-black/50">Last edited on:</span>
+        <span class="text-black font-semibold">
+          {new Date(proposal.submittedAt).toLocaleString(undefined, {
+            dateStyle: "short",
+            timeStyle: "short",
+          })}
+        </span>
+      </div>
+    </div>
 
     {#if proposal.withdrawalDetails}
       {@const wd = proposal.withdrawalDetails}
@@ -277,9 +174,42 @@
     {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw || commentsHref}
-    <Card.Footer class="flex flex-col items-start gap-3 pt-4 px-4 sm:px-6">
+    <Card.Footer class="flex flex-col items-start gap-3 pt-0 px-4 sm:px-6">
       {#if commentsHref || (showLink && proposalHref)}
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center gap-2 flex-wrap justify-between w-full">
+          <Button
+            variant="ghost"
+            class="inline-flex items-center gap-2 min-w-0"
+            href={commentsHref}
+            aria-label="View comments"
+            title="View comments"
+          >
+            <span class="shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-message-circle-more-icon lucide-message-circle-more"
+                ><path
+                  d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"
+                /><path d="M8 12h.01" /><path d="M12 12h.01" /><path
+                  d="M16 12h.01"
+                /></svg
+              >
+            </span>
+            <span
+              class="font-semibold text-xs tabular-nums leading-none relative -top-2 -left-2"
+            >
+              {proposal.commentCount}
+            </span>
+          </Button>
+
           {#if showLink && proposalHref}
             <Button
               href={proposalHref}
@@ -289,21 +219,6 @@
             >
               <FileTextIcon class="size-4 mr-1" />
               Read Proposal
-            </Button>
-          {/if}
-          {#if commentsHref}
-            <Button
-              href={commentsHref}
-              variant="outline"
-              size="sm"
-              class="text-xs shrink-0"
-              aria-label={commentCount != null
-                ? `${commentCount} ${commentCount === 1 ? "Comment" : "Comments"}`
-                : "View comments"}
-            >
-              <MessageSquareIcon class="size-4 mr-1" />
-              {commentCount != null ? commentCount : "—"}
-              {commentCount === 1 ? "Comment" : "Comments"}
             </Button>
           {/if}
         </div>
@@ -324,9 +239,3 @@
 {#if proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"}
   <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
 {/if}
-
-<ProposalRevisionHistory
-  {proposal}
-  {vote}
-  bind:open={revisionDrawerOpen}
-/>

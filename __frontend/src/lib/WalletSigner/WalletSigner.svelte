@@ -1,25 +1,27 @@
 <script>
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Tabs from "$lib/components/ui/tabs/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
+  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { toast } from "svelte-sonner";
+  import { goto, invalidateAll } from "$app/navigation";
   import {
     api,
     loggedIn,
     user,
     setJWT,
     showLogin,
-    pendingCommentAction,
+    redirectAfterLogin,
   } from "$stores/sessionManager.js";
+  import { get } from "svelte/store";
   import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
   import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
   import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
   import WalletMinimalIcon from "@lucide/svelte/icons/wallet-minimal";
-  import { toast } from "svelte-sonner";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import * as Tabs from "$lib/components/ui/tabs/index.js";
-  import { invalidateAll } from "$app/navigation";
+  import { Input } from "$lib/components/ui/input/index.js";
   import { log } from "$lib/WalletSigner/logger.js";
+  import { onMount } from "svelte";
   let {
     ballot = false,
     mode,
@@ -46,7 +48,7 @@
       ? storedSignType
       : allowedTypes.includes(defaultFromEnv)
         ? defaultFromEnv
-        : (allowedTypes[0] || "stake");
+        : allowedTypes[0] || "stake";
   let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
   let poolId = $state($user?.userId || "");
@@ -55,6 +57,20 @@
       return $user.userId;
     }
     return "";
+  });
+
+  onMount(() => {
+    const handleClick = (e) => {
+      const el = e.target.closest?.("[data-walletsigner-action]");
+      if (!el || el.dataset.walletsignerAction !== "navigateAfterLogin") return;
+      if (get(loggedIn)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      redirectAfterLogin.set(el.href);
+      $showLogin = true;
+    };
+    window.addEventListener("click", handleClick, true);
+    return () => window.removeEventListener("click", handleClick, true);
   });
 
   const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
@@ -101,16 +117,29 @@
     const getUser = await api.fetch(fetch, "/session/");
     const userData = await getUser.json();
     user.set(userData);
-    await invalidateAll();
     open = false;
     showLogin.set(false);
+    // Redirect from callback (not from $effect) so SvelteKit's goto() is not swallowed by effect lifecycle
+    const path = get(redirectAfterLogin);
+    if (path) {
+      redirectAfterLogin.set(null);
+      await goto(path);
+    } else {
+      await invalidateAll();
+      // If we're on /login, go to dashboard so we don't stay on the login page
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname === "/login"
+      ) {
+        await goto("/dashboard");
+      }
+    }
   }
 
   function close() {
     noWallets = false;
     open = false;
     showLogin.set(false);
-    pendingCommentAction.set(null);
   }
 
   function onSignTypeChange(e) {

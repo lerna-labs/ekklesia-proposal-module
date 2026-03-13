@@ -196,7 +196,7 @@
               <th
                 class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[80px] whitespace-nowrap"
               >
-                Total (ADA)
+                Total
               </th>
               <th
                 class="h-9 px-3 text-right align-middle font-medium w-[72px]"
@@ -236,11 +236,17 @@
                 <td class="p-3 text-right align-top tabular-nums">
                   {row.quantity ?? "—"}
                 </td>
-                <td class="p-3 text-right align-top tabular-nums">
-                  {formatAda(row.unitPrice)}
+                <td class="p-3 text-right align-top tabular-nums text-nowrap">
+                  {formatAda(row.unitPrice)} ADA<br />
+                  <span class="text-xs text-muted-foreground">
+                    ${formatUsd(row.unitPrice * conversionRateNum)} USD
+                  </span>
                 </td>
                 <td class="p-3 text-right align-top tabular-nums">
-                  {formatAda(totalAda)}
+                  {formatAda(totalAda)} ADA<br />
+                  <span class="text-xs text-muted-foreground">
+                    ${formatUsd(totalAda * conversionRateNum)}
+                  </span>
                 </td>
                 <td class="p-3 text-right align-top">
                   <div class="flex items-center justify-end gap-1">
@@ -271,9 +277,15 @@
           </tbody>
           <tfoot>
             <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
-              <td colspan="5" class="p-3 text-right">Total (ADA)</td>
-              <td class="p-3 text-right tabular-nums">
-                {formatAda(totalPackageAda)}
+              <td colspan="5" class="p-3 text-right text-nowrap"
+                >Total ADA<br />
+                <span class="text-xs text-white/50"> Total USD </span>
+              </td>
+              <td class="p-3 text-right tabular-nums text-nowrap">
+                {formatAda(totalPackageAda)} ADA<br />
+                <span class="text-xs text-white/50">
+                  ${formatUsd(totalPackageAda * conversionRateNum)}
+                </span>
               </td>
               <td class="p-3"></td>
             </tr>
@@ -304,16 +316,16 @@
 <!-- Add / Edit budget item -->
 <AlertDialog.Root bind:open={addDialogOpen}>
   <AlertDialog.Content
-    class="sm:max-w-xl max-h-[90vh] overflow-y-auto flex flex-col"
+    class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0"
   >
     <AlertDialog.Header
-      class="text-left flex flex-row items-center justify-between gap-4"
+      class="text-left flex flex-row items-center justify-between gap-4 shrink-0"
     >
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
     </AlertDialog.Header>
-    <div class="grid gap-4 pb-4">
+    <div class="grid gap-4 pb-4 overflow-y-auto min-h-0 flex-1">
       <Input
         id="name"
         label="Item Name"

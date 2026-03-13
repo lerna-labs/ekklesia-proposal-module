@@ -7,89 +7,32 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
 
   let { voteSlug = "" } = $props();
-
-  const createHref = $derived(
-    voteSlug ? `/dashboard/${voteSlug}/new` : "/dashboard",
-  );
-
-  const myProposalsHref = $derived(
-    voteSlug && $user?.userId
-      ? `/votes/${voteSlug}?proposer=${encodeURIComponent($user.userId)}&page=1&status=live,withdrawn,draft`
-      : "/dashboard",
-  );
-
-  const blueButtonClass =
-    "text-xs cursor-pointer bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue) border-0";
-
-  function openLogin() {
-    showLogin.set(true);
-  }
 </script>
 
 <Card.Root class="mt-4">
-  <Card.Header class="pb-2">
-    <Card.Title class="text-base">Your proposal</Card.Title>
+  <Card.Header class="pb-0">
+    <Card.Title class="text-base">Submit your proposal</Card.Title>
   </Card.Header>
-  <Card.Content class="flex flex-wrap gap-2">
-    {#if $loggedIn}
-      <Button
-        href={createHref}
-        variant="default"
-        size="sm"
-        class={blueButtonClass}
-      >
-        <PlusIcon class="size-4 shrink-0" aria-hidden="true" />
-        Create New Proposal
-      </Button>
-      <Button
-        href="/dashboard"
-        variant="outline"
-        size="sm"
-        class={blueButtonClass}
-      >
-        <UserIcon class="size-4 shrink-0" aria-hidden="true" />
-        Go to Dashboard
-      </Button>
-      <Button
-        href={myProposalsHref}
-        variant="outline"
-        size="sm"
-        class={blueButtonClass}
-      >
-        <FileTextIcon class="size-4 shrink-0" aria-hidden="true" />
-        My Proposals
-      </Button>
-    {:else}
-      <Button
-        type="button"
-        variant="default"
-        size="sm"
-        class={blueButtonClass}
-        onclick={openLogin}
-      >
-        <PlusIcon class="size-4 shrink-0" aria-hidden="true" />
-        Create New Proposal
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        class={blueButtonClass}
-        onclick={openLogin}
-      >
-        <UserIcon class="size-4 shrink-0" aria-hidden="true" />
-        Go to Dashboard
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        class={blueButtonClass}
-        onclick={openLogin}
-      >
-        <FileTextIcon class="size-4 shrink-0" aria-hidden="true" />
-        My Proposals
-      </Button>
-    {/if}
+  <Card.Content class="flex flex-wrap gap-2 pt-0!">
+    <Button
+      href="/dashboard/{voteSlug}/new"
+      data-walletsigner-action="navigateAfterLogin"
+      variant="default"
+      size="sm"
+      class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+    >
+      <PlusIcon class="size-4 shrink-0" aria-hidden="true" />
+      Create New Proposal
+    </Button>
+    <Button
+      href="/dashboard#proposals"
+      data-walletsigner-action="navigateAfterLogin"
+      variant="outline"
+      size="sm"
+      class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+    >
+      <UserIcon class="size-4 shrink-0" aria-hidden="true" />
+      My Drafts
+    </Button>
   </Card.Content>
 </Card.Root>

@@ -2,14 +2,16 @@ import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { writable, get } from 'svelte/store';
 import Cookies from 'js-cookie';
-import { clearPreviewStorage } from '$lib/previewProposalStorage.js';
 const API_URL = import.meta.env.VITE_API_URL;
+
+// proposal-module specific function
+import { clearPreviewStorage } from '$lib/previewProposalStorage.js';
+
 
 // Create a writable store to manage the session
 export const loggedIn = writable(false);
 export const showLogin = writable(false);
-/** When set, Comments will open add/reply dialog after login. Shape: { replyTo: comment | null }. Cleared when dialog opens or login is closed. */
-export const pendingCommentAction = writable(null);
+export const redirectAfterLogin = writable(null);
 export const user = writable(null);
 export const jwt = writable(null);
 
@@ -151,6 +153,8 @@ export const logout = async () => {
 		// Clear localStorage if present
 		if (typeof window !== 'undefined') {
 			localStorage.removeItem('token');
+
+			// proposal-module specific cleanup
 			clearPreviewStorage();
 		}
 
