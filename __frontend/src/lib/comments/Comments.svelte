@@ -2,11 +2,7 @@
   import { Button } from "$lib/components/ui/button";
   import { toast } from "svelte-sonner";
   import { untrack } from "svelte";
-  import {
-    user,
-    showLogin,
-    pendingCommentAction,
-  } from "$stores/sessionManager.js";
+  import { user, showLogin, loggedIn } from "$stores/sessionManager.js";
   import { fetchJson } from "./fetchJson.js";
   import { shortenString } from "$lib/utils.js";
   import CommentsHeader from "./CommentsHeader.svelte";
@@ -54,6 +50,11 @@
   let withdrawReason = $state("");
   let withdrawError = $state(null);
 
+  /** When true, open add/reply dialog after login. Cleared when modal is closed without login. */
+  let pendingAddAfterLogin = $state(false);
+  /** Comment to reply to after login, or null for new top-level comment. */
+  let pendingReplyTo = $state(null);
+
   const canComment = $derived(
     currentUserId &&
       proposal?.status === "live" &&
@@ -96,20 +97,29 @@
     }
   });
 
-  $effect(() => {
-    if (!addDialogOpen) {
+  let addDialogClearTimeoutId = 0;
+
+  function scheduleDeferredClear() {
+    if (addDialogClearTimeoutId) {
+      clearTimeout(addDialogClearTimeoutId);
+      addDialogClearTimeoutId = 0;
+    }
+    addDialogClearTimeoutId = setTimeout(() => {
       replyTo = null;
       commentValue = "";
       submitError = null;
-    }
-  });
+      pendingAddAfterLogin = false;
+      pendingReplyTo = null;
+      addDialogClearTimeoutId = 0;
+    }, 250);
+  }
 
-  // After successful login, open add/reply dialog if guest had clicked Add Comment or Reply
+  // When user logs in and had clicked Add Comment or Reply, open the add dialog once user data is ready
   $effect(() => {
-    const pending = $pendingCommentAction;
-    if (!currentUserId || !pending) return;
-    pendingCommentAction.set(null);
-    const replyToComment = pending.replyTo ?? null;
+    if (!$loggedIn || !pendingAddAfterLogin || !currentUserId) return;
+    const replyToComment = pendingReplyTo ?? null;
+    pendingAddAfterLogin = false;
+    pendingReplyTo = null;
     const isOwnComment =
       replyToComment &&
       replyToComment.author?._id != null &&
@@ -269,12 +279,17 @@
     queueMicrotask(() => showLogin.set(true));
   }
 
-  function openAddDialog(replyingTo = null) {
+  async function openAddDialog(replyingTo = null) {
     if (!currentUserId) {
-      pendingCommentAction.set({ replyTo: replyingTo });
+      pendingAddAfterLogin = true;
+      pendingReplyTo = replyingTo;
       requestLoginModal();
       toast.info("Please log in to comment or reply.");
       return;
+    }
+    if (addDialogClearTimeoutId) {
+      clearTimeout(addDialogClearTimeoutId);
+      addDialogClearTimeoutId = 0;
     }
     replyTo = replyingTo;
     commentValue = replyingTo
@@ -284,6 +299,7 @@
           .join("\n")
       : "";
     submitError = null;
+    await import("$lib/editor/Editor.svelte");
     addDialogOpen = true;
   }
 
@@ -316,8 +332,7 @@
     toast.success(replyTo ? "Reply posted" : "Comment posted");
     const parentId = replyTo?._id;
     addDialogOpen = false;
-    replyTo = null;
-    commentValue = "";
+    scheduleDeferredClear();
     await loadComments();
     if (parentId) {
       loadReplies(parentId, true);
@@ -326,9 +341,7 @@
 
   function closeAddDialog() {
     addDialogOpen = false;
-    replyTo = null;
-    commentValue = "";
-    submitError = null;
+    scheduleDeferredClear();
   }
 
   async function toggleLike(c) {
@@ -470,7 +483,7 @@
   }
 </script>
 
-<section class="" id="comments">
+<section id="comments">
   <CommentsHeader
     total={commentsState.meta?.total ?? proposal?.commentCount}
     bind:sortPopoverOpen

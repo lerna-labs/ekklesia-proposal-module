@@ -40,7 +40,7 @@
 </script>
 
 <div
-  class="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 pb-3 pt-3 mb-2 bg-slate-100"
+  class="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 pb-3 pt-3 mb-2 bg-slate-100 outline outline-2 outline-slate-100"
 >
   <h2 class="text-xl font-medium">
     {#if total != null && total > 0}
