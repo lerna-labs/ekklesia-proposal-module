@@ -28,7 +28,7 @@
   aria-label="View revision history"
   title="View revision history"
 >
-  Version {proposal?.version ?? 1}
-</Button>
+  View preview versions</Button
+>
 
 <ProposalRevisionHistory {proposal} {vote} bind:open={revisionDrawerOpen} />
