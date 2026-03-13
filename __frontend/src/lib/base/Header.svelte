@@ -4,7 +4,6 @@
   import WalletSigner from "$lib/WalletSigner/WalletSigner.svelte";
   import { User, LogOut, FileText } from "lucide-svelte";
   import { shortenString } from "$lib/utils.js";
-  import Logo from "$lib/base/Logo.svelte";
 </script>
 
 <header class="bg-(--mbo-tangy-blue) text-white">
@@ -12,7 +11,7 @@
     class="container mx-auto max-w-4xl py-4 px-4 flex justify-between items-center"
   >
     <a href="/">
-      <Logo />
+      <img src="/images/logo.svg" alt="Intersect Logo" class="h-18" />
     </a>
     <nav>
       <ul class="flex items-center gap-2">
