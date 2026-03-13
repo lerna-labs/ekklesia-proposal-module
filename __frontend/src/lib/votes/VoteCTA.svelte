@@ -16,6 +16,7 @@
   <Card.Content class="flex flex-wrap gap-2 pt-0!">
     <Button
       href="/dashboard/{voteSlug}/new"
+      data-walletsigner-action="navigateAfterLogin"
       variant="default"
       size="sm"
       class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
@@ -25,6 +26,7 @@
     </Button>
     <Button
       href="/dashboard#proposals"
+      data-walletsigner-action="navigateAfterLogin"
       variant="outline"
       size="sm"
       class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
