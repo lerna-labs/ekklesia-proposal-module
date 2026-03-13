@@ -13,14 +13,7 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardBudget from "$lib/ProposalCardBudget.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
-  import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
-  let {
-    proposal,
-    vote,
-    showLink = true,
-    class: className,
-  } = $props();
-
+  let { proposal, vote, showLink = true, class: className } = $props();
   let revisionDrawerOpen = $state(false);
 
   const isOwnProposal = $derived(
@@ -60,11 +53,6 @@
   );
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
-
-  const showVersionBadge = $derived(
-    (proposal?.version != null && proposal.version > 1) ||
-      (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
-  );
 </script>
 
 <Card.Root
@@ -85,21 +73,6 @@
           <a href={proposalHref} class="hover:underline cursor-pointer"
             >{proposal.title || proposal.name || "Untitled Proposal"}</a
           >
-          {#if showVersionBadge}
-            <button
-              type="button"
-              onclick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                revisionDrawerOpen = true;
-              }}
-              class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors ml-0 align-baseline"
-              aria-label="View revision history"
-              title="View revision history"
-            >
-              Version {proposal?.version ?? 1}
-            </button>
-          {/if}
         </span>
         {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
           <button
@@ -178,13 +151,13 @@
           {/if}
         </div>
       {/if}
-      {#if (showVersionBadge && proposal.updatedAt != null) || proposal.submittedAt != null}
+      {#if proposal.updatedAt != null || proposal.submittedAt != null}
         <div class="flex items-center gap-1 text-xs text-muted-foreground">
           <ClockIcon
             class="size-3.5 shrink-0 text-muted-foreground"
             aria-hidden="true"
           />
-          {#if showVersionBadge && proposal.updatedAt != null}
+          {#if proposal.updatedAt != null}
             <span class={labelClass}>Last updated:</span>
             <Popover.Root>
               <Popover.Trigger
@@ -324,9 +297,3 @@
 {#if proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer"}
   <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
 {/if}
-
-<ProposalRevisionHistory
-  {proposal}
-  {vote}
-  bind:open={revisionDrawerOpen}
-/>
