@@ -116,7 +116,7 @@
       </div>
     {/if}
 
-    <div class="flex justify-between text-xs italic mt-4">
+    <div class="flex justify-between text-xs italic mt-0">
       <div>
         <span class="text-black/50">Submitted on:</span>
         <span class="text-black font-semibold"
@@ -174,12 +174,15 @@
     {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw || commentsHref}
-    <Card.Footer class="flex flex-col items-start gap-3 pt-4 px-4 sm:px-6">
+    <Card.Footer class="flex flex-col items-start gap-3 pt-0 px-4 sm:px-6">
       {#if commentsHref || (showLink && proposalHref)}
         <div class="flex items-center gap-2 flex-wrap justify-between w-full">
           <Button
             variant="ghost"
             class="inline-flex items-center gap-2 min-w-0"
+            href={commentsHref}
+            aria-label="View comments"
+            title="View comments"
           >
             <span class="shrink-0">
               <svg
