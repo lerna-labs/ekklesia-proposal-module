@@ -17,7 +17,7 @@
       <ul class="flex items-center gap-2">
         <li>
           <Button
-            href="/votes/test-budget-2026"
+            href="/votes/cardano-budget-2026"
             variant="outline"
             size="sm"
             class="text-xs text-black"
