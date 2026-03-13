@@ -18,7 +18,6 @@
 
   let { proposal, vote, pillars = [] } = $props();
 
-  let trackRecordOpen = $state(false);
   let otherAdminModalOpen = $state(false);
   let linkWarningDialog;
 
@@ -46,8 +45,6 @@
   const submittedAt = $derived(proposal?.submittedAt);
   const updatedAt = $derived(proposal?.updatedAt);
 
-  const trackRecord = $derived(proposal?.metaData?.trackRecord ?? "");
-  const hasTrackRecord = $derived(trackRecord.trim().length > 0);
   const proposerName = $derived(
     proposal?.metaData?.proposerDetails?.name ?? "",
   );
@@ -67,10 +64,7 @@
       : null,
   );
   const hasProposerContent = $derived(
-    proposerName.trim() ||
-      legalEntityType.trim() ||
-      links.length > 0 ||
-      hasTrackRecord,
+    proposerName.trim() || legalEntityType.trim() || links.length > 0,
   );
   const dateOptions = { dateStyle: "long", timeStyle: "short" };
 </script>
@@ -221,33 +215,31 @@
               </ul>
             </div>
           {/if}
-          {#if hasTrackRecord || proposerHref}
-            <div class="flex flex-wrap gap-2">
-              {#if hasTrackRecord}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                  onclick={() => (trackRecordOpen = true)}
-                >
-                  Track Record
-                </Button>
-              {/if}
-              {#if proposerHref}
-                <Button
-                  href={proposerHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                >
-                  Show All Proposals
-                </Button>
-              {/if}
-            </div>
-          {/if}
+          <div class="flex flex-wrap gap-2">
+            {#if proposal?.metaData?.trackRecord}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="text-xs"
+                href="#track-record"
+              >
+                Track Record
+              </Button>
+            {/if}
+            {#if proposerHref}
+              <Button
+                href={proposerHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outline"
+                size="sm"
+                class="text-xs"
+              >
+                Show All Proposals
+              </Button>
+            {/if}
+          </div>
         </div>
       </div>
     {/if}
@@ -333,13 +325,5 @@
   bind:open={otherAdminModalOpen}
   title="Details about other administrator"
   content={otherAdministrator.trim() || "No details provided."}
-/>
-<MarkdownModal
-  bind:open={trackRecordOpen}
-  title="Track Record"
-  content={trackRecord}
-  contentClass="text-sm [&_.markdown]:text-inherit"
-  class="sm:max-w-lg max-h-[90dvh] overflow-y-auto flex flex-col"
-  description="Proposer's track record and relevant experience"
 />
 <LinkWarningDialog bind:this={linkWarningDialog} />
