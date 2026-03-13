@@ -99,8 +99,8 @@
 </script>
 
 <AlertDialog.Root bind:open>
-  <AlertDialog.Content class="sm:max-w-md max-h-[90dvh] overflow-y-auto flex flex-col">
-    <AlertDialog.Header>
+  <AlertDialog.Content class="sm:max-w-md max-h-[90dvh] flex flex-col min-h-0">
+    <AlertDialog.Header class="shrink-0">
       <AlertDialog.Title>Withdraw Proposal</AlertDialog.Title>
       <AlertDialog.Description>
         {#if proposal}
@@ -117,7 +117,7 @@
         {/if}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4">
+    <div class="grid gap-4 overflow-y-auto min-h-0 flex-1">
       <div class="grid gap-2">
         <Label.Root for="withdraw-reason" class="gap-0">
           Withdrawal Reason
@@ -163,7 +163,7 @@
         />
       </div>
     </div>
-    <AlertDialog.Footer class="gap-1">
+    <AlertDialog.Footer class="gap-1 shrink-0">
       <AlertDialog.Cancel disabled={submitting} class="cursor-pointer">
         Cancel
       </AlertDialog.Cancel>

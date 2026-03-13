@@ -30,21 +30,22 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[425px] max-h-[90dvh] overflow-y-auto flex flex-col">
+  <Dialog.Content class="sm:max-w-[425px] max-h-[90dvh] flex flex-col min-h-0">
     <form
+      class="flex flex-col min-h-0 flex-1"
       onsubmit={(e) => {
         e.preventDefault();
         onSubmit?.();
       }}
     >
-      <Dialog.Header>
+      <Dialog.Header class="shrink-0">
         <Dialog.Title>Withdraw Comment</Dialog.Title>
         <Dialog.Description>
           This will withdraw the comment. The author will see the withdrawal
           reason.
         </Dialog.Description>
       </Dialog.Header>
-      <div class="py-4 space-y-4">
+      <div class="py-4 space-y-4 overflow-y-auto min-h-0 flex-1">
         <Select.Root
           type="single"
           value={category || undefined}
@@ -72,7 +73,7 @@
           <p class="text-sm text-destructive">{error}</p>
         {/if}
       </div>
-      <Dialog.Footer>
+      <Dialog.Footer class="shrink-0">
         <Button
           type="button"
           variant="outline"

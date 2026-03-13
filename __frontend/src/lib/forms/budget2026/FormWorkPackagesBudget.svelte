@@ -316,16 +316,16 @@
 <!-- Add / Edit budget item -->
 <AlertDialog.Root bind:open={addDialogOpen}>
   <AlertDialog.Content
-    class="sm:max-w-xl max-h-[90vh] overflow-y-auto flex flex-col"
+    class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0"
   >
     <AlertDialog.Header
-      class="text-left flex flex-row items-center justify-between gap-4"
+      class="text-left flex flex-row items-center justify-between gap-4 shrink-0"
     >
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
     </AlertDialog.Header>
-    <div class="grid gap-4 pb-4">
+    <div class="grid gap-4 pb-4 overflow-y-auto min-h-0 flex-1">
       <Input
         id="name"
         label="Item Name"

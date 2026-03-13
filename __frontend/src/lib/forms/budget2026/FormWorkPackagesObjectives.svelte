@@ -194,8 +194,8 @@
 
 <!-- Add / Edit objective (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content class="sm:max-w-lg max-h-[90dvh] overflow-y-auto flex flex-col">
-    <AlertDialog.Header class="text-left">
+  <AlertDialog.Content class="sm:max-w-lg max-h-[90dvh] flex flex-col min-h-0">
+    <AlertDialog.Header class="text-left shrink-0">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}
       </AlertDialog.Title>
@@ -205,7 +205,7 @@
           : `Enter the Core Objective (max ${maxLength} characters).`}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-2">
+    <div class="grid gap-4 py-2 overflow-y-auto min-h-0 flex-1">
       <Textarea
         id="objective-list-editor-text"
         label="Core Objective"
@@ -223,7 +223,7 @@
           : null}
       />
     </div>
-    <AlertDialog.Footer class="flex gap-2 flex-wrap">
+    <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
       {#if editingIndex != null}
         <Button
           type="button"

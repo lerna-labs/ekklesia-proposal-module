@@ -22,15 +22,16 @@
   }}
 >
   <AlertDialog.Content
-    class="sm:max-w-[650px] max-h-[90dvh] overflow-y-auto flex flex-col"
+    class="sm:max-w-[650px] max-h-[90dvh] flex flex-col min-h-0"
   >
     <form
+      class="flex flex-col min-h-0 flex-1"
       onsubmit={(e) => {
         e.preventDefault();
         onSubmit?.();
       }}
     >
-      <AlertDialog.Header>
+      <AlertDialog.Header class="shrink-0">
         <AlertDialog.Title>
           {#if replyTo}
             Reply to {authorLabel(replyTo)}
@@ -39,7 +40,7 @@
           {/if}
         </AlertDialog.Title>
       </AlertDialog.Header>
-      <div class="py-4">
+      <div class="py-4 overflow-y-auto min-h-0 flex-1">
         {#key replyTo ? replyTo._id : "add"}
           <Textarea
             id="comment-content"
@@ -54,7 +55,7 @@
           <p class="text-sm text-destructive mt-2">{submitError}</p>
         {/if}
       </div>
-      <AlertDialog.Footer>
+      <AlertDialog.Footer class="shrink-0">
         <Button
           type="button"
           variant="outline"
