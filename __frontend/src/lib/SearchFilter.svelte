@@ -90,12 +90,12 @@
 
   const categoryTriggerLabel = $derived(
     pendingCategories.length === 0
-      ? "All Categories"
+      ? "All Pillars"
       : pendingCategories.length === 1
         ? (categoryOptionsList.find(
             (c) => String(c.value) === pendingCategories[0],
           )?.label ?? pendingCategories[0])
-        : `${pendingCategories.length} Categories`,
+        : `${pendingCategories.length} Pillars`,
   );
 
   $effect(() => {
@@ -252,7 +252,7 @@
           {#if categoryOption && categoryOptionsList.length > 0}
             <div class="space-y-2">
               <Label class="text-xs text-muted-foreground"
-                >{categoryOption.label}</Label
+                >Cardano 2030 Pillars</Label
               >
               <Select.Root type="multiple" bind:value={pendingCategories}>
                 <Select.Trigger
@@ -267,7 +267,7 @@
                   <Select.Group aria-label="Categories">
                     <Select.Item
                       value={ALL_CATEGORIES_VALUE}
-                      label="All Categories"
+                      label="All Pillars"
                     >
                       All Categories
                     </Select.Item>
