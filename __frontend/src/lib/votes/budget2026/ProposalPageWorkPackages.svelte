@@ -270,24 +270,19 @@
                               : 'pb-2'} bg-white"
                           >
                             <Card.Header
-                              class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
+                              class="flex flex-row items-center gap-1 py-2 pl-4 pr-3 text-sm"
                             >
                               <button
                                 type="button"
-                                class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-base flex items-center gap-2"
+                                class="min-w-0 flex-1 font-medium text-left cursor-pointer focus:outline-none text-base leading-6 flex items-center gap-2 {msExpanded
+                                  ? ''
+                                  : 'truncate'}"
                                 title={m?.name ?? "Unnamed milestone"}
                                 onclick={() => toggleMilestone(i, mi)}
                               >
-                                <span class="truncate"
-                                  >{m?.name ?? "Unnamed milestone"}</span
-                                >
-                                {#if (m?.duration ?? "").toString().trim()}
-                                  <Badge
-                                    class="shrink-0 font-normal text-xs bg-neutral-700 text-white border-0"
-                                  >
-                                    {m.duration} weeks
-                                  </Badge>
-                                {/if}
+                                <span class={msExpanded ? "pt-1" : "truncate"}>
+                                  {m?.name ?? "Unnamed milestone"}
+                                </span>
                               </button>
                               {#if hasDetails}
                                 <Button
@@ -320,6 +315,14 @@
                             </Card.Header>
                             {#if msExpanded && hasDetails}
                               <Card.Content class="pl-4 pr-3 pt-0 pb-4">
+                                {#if (m?.duration ?? "").toString().trim()}
+                                  <Badge
+                                    class="shrink-0 font-normal text-xs bg-neutral-500 text-white border-0 mb-4"
+                                  >
+                                    Estimated Duration:
+                                    {m.duration} weeks
+                                  </Badge>
+                                {/if}
                                 {#if (m?.deliverables ?? "").toString().trim()}
                                   <div
                                     class="text-sm text-muted-foreground mt-0 mb-1"
