@@ -109,7 +109,7 @@
               <Button
                 variant="outline"
                 size="sm"
-                class="text-xs"
+                class="text-xs mb-2"
                 href="#budget-summary"
               >
                 View budget breakdown
