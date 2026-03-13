@@ -19,8 +19,8 @@ export function formatAda(n) {
 export function formatUsd(n) {
 	return n != null && Number.isFinite(n)
 		? n.toLocaleString(undefined, {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
+			minimumFractionDigits: 0,
+			maximumFractionDigits: 0,
 		})
 		: "—";
 }
