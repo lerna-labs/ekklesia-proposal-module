@@ -427,9 +427,9 @@ async function createDummyData() {
         console.log(`Built ${pillars.length} pillars.`);
 
         const vote = await Vote.create({
-            title: "Test Budget 2026",
-            description: "A test vote for demonstration with one proposal and comments.",
-            slug: "test-budget-2026",
+            title: "Cardano Budget Process 2026",
+            description: "",
+            slug: "cardano-budget-2026",
             admins: ADMINS,
             submissionStartDate: submissionStart,
             submissionEndDate: submissionEnd,
