@@ -35,11 +35,32 @@
       : null,
   );
 
-  function onPreviewClick() {
-    if (!previewHref || !proposal?._id || !getPayload) return;
-    writePreviewPayload(proposal._id, getPayload(formData.status));
+  async function onPreviewClick() {
+    if (!vote?.slug || !getPayload) return;
+    const payload = getPayload(formData.status);
+    if (!payload) return;
+
+    let proposalId = proposal?._id;
+    if (!proposalId && formData.status === "draft" && onSave) {
+      try {
+        const saved = await onSave(payload, {
+          fromAutoSave: false,
+          exitAfterSave: false,
+        });
+        proposalId = saved?._id ?? null;
+      } catch (_) {
+        return;
+      }
+    }
+
+    if (!proposalId) return;
+    writePreviewPayload(proposalId, payload);
     setTimeout(() => {
-      window.open(previewHref, "_blank", "noopener,noreferrer");
+      window.open(
+        `/votes/${vote.slug}/${proposalId}?preview`,
+        "_blank",
+        "noopener,noreferrer",
+      );
     }, 0);
   }
 
@@ -116,6 +137,11 @@
     if (!getPayload || !onSave) return;
     const payload = getPayload("draft");
     autosaveLog("manual saveDraft", { exitAfterSave: !!exitAfterSave });
+    if (exitAfterSave) {
+      // Mark not dirty immediately so when the page's goto() triggers beforeNavigate,
+      // we don't show "unsaved changes". If save fails we revert so the form is dirty again.
+      initialSnapshot = JSON.stringify(payload);
+    }
     Promise.resolve(
       onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }),
     )
@@ -132,6 +158,10 @@
       })
       .catch((err) => {
         autosaveLog("manual saveDraft failed", err);
+        if (exitAfterSave) {
+          // Save failed; mark dirty again so leave-confirm works if they navigate away.
+          initialSnapshot = "";
+        }
       });
   }
 
@@ -256,6 +286,7 @@
         <div class="flex gap-2 w-full sm:w-auto">
           <Button
             type="button"
+            variant="outline"
             class="flex-1 min-w-0 cursor-pointer sm:flex-none"
             onclick={() => saveDraft(true)}
           >
@@ -263,6 +294,7 @@
           </Button>
           <Button
             type="button"
+            variant="outline"
             class="flex-1 min-w-0 cursor-pointer sm:flex-none"
             onclick={() => saveDraft(false)}
           >
@@ -270,41 +302,34 @@
           </Button>
         </div>
       {/if}
-      {#if previewHref}
-        <div
-          class="flex flex-col gap-2 w-full sm:flex-row sm:ml-auto sm:w-auto"
+      <div class="flex flex-col gap-2 w-full sm:flex-row sm:ml-auto sm:w-auto">
+        <Button
+          type="button"
+          variant="outline"
+          class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto inline-flex items-center gap-2"
+          onclick={onPreviewClick}
         >
-          <Button
-            type="button"
-            variant="outline"
-            class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto inline-flex items-center gap-2"
-            onclick={onPreviewClick}
-          >
-            <EyeIcon class="size-4 shrink-0" aria-hidden="true" />
-            Preview Proposal
-          </Button>
-          <Button
-            type="button"
-            class="w-full cursor-pointer sm:w-auto"
-            onclick={submitLive}
-          >
-            {formData.status === "draft"
-              ? "Submit Proposal"
-              : "Re-Submit Proposal"}
-          </Button>
-        </div>
-      {/if}
+          <EyeIcon class="size-4 shrink-0" aria-hidden="true" />
+          Preview Proposal
+        </Button>
+        <Button
+          type="button"
+          class="w-full cursor-pointer sm:w-auto"
+          onclick={submitLive}
+        >
+          {formData.status === "draft"
+            ? "Submit Proposal"
+            : "Re-Submit Proposal"}
+        </Button>
+      </div>
     </div>
     {#if formData.status === "draft"}
-      <p class="text-xs! text-left text-black/80 mb-0!">
-        Your changes are saved automatically every {AUTO_SAVE_INTERVAL_MINUTES} minutes.
-        {#if lastSaveAt != null}
-          (Last saved: {formatLastSaved(lastSaveAt)})
-        {/if}
+      <p class="text-xs! text-left text-white mb-0!">
+        <strong>Auto-saved</strong> every 2 minutes
       </p>
     {:else}
-      <p class="text-xs! text-right text-black/80 mb-0!">
-        Auto-save is disabled for live proposals.
+      <p class="text-xs! text-right text-white mb-0!">
+        <strong>Auto-saved</strong> is disabled for live proposals.
       </p>
     {/if}
   </div>
