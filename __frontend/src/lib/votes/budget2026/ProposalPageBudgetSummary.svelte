@@ -136,7 +136,8 @@
                     {formatAda(row.totalAda)}
                   </td>
                   <td class="p-3 text-right align-top tabular-nums">
-                    {row.totalUsd != null ? "$" + formatUsd(row.totalUsd) : "—"}
+                    {row.totalUsd != null ? "$" + formatUsd(row.totalUsd) : "—"} (ADA/USD
+                    {conversionRateNum})
                   </td>
                 </tr>
               {/each}
@@ -151,7 +152,8 @@
                     {formatAda(adminFeeAda)}
                   </td>
                   <td class="p-3 text-right tabular-nums">
-                    {adminFeeUsd != null ? "$" + formatUsd(adminFeeUsd) : "—"}
+                    {adminFeeUsd != null ? "$" + formatUsd(adminFeeUsd) : "—"} (ADA/USD
+                    {conversionRateNum})
                   </td>
                 </tr>
               {/if}
@@ -163,18 +165,18 @@
                 <td class="p-3 text-right tabular-nums">
                   {totalDisplayUsd != null
                     ? "$" + formatUsd(totalDisplayUsd)
-                    : "—"}
+                    : "—"} (ADA/USD {conversionRateNum})
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        <div class="text-xs text-muted-foreground mt-2">
+        <!-- <div class="text-xs text-muted-foreground mt-2">
           *This proposer has specified a {conversionRateNum != null
             ? "$" + formatUsd(conversionRateNum)
             : "—"} USD/ADA currency conversion rate (for estimate purposes only)
-        </div>
+        </div> -->
 
         {#if treasuryRepayment === "Yes"}
           <section class="mt-4 space-y-4">
