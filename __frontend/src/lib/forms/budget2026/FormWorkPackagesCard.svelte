@@ -9,14 +9,16 @@
   import BoxIcon from "@lucide/svelte/icons/box";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
-  import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import FormWorkPackagesMilestones from "./FormWorkPackagesMilestones.svelte";
   import FormWorkPackagesBudget from "./FormWorkPackagesBudget.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
+  import WorkPackageFormFields from "./WorkPackageFormFields.svelte";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
 
   let {
+    workPackage,
+    idPrefix = "wp",
     name = "",
     milestones = [],
     onMilestonesChange,
@@ -27,11 +29,33 @@
     milestoneAlternative = "",
     onMilestoneOptionChange,
     validationErrors,
-    onEdit,
     onDelete,
   } = $props();
 
-  const displayName = $derived(name || "Unnamed work package");
+  const displayName = $derived(
+    (workPackage?.name ?? name ?? "").toString().trim() || "Unnamed work package",
+  );
+
+  /** Top-level field keys that can have validation errors; card shows red outline when any have errors. */
+  const topLevelErrorKeys = [
+    "name",
+    "summary",
+    "coreObjectives",
+    "expectedValue",
+    "metric",
+    "initiativeType",
+    "proposalType",
+    "supportingDocuments",
+  ];
+  const hasTopLevelErrors = $derived(
+    validationErrors?.properties &&
+      topLevelErrorKeys.some(
+        (key) => (validationErrors.properties[key]?.errors?.length ?? 0) > 0,
+      ),
+  );
+  const cardRingClass = $derived(
+    hasTopLevelErrors ? "ring-2 ring-destructive rounded-md" : "",
+  );
 
   let expanded = $state(true);
   let confirmRemoveMilestonesOpen = $state(false);
@@ -139,17 +163,15 @@
   });
 </script>
 
-<Card.Root class="py-2 {expanded ? 'pb-0' : 'pb-2'} bg-slate-50">
+<Card.Root class="py-2 {expanded ? 'pb-0' : 'pb-2'} bg-slate-50 {cardRingClass}">
   <Card.Header class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm">
-    <button
-      type="button"
-      class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
+    <span
+      class="min-w-0 flex-1 font-medium truncate text-left text-lg flex items-center gap-2"
       title={displayName}
-      onclick={onEdit}
     >
       <BoxIcon class="size-5 shrink-0" />
       {displayName}
-    </button>
+    </span>
     <Button
       type="button"
       variant="outline"
@@ -170,17 +192,6 @@
       variant="outline"
       size="icon"
       class="shrink-0 size-8 cursor-pointer"
-      title="Edit work package"
-      aria-label="Edit work package"
-      onclick={onEdit}
-    >
-      <PencilIcon class="size-4" />
-    </Button>
-    <Button
-      type="button"
-      variant="outline"
-      size="icon"
-      class="shrink-0 size-8 cursor-pointer"
       title="Remove work package"
       aria-label="Remove work package"
       onclick={onDelete}
@@ -190,6 +201,15 @@
   </Card.Header>
   {#if expanded}
     <Card.Content class="p-4 pt-0">
+      {#if workPackage}
+        <div class="mb-6">
+          <WorkPackageFormFields
+            bind:draft={workPackage}
+            draftErrors={validationErrors}
+            {idPrefix}
+          />
+        </div>
+      {/if}
       <section>
         <div class={sectionRingClass}>
           <h3 class="text-normal font-medium mb-2">

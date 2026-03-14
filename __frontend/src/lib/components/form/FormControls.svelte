@@ -329,7 +329,7 @@
       </p>
     {:else}
       <p class="text-xs! text-right text-white mb-0!">
-        <strong>Auto-saved</strong> is disabled for live proposals.
+        <strong>Auto-save</strong> is disabled for live proposals.
       </p>
     {/if}
   </div>
