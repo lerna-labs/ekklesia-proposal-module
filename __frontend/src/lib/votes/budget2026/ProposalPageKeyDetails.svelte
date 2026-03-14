@@ -82,8 +82,8 @@
   <Card.Header class="py-0">
     <Card.Title class="text-xl font-medium">Key Details</Card.Title>
   </Card.Header>
-  <Card.Content class="grid grid-cols-2 gap-2">
-    <div class="space-y-2 text-xs">
+  <Card.Content class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]">
+    <div class="space-y-2 text-xs md:row-start-1 md:col-start-1">
       {#if totalBudget != null}
         <div
           class="rounded-lg border bg-card text-card-foreground overflow-hidden"
@@ -269,85 +269,24 @@
           </div>
         </div>
       {/if}
-      {#if (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null}
-        <div class="mt-4 space-y-2">
-          {#if (proposal?._id ?? proposal?.id) != null}
-            {@const proposalIdStr = String(proposal._id ?? proposal.id)}
-            <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <HashIcon
-                class="size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <span class={labelClass}>Proposal ID:</span>
-              <button
-                type="button"
-                class="text-muted-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
-                title="Copy proposal ID"
-                onclick={() => {
-                  navigator.clipboard.writeText(proposalIdStr).then(
-                    () => toast.success("Proposal ID copied to clipboard"),
-                    () => toast.error("Failed to copy"),
-                  );
-                }}
-              >
-                {proposalIdStr}
-              </button>
-            </div>
-          {/if}
-          {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
-            <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <ClockIcon
-                class="size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
-              {#if showVersionBadge && updatedAt != null}
-                <span class={labelClass}>Last updated:</span>
-                <Popover.Root>
-                  <Popover.Trigger
-                    type="button"
-                    class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-                    title="Click to see submitted date"
-                    aria-label="Show submitted date"
-                  >
-                    {new Date(updatedAt).toLocaleString(undefined, dateOptions)}
-                  </Popover.Trigger>
-                  <Popover.Content class="w-auto p-3" align="start">
-                    <div class="text-xs space-y-1">
-                      {#if submittedAt != null}
-                        <p>
-                          <span class="font-medium text-muted-foreground">
-                            Submitted:
-                          </span>
-                          {new Date(submittedAt).toLocaleString(
-                            undefined,
-                            dateOptions,
-                          )}
-                        </p>
-                      {:else}
-                        <p class="text-muted-foreground">
-                          Submitted date not available
-                        </p>
-                      {/if}
-                    </div>
-                  </Popover.Content>
-                </Popover.Root>
-              {:else if submittedAt != null}
-                <span class={labelClass}>Submitted at:</span>
-                <span>
-                  {new Date(submittedAt).toLocaleString(undefined, dateOptions)}
-                </span>
-              {/if}
-            </div>
-          {/if}
-        </div>
-      {/if}
-      {#if !administratorLabel && (estimatedDuration == null || estimatedDuration === "") && totalBudget == null && !hasProposerContent && !((showVersionBadge && updatedAt != null) || submittedAt != null) && (proposal?._id ?? proposal?.id) == null}
+      {#if !administratorLabel && (estimatedDuration == null || estimatedDuration === "") && totalBudget == null && !hasProposerContent}
         <p class="text-muted-foreground">No proposal details available.</p>
       {/if}
     </div>
     <div
-      class="rounded-lg border bg-card text-card-foreground overflow-hidden pt-4 pr-4 pl-4 pb-4 space-y-2"
+      class="rounded-lg border bg-card text-card-foreground overflow-hidden pt-4 pr-4 pl-4 pb-4 space-y-2 md:row-start-1 md:col-start-2"
     >
+      <div class="min-w-0 flex gap-1.5">
+        <InfoIcon
+          class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <div class="min-w-0">
+          <p class="text-xs font-medium text-muted-foreground mb-1"
+            >Proposal overview</p
+          >
+        </div>
+      </div>
       {#if summary.trim()}
         <section class="text-sm mb-8" id="summary">
           <div class="**:first:mt-0">
@@ -364,7 +303,7 @@
           id="track-record"
         >
           <Accordion.Item value="track-record">
-            <Accordion.Trigger class="text-sm font-medium">
+            <Accordion.Trigger class="text-sm font-medium cursor-pointer">
               Track record
             </Accordion.Trigger>
             <Accordion.Content class="**:first:mt-0">
@@ -374,6 +313,80 @@
         </Accordion.Root>
       {/if}
     </div>
+    {#if (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null}
+      <div
+        class="mt-4 space-y-2 md:row-start-2 md:col-start-1"
+      >
+        {#if (proposal?._id ?? proposal?.id) != null}
+          {@const proposalIdStr = String(proposal._id ?? proposal.id)}
+          <div class="flex items-center gap-1 text-xs text-muted-foreground">
+            <HashIcon
+              class="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <span class={labelClass}>Proposal ID:</span>
+            <button
+              type="button"
+              class="text-muted-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+              title="Copy proposal ID"
+              onclick={() => {
+                navigator.clipboard.writeText(proposalIdStr).then(
+                  () => toast.success("Proposal ID copied to clipboard"),
+                  () => toast.error("Failed to copy"),
+                );
+              }}
+            >
+              {proposalIdStr}
+            </button>
+          </div>
+        {/if}
+        {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
+          <div class="flex items-center gap-1 text-xs text-muted-foreground">
+            <ClockIcon
+              class="size-3.5 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+            />
+            {#if showVersionBadge && updatedAt != null}
+              <span class={labelClass}>Last updated:</span>
+              <Popover.Root>
+                <Popover.Trigger
+                  type="button"
+                  class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  title="Click to see submitted date"
+                  aria-label="Show submitted date"
+                >
+                  {new Date(updatedAt).toLocaleString(undefined, dateOptions)}
+                </Popover.Trigger>
+                <Popover.Content class="w-auto p-3" align="start">
+                  <div class="text-xs space-y-1">
+                    {#if submittedAt != null}
+                      <p>
+                        <span class="font-medium text-muted-foreground">
+                          Submitted:
+                        </span>
+                        {new Date(submittedAt).toLocaleString(
+                          undefined,
+                          dateOptions,
+                        )}
+                      </p>
+                    {:else}
+                      <p class="text-muted-foreground">
+                        Submitted date not available
+                      </p>
+                    {/if}
+                  </div>
+                </Popover.Content>
+              </Popover.Root>
+            {:else if submittedAt != null}
+              <span class={labelClass}>Submitted at:</span>
+              <span>
+                {new Date(submittedAt).toLocaleString(undefined, dateOptions)}
+              </span>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
   </Card.Content>
 </Card.Root>
 
