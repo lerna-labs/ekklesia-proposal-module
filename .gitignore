@@ -1,7 +1,7 @@
 .DS_Store
 node_modules/
 logs/
-backup/
+backup/data/
 public/
 .cursor/plans
 
