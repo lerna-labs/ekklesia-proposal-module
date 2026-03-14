@@ -10,6 +10,8 @@
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import ItemContainer from "./ItemContainer.svelte";
+  import ProposalPageWorkPackageBudgetCards from "./ProposalPageWorkPackageBudgetCards.svelte";
+  import CollapsibleCard from "./CollapsibleCard.svelte";
   let { proposal } = $props();
   let linkWarningDialog;
 
@@ -54,6 +56,16 @@
   }
 
   const hasContent = $derived(workPackages.length > 0);
+
+  const conversionRateNum = $derived.by(() => {
+    const v =
+      proposal?.metaData?.proposalDetails?.conversionRate ??
+      proposal?.metaData?.conversionRate ??
+      proposal?.metaData?.financialAndAdministrative?.conversionRate;
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  });
 </script>
 
 {#if hasContent}
@@ -264,96 +276,51 @@
                           (m?.deliverables ?? "").toString().trim() ||
                           (m?.acceptanceCriteria ?? "").toString().trim()}
                         <li>
-                          <Card.Root
-                            class="py-2 gap-0 {msExpanded && hasDetails
-                              ? 'pb-0'
-                              : 'pb-2'} bg-white"
+                          <CollapsibleCard
+                            title={m?.name ?? "Unnamed milestone"}
+                            expanded={msExpanded}
+                            onToggle={() => toggleMilestone(i, mi)}
+                            showButton={hasDetails}
+                            expandLabel="Expand milestone"
+                            collapseLabel="Collapse milestone"
                           >
-                            <Card.Header
-                              class="flex flex-row items-center gap-1 py-2 pl-4 pr-3 text-sm"
-                            >
-                              <button
-                                type="button"
-                                class="min-w-0 flex-1 font-medium text-left cursor-pointer focus:outline-none text-base leading-6 flex items-center gap-2 {msExpanded
-                                  ? ''
-                                  : 'truncate'}"
-                                title={m?.name ?? "Unnamed milestone"}
-                                onclick={() => toggleMilestone(i, mi)}
+                            {#if (m?.duration ?? "").toString().trim()}
+                              <Badge
+                                class="shrink-0 font-normal text-xs bg-neutral-500 text-white border-0 mb-4"
                               >
-                                <span class={msExpanded ? "pt-1" : "truncate"}>
-                                  {m?.name ?? "Unnamed milestone"}
-                                </span>
-                              </button>
-                              {#if hasDetails}
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  class="shrink-0 size-8 cursor-pointer"
-                                  title={msExpanded
-                                    ? "Collapse milestone"
-                                    : "Expand milestone"}
-                                  aria-expanded={msExpanded}
-                                  aria-label={msExpanded
-                                    ? "Collapse milestone"
-                                    : "Expand milestone"}
-                                  onclick={() => toggleMilestone(i, mi)}
-                                >
-                                  {#if msExpanded}
-                                    <ChevronUpIcon
-                                      class="size-4"
-                                      aria-hidden="true"
-                                    />
-                                  {:else}
-                                    <ChevronDownIcon
-                                      class="size-4"
-                                      aria-hidden="true"
-                                    />
-                                  {/if}
-                                </Button>
-                              {/if}
-                            </Card.Header>
-                            {#if msExpanded && hasDetails}
-                              <Card.Content class="pl-4 pr-3 pt-0 pb-4">
-                                {#if (m?.duration ?? "").toString().trim()}
-                                  <Badge
-                                    class="shrink-0 font-normal text-xs bg-neutral-500 text-white border-0 mb-4"
-                                  >
-                                    Estimated Duration:
-                                    {m.duration} weeks
-                                  </Badge>
-                                {/if}
-                                {#if (m?.deliverables ?? "").toString().trim()}
-                                  <div
-                                    class="text-sm text-muted-foreground mt-0 mb-1"
-                                  >
-                                    <span class="font-medium text-foreground"
-                                      >Deliverables:</span
-                                    >
-                                    <Markdown
-                                      content={m.deliverables}
-                                      class="mt-0.5"
-                                    />
-                                  </div>
-                                {/if}
-                                {#if (m?.acceptanceCriteria ?? "")
-                                  .toString()
-                                  .trim()}
-                                  <div
-                                    class="text-sm text-muted-foreground mt-3"
-                                  >
-                                    <span class="font-medium text-foreground"
-                                      >Acceptance criteria:</span
-                                    >
-                                    <Markdown
-                                      content={m.acceptanceCriteria}
-                                      class="mt-0.5"
-                                    />
-                                  </div>
-                                {/if}
-                              </Card.Content>
+                                Estimated Duration:
+                                {m.duration} weeks
+                              </Badge>
                             {/if}
-                          </Card.Root>
+                            {#if (m?.deliverables ?? "").toString().trim()}
+                              <div
+                                class="text-sm text-muted-foreground mt-0 mb-1"
+                              >
+                                <span class="font-medium text-foreground"
+                                  >Deliverables:</span
+                                >
+                                <Markdown
+                                  content={m.deliverables}
+                                  class="mt-0.5"
+                                />
+                              </div>
+                            {/if}
+                            {#if (m?.acceptanceCriteria ?? "")
+                              .toString()
+                              .trim()}
+                              <div
+                                class="text-sm text-muted-foreground mt-3"
+                              >
+                                <span class="font-medium text-foreground"
+                                  >Acceptance criteria:</span
+                                >
+                                <Markdown
+                                  content={m.acceptanceCriteria}
+                                  class="mt-0.5"
+                                />
+                              </div>
+                            {/if}
+                          </CollapsibleCard>
                         </li>
                       {/each}
                     </ul>
@@ -364,104 +331,11 @@
                   <section
                     class={noMilestones || milestones.length > 0 ? "mt-8" : ""}
                   >
-                    <h4 class="text-normal font-medium mb-2"
-                      >What's the budget estimated for this Work Package?</h4
-                    >
-                    <p class="text-sm text-muted-foreground mb-4">
-                      Budget breakdown by category and item.
-                    </p>
-                    <div
-                      class="rounded-md border overflow-x-auto mb-2 bg-white"
-                    >
-                      <table
-                        class="w-full caption-bottom text-xs border-collapse"
-                      >
-                        <thead>
-                          <tr
-                            class="border-b transition-colors hover:bg-muted/50"
-                          >
-                            <th
-                              class="h-9 px-3 text-left align-middle font-medium whitespace-nowrap w-px"
-                              >Category</th
-                            >
-                            <th
-                              class="h-9 px-3 text-left align-middle font-medium w-[min(160px,20%)]"
-                              >Item Name</th
-                            >
-                            <th
-                              class="h-9 px-3 text-left align-middle font-medium max-w-[180px]"
-                              >Description</th
-                            >
-                            <th
-                              class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[56px]"
-                              >Qty</th
-                            >
-                            <th
-                              class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[72px] whitespace-nowrap"
-                              >Unit Price</th
-                            >
-                            <th
-                              class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[80px] whitespace-nowrap"
-                              >Total (ADA)</th
-                            >
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {#each breakdown as row}
-                            {@const total =
-                              row.total ??
-                              Number(row.quantity || 0) *
-                                Number(row.unitPrice || 0)}
-                            <tr
-                              class="border-b transition-colors hover:bg-muted/50"
-                            >
-                              <td
-                                class="p-3 align-top text-black whitespace-nowrap"
-                                >{row.costCategory ?? "—"}</td
-                              >
-                              <td class="p-3 align-top font-medium"
-                                >{(row.name ?? row.itemName) ||
-                                  row.costCategory ||
-                                  "—"}</td
-                              >
-                              <td
-                                class="p-3 align-top text-muted-foreground max-w-[180px]"
-                              >
-                                <div
-                                  class="line-clamp-2 overflow-hidden [&_.markdown]:text-inherit!"
-                                >
-                                  <Markdown
-                                    content={row.description ?? ""}
-                                    class="text-xs!"
-                                  />
-                                </div>
-                              </td>
-                              <td class="p-3 text-right align-top tabular-nums"
-                                >{row.quantity ?? "—"}</td
-                              >
-                              <td class="p-3 text-right align-top tabular-nums"
-                                >{formatAda(row.unitPrice)}</td
-                              >
-                              <td class="p-3 text-right align-top tabular-nums"
-                                >{formatAda(total)}</td
-                              >
-                            </tr>
-                          {/each}
-                        </tbody>
-                        <tfoot>
-                          <tr
-                            class="bg-(--mbo-cardano-blue) text-white font-medium"
-                          >
-                            <td colspan="5" class="p-3 text-right"
-                              >Total (ADA)</td
-                            >
-                            <td class="p-3 text-right tabular-nums"
-                              >{formatAda(wpTotals[i] ?? 0)}</td
-                            >
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
+                    <ProposalPageWorkPackageBudgetCards
+                      breakdown={breakdown}
+                      totalAda={wpTotals[i] ?? 0}
+                      conversionRateNum={conversionRateNum}
+                    />
                   </section>
                 {/if}
               </Card.Content>
