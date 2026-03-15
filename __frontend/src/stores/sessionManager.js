@@ -107,7 +107,7 @@ export const api = {
 			// Properly handle the error to display the SvelteKit error page
 			if (err.status && err.body.message) {
 				// If it's already a properly formatted error, just re-throw it
-				console.log('Re-throwing error:', err);
+				// console.log('Re-throwing error:', err);
 				throw err;
 			} else {
 				// Create a proper SvelteKit error
