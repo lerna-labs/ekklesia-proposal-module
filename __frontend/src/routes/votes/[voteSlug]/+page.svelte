@@ -9,7 +9,10 @@
   import Search from "$lib/Search.svelte";
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
-  import { shortenString } from "$lib/utils.js";
+  import {
+    queryStringWithLiteralCommas,
+    shortenString,
+  } from "$lib/utils.js";
   import VoteCTA from "$lib/votes/VoteCTA.svelte";
   import XIcon from "@lucide/svelte/icons/x";
   let { data } = $props();
@@ -66,7 +69,8 @@
         const restored = new URLSearchParams(saved);
         restored.set("page", "1");
         const path = page.url.pathname;
-        goto(`${path}?${restored.toString()}`, { replaceState: true });
+        const qs = queryStringWithLiteralCommas(restored);
+        goto(`${path}?${qs}`, { replaceState: true });
       }
     }
   });
@@ -78,7 +82,7 @@
     const pathname = page.url.pathname;
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("page", String(pageNum));
-    const url = `${pathname}?${searchParams.toString()}`;
+    const url = `${pathname}?${queryStringWithLiteralCommas(searchParams)}`;
     goto(url);
   }
 
@@ -98,8 +102,8 @@
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.delete("proposer");
     searchParams.set("page", "1");
-    const qs = searchParams.toString();
-    if (listStateKey && typeof window !== "undefined") {
+    const qs = queryStringWithLiteralCommas(searchParams);
+    if (listStateKey && typeof window !== "undefined" && qs) {
       localStorage.setItem(listStateKey, qs);
     }
     goto(qs ? `${pathname}?${qs}` : pathname);

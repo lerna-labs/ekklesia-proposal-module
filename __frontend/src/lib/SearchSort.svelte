@@ -1,6 +1,7 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import { queryStringWithLiteralCommas } from "$lib/utils.js";
   import * as Popover from "$lib/components/ui/popover";
   import { Button, buttonVariants } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -23,7 +24,6 @@
 
   const PER_PAGE_OPTIONS = [10, 25, 50, 100];
   const defaultLimit = "10";
-  const validSortValues = $derived(new Set(sortOptions.map((o) => o.value)));
 
   let open = $state(false);
   let pendingSort = $state("submittedAt");
@@ -70,7 +70,7 @@
     searchParams.set("direction", pendingDirection === "down" ? "desc" : "asc");
     searchParams.set("limit", pendingLimit);
     searchParams.set("page", "1");
-    const url = `${page.url.pathname}?${searchParams.toString()}`;
+    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
     goto(url);
     sort = pendingSort;
     ascending = pendingDirection === "up";
@@ -83,7 +83,7 @@
     searchParams.set("direction", "asc");
     searchParams.set("limit", defaultLimit);
     searchParams.set("page", "1");
-    const url = `${page.url.pathname}?${searchParams.toString()}`;
+    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
     goto(url);
     sort = DEFAULT_SORT;
     ascending = true;
