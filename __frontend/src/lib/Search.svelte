@@ -6,7 +6,12 @@
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";
 
-  let { class: className = "", placeholder = "Search..." } = $props();
+  let {
+    class: className = "",
+    placeholder = "Search...",
+    /** Called before clearing; e.g. remove search from persisted list state in localStorage. */
+    onBeforeClear,
+  } = $props();
   let value = $state("");
 
   $effect(() => {
@@ -41,10 +46,12 @@
   }
 
   function clear() {
+    onBeforeClear?.();
     value = "";
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.delete("search");
-    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
+    const qs = queryStringWithLiteralCommas(searchParams);
+    const url = qs ? `${page.url.pathname}?${qs}` : page.url.pathname;
     goto(url);
   }
 

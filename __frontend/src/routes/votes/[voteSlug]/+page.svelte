@@ -82,6 +82,17 @@
     goto(url);
   }
 
+  function clearSearchFromStorage() {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const saved = localStorage.getItem(listStateKey);
+    if (!saved) return;
+    const params = new URLSearchParams(saved);
+    params.delete("search");
+    const qs = params.toString();
+    if (qs) localStorage.setItem(listStateKey, qs);
+    else localStorage.removeItem(listStateKey);
+  }
+
   function clearProposerFilter() {
     const pathname = page.url.pathname;
     const searchParams = new URLSearchParams(page.url.searchParams);
@@ -174,7 +185,11 @@
         {/if}
       </h2>
       <div class="flex items-center gap-1">
-        <Search placeholder="Search proposals..." class="w-full sm:w-64" />
+        <Search
+          placeholder="Search proposals..."
+          class="w-full sm:w-64"
+          onBeforeClear={clearSearchFromStorage}
+        />
         <SearchFilter
           filterOptions={vote.filterOptions ?? []}
           {vote}
