@@ -14,8 +14,6 @@
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import TreasuryDonationAcknowledgmentModal from "./TreasuryDonationAcknowledgmentModal.svelte";
   import { normalizeWorkPackage } from "./workPackageUtils.js";
-  import { tick } from "svelte";
-
   let {
     vote,
     proposal,
@@ -420,7 +418,7 @@
       };
     }
     // Reset FormControls dirty baseline after prefill so opening a proposal and leaving does not show "unsaved changes".
-    tick().then(() => formControlsRef?.resetDirtyBaseline?.());
+    formControlsRef?.resetDirtyBaseline?.();
   });
 
   function getPayload(status) {

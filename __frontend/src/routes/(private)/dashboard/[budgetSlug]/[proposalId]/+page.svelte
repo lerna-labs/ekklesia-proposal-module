@@ -1,6 +1,5 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
-  import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import { api } from "$stores/sessionManager.js";
 
@@ -61,10 +60,8 @@
         } else {
           toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
         }
-        formRef?.clearDirty?.();
-        await tick();
         await invalidateAll();
-        if (payload.status === "live" || options?.exitAfterSave) goto("/dashboard");
+        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";

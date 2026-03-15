@@ -141,13 +141,18 @@
     const payload = getPayload("draft");
     autosaveLog("saveAndLeave", { url });
     Promise.resolve(
-      onSave(payload, { fromAutoSave: false, exitAfterSave: true }),
+      onSave(payload, {
+        fromAutoSave: false,
+        exitAfterSave: true,
+        skipGoto: true,
+      }),
     )
       .then(() => {
-        initialSnapshot = JSON.stringify(payload);
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
         dirtyRef.current = false;
         lastSaveAt = Date.now();
-        if (proposal?._id) writePreviewPayload(proposal._id, payload);
+        if (proposal?._id)
+          writePreviewPayload(proposal._id, getPayload(formData.status));
         clearPreviewStorage();
         goto(url);
       })
@@ -171,10 +176,10 @@
       onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }),
     )
       .then(() => {
-        initialSnapshot = JSON.stringify(payload);
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
         lastSaveAt = Date.now();
         if (payload?.status === "draft" && proposal?._id) {
-          writePreviewPayload(proposal._id, payload);
+          writePreviewPayload(proposal._id, getPayload(formData.status));
         }
         if (exitAfterSave) clearPreviewStorage();
         autosaveLog("manual saveDraft succeeded", {
@@ -195,7 +200,7 @@
     const payload = getPayload("live");
     Promise.resolve(onSave(payload))
       .then(() => {
-        initialSnapshot = JSON.stringify(payload);
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
         clearPreviewStorage();
       })
       .catch(() => {});
@@ -246,10 +251,10 @@
       });
       Promise.resolve(onSave(payload, { fromAutoSave: true }))
         .then(() => {
-          initialSnapshot = JSON.stringify(payload);
+          initialSnapshot = JSON.stringify(getPayload(formData.status));
           lastSaveAt = Date.now();
           if (payload?.status === "draft" && proposal?._id) {
-            writePreviewPayload(proposal._id, payload);
+            writePreviewPayload(proposal._id, getPayload(formData.status));
           }
           autosaveLog("auto-save succeeded", {
             lastSaveAt: new Date(lastSaveAt).toISOString(),
