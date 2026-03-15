@@ -3,7 +3,9 @@ node_modules/
 logs/
 backup/data/
 public/
-.cursor/plans
+__testkit/
 
 .env*
 !.env.example
+
+.cursor/plans

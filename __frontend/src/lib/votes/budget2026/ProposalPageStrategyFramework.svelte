@@ -48,7 +48,9 @@
 
 {#if hasContent}
   <section class="text-sm space-y-4 mt-8">
-    <h2 class="text-2xl font-medium mb-2">Alignment to Strategy Framework</h2>
+    <h2 class="text-2xl font-medium mb-2"
+      >Alignment to Cardano 2030 Strategy framework</h2
+    >
 
     {#if selectedPillars.length > 0}
       <ul class="list-none p-0 flex flex-wrap gap-2 mb-4">
