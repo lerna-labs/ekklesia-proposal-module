@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import { z } from "zod";
 import { isAuthenticated } from "../../../helper/middleWare.js";
 import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
+import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
@@ -1109,12 +1110,17 @@ router.get("/", async (req, res) => {
       const excludeMod = await loadExcludeScript(voteDoc.excludeScript);
       if (excludeMod?.excludeNonPublicFields) {
         proposals = proposals.map((proposal) => {
-          const isProposer =
-            String(proposal.proposerId ?? "").trim() === authenticatedUserId;
-          return excludeMod.excludeNonPublicFields(proposal, {
-            isProposer,
-            isAdmin: isVoteAdmin,
-          });
+          try {
+            const isProposer =
+              String(proposal.proposerId ?? "").trim() === authenticatedUserId;
+            return excludeMod.excludeNonPublicFields(proposal, {
+              isProposer,
+              isAdmin: isVoteAdmin,
+            });
+          } catch (err) {
+            console.warn("excludeNonPublicFields failed for proposal", proposal?._id, err.message);
+            return proposal;
+          }
         });
       }
     }
