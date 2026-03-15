@@ -55,10 +55,20 @@ const proposalSchema = new Schema(
   { timestamps: true, versionKey: false }
 );
 
+// List by proposer (dashboard "my proposals")
 proposalSchema.index({ proposerId: 1, voteId: 1 });
+// List by vote (required param); compound indexes below cover voteId + status + sort to avoid in-memory sort
 proposalSchema.index({ voteId: 1 });
 proposalSchema.index({ status: 1 });
 proposalSchema.index({ title: 1 });
+
+// Compound indexes for GET /proposals list: voteId + status (usually "live") + sort field
+// Default list: vote + live, sort submittedAt desc (newest first)
+proposalSchema.index({ voteId: 1, status: 1, submittedAt: -1 });
+// Sort by title (asc/desc)
+proposalSchema.index({ voteId: 1, status: 1, title: 1 });
+// Sort by updatedAt (timestamps)
+proposalSchema.index({ voteId: 1, status: 1, updatedAt: -1 });
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
 export { Proposal };
