@@ -11,6 +11,7 @@ import {
   checkDatabaseConnectionMW,
 } from "./helper/dbManager.js";
 import cookieParser from "cookie-parser";
+import { publicReadLimiter } from "./helper/rateLimiters.js";
 
 // Initialize console with timestamps
 initializeConsole();
@@ -52,6 +53,14 @@ async function startServer() {
   try {
     // Try to connect to MongoDB but don't fail if connection isn't established
     await connectToDatabase();
+
+    // Public read rate limit (200/min per IP): apply only to GET /api/v0/votes, /proposals, /comments
+    app.use("/api/v0", (req, res, next) => {
+      if (req.method === "GET" && /^\/(votes|proposals|comments)(\/|$)/.test(req.path)) {
+        return publicReadLimiter(req, res, next);
+      }
+      next();
+    });
 
     // Load all routes from the routes directory
     await loadRoutes(join(__dirname, "routes"), app);

@@ -10,7 +10,8 @@ import { Comment } from "../../../schema/Comment.js";
 // helper imports
 import mongoose from "mongoose";
 import { z } from "zod";
-import { verifyToken } from "../../../helper/verifyToken.js";
+import { isAuthenticated } from "../../../helper/middleWare.js";
+import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
@@ -102,17 +103,9 @@ function escapeRegex(str) {
  * @returns {Object} 404 - Vote not found
  * @returns {Object} 500 - Server error
  */
-router.post("/", async (req, res) => {
+router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(tokenResult.code ?? 401).json({
-        status: "error",
-        message: tokenResult.message ?? "Authentication required",
-      });
-    }
-
-    const proposerId = tokenResult.userId;
+    const proposerId = req.userId;
 
     const rawVoteId = req.body?.voteId;
     if (!rawVoteId || !mongoose.Types.ObjectId.isValid(rawVoteId) || String(rawVoteId).length !== 24) {
@@ -242,16 +235,9 @@ const WITHDRAWAL_CATEGORIES = [
  * @returns {Object} 403 - Not the proposer or a vote admin
  * @returns {Object} 404 - Proposal not found
  */
-router.put("/:proposalId/withdraw", async (req, res) => {
+router.put("/:proposalId/withdraw", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(tokenResult.code ?? 401).json({
-        status: "error",
-        message: tokenResult.message ?? "Authentication required",
-      });
-    }
-    const userId = tokenResult.userId;
+    const userId = req.userId;
     const { proposalId } = req.params;
     const { category, comment } = req.body ?? {};
 
@@ -372,16 +358,9 @@ router.put("/:proposalId/withdraw", async (req, res) => {
  * @returns {Object} 403 - Not the proposer or proposal is not a draft
  * @returns {Object} 404 - Proposal not found
  */
-router.delete("/:proposalId", async (req, res) => {
+router.delete("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(tokenResult.code ?? 401).json({
-        status: "error",
-        message: tokenResult.message ?? "Authentication required",
-      });
-    }
-    const userId = String(tokenResult.userId ?? "").trim();
+    const userId = String(req.userId ?? "").trim();
     const { proposalId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
@@ -442,16 +421,9 @@ router.delete("/:proposalId", async (req, res) => {
  * @returns {Object} 403 - Not the proposer
  * @returns {Object} 404 - Proposal not found
  */
-router.put("/:proposalId", async (req, res) => {
+router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(tokenResult.code ?? 401).json({
-        status: "error",
-        message: tokenResult.message ?? "Authentication required",
-      });
-    }
-    const userId = String(tokenResult.userId ?? "").trim();
+    const userId = String(req.userId ?? "").trim();
     const { proposalId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
