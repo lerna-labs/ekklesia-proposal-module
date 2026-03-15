@@ -1,6 +1,7 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import { queryStringWithLiteralCommas } from "$lib/utils.js";
   import * as Popover from "$lib/components/ui/popover";
   import { Button, buttonVariants } from "$lib/components/ui/button";
   import * as Select from "$lib/components/ui/select/index.js";
@@ -149,18 +150,7 @@
       }
     }
 
-    let qs = searchParams.toString();
-    // Keep comma-separated values as literal commas in the URL (no %2C encoding)
-    for (const opt of filterOptions) {
-      if (!opt.multiple) continue;
-      const match = qs.match(new RegExp(`\\b${opt.param}=([^&]*)`));
-      if (match) {
-        qs = qs.replace(
-          new RegExp(`\\b${opt.param}=[^&]*`),
-          opt.param + "=" + decodeURIComponent(match[1]),
-        );
-      }
-    }
+    const qs = queryStringWithLiteralCommas(searchParams);
     const url = `${page.url.pathname}?${qs}`;
     goto(url);
     open = false;
@@ -184,7 +174,8 @@
         window.localStorage.removeItem(listStateKey);
       } catch (_) {}
     }
-    const url = `${page.url.pathname}?${searchParams.toString()}`;
+    const qs = queryStringWithLiteralCommas(searchParams);
+    const url = qs ? `${page.url.pathname}?${qs}` : page.url.pathname;
     goto(url);
     open = false;
   }
@@ -281,7 +272,7 @@
                       value={ALL_CATEGORIES_VALUE}
                       label="All Pillars"
                     >
-                      All Categories
+                      All Pillars
                     </Select.Item>
                     {#each categoryOptionsList as opt (opt.value)}
                       <Select.Item value={opt.value} label={opt.label}>
@@ -311,8 +302,8 @@
               type="button"
               variant="default"
               size="sm"
-class="flex-1 text-xs"
-            onclick={apply}
+              class="flex-1 text-xs"
+              onclick={apply}
             >
               <CheckIcon class="size-4" />
               Apply

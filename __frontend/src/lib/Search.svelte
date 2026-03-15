@@ -1,32 +1,24 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
+  import { queryStringWithLiteralCommas } from "$lib/utils.js";
   import * as Input from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";
 
-  let { class: className = "", placeholder = "Search..." } = $props();
+  let {
+    class: className = "",
+    placeholder = "Search...",
+    /** Called before clearing; e.g. remove search from persisted list state in localStorage. */
+    onBeforeClear,
+  } = $props();
   let value = $state("");
 
   $effect(() => {
     const search = page.url.searchParams.get("search") ?? "";
     value = search;
   });
-
-  /** Build query string with literal commas for status and category (no %2C). */
-  function queryStringWithLiteralCommas(searchParams) {
-    let qs = searchParams.toString();
-    for (const key of ["status", "category"]) {
-      const m = qs.match(new RegExp(`\\b${key}=([^&]*)`));
-      if (m)
-        qs = qs.replace(
-          new RegExp(`\\b${key}=[^&]*`),
-          key + "=" + decodeURIComponent(m[1]),
-        );
-    }
-    return qs;
-  }
 
   function submit() {
     const searchParams = new URLSearchParams(page.url.searchParams);
@@ -36,15 +28,19 @@
     } else {
       searchParams.delete("search");
     }
+    searchParams.set("page", "1");
     const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
     goto(url);
   }
 
   function clear() {
+    onBeforeClear?.();
     value = "";
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.delete("search");
-    const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
+    searchParams.set("page", "1");
+    const qs = queryStringWithLiteralCommas(searchParams);
+    const url = qs ? `${page.url.pathname}?${qs}` : page.url.pathname;
     goto(url);
   }
 
