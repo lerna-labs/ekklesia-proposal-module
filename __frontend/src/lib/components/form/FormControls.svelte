@@ -1,5 +1,5 @@
 <script>
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
   import EyeIcon from "@lucide/svelte/icons/eye";
@@ -133,6 +133,36 @@
     goto(url);
   }
 
+  function saveAndLeave() {
+    const url = pendingNavigateUrl;
+    leaveConfirmOpen = false;
+    pendingNavigateUrl = null;
+    if (!url || !getPayload || !onSave || formData.status !== "draft") return;
+    const payload = getPayload("draft");
+    autosaveLog("saveAndLeave", { url });
+    Promise.resolve(
+      onSave(payload, {
+        fromAutoSave: false,
+        exitAfterSave: true,
+        skipGoto: true,
+      }),
+    )
+      .then(() => {
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
+        dirtyRef.current = false;
+        lastSaveAt = Date.now();
+        if (proposal?._id)
+          writePreviewPayload(proposal._id, getPayload(formData.status));
+        clearPreviewStorage();
+        goto(url);
+      })
+      .catch((err) => {
+        autosaveLog("saveAndLeave failed", err);
+        pendingNavigateUrl = url;
+        leaveConfirmOpen = true;
+      });
+  }
+
   function saveDraft(exitAfterSave) {
     if (!getPayload || !onSave) return;
     const payload = getPayload("draft");
@@ -146,10 +176,10 @@
       onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }),
     )
       .then(() => {
-        initialSnapshot = JSON.stringify(payload);
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
         lastSaveAt = Date.now();
         if (payload?.status === "draft" && proposal?._id) {
-          writePreviewPayload(proposal._id, payload);
+          writePreviewPayload(proposal._id, getPayload(formData.status));
         }
         if (exitAfterSave) clearPreviewStorage();
         autosaveLog("manual saveDraft succeeded", {
@@ -170,7 +200,7 @@
     const payload = getPayload("live");
     Promise.resolve(onSave(payload))
       .then(() => {
-        initialSnapshot = JSON.stringify(payload);
+        initialSnapshot = JSON.stringify(getPayload(formData.status));
         clearPreviewStorage();
       })
       .catch(() => {});
@@ -221,10 +251,10 @@
       });
       Promise.resolve(onSave(payload, { fromAutoSave: true }))
         .then(() => {
-          initialSnapshot = JSON.stringify(payload);
+          initialSnapshot = JSON.stringify(getPayload(formData.status));
           lastSaveAt = Date.now();
           if (payload?.status === "draft" && proposal?._id) {
-            writePreviewPayload(proposal._id, payload);
+            writePreviewPayload(proposal._id, getPayload(formData.status));
           }
           autosaveLog("auto-save succeeded", {
             lastSaveAt: new Date(lastSaveAt).toISOString(),
@@ -338,18 +368,37 @@
 <AlertDialog.Root bind:open={leaveConfirmOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Unsaved changes</AlertDialog.Title>
+      <AlertDialog.Title class="text-destructive"
+        >Are you sure you want to leave this form?</AlertDialog.Title
+      >
       <AlertDialog.Description>
         You have unsaved changes. Are you sure you want to leave?
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <AlertDialog.Footer class="flex gap-2">
-      <AlertDialog.Cancel class="cursor-pointer" onclick={stayOnPage}>
-        Stay
-      </AlertDialog.Cancel>
-      <AlertDialog.Action class="cursor-pointer" onclick={confirmLeave}>
-        Leave
+    <AlertDialog.Footer>
+      {#if formData.status === "draft"}
+        <AlertDialog.Action
+          class={buttonVariants({ variant: "secondary" })}
+          onclick={saveAndLeave}
+        >
+          Yes, save & exit
+        </AlertDialog.Action>
+      {/if}
+      <AlertDialog.Action
+        class={buttonVariants({ variant: "secondary" })}
+        onclick={confirmLeave}
+      >
+        Yes, discard unsaved changes
       </AlertDialog.Action>
+      <AlertDialog.Cancel
+        class={buttonVariants({
+          variant: "default",
+          class: "hover:text-white",
+        })}
+        onclick={stayOnPage}
+      >
+        No, stay
+      </AlertDialog.Cancel>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>
