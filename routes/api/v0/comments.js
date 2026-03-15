@@ -6,6 +6,8 @@ import { Proposal } from "../../../schema/Proposal.js";
 import { User } from "../../../schema/User.js";
 import { Vote } from "../../../schema/Vote.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
+import { isAuthenticated } from "../../../helper/middleWare.js";
+import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 
 const router = Router();
 
@@ -363,13 +365,9 @@ router.get("/", async (req, res) => {
  * API spec §5.5 — Create a comment on a live proposal. Auth required. Before vote feedbackEndDate. Body: proposalId, content, optional parentId.
  * Only authenticated users can create comments; userId is taken exclusively from the verified token, never from the request body.
  */
-router.post("/", async (req, res) => {
+router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "Authentication required to create comments" });
-    }
-    const userId = tokenResult.userId.toString();
+    const userId = req.userId.toString();
 
     const { proposalId, content, parentId } = req.body ?? {};
     if (!proposalId || typeof proposalId !== "string") {
@@ -526,13 +524,9 @@ router.get("/:commentId/replies", async (req, res) => {
  * POST /comments/:commentId/like
  * API spec §5.7 — Toggle like. 201 when added, 200 when removed. Live comment only; before vote feedbackEndDate.
  */
-router.post("/:commentId/like", async (req, res) => {
+router.post("/:commentId/like", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "No token provided" });
-    }
-    const userId = tokenResult.userId.toString();
+    const userId = req.userId.toString();
     const { commentId } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
@@ -593,13 +587,9 @@ router.post("/:commentId/like", async (req, res) => {
  * PUT /comments/:commentId/withdraw
  * API spec §5.8 — Vote admin withdraws a live comment. Body: category (required), comment (optional). Until feedbackEndDate.
  */
-router.put("/:commentId/withdraw", async (req, res) => {
+router.put("/:commentId/withdraw", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "No token provided" });
-    }
-    const userId = tokenResult.userId.toString();
+    const userId = req.userId.toString();
     const { commentId } = req.params;
     const { category, comment: commentReason } = req.body ?? {};
 
@@ -737,13 +727,9 @@ router.get("/:commentId", async (req, res) => {
  * PUT /comments/:commentId
  * API spec §5.6 — Update comment content. Author only; within 15 minutes of creation.
  */
-router.put("/:commentId", async (req, res) => {
+router.put("/:commentId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
-    const tokenResult = verifyToken(req);
-    if (tokenResult.status !== "success" || !tokenResult.userId) {
-      return res.status(401).json({ status: "error", message: "No token provided" });
-    }
-    const userId = tokenResult.userId.toString();
+    const userId = req.userId.toString();
     const { commentId } = req.params;
     const { content } = req.body ?? {};
 

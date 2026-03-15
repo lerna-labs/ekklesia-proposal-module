@@ -21,6 +21,8 @@ import { fetchDrepName, fetchHandle, validateDrep } from "../../../helper/koios.
 import {
   nonceRequestLimiter,
   sessionVerificationLimiter,
+  getSessionLimiter,
+  deleteSessionLimiter,
 } from "../../../helper/rateLimiters.js";
 
 // enable dayjs duration plugin
@@ -127,7 +129,7 @@ function validateScriptAddress(scriptAddress) {
  *   - adminVoteIds: Array of vote _id strings where the authenticated user is an admin (only present if non-empty)
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
-router.get("/", isAuthenticated, async (req, res) => {
+router.get("/", getSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
 
   let name = null;
@@ -443,7 +445,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
  *   - message: "Logged out successfully"
  * @returns {Object} 401 - Unauthorized if not authenticated (handled by isAuthenticated middleware)
  */
-router.delete("/", isAuthenticated, async (req, res) => {
+router.delete("/", deleteSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
 
   // Clear the cookie with matching options from when it was set
