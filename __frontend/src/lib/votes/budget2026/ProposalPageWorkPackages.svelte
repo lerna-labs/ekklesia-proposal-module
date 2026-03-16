@@ -39,6 +39,13 @@
   /** Which milestone cards are expanded. Key "wpIndex-milestoneIndex" -> boolean. */
   let expandedMilestones = $state({});
 
+  $effect(() => {
+    const list = Array.isArray(workPackages) ? workPackages : [];
+    if (list.length > 0) {
+      expanded = Object.fromEntries(list.map((_, i) => [i, true]));
+    }
+  });
+
   function toggle(index) {
     expanded = { ...expanded, [index]: !expanded[index] };
   }
