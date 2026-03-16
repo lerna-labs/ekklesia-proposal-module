@@ -51,7 +51,7 @@ const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
     error: "Cost category is required",
   }),
-  name: z.string().min(1, "Item name is required").max(200),
+  name: z.string().min(1, "Item name is required").max(100),
   description: z.string().min(1, "Item description is required").max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })

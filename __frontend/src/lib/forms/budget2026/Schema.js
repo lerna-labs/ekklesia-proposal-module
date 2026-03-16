@@ -21,7 +21,7 @@ export const budgetRowInputSchema = z.object({
   name: z
     .string()
     .min(1, "Item name is required")
-    .max(200),
+    .max(100),
   description: z
     .string()
     .min(1, "Item description is required")
