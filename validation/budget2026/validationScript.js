@@ -444,8 +444,8 @@ const metaDataSchema = z.object({
 
 const formSchema = z
   .object({
-    title: z.string().min(2, "Proposal Title is required").max(100),
-    summary: z.string().min(2, "Executive Summary is required").max(2000),
+    title: z.string().min(1, "Proposal Title is required").max(100),
+    summary: z.string().min(1, "Executive Summary is required").max(2000),
     status: z.enum(["draft", "live"]).default("draft"),
     metaData: metaDataSchema,
   })
