@@ -14,8 +14,8 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
   }
 
   // Paths to remove: whole objects (entirely non-public) or single non-public fields.
+  // contractingParty is handled separately: reduced to { legalEntityType } for public.
   const paths = [
-    "metaData.contractingParty",
     "metaData.primaryContact",
     "metaData.signatoryContact",
     "metaData.kycInfo",
@@ -36,6 +36,14 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
     if (parent != null && typeof parent === "object" && last in parent) {
       delete parent[last];
     }
+  }
+
+  // Reduce contractingParty to public-safe shape: only legalEntityType.
+  if (result.metaData && result.metaData.contractingParty != null && typeof result.metaData.contractingParty === "object") {
+    const cp = result.metaData.contractingParty;
+    result.metaData.contractingParty = {
+      legalEntityType: cp.legalEntityType ?? "",
+    };
   }
 
   return result;
