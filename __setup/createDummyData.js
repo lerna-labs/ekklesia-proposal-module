@@ -381,7 +381,8 @@ const ADMINS = [
     "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf", // MAD 
     "stake_test1uqvx67glm2hdjcfp9pg0d59x0595n372k8sh437vk3hda0gukg9fa", // ADAM - Hydra Voter DRep #0
     "stake_test1ury4vups5rm3dahv3vht7lp83kdpxc0assfgwulm2z4rn4qe9ceqz", // SIMO 
-    "stake_test1urtue405zxlphdej5dmsl4x8nd6t6h78ttrkhhl88ukc3yckckjnu" // LORENZO
+    "stake_test1urtue405zxlphdej5dmsl4x8nd6t6h78ttrkhhl88ukc3yckckjnu", // LORENZO
+    "stake_test1ur34vgj0kk338wlfsdf7fnxs9uukh24047lc2wfmm0mgptgq7849c" // spannercode
 ];
 
 /** Proposers used for dummy proposals; each must have a User record. */
