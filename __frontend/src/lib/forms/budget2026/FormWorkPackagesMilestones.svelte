@@ -263,9 +263,10 @@
         description="How long do you expect it to take for this milestone to be finished?"
         required
         suffix="weeks"
-        min="0"
-        step="any"
-        maxDecimals={null}
+        min="1"
+        max="240"
+        step="1"
+        maxDecimals={0}
         class="w-1/4"
         validationErrors={draftErrors}
       />

@@ -56,5 +56,6 @@ export const milestoneSchema = z.object({
           : undefined,
     })
     .int("Duration must be a whole number of weeks")
-    .min(1, "Duration must be at least 1 week"),
+    .min(1, "Duration must be at least 1 week")
+    .max(240, "Duration must be at most 240 weeks"),
 });
