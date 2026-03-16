@@ -73,7 +73,7 @@
   label="Track Record"
   description="Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience."
   placeholder="Enter Track Record Here"
-  maxLength={10000}
+  maxLength={5000}
   validationErrors={validationErrors?.properties?.metaData}
   class="mb-8"
 />
