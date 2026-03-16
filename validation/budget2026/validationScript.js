@@ -55,7 +55,11 @@ const budgetRowInputSchema = z.object({
   description: z.string().min(1, "Item description is required").max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
-    .min(0.001, "Quantity is required and must be greater than 0"),
+    .refine((v) => v > 0, { message: "Quantity must be greater than 0" })
+    .refine(
+      (v) => v === Math.round(v * 100) / 100,
+      { message: "Quantity must have at most 2 decimal places" },
+    ),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
