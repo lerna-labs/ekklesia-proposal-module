@@ -120,7 +120,7 @@
       description="Focus on how your proposal provides value towards those pillars"
       placeholder="Explain why you chose those pillars..."
       required
-      maxLength={15000}
+      maxLength={10000}
       validationErrors={sfErrors}
     />
   </Field.Field>

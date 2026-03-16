@@ -218,7 +218,7 @@ const strategyFrameworkSchema = z.object({
   pillarRationale: z
     .string()
     .min(1, "Rationale for your selection is required")
-    .max(15000),
+    .max(10000),
   kpiAlignment: z
     .string()
     .min(1, "Alignment to KPIs is required")
