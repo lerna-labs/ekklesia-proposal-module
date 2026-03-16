@@ -95,6 +95,7 @@
   bind:value={formData.metaData.estimatedDuration}
   placeholder="12"
   decimalComma={true}
+  maxDecimals={0}
   min="1"
   max="60"
   step="1"

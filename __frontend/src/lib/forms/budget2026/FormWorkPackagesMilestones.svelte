@@ -267,6 +267,7 @@
         suffix="weeks"
         min="0"
         step="any"
+        maxDecimals={null}
         class="w-1/4"
         validationErrors={draftErrors}
       />
