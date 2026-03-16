@@ -25,7 +25,7 @@ export const budgetRowInputSchema = z.object({
   description: z
     .string()
     .min(1, "Item description is required")
-    .max(600),
+    .max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .min(0.001, "Quantity is required and must be greater than 0"),

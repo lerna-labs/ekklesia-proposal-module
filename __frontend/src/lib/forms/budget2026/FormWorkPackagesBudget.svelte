@@ -384,7 +384,7 @@
         placeholder="Describe this budget item..."
         description="Briefly explain what this cost covers and why it is required for this work package."
         required
-        maxLength={600}
+        maxLength={1000}
         validationErrors={draftErrors}
       />
 
