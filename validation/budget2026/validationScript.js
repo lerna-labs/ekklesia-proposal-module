@@ -267,7 +267,7 @@ const metaDataSchema = z.object({
           ? "Estimated duration must be a number"
           : undefined,
     })
-    .min(1, "Estimated duration is required and must be greater than 0"),
+    .min(1, "Estimated duration is required and must be greater than 0").max(60, "Estimated duration must be less than 60 months"),
   strategyFramework: strategyFrameworkSchema,
   proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),

@@ -95,8 +95,9 @@
   bind:value={formData.metaData.estimatedDuration}
   placeholder="12"
   decimalComma={true}
-  min="0"
-  step="any"
+  min="1"
+  max="60"
+  step="1"
   validationErrors={estimatedDurationErrors}
   label="Estimated Duration (in months)"
   required
