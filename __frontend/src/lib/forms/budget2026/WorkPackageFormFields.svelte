@@ -93,7 +93,7 @@
     placeholder="e.g. Faster onboarding for developers integrating with Cardano"
     description="Describe what will change or improve as a result of this Work Package. This may be qualitative or quantitative and does not need to be financial."
     required
-    maxLength={1000}
+    maxLength={2000}
     validationErrors={validationErrorsForField("expectedValue")}
   />
 
@@ -104,7 +104,7 @@
     placeholder="e.g. Average time to first successful deployment reduced by 30%"
     description="How will success be measured? Provide one or more metrics that demonstrate whether the expected value has been achieved."
     required
-    maxLength={600}
+    maxLength={2000}
     validationErrors={validationErrorsForField("metric")}
   />
 

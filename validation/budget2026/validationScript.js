@@ -113,8 +113,8 @@ const workPackageSchema = z
     coreObjectives: z
       .array(z.string().min(1).max(1000))
       .min(1, "At least one core objective is required"),
-    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
-    metric: z.string().min(1, "Metric is required").max(600),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(2000),
+    metric: z.string().min(1, "Metric is required").max(2000),
     milestones: z.array(milestoneSchema).optional().default([]),
     budgetBreakdown: z
       .array(budgetRowSchema)
