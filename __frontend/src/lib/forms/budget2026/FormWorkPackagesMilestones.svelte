@@ -215,7 +215,7 @@
           : "Add a milestone with name, deliverables, acceptance criteria, and duration (in weeks)."}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1">
+    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1 px-2">
       <Input
         id="name"
         label="Milestone (and reference name)"

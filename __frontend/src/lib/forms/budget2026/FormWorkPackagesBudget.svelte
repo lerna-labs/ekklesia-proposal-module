@@ -326,7 +326,7 @@
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
     </AlertDialog.Header>
-    <div class="grid gap-4 pb-4 overflow-y-auto min-h-0 flex-1">
+    <div class="grid gap-4 pb-4 pt-2 overflow-y-auto min-h-0 flex-1 px-2">
       <Input
         id="name"
         label="Item Name"
