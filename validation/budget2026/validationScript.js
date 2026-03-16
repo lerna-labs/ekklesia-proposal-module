@@ -148,7 +148,7 @@ const workPackageSchema = z
 
 /** Proposer details (FormProposerDetails): public name, contact email, social/media links. */
 const proposerDetailsSchema = z.object({
-  name: z.string().min(1, "Proposer name is required").max(100),
+  name: z.string().min(1, "Proposer name is required").max(60),
   email: z
     .union([z.string(), z.undefined()])
     .transform((v) => (v == null ? "" : String(v).trim()))

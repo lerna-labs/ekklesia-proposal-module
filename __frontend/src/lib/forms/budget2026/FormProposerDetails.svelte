@@ -2,12 +2,7 @@
   /** @see __frontend/docs/budget2026/form-proposer-details.md Version: 1.1.0 */
   import Input from "$lib/components/form/Input.svelte";
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
 
   const proposerErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.proposerDetails,
@@ -36,9 +31,9 @@
   description="This name will be public on your proposal page"
   placeholder="Enter Name"
   required
-  maxLength={100}
+  maxLength={60}
   validationErrors={nameErrors}
-  class="mb-8"
+  class="mb-8 sm:max-w-[50%]"
 />
 
 <h3>Would you like to link any social media on your proposal page?</h3>
@@ -64,7 +59,7 @@
   maxLength={254}
   type="email"
   validationErrors={emailErrors}
-  class="mb-8"
+  class="mb-8 sm:max-w-[50%]"
   placeholder="Enter Email"
   notPublic
 />
