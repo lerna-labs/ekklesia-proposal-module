@@ -58,7 +58,7 @@
     placeholder="Describe the main activities and, where applicable, the key outputs or deliverables associated with this work package"
     description="Provide a high-level description of the work involved. This may include activities, approaches, or key outputs, but does not need to be a detailed delivery plan. The goal is to give reviewers enough context to understand how the stated objectives will be achieved."
     required
-    maxLength={10000}
+    maxLength={2000}
     validationErrors={validationErrorsForField("summary")}
     class="mb-4"
   />

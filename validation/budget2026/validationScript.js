@@ -84,7 +84,7 @@ const milestoneSchema = z.object({
 const workPackageSchema = z
   .object({
     name: z.string().min(1, "Work Package name is required").max(100),
-    summary: z.string().min(1, "Work Package summary is required").max(10000),
+    summary: z.string().min(1, "Work Package summary is required").max(2000),
     initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
       if (val === "" || val === undefined) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
