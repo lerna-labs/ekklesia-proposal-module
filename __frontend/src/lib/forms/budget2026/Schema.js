@@ -21,14 +21,18 @@ export const budgetRowInputSchema = z.object({
   name: z
     .string()
     .min(1, "Item name is required")
-    .max(200),
+    .max(100),
   description: z
     .string()
     .min(1, "Item description is required")
-    .max(600),
+    .max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
-    .min(0.001, "Quantity is required and must be greater than 0"),
+    .refine((v) => v > 0, { message: "Quantity must be greater than 0" })
+    .refine(
+      (v) => v === Math.round(v * 100) / 100,
+      { message: "Quantity must have at most 2 decimal places" },
+    ),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
@@ -56,63 +60,6 @@ export const milestoneSchema = z.object({
           : undefined,
     })
     .int("Duration must be a whole number of weeks")
-    .min(1, "Duration must be at least 1 week"),
+    .min(1, "Duration must be at least 1 week")
+    .max(240, "Duration must be at most 240 weeks"),
 });
-
-/** Single work package schema. Matches FormWorkPackages.svelte (metaData.proposalDetails.workPackages[]). */
-export const workPackageSchema = z
-  .object({
-    name: z.string().min(1, "Work Package name is required").max(100),
-    summary: z.string().min(1, "Work Package summary is required").max(10000),
-    initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
-      if (val === "" || val === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
-        return;
-      }
-      if (val !== "New Initiative" && val !== "Maintenance") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Initiative type must be New Initiative or Maintenance",
-        });
-      }
-    }),
-    proposalType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
-      if (val === "" || val === undefined) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Type of proposal is required" });
-        return;
-      }
-      if (val !== "Technical (software/IT)" && val !== "Non-technical") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Type of proposal must be Technical (software/IT) or Non-technical",
-        });
-      }
-    }),
-    supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
-    coreObjectives: z
-    .array(z.string().min(1).max(1000))
-    .min(1, "At least one core objective is required")
-    .optional()
-    .default([]),
-    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
-    metric: z.string().min(1, "Metric is required").max(600),
-    milestones: z.array(milestoneSchema).optional().default([]),
-    budgetBreakdown: z.array(budgetRowSchema).optional().default([]),
-    noMilestonesBreakdown: z.boolean().optional().default(false),
-    milestoneAlternative: z.string().max(4000).optional().default(""),
-  })
-  .superRefine((data, ctx) => {
-    // Only validate milestone alternative when checkbox is set; "at least one milestone" is enforced on backend on submit.
-    if (data.noMilestonesBreakdown) {
-      const alt = (data.milestoneAlternative ?? "").trim();
-      if (alt.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Milestone alternative is required when not using milestones",
-          path: ["milestoneAlternative"],
-        });
-      }
-    }
-  });
-
-export default workPackageSchema;

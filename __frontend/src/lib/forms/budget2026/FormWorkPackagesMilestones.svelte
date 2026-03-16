@@ -204,9 +204,7 @@
 
 <!-- Add / Edit milestone (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content
-    class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0"
-  >
+  <AlertDialog.Content class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0">
     <AlertDialog.Header class="text-left shrink-0">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Milestone" : "Add Milestone"}
@@ -217,7 +215,7 @@
           : "Add a milestone with name, deliverables, acceptance criteria, and duration (in weeks)."}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1">
+    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1 px-2">
       <Input
         id="name"
         label="Milestone (and reference name)"
@@ -265,8 +263,10 @@
         description="How long do you expect it to take for this milestone to be finished?"
         required
         suffix="weeks"
-        min="0"
-        step="any"
+        min="1"
+        max="240"
+        step="1"
+        maxDecimals={0}
         class="w-1/4"
         validationErrors={draftErrors}
       />

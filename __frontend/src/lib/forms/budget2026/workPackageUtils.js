@@ -1,6 +1,6 @@
 /**
  * Shared work package normalization for prefill and form.
- * Single source of truth for work package shape (matches workPackageSchema in Schema.js).
+ * Work package shape matches backend validation (validation/budget2026/validationScript.js).
  */
 
 /** Work package default shape for new drafts. */

@@ -8,6 +8,7 @@
   import * as Field from "$lib/components/ui/field/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import Input from "$lib/components/form/Input.svelte";
+  import InputNumber from "$lib/components/form/InputNumber.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
@@ -325,7 +326,7 @@
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
     </AlertDialog.Header>
-    <div class="grid gap-4 pb-4 overflow-y-auto min-h-0 flex-1">
+    <div class="grid gap-4 pb-4 pt-2 overflow-y-auto min-h-0 flex-1 px-2">
       <Input
         id="name"
         label="Item Name"
@@ -384,18 +385,19 @@
         placeholder="Describe this budget item..."
         description="Briefly explain what this cost covers and why it is required for this work package."
         required
-        maxLength={600}
+        maxLength={1000}
         validationErrors={draftErrors}
       />
 
       <div class="grid grid-cols-2 gap-4">
-        <Input
+        <InputNumber
           id="quantity"
           label="Quantity"
           description="Number of units for this cost (e.g. people, months, licenses, items)."
           type="number"
-          min="0"
-          step="any"
+          min="0.01"
+          step="0.01"
+          maxDecimals={2}
           bind:value={draft.quantity}
           placeholder="e.g. 1"
           required

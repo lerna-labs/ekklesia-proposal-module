@@ -1,8 +1,8 @@
 <script>
   /**
    * Number input with optional prefix/suffix, full field wrapper (label, description tooltip, helper text).
-   * Value can be string or number; use decimalComma to show/store comma as decimal separator.
-   * Prop naming aligned with Input.svelte (label, required, description, class).
+   * Always normalizes comma to dot on input. When type="number", value is dot-form so step/spinner work.
+   * Use decimalComma only with type="text" for comma display. maxDecimals caps decimal places (default 2).
    */
   import * as Field from "$lib/components/ui/field/index.js";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
@@ -20,6 +20,7 @@
     invalid = false,
     decimalComma = false,
     type = "text",
+    maxDecimals = 2,
     validationErrors,
     class: className = "",
     containerClass = "",
@@ -43,15 +44,29 @@
 
   function onInput(e) {
     const raw = e.target.value;
-    value = decimalComma ? raw.replace(",", ".") : raw;
+    const normalized = raw.replace(",", ".");
+    let nextValue = normalized;
+    if (maxDecimals != null && normalized.includes(".")) {
+      const num = parseFloat(normalized);
+      if (!Number.isNaN(num)) {
+        const decimals = (normalized.split(".")[1] ?? "").length;
+        if (decimals > maxDecimals) {
+          const factor = 10 ** maxDecimals;
+          nextValue = Math.round(num * factor) / factor;
+        }
+      }
+    }
+    value = nextValue;
   }
 
   let displayValue = $derived(
     value == null || value === ""
       ? ""
-      : decimalComma
-        ? formatForDisplay(value)
-        : value,
+      : type === "number"
+        ? String(value)
+        : decimalComma
+          ? formatForDisplay(value)
+          : value,
   );
 </script>
 

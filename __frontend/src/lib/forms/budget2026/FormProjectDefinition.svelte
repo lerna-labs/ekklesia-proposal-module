@@ -20,7 +20,6 @@
   description="The official name of your project as it will appear in governance voting."
   placeholder="Enter Title Here"
   required
-  minLength={2}
   maxLength={100}
   {validationErrors}
   class="mb-8"
@@ -53,7 +52,6 @@
   description="A high-level overview of the problem, solution, and impact. This is the first thing voters read."
   placeholder="Enter Summary Here"
   required
-  minLength={2}
   maxLength={2000}
   {validationErrors}
   class="mb-8"
@@ -73,7 +71,7 @@
   label="Track Record"
   description="Proven history of delivery. Mention previous successful proposals, mainnet deployments, or relevant enterprise experience."
   placeholder="Enter Track Record Here"
-  maxLength={10000}
+  maxLength={5000}
   validationErrors={validationErrors?.properties?.metaData}
   class="mb-8"
 />
@@ -95,8 +93,10 @@
   bind:value={formData.metaData.estimatedDuration}
   placeholder="12"
   decimalComma={true}
-  min="0"
-  step="any"
+  maxDecimals={0}
+  min="1"
+  max="60"
+  step="1"
   validationErrors={estimatedDurationErrors}
   label="Estimated Duration (in months)"
   required

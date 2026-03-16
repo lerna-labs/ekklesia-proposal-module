@@ -51,11 +51,15 @@ const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
     error: "Cost category is required",
   }),
-  name: z.string().min(1, "Item name is required").max(200),
-  description: z.string().min(1, "Item description is required").max(600),
+  name: z.string().min(1, "Item name is required").max(100),
+  description: z.string().min(1, "Item description is required").max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
-    .min(0.001, "Quantity is required and must be greater than 0"),
+    .refine((v) => v > 0, { message: "Quantity must be greater than 0" })
+    .refine(
+      (v) => v === Math.round(v * 100) / 100,
+      { message: "Quantity must have at most 2 decimal places" },
+    ),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
@@ -78,13 +82,14 @@ const milestoneSchema = z.object({
           : undefined,
     })
     .int("Duration must be a whole number of weeks")
-    .min(1, "Duration must be at least 1 week"),
+    .min(1, "Duration must be at least 1 week")
+    .max(240, "Duration must be at most 240 weeks"),
 });
 
 const workPackageSchema = z
   .object({
     name: z.string().min(1, "Work Package name is required").max(100),
-    summary: z.string().min(1, "Work Package summary is required").max(10000),
+    summary: z.string().min(1, "Work Package summary is required").max(2000),
     initiativeType: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
       if (val === "" || val === undefined) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Initiative type is required" });
@@ -113,8 +118,8 @@ const workPackageSchema = z
     coreObjectives: z
       .array(z.string().min(1).max(1000))
       .min(1, "At least one core objective is required"),
-    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(1000),
-    metric: z.string().min(1, "Metric is required").max(600),
+    expectedValue: z.string().min(1, "Expected Value (ROI) is required").max(2000),
+    metric: z.string().min(1, "Metric is required").max(2000),
     milestones: z.array(milestoneSchema).optional().default([]),
     budgetBreakdown: z
       .array(budgetRowSchema)
@@ -148,7 +153,7 @@ const workPackageSchema = z
 
 /** Proposer details (FormProposerDetails): public name, contact email, social/media links. */
 const proposerDetailsSchema = z.object({
-  name: z.string().min(1, "Proposer name is required").max(100),
+  name: z.string().min(1, "Proposer name is required").max(60),
   email: z
     .union([z.string(), z.undefined()])
     .transform((v) => (v == null ? "" : String(v).trim()))
@@ -174,8 +179,11 @@ const proposerDetailsSchema = z.object({
 const proposalDetailsSchema = z.object({
   conversionRate: z.coerce
     .number({ invalid_type_error: "Enter a valid number" })
-    .min(0)
-    .refine((v) => v > 0, { message: "Conversion rate is required" }),
+    .refine((v) => v > 0, { message: "Conversion rate is required" })
+    .refine(
+      (v) => v === Math.round(v * 100) / 100,
+      { message: "Conversion rate must have at most 2 decimal places" },
+    ),
   workPackages: z
     .array(workPackageSchema)
     .min(1, "At least one work package is required")
@@ -218,7 +226,7 @@ const strategyFrameworkSchema = z.object({
   pillarRationale: z
     .string()
     .min(1, "Rationale for your selection is required")
-    .max(15000),
+    .max(10000),
   kpiAlignment: z
     .string()
     .min(1, "Alignment to KPIs is required")
@@ -259,7 +267,7 @@ const kycInfoSchema = z.object({
 });
 
 const metaDataSchema = z.object({
-  trackRecord: z.union([z.literal(""), z.string().min(2).max(10000)]).optional().default(""),
+  trackRecord: z.union([z.literal(""), z.string().min(1).max(5000)]).optional().default(""),
   estimatedDuration: z
     .coerce.number({
       error: (iss) =>
@@ -267,7 +275,7 @@ const metaDataSchema = z.object({
           ? "Estimated duration must be a number"
           : undefined,
     })
-    .min(1, "Estimated duration is required and must be greater than 0"),
+    .min(1, "Estimated duration is required and must be greater than 0").max(60, "Estimated duration must be less than 60 months"),
   strategyFramework: strategyFrameworkSchema,
   proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
@@ -436,8 +444,8 @@ const metaDataSchema = z.object({
 
 const formSchema = z
   .object({
-    title: z.string().min(2, "Proposal Title is required").max(100),
-    summary: z.string().min(2, "Executive Summary is required").max(2000),
+    title: z.string().min(1, "Proposal Title is required").max(100),
+    summary: z.string().min(1, "Executive Summary is required").max(2000),
     status: z.enum(["draft", "live"]).default("draft"),
     metaData: metaDataSchema,
   })
