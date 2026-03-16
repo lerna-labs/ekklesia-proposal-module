@@ -29,7 +29,7 @@
       data-walletsigner-action="navigateAfterLogin"
       variant="outline"
       size="sm"
-      class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+      class=" w-fit cursor-pointer gap-1 text-xs "
     >
       <UserIcon class="size-4 shrink-0" aria-hidden="true" />
       My Drafts
