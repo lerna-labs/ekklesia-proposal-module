@@ -204,9 +204,7 @@
 
 <!-- Add / Edit milestone (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content
-    class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0"
-  >
+  <AlertDialog.Content class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0">
     <AlertDialog.Header class="text-left shrink-0">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Milestone" : "Add Milestone"}
