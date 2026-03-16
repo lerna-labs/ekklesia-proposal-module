@@ -174,8 +174,11 @@ const proposerDetailsSchema = z.object({
 const proposalDetailsSchema = z.object({
   conversionRate: z.coerce
     .number({ invalid_type_error: "Enter a valid number" })
-    .min(0)
-    .refine((v) => v > 0, { message: "Conversion rate is required" }),
+    .refine((v) => v > 0, { message: "Conversion rate is required" })
+    .refine(
+      (v) => v === Math.round(v * 100) / 100,
+      { message: "Conversion rate must have at most 2 decimal places" },
+    ),
   workPackages: z
     .array(workPackageSchema)
     .min(1, "At least one work package is required")
