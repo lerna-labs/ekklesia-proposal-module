@@ -14,15 +14,37 @@ const costCategoriesPath = join(__dirname, "costCategories.json");
 const costCategoriesList = JSON.parse(readFileSync(costCategoriesPath, "utf8"));
 const COST_CATEGORIES = costCategoriesList.map((c) => c.name);
 
-const supportingInfoLinkSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100),
-  url: z.string().url("Enter a valid URL"),
-});
+const TITLE_MAX_LENGTH = 100;
 
-/** Additional Info section: links with title max 100. */
-const supportingInfoLinkSchemaOtherInfo = z.object({
-  title: z.string().min(1, "Title is required").max(100),
-  url: z.string().min(1, "URL is required").url("Enter a valid URL"),
+function normalizeUrl(val) {
+  const trimmed = (val ?? "").trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+const linkSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(TITLE_MAX_LENGTH, `Title must be at most ${TITLE_MAX_LENGTH} characters`),
+  url: z
+    .string()
+    .min(1, "URL is required")
+    .transform(normalizeUrl)
+    .pipe(
+      z
+        .string()
+        .url("Enter a valid URL")
+        .refine((u) => {
+          try {
+            const host = new URL(u).hostname;
+            return /^[^.\s]+\.[A-Za-z0-9-]{2,}$/.test(host);
+          } catch {
+            return false;
+          }
+        }, { message: "Enter a full website address like example.com" }),
+    ),
 });
 
 const budgetRowInputSchema = z.object({
@@ -87,7 +109,7 @@ const workPackageSchema = z
         });
       }
     }),
-    supportingDocuments: z.array(supportingInfoLinkSchema).optional().default([]),
+    supportingDocuments: z.array(linkSchema).optional().default([]),
     coreObjectives: z
       .array(z.string().min(1).max(1000))
       .min(1, "At least one core objective is required"),
@@ -146,7 +168,7 @@ const proposerDetailsSchema = z.object({
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
       }
     }),
-  links: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+  links: z.array(linkSchema).optional().default([]),
 });
 
 const proposalDetailsSchema = z.object({
@@ -250,7 +272,7 @@ const metaDataSchema = z.object({
   proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
   proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
   /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
-  supportingInfoLinks: z.array(supportingInfoLinkSchemaOtherInfo).optional().default([]),
+  supportingInfoLinks: z.array(linkSchema).optional().default([]),
   /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
   treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
     if (val === "" || val === undefined) {
