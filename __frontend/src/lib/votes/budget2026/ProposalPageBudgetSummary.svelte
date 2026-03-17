@@ -158,12 +158,6 @@
           </table>
         </div>
 
-        <!-- <div class="text-xs text-muted-foreground mt-2">
-          *This proposer has specified a {conversionRateNum != null
-            ? "$" + formatUsd(conversionRateNum)
-            : "—"} USD/ADA currency conversion rate (for estimate purposes only)
-        </div> -->
-
         <section class="space-y-4 mt-6">
           <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
             Will any portion of the requested funds be returned to the Cardano
