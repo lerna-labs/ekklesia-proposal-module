@@ -80,7 +80,7 @@
   </ul>
 
   <div
-    class="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-md border bg-(--mbo-cardano-blue) text-white font-medium mt-4"
+    class="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-md border bg-(--mbo-cardano-blue) text-white font-medium mt-2"
   >
     <span>Total work package budget</span>
     <div class="flex items-center gap-4 tabular-nums">

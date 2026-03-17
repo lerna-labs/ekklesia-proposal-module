@@ -175,12 +175,14 @@
                   {#each wp.items as item}
                     <tr class="border-b last:border-b-0">
                       <td class="px-3 py-2 align-top text-xs">
-                        <span class="inline-flex items-center gap-1">
+                        <span class="inline-flex items-start gap-1">
                           <span
-                            class="w-1 h-1 bg-black shrink-0 mr-0.5"
+                            class="w-1 h-1 bg-black shrink-0 mt-1.5 mr-0.5"
                             aria-hidden="true"
                           ></span>
-                          <span class="font-medium">{item.name}</span>
+                          <span class="font-medium leading-snug">
+                            {item.name}
+                          </span>
                         </span>
                       </td>
                       <td class="px-3 py-2 align-top text-xs">
