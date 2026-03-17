@@ -91,17 +91,6 @@
 <section id="budget-summary" class="mt-12">
   <div class="flex items-center gap-2 flex-wrap mb-4">
     <h2 class="text-2xl font-medium">Budget Summary</h2>
-    {#if treasuryRepayment === "Yes"}
-      <Badge
-        class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal shrink-0"
-        >Treasury Repayment</Badge
-      >
-    {:else}
-      <Badge
-        class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0 font-normal shrink-0"
-        >No Treasury Repayment</Badge
-      >
-    {/if}
   </div>
   {#if hasContent}
     <Card.Root class="bg-slate-50 py-0">
