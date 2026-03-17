@@ -3,7 +3,7 @@
   let { proposal } = $props();
 </script>
 
-<section>
+<section id="executive-summary">
   <h2 class="text-2xl font-medium mb-4 mt-8"
     >Executive Summary
 
