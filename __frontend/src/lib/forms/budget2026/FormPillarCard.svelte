@@ -7,6 +7,7 @@
     pillar = {},
     selected = false,
     onselect,
+    readOnly = false,
     splitBy = ":",
     class: className = "",
   } = $props();
@@ -30,13 +31,15 @@
 </script>
 
 <Card.Root
-  role="button"
-  tabindex="0"
-  class="pt-4 pb-4 rounded-md border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring {selected
+  role={readOnly ? undefined : "button"}
+  tabindex={readOnly ? undefined : 0}
+  class="pt-4 pb-4 rounded-md border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring {readOnly
+    ? 'cursor-default'
+    : 'cursor-pointer'} {selected
     ? 'bg-(--mbo-electric-blue) text-white border-(--mbo-electric-blue)'
     : 'bg-slate-100 dark:bg-slate-800 border-muted-foreground/20'} {className}"
-  onclick={toggleSelect}
-  onkeydown={(e) => {
+  onclick={readOnly ? () => {} : toggleSelect}
+  onkeydown={readOnly ? () => {} : (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggleSelect(e);
