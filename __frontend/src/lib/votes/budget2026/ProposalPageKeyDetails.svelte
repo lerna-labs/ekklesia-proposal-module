@@ -16,13 +16,7 @@
   import InfoIcon from "@lucide/svelte/icons/info";
   import { toast } from "svelte-sonner";
 
-  import Markdown from "$lib/base/Markdown.svelte";
-  import * as Accordion from "$lib/components/ui/accordion/index.js";
-
   let { proposal, vote, pillars = [] } = $props();
-
-  const summary = $derived(proposal?.summary ?? "");
-  const trackRecord = $derived(proposal?.metaData?.trackRecord ?? "");
 
   let otherAdminModalOpen = $state(false);
   let linkWarningDialog;

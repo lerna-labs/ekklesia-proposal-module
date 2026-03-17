@@ -11,7 +11,6 @@
   import ProposalPageExecutiveSummary from "./ProposalPageExecutiveSummary.svelte";
   import ProposalPageBudgetAdministration from "./ProposalPageBudgetAdministration.svelte";
   import ProposalPageComments from "./ProposalPageComments.svelte";
-  import * as Card from "$lib/components/ui/card";
 
   let {
     proposal,
