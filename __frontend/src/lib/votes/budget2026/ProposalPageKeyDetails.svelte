@@ -179,101 +179,6 @@
           </div>
         </div>
       {/if}
-
-      {#if hasProposerContent}
-        <div
-          class="rounded-lg border bg-white text-card-foreground overflow-hidden"
-        >
-          <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-            {#if legalEntityType === "company"}
-              <HomeIcon
-                class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-                aria-hidden="true"
-              />
-            {:else}
-              <UserIcon
-                class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-                aria-hidden="true"
-              />
-            {/if}
-            <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Proposer</p
-              >
-              <p class="font-medium text-foreground">
-                {#if proposerHref}
-                  <a href={proposerHref} class="hover:underline">
-                    {proposerName.trim() || "Proposer"}
-                  </a>
-                {:else}
-                  <span>{proposerName.trim() || "Proposer"}</span>
-                {/if}
-              </p>
-            </div>
-          </div>
-          <div class="px-4 pb-4 space-y-3 text-xs">
-            {#if links.length > 0}
-              <div class="border-t pt-3">
-                <ul class="space-y-0.5 list-none p-0">
-                  {#each links as link (link.url)}
-                    <li>
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="text-primary hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
-                        onclick={(e) => {
-                          e.preventDefault();
-                          linkWarningDialog.show(
-                            link.url,
-                            (link.title ?? "").trim() || link.url,
-                          );
-                        }}
-                      >
-                        <ExternalLinkIcon
-                          class="size-3.5 shrink-0 mt-0.5"
-                          aria-hidden="true"
-                        />
-                        <span class="min-w-0 wrap-break-word">
-                          {link.title || link.url}
-                        </span>
-                      </a>
-                    </li>
-                  {/each}
-                </ul>
-              </div>
-            {/if}
-            <div class="flex flex-wrap gap-2">
-              {#if proposal?.metaData?.trackRecord}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                  href="#track-record"
-                >
-                  Track Record
-                </Button>
-              {/if}
-              {#if proposerHref}
-                <Button
-                  href={proposerHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  variant="outline"
-                  size="sm"
-                  class="text-xs"
-                >
-                  Show All Proposals
-                </Button>
-              {/if}
-            </div>
-          </div>
-        </div>
-      {/if}
-      {#if !administratorLabel && (estimatedDuration == null || estimatedDuration === "") && totalBudget == null && !hasProposerContent}
-        <p class="text-muted-foreground">No proposal details available.</p>
-      {/if}
     </div>
 
     {#if (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null}
@@ -346,6 +251,98 @@
             {/if}
           </div>
         {/if}
+      </div>
+    {/if}
+
+    {#if hasProposerContent}
+      <div
+        class="rounded-lg border bg-white text-card-foreground overflow-hidden"
+      >
+        <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
+          {#if legalEntityType === "company"}
+            <HomeIcon
+              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {:else}
+            <UserIcon
+              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+          {/if}
+          <div class="min-w-0">
+            <p class="text-xs font-medium text-muted-foreground mb-1"
+              >Proposer</p
+            >
+            <p class="font-medium text-foreground">
+              {#if proposerHref}
+                <a href={proposerHref} class="hover:underline">
+                  {proposerName.trim() || "Proposer"}
+                </a>
+              {:else}
+                <span>{proposerName.trim() || "Proposer"}</span>
+              {/if}
+            </p>
+          </div>
+        </div>
+        <div class="px-4 pb-4 space-y-3 text-xs">
+          {#if links.length > 0}
+            <div class="border-t pt-3">
+              <ul class="space-y-0.5 list-none p-0">
+                {#each links as link (link.url)}
+                  <li>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-primary hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
+                      onclick={(e) => {
+                        e.preventDefault();
+                        linkWarningDialog.show(
+                          link.url,
+                          (link.title ?? "").trim() || link.url,
+                        );
+                      }}
+                    >
+                      <ExternalLinkIcon
+                        class="size-3.5 shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
+                      <span class="min-w-0 wrap-break-word">
+                        {link.title || link.url}
+                      </span>
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+          <div class="flex flex-wrap gap-2">
+            {#if proposal?.metaData?.trackRecord}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                class="text-xs"
+                href="#track-record"
+              >
+                Track Record
+              </Button>
+            {/if}
+            {#if proposerHref}
+              <Button
+                href={proposerHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outline"
+                size="sm"
+                class="text-xs"
+              >
+                Show All Proposals
+              </Button>
+            {/if}
+          </div>
+        </div>
       </div>
     {/if}
   </Card.Content>
