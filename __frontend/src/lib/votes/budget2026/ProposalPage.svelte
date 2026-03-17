@@ -9,6 +9,7 @@
   import ProposalPageBudgetSummary from "./ProposalPageBudgetSummary.svelte";
   import ProposalPageSupportingInfo from "./ProposalPageSupportingInfo.svelte";
   import ProposalPageExecutiveSummary from "./ProposalPageExecutiveSummary.svelte";
+  import ProposalPageBudgetAdministration from "./ProposalPageBudgetAdministration.svelte";
   import ProposalPageComments from "./ProposalPageComments.svelte";
   import * as Card from "$lib/components/ui/card";
 
@@ -62,6 +63,9 @@
     <ProposalPageWorkPackages {proposal} />
 
     <ProposalPageBudgetSummary {proposal} />
+
+    <ProposalPageBudgetAdministration {proposal} />
+
     <ProposalPageSupportingInfo {proposal} />
   </div>
 </div>
