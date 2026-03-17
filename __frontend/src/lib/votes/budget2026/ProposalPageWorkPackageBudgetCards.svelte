@@ -28,7 +28,7 @@
 </script>
 
 <section class="space-y-2">
-  <h4 class="text-normal font-medium mb-2">
+  <h4 class="text-lg font-medium mb-2">
     What's the budget estimated for this Work Package?
   </h4>
   <p class="text-sm text-muted-foreground mb-4">
