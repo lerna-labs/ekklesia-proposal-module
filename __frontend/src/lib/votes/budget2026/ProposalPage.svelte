@@ -8,6 +8,7 @@
   import ProposalPageWorkPackages from "./ProposalPageWorkPackages.svelte";
   import ProposalPageBudgetSummary from "./ProposalPageBudgetSummary.svelte";
   import ProposalPageSupportingInfo from "./ProposalPageSupportingInfo.svelte";
+  import ProposalPageExecutiveSummary from "./ProposalPageExecutiveSummary.svelte";
   import ProposalPageComments from "./ProposalPageComments.svelte";
   import * as Card from "$lib/components/ui/card";
 
@@ -53,6 +54,8 @@
     <ProposalPageTitle {proposal} {vote} />
 
     <ProposalPageKeyDetails {proposal} {vote} {pillars} />
+
+    <ProposalPageExecutiveSummary {proposal} />
 
     <ProposalPageStrategyFramework {proposal} {pillars} />
 

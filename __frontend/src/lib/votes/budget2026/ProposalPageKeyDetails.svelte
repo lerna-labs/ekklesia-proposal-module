@@ -82,7 +82,9 @@
   <Card.Header class="py-0">
     <Card.Title class="text-xl font-medium">Key Details</Card.Title>
   </Card.Header>
-  <Card.Content class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]">
+  <Card.Content
+    class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
+  >
     <div class="space-y-2 text-xs md:row-start-1 md:col-start-1">
       {#if totalBudget != null}
         <div
@@ -273,50 +275,9 @@
         <p class="text-muted-foreground">No proposal details available.</p>
       {/if}
     </div>
-    <div
-      class="rounded-lg border bg-card text-card-foreground overflow-hidden pt-4 pr-4 pl-4 pb-4 space-y-2 md:row-start-1 md:col-start-2"
-    >
-      <div class="min-w-0 flex gap-1.5">
-        <InfoIcon
-          class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <div class="min-w-0">
-          <p class="text-xs font-medium text-muted-foreground mb-1"
-            >Proposal overview</p
-          >
-        </div>
-      </div>
-      {#if summary.trim()}
-        <section class="text-sm mb-8" id="summary">
-          <div class="**:first:mt-0">
-            <Markdown content={summary} />
-          </div>
-        </section>
-      {/if}
 
-      {#if trackRecord.trim()}
-        <Accordion.Root
-          type="single"
-          collapsible
-          class="text-sm border-t border-b"
-          id="track-record"
-        >
-          <Accordion.Item value="track-record">
-            <Accordion.Trigger class="text-sm font-medium cursor-pointer">
-              Track record
-            </Accordion.Trigger>
-            <Accordion.Content class="**:first:mt-0">
-              <Markdown content={trackRecord} />
-            </Accordion.Content>
-          </Accordion.Item>
-        </Accordion.Root>
-      {/if}
-    </div>
     {#if (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null}
-      <div
-        class="mt-4 space-y-2 md:row-start-2 md:col-start-1"
-      >
+      <div class="mt-4 space-y-2 md:row-start-2 md:col-start-1">
         {#if (proposal?._id ?? proposal?.id) != null}
           {@const proposalIdStr = String(proposal._id ?? proposal.id)}
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
