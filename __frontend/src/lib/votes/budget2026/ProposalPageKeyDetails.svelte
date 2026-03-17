@@ -8,6 +8,7 @@
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+  import LinkIcon from "@lucide/svelte/icons/link";
   import HashIcon from "@lucide/svelte/icons/hash";
   import HomeIcon from "@lucide/svelte/icons/home";
   import ShieldCheckIcon from "@lucide/svelte/icons/shield-check";
@@ -286,14 +287,23 @@
         <div class="px-4 pb-4 space-y-3 text-xs">
           {#if links.length > 0}
             <div class="border-t pt-3">
-              <ul class="space-y-0.5 list-none p-0">
+              <div class="flex items-center gap-1.5 mb-1">
+                <ExternalLinkIcon
+                  class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <p class="text-xs font-medium text-muted-foreground mb-1">
+                  Social Links
+                </p>
+              </div>
+              <ul class="space-y-2 list-none p-0 border-b pb-3">
                 {#each links as link (link.url)}
                   <li>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-primary hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
+                      class="text-primary underline hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
                       onclick={(e) => {
                         e.preventDefault();
                         linkWarningDialog.show(
@@ -302,11 +312,7 @@
                         );
                       }}
                     >
-                      <ExternalLinkIcon
-                        class="size-3 shrink-0 mt-0.5 mr-1 ml-0.5"
-                        aria-hidden="true"
-                      />
-                      <span class="min-w-0 wrap-break-word">
+                      <span class="min-w-0 wrap-break-word ml-6 line-clamp-1">
                         {link.title || link.url}
                       </span>
                     </a>
