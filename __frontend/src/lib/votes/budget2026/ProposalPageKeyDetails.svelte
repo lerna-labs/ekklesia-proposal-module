@@ -303,7 +303,7 @@
                       }}
                     >
                       <ExternalLinkIcon
-                        class="size-3.5 shrink-0 mt-0.5"
+                        class="size-3 shrink-0 mt-0.5 mr-1 ml-0.5"
                         aria-hidden="true"
                       />
                       <span class="min-w-0 wrap-break-word">
