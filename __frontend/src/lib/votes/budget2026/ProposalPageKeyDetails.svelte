@@ -124,7 +124,7 @@
                 class="text-xs mb-2"
                 href="#budget-summary"
               >
-                View budget breakdown
+                View Budget Summary
               </Button>
             </div>
           </div>
