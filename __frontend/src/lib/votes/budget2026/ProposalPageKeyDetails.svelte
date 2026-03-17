@@ -175,39 +175,6 @@
               </p>
             </Popover.Content>
           </Popover.Root>
-          <div class="p-4 min-w-0 flex gap-1.5">
-            <ShieldCheckIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Administrator</p
-              >
-              <p class="flex items-center gap-1">
-                {#if administratorLabel}
-                  {#if isOtherAdministrator}
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 cursor-pointer rounded hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Show other administrator details"
-                      onclick={() => (otherAdminModalOpen = true)}
-                    >
-                      <span class="font-medium">{administratorLabel}</span>
-                      <InfoIcon
-                        class="size-4 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  {:else}
-                    {administratorLabel}
-                  {/if}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </p>
-            </div>
-          </div>
         </div>
       {/if}
     </div>
