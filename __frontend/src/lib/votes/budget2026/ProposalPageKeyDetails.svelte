@@ -108,6 +108,23 @@
                 {conversionRate})
               </div>
 
+              <div class="mb-4">
+                <Popover.Root>
+                  <Popover.Trigger
+                    class="cursor-pointer inline-flex items-center gap-1"
+                  >
+                    This conversion rate was specified by the proposer
+                    <InfoIcon class="size-3 shrink-0" aria-hidden="true" />
+                  </Popover.Trigger>
+                  <Popover.Content class="p-3 text-xs" align="start">
+                    *If Intersect is selected as the administrator, this rate is
+                    indicative only and does not mean the contract will be set
+                    in that dollar value; the contract will be based in ADA, and
+                    vendors are responsible for managing market conditions.
+                  </Popover.Content>
+                </Popover.Root>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
