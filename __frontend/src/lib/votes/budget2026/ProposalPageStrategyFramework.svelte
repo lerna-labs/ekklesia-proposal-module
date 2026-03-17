@@ -47,7 +47,7 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-4 mt-8">
+  <section class="text-sm space-y-4 mt-8" id="strategy-framework">
     <h2 class="text-2xl font-medium mb-2"
       >Alignment to Cardano 2030 Strategy framework</h2
     >

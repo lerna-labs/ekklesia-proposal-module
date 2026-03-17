@@ -76,8 +76,8 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-3 mb-2! mt-12" id="work-packages">
-    <h2 class="text-2xl font-medium mb-4">Work Packages Breakdown</h2>
+  <section class="text-sm space-y-3 mb-2! mt-12" id="proposal-details">
+    <h2 class="text-2xl font-medium mb-4">Proposal Details</h2>
 
     <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
       {#each workPackages as wp, i}
@@ -150,7 +150,7 @@
             {#if isExpanded}
               <Card.Content class="pl-4 pr-3 pt-0 pb-4 -mt-4">
                 {#if (wp?.summary ?? "").toString().trim()}
-                  <section class="mb-6 pl-7">
+                  <section class="mb-6">
                     <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
                       >Work Package Summary</h4
                     >
@@ -176,7 +176,7 @@
                 {/if}
 
                 {#if coreObjectives.length > 0}
-                  <section class="mb-6 pl-7">
+                  <section class="mb-6">
                     <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
                       >What is this work package intended to achieve?</h4
                     >
@@ -196,7 +196,7 @@
                   </section>
                 {/if}
 
-                <section class="mb-6 pl-7">
+                <section class="mb-6">
                   <h4
                     class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
                     >Why does this work matter to Cardano, and how will success
@@ -267,7 +267,7 @@
                   </section>
                 {:else if milestones.length > 0}
                   <section>
-                    <h4 class="text-normal font-medium mb-2"
+                    <h4 class="text-lg font-medium mb-2"
                       >How will this work package be delivered?</h4
                     >
                     <p class="text-sm text-muted-foreground mb-4">
@@ -315,9 +315,7 @@
                             {#if (m?.acceptanceCriteria ?? "")
                               .toString()
                               .trim()}
-                              <div
-                                class="text-sm text-muted-foreground mt-3"
-                              >
+                              <div class="text-sm text-muted-foreground mt-3">
                                 <span class="font-medium text-foreground"
                                   >Acceptance criteria:</span
                                 >
@@ -339,9 +337,9 @@
                     class={noMilestones || milestones.length > 0 ? "mt-8" : ""}
                   >
                     <ProposalPageWorkPackageBudgetCards
-                      breakdown={breakdown}
+                      {breakdown}
                       totalAda={wpTotals[i] ?? 0}
-                      conversionRateNum={conversionRateNum}
+                      {conversionRateNum}
                     />
                   </section>
                 {/if}
