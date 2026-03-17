@@ -145,11 +145,15 @@
                   <p class="text-xs font-medium text-muted-foreground mb-1">
                     Estimated duration
                   </p>
-                  <span class="font-medium">
+                  <span class="font-medium inline-flex items-center gap-1">
                     {#if estimatedDuration != null && estimatedDuration !== ""}
                       {Number(estimatedDuration) === 1
                         ? "1 month"
                         : `${Number(estimatedDuration)} months`}
+                      <InfoIcon
+                        class="size-3 shrink-0 text-black"
+                        aria-hidden="true"
+                      />
                     {:else}
                       <span class="text-muted-foreground">—</span>
                     {/if}
