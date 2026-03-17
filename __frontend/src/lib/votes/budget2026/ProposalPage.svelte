@@ -59,8 +59,9 @@
 
     <ProposalPageStrategyFramework {proposal} {pillars} />
 
-    <ProposalPageBudgetSummary {proposal} />
     <ProposalPageWorkPackages {proposal} />
+
+    <ProposalPageBudgetSummary {proposal} />
     <ProposalPageSupportingInfo {proposal} />
   </div>
 </div>

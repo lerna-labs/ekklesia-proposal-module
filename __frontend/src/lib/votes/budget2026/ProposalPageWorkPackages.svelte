@@ -77,7 +77,7 @@
 
 {#if hasContent}
   <section class="text-sm space-y-3 mb-2! mt-12" id="work-packages">
-    <h2 class="text-2xl font-medium mb-4">Work Packages Breakdown</h2>
+    <h2 class="text-2xl font-medium mb-4">Proposal Details</h2>
 
     <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
       {#each workPackages as wp, i}
