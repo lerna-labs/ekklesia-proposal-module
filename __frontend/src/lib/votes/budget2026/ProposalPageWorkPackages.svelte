@@ -73,6 +73,28 @@
     const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
     return Number.isFinite(n) && n > 0 ? n : null;
   });
+
+  function expandFromHash(hash) {
+    if (!hash) return;
+    const match = hash.match(/^#work-package-(\d+)$/);
+    if (!match) return;
+    const idx = Number(match[1]) - 1;
+    if (!Number.isInteger(idx) || idx < 0 || idx >= workPackages.length) return;
+    expanded = { ...expanded, [idx]: true };
+  }
+
+  $effect(() => {
+    if (typeof window === "undefined") return;
+    const handleHashChange = () => {
+      expandFromHash(window.location.hash);
+    };
+    // Run once on mount in case the page loaded with a hash.
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  });
 </script>
 
 {#if hasContent}
@@ -100,7 +122,10 @@
           ? wp.supportingDocuments
           : []}
         <li>
-          <Card.Root class="py-2 {isExpanded ? 'pb-0' : 'pb-2'} bg-slate-50">
+          <Card.Root
+            id={`work-package-${i + 1}`}
+            class="py-2 {isExpanded ? 'pb-0' : 'pb-2'} bg-slate-50"
+          >
             <Card.Header
               class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
             >

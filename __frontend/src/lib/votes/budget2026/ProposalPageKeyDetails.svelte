@@ -8,6 +8,7 @@
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+  import LinkIcon from "@lucide/svelte/icons/link";
   import HashIcon from "@lucide/svelte/icons/hash";
   import HomeIcon from "@lucide/svelte/icons/home";
   import ShieldCheckIcon from "@lucide/svelte/icons/shield-check";
@@ -124,7 +125,7 @@
                 class="text-xs mb-2"
                 href="#budget-summary"
               >
-                View budget breakdown
+                View Budget Summary
               </Button>
             </div>
           </div>
@@ -145,11 +146,15 @@
                   <p class="text-xs font-medium text-muted-foreground mb-1">
                     Estimated duration
                   </p>
-                  <span class="font-medium">
+                  <span class="font-medium inline-flex items-center gap-1">
                     {#if estimatedDuration != null && estimatedDuration !== ""}
                       {Number(estimatedDuration) === 1
                         ? "1 month"
                         : `${Number(estimatedDuration)} months`}
+                      <InfoIcon
+                        class="size-3 shrink-0 text-black"
+                        aria-hidden="true"
+                      />
                     {:else}
                       <span class="text-muted-foreground">—</span>
                     {/if}
@@ -171,39 +176,6 @@
               </p>
             </Popover.Content>
           </Popover.Root>
-          <div class="p-4 min-w-0 flex gap-1.5">
-            <ShieldCheckIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Administrator</p
-              >
-              <p class="flex items-center gap-1">
-                {#if administratorLabel}
-                  {#if isOtherAdministrator}
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 cursor-pointer rounded hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Show other administrator details"
-                      onclick={() => (otherAdminModalOpen = true)}
-                    >
-                      <span class="font-medium">{administratorLabel}</span>
-                      <InfoIcon
-                        class="size-4 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  {:else}
-                    {administratorLabel}
-                  {/if}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </p>
-            </div>
-          </div>
         </div>
       {/if}
     </div>
@@ -315,14 +287,23 @@
         <div class="px-4 pb-4 space-y-3 text-xs">
           {#if links.length > 0}
             <div class="border-t pt-3">
-              <ul class="space-y-0.5 list-none p-0">
+              <div class="flex items-center gap-1.5 mb-1">
+                <ExternalLinkIcon
+                  class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <p class="text-xs font-medium text-muted-foreground mb-1">
+                  Social Links
+                </p>
+              </div>
+              <ul class="space-y-2 list-none p-0 border-b pb-3">
                 {#each links as link (link.url)}
                   <li>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-primary hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
+                      class="text-primary underline hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
                       onclick={(e) => {
                         e.preventDefault();
                         linkWarningDialog.show(
@@ -331,11 +312,7 @@
                         );
                       }}
                     >
-                      <ExternalLinkIcon
-                        class="size-3.5 shrink-0 mt-0.5"
-                        aria-hidden="true"
-                      />
-                      <span class="min-w-0 wrap-break-word">
+                      <span class="min-w-0 wrap-break-word ml-6 line-clamp-1">
                         {link.title || link.url}
                       </span>
                     </a>

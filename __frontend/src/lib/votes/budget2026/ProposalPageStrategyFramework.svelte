@@ -1,7 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
-  import PillarContainer from "./PillarContainer.svelte";
+  import FormPillarCard from "$lib/forms/budget2026/FormPillarCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
@@ -9,8 +9,6 @@
 
   let { proposal, pillars = [] } = $props();
 
-  /** Which pillar rows are expanded. Index -> boolean. */
-  let expandedPillars = $state({});
   let expandedRationale = $state(true);
   let expandedKpi = $state(true);
 
@@ -22,16 +20,8 @@
     const options = Array.isArray(pillars) ? pillars : [];
     return ids
       .map((id) => options.find((p) => p?._id === id))
-      .filter(Boolean)
-      .map((p) => ({
-        title: p?.title ?? p?._id ?? "",
-        description: (p?.description ?? "").toString().trim(),
-      }));
+      .filter(Boolean);
   });
-
-  function togglePillar(index) {
-    expandedPillars = { ...expandedPillars, [index]: !expandedPillars[index] };
-  }
 
   const pillarRationale = $derived(
     proposal?.metaData?.strategyFramework?.pillarRationale ?? "",
@@ -53,18 +43,15 @@
     >
 
     {#if selectedPillars.length > 0}
-      <ul class="list-none p-0 flex flex-wrap gap-2 mb-4">
-        {#each selectedPillars as pillar, i}
-          <li>
-            <PillarContainer
-              title={pillar.title}
-              content={pillar.description}
-              expanded={expandedPillars[i] === true}
-              ontoggle={() => togglePillar(i)}
-            />
-          </li>
+      <div class="space-y-2 rounded-md border mb-4">
+        {#each selectedPillars as pillar (pillar?._id)}
+          <FormPillarCard
+            pillar={pillar}
+            selected={true}
+            readOnly={true}
+          />
         {/each}
-      </ul>
+      </div>
     {/if}
 
     {#if pillarRationale.trim()}
