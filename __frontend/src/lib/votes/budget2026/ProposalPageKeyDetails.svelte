@@ -105,15 +105,14 @@
               >
               <div class="text-xs text-muted-foreground mt-1 mb-2">
                 USD equivalent ${formatUsd(totalBudget * conversionRate)} (ADA/USD
-                {conversionRate})
+                {conversionRate})*
               </div>
 
-              <div class="mb-4">
+              <div class="mb-4 inline-flex items-center gap-1"
+                >This conversion rate was specified by the proposer
+
                 <Popover.Root>
-                  <Popover.Trigger
-                    class="cursor-pointer inline-flex items-center gap-1"
-                  >
-                    This conversion rate was specified by the proposer
+                  <Popover.Trigger class="cursor-pointer">
                     <InfoIcon class="size-3 shrink-0" aria-hidden="true" />
                   </Popover.Trigger>
                   <Popover.Content class="p-3 text-xs" align="start">
