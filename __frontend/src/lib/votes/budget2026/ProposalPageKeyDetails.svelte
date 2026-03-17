@@ -134,26 +134,43 @@
         <div
           class="rounded-lg border bg-card text-card-foreground grid grid-cols-2 divide-x divide-border overflow-hidden"
         >
-          <div class="p-4 min-w-0 flex gap-1.5">
-            <ClockIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Estimated duration</p
-              >
-              <span class="font-medium">
-                {#if estimatedDuration != null && estimatedDuration !== ""}
-                  {Number(estimatedDuration) === 1
-                    ? "1 month"
-                    : `${Number(estimatedDuration)} months`}
-                {:else}
-                  <span class="text-muted-foreground">—</span>
-                {/if}
-              </span>
-            </div>
-          </div>
+          <Popover.Root>
+            <Popover.Trigger class="cursor-pointer" openOnHover={true}>
+              <div class="p-4 min-w-0 flex gap-1.5">
+                <ClockIcon
+                  class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div class="min-w-0 text-left">
+                  <p class="text-xs font-medium text-muted-foreground mb-1">
+                    Estimated duration
+                  </p>
+                  <span class="font-medium">
+                    {#if estimatedDuration != null && estimatedDuration !== ""}
+                      {Number(estimatedDuration) === 1
+                        ? "1 month"
+                        : `${Number(estimatedDuration)} months`}
+                    {:else}
+                      <span class="text-muted-foreground">—</span>
+                    {/if}
+                  </span>
+                </div>
+              </div>
+            </Popover.Trigger>
+            <Popover.Content class="p-3 text-sm" align="start">
+              <div class="font-medium">
+                How long will your proposal need to be fully delivered? Or if
+                you are requesting funding for operations, how many months will
+                this budget cover?
+              </div>
+              <p class="text-xs mt-2"
+                >Provide an estimated duration from the start of the work to
+                completion. Or if your proposal covers ongoing operations or
+                services, specify the number of months this budget is intended
+                to support.
+              </p>
+            </Popover.Content>
+          </Popover.Root>
           <div class="p-4 min-w-0 flex gap-1.5">
             <ShieldCheckIcon
               class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
