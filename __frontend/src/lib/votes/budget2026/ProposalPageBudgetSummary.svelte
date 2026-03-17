@@ -164,20 +164,45 @@
             : "—"} USD/ADA currency conversion rate (for estimate purposes only)
         </div> -->
 
-        {#if treasuryRepayment === "Yes"}
-          <section class="mt-4 space-y-4">
+        <section class="space-y-4 mt-6">
+          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
+            Will any portion of the requested funds be returned to the Cardano
+            Treasury?
+          </h3>
+
+          <p class="text-sm text-muted-foreground"
+            >Select whether your proposal includes any form of treasury
+            repayment (for example, unused funds, profit-sharing, or conditional
+            returns).</p
+          >
+
+          {#if treasuryRepayment === "Yes"}
+            <Badge
+              class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal shrink-0"
+              >Yes</Badge
+            >
+
             <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-              Repayment Circumstances
+              Under what circumstances would a repayment occur?
             </h3>
-            <ItemContainer>
-              <div class="text-sm">
-                <Markdown
-                  content={treasuryRepaymentCircumstances.trim() || "—"}
-                />
-              </div>
-            </ItemContainer>
-          </section>
-        {/if}
+
+            <p class="text-sm text-muted-foreground"
+              >Describe the specific conditions or triggers that would result in
+              funds being returned to the Treasury (e.g. surplus funds, revenue
+              thresholds, loan, project cancellation).</p
+            >
+
+            <Markdown
+              content={treasuryRepaymentCircumstances.trim() || "—"}
+              class="text-sm"
+            />
+          {:else}
+            <Badge
+              class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0 font-normal shrink-0"
+              >No</Badge
+            >
+          {/if}
+        </section>
 
         <section class="mt-6 space-y-2">
           <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
