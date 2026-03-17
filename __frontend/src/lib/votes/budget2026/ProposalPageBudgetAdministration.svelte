@@ -6,6 +6,10 @@
 <section class="mt-12" id="budget-administration">
   <h2 class="text-2xl font-medium mb-4">Budget Administration</h2>
 
+  {#if proposal?.metaData?.administrator === "Intersect"}
+    <div class="text-sm"> Boilerplate text, content not supplied yet </div>
+  {/if}
+
   {#if proposal?.metaData?.administrator === "Other" && proposal?.metaData?.otherAdministrator}
     <div class="text-sm">
       <Markdown content={proposal?.metaData?.otherAdministrator?.trim()} />
