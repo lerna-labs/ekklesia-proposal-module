@@ -3,7 +3,6 @@
   import * as Popover from "$lib/components/ui/popover";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
-  import MarkdownModal from "$lib/components/MarkdownModal.svelte";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -176,6 +175,24 @@
               </p>
             </Popover.Content>
           </Popover.Root>
+          <div class="p-4 min-w-0 flex gap-1.5">
+            <ShieldCheckIcon
+              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-muted-foreground mb-1"
+                >Administrator</p
+              >
+              <p class="flex items-center gap-1">
+                {#if administratorLabel}
+                  {administratorLabel}
+                {:else}
+                  <span class="text-muted-foreground">—</span>
+                {/if}
+              </p>
+            </div>
+          </div>
         </div>
       {/if}
     </div>
@@ -352,9 +369,4 @@
   </Card.Content>
 </Card.Root>
 
-<MarkdownModal
-  bind:open={otherAdminModalOpen}
-  title="Details about other administrator"
-  content={otherAdministrator.trim() || "No details provided."}
-/>
 <LinkWarningDialog bind:this={linkWarningDialog} />

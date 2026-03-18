@@ -250,12 +250,6 @@
             Treasury?
           </h3>
 
-          <p class="text-sm text-muted-foreground"
-            >Select whether your proposal includes any form of treasury
-            repayment (for example, unused funds, profit-sharing, or conditional
-            returns).</p
-          >
-
           {#if treasuryRepayment === "Yes"}
             <Badge
               class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal shrink-0"
@@ -265,12 +259,6 @@
             <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
               Under what circumstances would a repayment occur?
             </h3>
-
-            <p class="text-sm text-muted-foreground"
-              >Describe the specific conditions or triggers that would result in
-              funds being returned to the Treasury (e.g. surplus funds, revenue
-              thresholds, loan, project cancellation).</p
-            >
 
             <Markdown
               content={treasuryRepaymentCircumstances.trim() || "—"}
@@ -286,7 +274,8 @@
 
         <section class="mt-6 space-y-2">
           <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-            Prior Funding
+            Have you previously received funding from Cardano or related
+            ecosystem programs?
           </h3>
           <ItemContainer>
             <div class="text-sm">
