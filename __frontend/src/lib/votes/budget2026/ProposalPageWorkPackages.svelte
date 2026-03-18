@@ -99,7 +99,9 @@
 
 {#if hasContent}
   <section class="text-sm space-y-3 mb-2! mt-12" id="proposal-details">
-    <h2 class="text-2xl font-medium mb-4">Proposal Details</h2>
+    <h2 class="text-2xl font-medium mb-4"
+      >How can your proposal be broken down in work packages?</h2
+    >
 
     <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
       {#each workPackages as wp, i}
@@ -138,19 +140,7 @@
                 <BoxIcon class="size-5 shrink-0" aria-hidden="true" />
                 <span class="truncate">{name}</span>
               </button>
-              <div
-                class="shrink-0 h-8 flex items-center rounded-md border border-border bg-white px-2 text-xs"
-                aria-label="Work package budget"
-              >
-                <div class="flex items-center divide-x divide-border">
-                  <span class="pr-2 text-muted-foreground pl-1 hidden sm:block"
-                    >Budget</span
-                  >
-                  <span class="sm:pl-2 font-semibold tabular-nums">
-                    {formatAda(totalAda)} ADA
-                  </span>
-                </div>
-              </div>
+
               <Button
                 type="button"
                 variant="outline"
@@ -177,26 +167,39 @@
                 {#if (wp?.summary ?? "").toString().trim()}
                   <section class="mb-6">
                     <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
-                      >Work Package Summary</h4
+                      >Please describe this Work Package at a high level</h4
                     >
                     <ItemContainer>
                       <Markdown content={wp.summary} />
-
-                      <div class="flex flex-wrap gap-2 items-center mt-5">
-                        <Badge
-                          variant="outline"
-                          class="border-(--mbo-cardano-blue) text-(--mbo-cardano-blue)"
-                        >
-                          {wp.initiativeType}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          class="border-(--mbo-cardano-blue) text-(--mbo-cardano-blue)"
-                        >
-                          {wp.proposalType}
-                        </Badge>
-                      </div>
                     </ItemContainer>
+                  </section>
+                {/if}
+
+                {#if wp.initiativeType}
+                  <section class="mb-2">
+                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
+                      >Is this a new initiative or a continuation of existing
+                      work?</h4
+                    >
+                    <Badge
+                      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+                    >
+                      {wp.initiativeType}
+                    </Badge>
+                  </section>
+                {/if}
+
+                {#if wp.proposalType}
+                  <section class="mb-2">
+                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
+                      >How would you classify the primary nature of this work
+                      proposal?</h4
+                    >
+                    <Badge
+                      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+                    >
+                      {wp.proposalType}
+                    </Badge>
                   </section>
                 {/if}
 
@@ -209,6 +212,10 @@
                       {#each coreObjectives as obj}
                         <li>
                           <ItemContainer>
+                            <strong
+                              class="text-sm font-medium inline-block mb-1"
+                              >Core Objective</strong
+                            ><br />
                             {#if typeof obj === "string"}
                               {obj}
                             {:else}
@@ -228,51 +235,59 @@
                     be measured?</h4
                   >
                   <ItemContainer>
-                    <h5 class="text-md font-medium mb-2"
-                      >Expected value (ROI)</h5
-                    >
                     <Markdown content={wp.expectedValue} />
-                    <h5 class="text-md font-medium mt-4 mb-2">Metric</h5>
+                  </ItemContainer>
+                </section>
+
+                <section class="mb-6">
+                  <h4
+                    class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
+                    >How will success be measured?</h4
+                  >
+                  <ItemContainer>
                     <Markdown content={wp.metric} />
                   </ItemContainer>
                 </section>
 
                 {#if supportingDocs.length > 0}
-                  <section class="mb-6 pl-7">
+                  <section class="mb-6">
                     <h4
                       class="text-normal font-medium mb-1.5 text-(--mbo-tangy-blue)"
-                      >Supporting documentation</h4
+                      >Is there any extra material you would like to share about
+                      this work package?</h4
                     >
-                    <ul class="space-y-0.5 list-none p-0">
-                      {#each supportingDocs as doc}
-                        {@const url = (doc?.url ?? "").toString().trim()}
-                        {@const title = (doc?.title ?? url ?? "Link")
-                          .toString()
-                          .trim()}
-                        {#if url}
-                          <li>
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
-                              onclick={(e) => {
-                                e.preventDefault();
-                                linkWarningDialog.show(url, title);
-                              }}
-                            >
-                              <ExternalLinkIcon
-                                class="size-3.5 shrink-0 mt-0.5"
-                                aria-hidden="true"
-                              />
-                              <span class="min-w-0 wrap-break-word">
-                                {title}
-                              </span>
-                            </a>
-                          </li>
-                        {/if}
-                      {/each}
-                    </ul>
+                    <ItemContainer>
+                      <ul class="space-y-0.5 list-none p-0">
+                        {#each supportingDocs as doc}
+                          {@const url = (doc?.url ?? "").toString().trim()}
+                          {@const title = (doc?.title ?? url ?? "Link")
+                            .toString()
+                            .trim()}
+                          {#if url}
+                            <li>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+                                onclick={(e) => {
+                                  e.preventDefault();
+                                  linkWarningDialog.show(url, title);
+                                }}
+                              >
+                                <ExternalLinkIcon
+                                  class="size-3.5 shrink-0 mt-0.5"
+                                  aria-hidden="true"
+                                />
+                                <span class="min-w-0 wrap-break-word">
+                                  {title}
+                                </span>
+                              </a>
+                            </li>
+                          {/if}
+                        {/each}
+                      </ul>
+                    </ItemContainer>
                   </section>
                 {/if}
 
@@ -295,9 +310,6 @@
                     <h4 class="text-lg font-medium mb-2"
                       >How will this work package be delivered?</h4
                     >
-                    <p class="text-sm text-muted-foreground mb-4">
-                      Milestones or delivery phases for this work package.
-                    </p>
                     <ul
                       class="milestone-list-editor-list space-y-2 list-none p-0 m-0 mb-1!"
                     >
@@ -317,19 +329,24 @@
                             collapseLabel="Collapse milestone"
                           >
                             {#if (m?.duration ?? "").toString().trim()}
-                              <Badge
-                                class="shrink-0 font-normal text-xs bg-neutral-500 text-white border-0 mb-4"
+                              <div
+                                class="text-sm text-muted-foreground mt-0 mb-4"
                               >
-                                Estimated Duration:
-                                {m.duration} weeks
-                              </Badge>
+                                <span class="font-medium text-foreground"
+                                  >How many weeks will you need to complete this
+                                  milestone?</span
+                                >
+                                <p>
+                                  {m.duration} weeks
+                                </p>
+                              </div>
                             {/if}
                             {#if (m?.deliverables ?? "").toString().trim()}
                               <div
-                                class="text-sm text-muted-foreground mt-0 mb-1"
+                                class="text-sm text-muted-foreground mt-0 mb-4"
                               >
                                 <span class="font-medium text-foreground"
-                                  >Deliverables:</span
+                                  >What will you deliver in this milestone?</span
                                 >
                                 <Markdown
                                   content={m.deliverables}
@@ -340,9 +357,9 @@
                             {#if (m?.acceptanceCriteria ?? "")
                               .toString()
                               .trim()}
-                              <div class="text-sm text-muted-foreground mt-3">
+                              <div class="text-sm text-muted-foreground mt-4">
                                 <span class="font-medium text-foreground"
-                                  >Acceptance criteria:</span
+                                  >How do you know it's "done"?</span
                                 >
                                 <Markdown
                                   content={m.acceptanceCriteria}

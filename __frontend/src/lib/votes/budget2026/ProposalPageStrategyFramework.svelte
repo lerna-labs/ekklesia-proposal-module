@@ -18,9 +18,7 @@
   const selectedPillars = $derived.by(() => {
     const ids = Array.isArray(selectedPillarIds) ? selectedPillarIds : [];
     const options = Array.isArray(pillars) ? pillars : [];
-    return ids
-      .map((id) => options.find((p) => p?._id === id))
-      .filter(Boolean);
+    return ids.map((id) => options.find((p) => p?._id === id)).filter(Boolean);
   });
 
   const pillarRationale = $derived(
@@ -42,14 +40,14 @@
       >Alignment to Cardano 2030 Strategy framework</h2
     >
 
+    <h3 class="text-lg font-medium mb-2 mt-4">
+      To which strategic pillar does your proposal align the most?
+    </h3>
+
     {#if selectedPillars.length > 0}
       <div class="space-y-2 rounded-md border mb-4">
         {#each selectedPillars as pillar (pillar?._id)}
-          <FormPillarCard
-            pillar={pillar}
-            selected={true}
-            readOnly={true}
-          />
+          <FormPillarCard {pillar} selected={true} readOnly={true} />
         {/each}
       </div>
     {/if}
@@ -69,7 +67,9 @@
             title="Pillar rationale"
             onclick={() => (expandedRationale = !expandedRationale)}
           >
-            <span class="truncate">Pillar Rationale</span>
+            <h3 class="text-lg font-medium"
+              >Why have you selected those pillars?</h3
+            >
           </button>
           <Button
             type="button"
@@ -113,7 +113,10 @@
             title="KPI alignment"
             onclick={() => (expandedKpi = !expandedKpi)}
           >
-            <span class="truncate">KPI Alignment</span>
+            <h3 class="text-lg font-medium"
+              >Does your proposal support any of the KPIs of the strategy
+              framework?</h3
+            >
           </button>
           <Button
             type="button"
