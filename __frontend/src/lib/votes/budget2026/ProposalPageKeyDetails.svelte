@@ -184,7 +184,7 @@
               <p class="text-xs font-medium text-muted-foreground mb-1"
                 >Administrator</p
               >
-              <p class="flex items-center gap-1">
+              <p class="flex items-center gap-1 font-medium">
                 {#if administratorLabel}
                   {administratorLabel}
                 {:else}
