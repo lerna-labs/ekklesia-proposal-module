@@ -3,7 +3,6 @@
   import * as Popover from "$lib/components/ui/popover";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
-  import MarkdownModal from "$lib/components/MarkdownModal.svelte";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -187,22 +186,7 @@
               >
               <p class="flex items-center gap-1">
                 {#if administratorLabel}
-                  {#if isOtherAdministrator}
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 cursor-pointer rounded hover:bg-muted/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      aria-label="Show other administrator details"
-                      onclick={() => (otherAdminModalOpen = true)}
-                    >
-                      <span class="font-medium">{administratorLabel}</span>
-                      <InfoIcon
-                        class="size-4 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  {:else}
-                    {administratorLabel}
-                  {/if}
+                  {administratorLabel}
                 {:else}
                   <span class="text-muted-foreground">—</span>
                 {/if}
@@ -385,9 +369,4 @@
   </Card.Content>
 </Card.Root>
 
-<MarkdownModal
-  bind:open={otherAdminModalOpen}
-  title="Details about other administrator"
-  content={otherAdministrator.trim() || "No details provided."}
-/>
 <LinkWarningDialog bind:this={linkWarningDialog} />
