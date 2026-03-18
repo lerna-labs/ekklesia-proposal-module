@@ -129,17 +129,35 @@
             class="py-2 {isExpanded ? 'pb-0' : 'pb-2'} bg-slate-50"
           >
             <Card.Header
-              class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
+              class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm {isExpanded
+                ? 'items-start min-h-10'
+                : 'items-center h-10 min-h-10'}"
             >
-              <button
-                type="button"
-                class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
-                title={name}
-                onclick={() => toggle(i)}
+              <div
+                class="flex-1 min-w-0 flex {isExpanded
+                  ? 'min-h-10 items-start'
+                  : 'h-10 items-center'}"
               >
-                <BoxIcon class="size-5 shrink-0" aria-hidden="true" />
-                <span class="truncate">{name}</span>
-              </button>
+                <button
+                  type="button"
+                  class="min-w-0 w-full font-medium text-left cursor-pointer focus:outline-none text-lg leading-6 relative pl-7"
+                  title={name}
+                  onclick={() => toggle(i)}
+                >
+                  <span
+                    class="absolute left-0 {isExpanded ? 'top-2' : 'top-0'}"
+                    aria-hidden="true"
+                  >
+                    <BoxIcon class="size-5 shrink-0 top-0.5 relative" />
+                  </span>
+
+                  {#if isExpanded}
+                    <span class="block pt-2">{name}</span>
+                  {:else}
+                    <span class="truncate block">{name}</span>
+                  {/if}
+                </button>
+              </div>
 
               <Button
                 type="button"
