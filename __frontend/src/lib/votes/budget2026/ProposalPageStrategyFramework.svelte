@@ -105,18 +105,29 @@
           : 'pb-2'} bg-slate-50 rounded-md border"
       >
         <Card.Header
-          class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
+          class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm {expandedKpi
+            ? 'items-start min-h-10'
+            : 'items-center h-10 min-h-10'}"
         >
           <button
             type="button"
-            class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
+            class="min-w-0 flex-1 font-medium text-left cursor-pointer focus:outline-none text-lg leading-6 flex items-center gap-2 {expandedKpi
+              ? ''
+              : 'truncate'}"
             title="KPI alignment"
             onclick={() => (expandedKpi = !expandedKpi)}
           >
-            <h3 class="text-lg font-medium"
-              >Does your proposal support any of the KPIs of the strategy
-              framework?</h3
-            >
+            {#if expandedKpi}
+              <span class="pt-2 block"
+                >Does your proposal support any of the KPIs of the
+                strategy framework?</span
+              >
+            {:else}
+              <span class="truncate"
+                >Does your proposal support any of the KPIs of the
+                strategy framework?</span
+              >
+            {/if}
           </button>
           <Button
             type="button"
