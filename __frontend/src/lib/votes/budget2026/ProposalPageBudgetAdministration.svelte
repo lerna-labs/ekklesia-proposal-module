@@ -10,8 +10,22 @@
   <h3 class="text-lg font-medium mb-2 mt-4"
     >Who will be your administrator for this proposal?</h3
   >
+
+  <Badge
+    class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+  >
+    {proposal?.metaData?.administrator === "Intersect" ? "Intersect" : "Other"}
+  </Badge>
+
   {#if proposal?.metaData?.administrator === "Intersect"}
-    <div class="text-sm">Boilerplate text, content not supplied yet</div>
+    <div class="text-sm"
+      >For more info about Intersect administration service and process click <a
+        href="https://admin-services.docs.intersectmbo.org"
+        class="link"
+        target="_blank"
+        rel="noopener noreferrer">here</a
+      ></div
+    >
   {/if}
 
   {#if proposal?.metaData?.administrator === "Other" && proposal?.metaData?.otherAdministrator}
@@ -20,7 +34,7 @@
     </div>
   {/if}
 
-  <h3 class="text-lg font-medium mb-2 mt-4">
+  <h3 class="text-lg font-medium mb-2 mt-8">
     Are you applying as a registered company or as an individual?
   </h3>
 
