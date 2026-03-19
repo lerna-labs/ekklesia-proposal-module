@@ -4,13 +4,7 @@
 </script>
 
 <section id="executive-summary">
-  <h2 class="text-2xl font-medium mb-4 mt-8"
-    >Executive Summary
-
-    {#if proposal?.metaData?.trackRecord}
-      & Track Record
-    {/if}
-  </h2>
+  <h2 class="text-2xl font-medium mb-4 mt-8"> Proposal Overview </h2>
 
   <h3 class="text-lg font-medium mb-2 mt-4"
     >Please describe your whole proposal at high level</h3
