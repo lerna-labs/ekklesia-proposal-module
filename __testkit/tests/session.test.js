@@ -353,6 +353,20 @@ describe("Access with/without login", () => {
     expect(res.status).toBe(200);
   });
 
+  it("GET /votes/:slug does not get blocked by voteId validation", async () => {
+    const slugCandidate = `slug-route-regression-${Date.now()}`;
+    const res = await fetch(`${API_BASE_URL}/votes/${slugCandidate}`);
+
+    // If the slug does not exist we expect slug-path 404, but it must not be voteId-format 400.
+    expect(res.status).not.toBe(400);
+    if (res.status === 404) {
+      const body = await res.json();
+      expect(body.message).toMatch(/vote not found/i);
+    } else {
+      expect(res.status).toBe(200);
+    }
+  });
+
   it("GET /proposals returns 200 without auth", async () => {
     const res = await fetch(`${API_BASE_URL}/proposals`);
     expect(res.status).toBe(200);
