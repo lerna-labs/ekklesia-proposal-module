@@ -133,7 +133,7 @@ export async function getProposal(req, res, next) {
  * - req.isScript: Boolean indicating if the address is a script address
  */
 export function validateSessionRequest(req, res, next) {
-  let { signerAddress, signType } = req.body;
+  let { signerAddress, signType } = req.body || {};
 
   // Check if signerAddress exists in the request
   if (!signerAddress) {
