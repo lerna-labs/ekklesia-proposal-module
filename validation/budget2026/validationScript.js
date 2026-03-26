@@ -179,7 +179,7 @@ const proposerDetailsSchema = z.object({
 const proposalDetailsSchema = z.object({
   conversionRate: z.coerce
     .number({ invalid_type_error: "Enter a valid number" })
-    .refine((v) => v > 0, { message: "Conversion rate is required" })
+    .refine((v) => v > 0, { message: "Conversion rate must be a positive number" })
     .refine(
       (v) => v === Math.round(v * 100) / 100,
       { message: "Conversion rate must have at most 2 decimal places" },
