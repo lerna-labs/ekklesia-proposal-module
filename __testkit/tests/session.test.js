@@ -405,6 +405,49 @@ describe("Access with/without login", () => {
     expect(body.message).toMatch(/invalid limit parameter/i);
   });
 
+  it("GET /comments accepts withdrawnByAdmin token (non-admin still forbidden)", async () => {
+    const proposalsRes = await fetch(`${API_BASE_URL}/proposals?limit=1`);
+    expect(proposalsRes.status).toBe(200);
+    const proposalsBody = await proposalsRes.json();
+    const proposalId = proposalsBody.data?.[0]?._id;
+    if (!proposalId) {
+      console.warn("GET /comments status=withdrawnByAdmin skipped: no proposals in DB");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&status=WithdrawnByAdmin`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/only admins/i);
+    expect(body.message).not.toMatch(/invalid status parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies accepts withdrawnByAdmin token (non-admin still forbidden)", async () => {
+    const proposalsRes = await fetch(`${API_BASE_URL}/proposals?limit=1`);
+    expect(proposalsRes.status).toBe(200);
+    const proposalsBody = await proposalsRes.json();
+    const proposalId = proposalsBody.data?.[0]?._id;
+    if (!proposalId) {
+      console.warn("GET /comments/:commentId/replies status=withdrawnByAdmin skipped: no proposals in DB");
+      return;
+    }
+
+    const commentsRes = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&limit=1`);
+    expect(commentsRes.status).toBe(200);
+    const commentsBody = await commentsRes.json();
+    const commentId = commentsBody.data?.[0]?._id;
+    if (!commentId) {
+      console.warn("GET /comments/:commentId/replies status=withdrawnByAdmin skipped: no comments in DB");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?status=WithdrawnByAdmin`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/only admins/i);
+    expect(body.message).not.toMatch(/invalid status parameter/i);
+  });
+
   it("GET /session without cookie returns 401", async () => {
     const res = await fetch(`${API_BASE_URL}/session`, { method: "GET" });
     expect(res.status).toBe(401);
