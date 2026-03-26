@@ -373,6 +373,38 @@ describe("Access with/without login", () => {
     expect(res.ok).toBe(true);
   });
 
+  it("GET /comments returns 400 for non-numeric page", async () => {
+    const proposalId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&page=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid page parameter/i);
+  });
+
+  it("GET /comments returns 400 for non-numeric limit", async () => {
+    const proposalId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&limit=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid limit parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies returns 400 for non-numeric page", async () => {
+    const commentId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?page=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid page parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies returns 400 for non-numeric limit", async () => {
+    const commentId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?limit=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid limit parameter/i);
+  });
+
   it("GET /session without cookie returns 401", async () => {
     const res = await fetch(`${API_BASE_URL}/session`, { method: "GET" });
     expect(res.status).toBe(401);
