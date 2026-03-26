@@ -151,6 +151,22 @@ export function validateSessionRequest(req, res, next) {
     });
   }
 
+  // Check if signerAddress is a string
+  if (typeof signerAddress !== "string") {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid address format",
+    });
+  }
+
+  // Check if signType is a string
+  if (typeof signType !== "string") {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid signType format",
+    });
+  }
+
   // Validate address format
   let addressBech32 = validateAddress(signerAddress.trim(), signType);
   // console.log("Address validation in validateSessionRequest MW", addressBech32);
