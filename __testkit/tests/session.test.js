@@ -95,6 +95,17 @@ describe("POST /session", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 when signerAddress is not a string", async () => {
+    const res = await fetch(`${API_BASE_URL}/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signerAddress: { bad: "value" }, signType: "drep" }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid address format/i);
+  });
+
   it("returns 400 for invalid signType", async () => {
     const signerAddress = readDrepId(KEYS_DREP01);
     const res = await fetch(`${API_BASE_URL}/session`, {
