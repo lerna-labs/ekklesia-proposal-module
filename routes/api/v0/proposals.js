@@ -546,7 +546,8 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       ];
       const validationResult = await validateProposalTreasuryTxHash(
         txHash,
-        String(tokenResult.userId ?? "").trim(),
+        // Requester identity is already resolved by isAuthenticated -> req.userId.
+        userId,
         voteDoc,
         { excludeProposalIds },
       );
