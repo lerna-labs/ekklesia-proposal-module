@@ -117,6 +117,16 @@ async function formatComment(
   return result;
 }
 
+function parsePaginationParams(query) {
+  const rawPage = query.page;
+  const rawLimit = query.limit;
+
+  const page = rawPage === undefined ? 1 : parseInt(rawPage, 10);
+  const limit = rawLimit === undefined ? 10 : parseInt(rawLimit, 10);
+
+  return { page, limit };
+}
+
 /**
  * GET /comments
  * API spec §3.6 — Paginated top-level comments for a proposal. Query: proposal (required), status, sort, direction, page, limit.
@@ -129,8 +139,7 @@ router.get("/", async (req, res) => {
     const sortParam = (req.query.sort || "date").toString().trim().toLowerCase();
     const direction = (req.query.direction || "desc").toString().trim().toLowerCase();
     const userTypeParam = (req.query.userType || "").toString().trim().toLowerCase();
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+    const { page, limit } = parsePaginationParams(req.query);
 
     if (!proposalId || typeof proposalId !== "string") {
       return res.status(400).json({
@@ -157,7 +166,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    if (limit < 1 || isNaN(limit)) {
+    if (limit < 1 || isNaN(limit) || limit > 100) {
       return res.status(400).json({
         status: "error",
         message:
@@ -465,8 +474,7 @@ router.get("/:commentId/replies", async (req, res) => {
   try {
     const { commentId } = req.params;
     const statusParam = req.query.status;
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+    const { page, limit } = parsePaginationParams(req.query);
 
     if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
       return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
@@ -474,7 +482,7 @@ router.get("/:commentId/replies", async (req, res) => {
     if (page < 1 || isNaN(page)) {
       return res.status(400).json({ status: "error", message: "Invalid page parameter. Must be a positive integer." });
     }
-    if (limit < 1 || isNaN(limit)) {
+    if (limit < 1 || isNaN(limit) || limit > 100) {
       return res.status(400).json({ status: "error", message: "Invalid limit parameter. Must be a positive integer between 1 and 100." });
     }
 
