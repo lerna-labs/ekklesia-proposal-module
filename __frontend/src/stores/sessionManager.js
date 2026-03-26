@@ -23,13 +23,32 @@ function getExpiryFromJwt(token) {
 		if (!token || typeof token !== 'string') return null;
 		const parts = token.split('.');
 		if (parts.length !== 3) return null;
-		const payload = JSON.parse(atob(parts[1]));
+		// JWT payload is base64url encoded; normalize before atob.
+		const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+		const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+		const payload = JSON.parse(atob(padded));
 		if (!payload?.exp) return null;
 		const expiryMs = Number(payload.exp) * 1000;
 		return Number.isFinite(expiryMs) ? expiryMs : null;
 	} catch {
 		return null;
 	}
+}
+
+function getExpiryFromInput(expiresIn) {
+	if (expiresIn == null) return null;
+
+	// Date-like string (e.g., ISO timestamp)
+	const asDateMs = new Date(expiresIn).getTime();
+	if (Number.isFinite(asDateMs)) return asDateMs;
+
+	// Numeric timestamp (seconds or milliseconds)
+	const asNum = Number(expiresIn);
+	if (Number.isFinite(asNum)) {
+		return asNum < 1e12 ? asNum * 1000 : asNum;
+	}
+
+	return null;
 }
 
 function clearClientSessionState({ openLogin = false, notify = false } = {}) {
@@ -67,18 +86,25 @@ function clearClientSessionState({ openLogin = false, notify = false } = {}) {
 }
 
 export async function expireSession() {
+	let targetAfterLogin = null;
 	if (typeof window !== 'undefined') {
-		redirectAfterLogin.set(window.location.pathname + window.location.search + window.location.hash);
+		targetAfterLogin =
+			window.location.pathname + window.location.search + window.location.hash;
+		redirectAfterLogin.set(targetAfterLogin);
 	}
 	clearClientSessionState({ openLogin: true, notify: true });
+	if (
+		typeof window !== 'undefined' &&
+		window.location.pathname !== '/login' &&
+		targetAfterLogin
+	) {
+		await goto('/login');
+	}
 }
 
 // Set JWT in cookie and localStorage (if cookies are not available)
 export function setJWT(token, expiresIn) {
-	const expiresAtFromArg = expiresIn ? new Date(expiresIn).getTime() : null;
-	const expiresAt = Number.isFinite(expiresAtFromArg)
-		? expiresAtFromArg
-		: getExpiryFromJwt(token);
+	const expiresAt = getExpiryFromInput(expiresIn) ?? getExpiryFromJwt(token);
 
 	if (typeof document !== 'undefined') {
 		// Determine environment and protocol
