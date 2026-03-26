@@ -95,6 +95,17 @@ describe("POST /session", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 when signerAddress is not a string", async () => {
+    const res = await fetch(`${API_BASE_URL}/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signerAddress: { bad: "value" }, signType: "drep" }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid address format/i);
+  });
+
   it("returns 400 for invalid signType", async () => {
     const signerAddress = readDrepId(KEYS_DREP01);
     const res = await fetch(`${API_BASE_URL}/session`, {
@@ -353,10 +364,99 @@ describe("Access with/without login", () => {
     expect(res.status).toBe(200);
   });
 
+  it("GET /votes/:slug does not get blocked by voteId validation", async () => {
+    const slugCandidate = `slug-route-regression-${Date.now()}`;
+    const res = await fetch(`${API_BASE_URL}/votes/${slugCandidate}`);
+
+    // If the slug does not exist we expect slug-path 404, but it must not be voteId-format 400.
+    expect(res.status).not.toBe(400);
+    if (res.status === 404) {
+      const body = await res.json();
+      expect(body.message).toMatch(/vote not found/i);
+    } else {
+      expect(res.status).toBe(200);
+    }
+  });
+
   it("GET /proposals returns 200 without auth", async () => {
     const res = await fetch(`${API_BASE_URL}/proposals`);
     expect(res.status).toBe(200);
     expect(res.ok).toBe(true);
+  });
+
+  it("GET /comments returns 400 for non-numeric page", async () => {
+    const proposalId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&page=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid page parameter/i);
+  });
+
+  it("GET /comments returns 400 for non-numeric limit", async () => {
+    const proposalId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&limit=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid limit parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies returns 400 for non-numeric page", async () => {
+    const commentId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?page=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid page parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies returns 400 for non-numeric limit", async () => {
+    const commentId = "000000000000000000000000";
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?limit=abc`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid limit parameter/i);
+  });
+
+  it("GET /comments accepts withdrawnByAdmin token (non-admin still forbidden)", async () => {
+    const proposalsRes = await fetch(`${API_BASE_URL}/proposals?limit=1`);
+    expect(proposalsRes.status).toBe(200);
+    const proposalsBody = await proposalsRes.json();
+    const proposalId = proposalsBody.data?.[0]?._id;
+    if (!proposalId) {
+      console.warn("GET /comments status=withdrawnByAdmin skipped: no proposals in DB");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&status=WithdrawnByAdmin`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/only admins/i);
+    expect(body.message).not.toMatch(/invalid status parameter/i);
+  });
+
+  it("GET /comments/:commentId/replies accepts withdrawnByAdmin token (non-admin still forbidden)", async () => {
+    const proposalsRes = await fetch(`${API_BASE_URL}/proposals?limit=1`);
+    expect(proposalsRes.status).toBe(200);
+    const proposalsBody = await proposalsRes.json();
+    const proposalId = proposalsBody.data?.[0]?._id;
+    if (!proposalId) {
+      console.warn("GET /comments/:commentId/replies status=withdrawnByAdmin skipped: no proposals in DB");
+      return;
+    }
+
+    const commentsRes = await fetch(`${API_BASE_URL}/comments?proposal=${proposalId}&limit=1`);
+    expect(commentsRes.status).toBe(200);
+    const commentsBody = await commentsRes.json();
+    const commentId = commentsBody.data?.[0]?._id;
+    if (!commentId) {
+      console.warn("GET /comments/:commentId/replies status=withdrawnByAdmin skipped: no comments in DB");
+      return;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/comments/${commentId}/replies?status=WithdrawnByAdmin`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/only admins/i);
+    expect(body.message).not.toMatch(/invalid status parameter/i);
   });
 
   it("GET /session without cookie returns 401", async () => {
@@ -416,6 +516,59 @@ describe("Access with/without login", () => {
       }),
     });
     expect(res.status).not.toBe(401);
+  });
+
+  it("PUT /proposals/:proposalId does not throw tokenResult ReferenceError", async () => {
+    const session = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
+
+    const listRes = await fetch(
+      `${API_BASE_URL}/proposals?proposer=${encodeURIComponent(session.userId)}`,
+      { headers: { Cookie: session.cookieHeader } }
+    );
+    expect(listRes.status).toBe(200);
+    const listBody = await listRes.json();
+    const ownDraft = listBody.data?.find((p) => p?.status === "draft" && p?.voteId);
+    if (!ownDraft) {
+      console.warn("PUT /proposals/:proposalId regression skipped: no own draft proposal found");
+      return;
+    }
+
+    const voteRes = await fetch(`${API_BASE_URL}/votes/${ownDraft.voteId}`);
+    if (voteRes.status !== 200) {
+      console.warn("PUT /proposals/:proposalId regression skipped: could not load vote");
+      return;
+    }
+    const vote = await voteRes.json();
+    if (vote?.depositOptions?.treasuryDonation == null) {
+      console.warn("PUT /proposals/:proposalId regression skipped: vote has no treasuryDonation configured");
+      return;
+    }
+
+    const payload = {
+      voteId: ownDraft.voteId,
+      title: ownDraft.title || "Regression title",
+      summary: ownDraft.summary || "",
+      status: "live",
+      metaData: {
+        ...(ownDraft.metaData || {}),
+        treasuryDonationTxHash:
+          ownDraft.metaData?.treasuryDonationTxHash ||
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      },
+    };
+
+    const res = await fetch(`${API_BASE_URL}/proposals/${ownDraft._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: session.cookieHeader,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    expect(res.status).not.toBe(500);
+    const body = await res.json().catch(() => ({}));
+    expect(JSON.stringify(body)).not.toMatch(/tokenResult is not defined/i);
   });
 
   it("GET /proposals?proposer=<userId> with auth returns 200", async () => {
