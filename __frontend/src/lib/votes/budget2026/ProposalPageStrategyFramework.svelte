@@ -36,18 +36,18 @@
 
 {#if hasContent}
   <section class="text-sm space-y-4 mt-8" id="strategy-framework">
-    <h2 class="text-2xl font-medium mb-2"
-      >Alignment to Cardano 2030 Strategy framework</h2
-    >
+    <h2 class="text-2xl font-medium mb-2">
+      Alignment to Cardano 2030 Strategy framework
+    </h2>
 
     <h3 class="text-lg font-medium mb-2 mt-4">
       To which strategic pillar does your proposal align the most?
     </h3>
 
     {#if selectedPillars.length > 0}
-      <div class="space-y-2 rounded-md border mb-4">
+      <div class="space-y-2 rounded-md mb-4">
         {#each selectedPillars as pillar (pillar?._id)}
-          <FormPillarCard {pillar} selected={true} readOnly={true} />
+          <FormPillarCard {pillar} selected={false} readOnly={true} />
         {/each}
       </div>
     {/if}
@@ -67,9 +67,9 @@
             title="Pillar rationale"
             onclick={() => (expandedRationale = !expandedRationale)}
           >
-            <h3 class="text-lg font-medium"
-              >Why have you selected those pillars?</h3
-            >
+            <h3 class="text-lg font-medium">
+              Why have you selected those pillars?
+            </h3>
           </button>
           <Button
             type="button"
@@ -118,15 +118,15 @@
             onclick={() => (expandedKpi = !expandedKpi)}
           >
             {#if expandedKpi}
-              <span class="pt-2 block"
-                >Does your proposal support any of the KPIs of the
-                strategy framework?</span
-              >
+              <span class="pt-2 block">
+                Does your proposal support any of the KPIs of the strategy
+                framework?
+              </span>
             {:else}
-              <span class="truncate"
-                >Does your proposal support any of the KPIs of the
-                strategy framework?</span
-              >
+              <span class="truncate">
+                Does your proposal support any of the KPIs of the strategy
+                framework?
+              </span>
             {/if}
           </button>
           <Button
