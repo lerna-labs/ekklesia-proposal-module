@@ -40,15 +40,17 @@ function getCommentStatusFilter(statusParam, isAdmin) {
     return { status: "live" };
   }
   const s = statusParam.trim().toLowerCase();
+  const normalizedStatus =
+    s === "withdrawnbyadmin" ? "withdrawnByAdmin" : s;
   if (!isAdmin) {
-    if (s !== "live") {
+    if (normalizedStatus !== "live") {
       return { error: true, message: "Only admins can filter comments by status other than live." };
     }
     return { status: "live" };
   }
-  if (s === "live") return { status: "live" };
-  if (s === "withdrawn") return { status: "withdrawnByAdmin" };
-  if (COMMENT_STATUSES.includes(s)) return { status: s };
+  if (normalizedStatus === "live") return { status: "live" };
+  if (normalizedStatus === "withdrawn") return { status: "withdrawnByAdmin" };
+  if (COMMENT_STATUSES.includes(normalizedStatus)) return { status: normalizedStatus };
   return { error: true, message: "Invalid status parameter. Must be: live, withdrawn, or withdrawnByAdmin." };
 }
 
@@ -121,8 +123,19 @@ function parsePaginationParams(query) {
   const rawPage = query.page;
   const rawLimit = query.limit;
 
-  const page = rawPage === undefined ? 1 : parseInt(rawPage, 10);
-  const limit = rawLimit === undefined ? 10 : parseInt(rawLimit, 10);
+  const integerPattern = /^\d+$/;
+  const page =
+    rawPage === undefined
+      ? 1
+      : (typeof rawPage === "string" && integerPattern.test(rawPage.trim())
+          ? Number(rawPage.trim())
+          : Number.NaN);
+  const limit =
+    rawLimit === undefined
+      ? 10
+      : (typeof rawLimit === "string" && integerPattern.test(rawLimit.trim())
+          ? Number(rawLimit.trim())
+          : Number.NaN);
 
   return { page, limit };
 }
