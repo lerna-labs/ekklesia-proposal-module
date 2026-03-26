@@ -51,7 +51,7 @@
         </Button>
       </div>
     {/if}
-    <ProposalPageTitle {proposal} {vote} />
+    <ProposalPageTitle {proposal} {vote} {commentCount} {commentsHref} {showComments} />
 
     <ProposalPageKeyDetails {proposal} {vote} {pillars} />
 

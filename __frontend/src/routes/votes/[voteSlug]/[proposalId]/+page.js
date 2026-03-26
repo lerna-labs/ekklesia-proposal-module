@@ -40,16 +40,14 @@ export async function load({ params, fetch, url }) {
 		error(404, `Proposal not found`);
 	}
 
-	let commentCount;
-	const isWithdrawn =
-		proposalData?.status === 'withdrawnByAdmin' || proposalData?.status === 'withdrawnByProposer';
-	if (isWithdrawn) {
+	let commentCount = proposalData?.commentCount ?? null;
+	const canShowComments =
+		proposalData?.status !== 'draft' && proposalData?.status !== 'archived';
+	if (canShowComments) {
 		const commentsRes = await api.fetch(fetch, `/comments?proposal=${proposalId}&page=1&limit=1`);
 		if (commentsRes.ok) {
 			const commentsJson = await commentsRes.json();
 			commentCount = commentsJson.meta?.total ?? 0;
-		} else {
-			commentCount = 0;
 		}
 	}
 
