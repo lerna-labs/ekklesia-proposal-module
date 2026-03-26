@@ -507,6 +507,59 @@ describe("Access with/without login", () => {
     expect(res.status).not.toBe(401);
   });
 
+  it("PUT /proposals/:proposalId does not throw tokenResult ReferenceError", async () => {
+    const session = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
+
+    const listRes = await fetch(
+      `${API_BASE_URL}/proposals?proposer=${encodeURIComponent(session.userId)}`,
+      { headers: { Cookie: session.cookieHeader } }
+    );
+    expect(listRes.status).toBe(200);
+    const listBody = await listRes.json();
+    const ownDraft = listBody.data?.find((p) => p?.status === "draft" && p?.voteId);
+    if (!ownDraft) {
+      console.warn("PUT /proposals/:proposalId regression skipped: no own draft proposal found");
+      return;
+    }
+
+    const voteRes = await fetch(`${API_BASE_URL}/votes/${ownDraft.voteId}`);
+    if (voteRes.status !== 200) {
+      console.warn("PUT /proposals/:proposalId regression skipped: could not load vote");
+      return;
+    }
+    const vote = await voteRes.json();
+    if (vote?.depositOptions?.treasuryDonation == null) {
+      console.warn("PUT /proposals/:proposalId regression skipped: vote has no treasuryDonation configured");
+      return;
+    }
+
+    const payload = {
+      voteId: ownDraft.voteId,
+      title: ownDraft.title || "Regression title",
+      summary: ownDraft.summary || "",
+      status: "live",
+      metaData: {
+        ...(ownDraft.metaData || {}),
+        treasuryDonationTxHash:
+          ownDraft.metaData?.treasuryDonationTxHash ||
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      },
+    };
+
+    const res = await fetch(`${API_BASE_URL}/proposals/${ownDraft._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: session.cookieHeader,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    expect(res.status).not.toBe(500);
+    const body = await res.json().catch(() => ({}));
+    expect(JSON.stringify(body)).not.toMatch(/tokenResult is not defined/i);
+  });
+
   it("GET /proposals?proposer=<userId> with auth returns 200", async () => {
     const session = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
     const res = await fetch(
