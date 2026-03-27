@@ -5,7 +5,7 @@
 | **Version** | 1.0.0   |
 | **Last revised** | 2026-03-14 |
 
-Tests for the Ekklesia Proposal Module API. **Login smoke test:** `tests/login.test.js`. **Full session/auth suite:** `tests/session.test.js`. **Performance (vote/proposal + rate limit):** `tests/performance.test.js`. See [docs/session-tests.md](docs/session-tests.md) and [docs/performance-test-plan.md](docs/performance-test-plan.md).
+Tests for the Ekklesia Proposal Module API. **Login smoke test:** `tests/login.test.js`. **Full session/auth suite:** `tests/session.test.js`. **Session rate-limit suite:** `tests/session-rate-limit.test.js`. **Performance (vote/proposal + rate limit):** `tests/performance.test.js`. See [docs/session-tests.md](docs/session-tests.md) and [docs/performance-test-plan.md](docs/performance-test-plan.md).
 
 ## Prerequisites
 
@@ -29,6 +29,7 @@ From the `__testkit` directory:
 npm test              # all tests
 npm run test:login    # only tests/login.test.js
 npm run test:session  # only tests/session.test.js
+npm run test:session:ratelimit  # only tests/session-rate-limit.test.js (POST /session limiter)
 npm run test:perf     # only tests/performance.test.js (HTTP only; set API_BASE_URL; optional PERF_* ids)
 npm run test:ratelimit  # only tests/performance-rate-limit.test.js (201 GETs → 429; no seed)
 npm run seed:perf     # seed one vote + 20k proposals (needs MongoDB); prints PERF_VOTE_ID, PERF_PROPOSAL_ID
@@ -49,7 +50,7 @@ The **login test** (`tests/login.test.js`) runs login → GET session → logout
 - **PUT /session** – valid signature, wrong/tampered signature, missing signature, nonce replay, signer/signature binding, invalid signType.
 - **GET /session** – with cookie, no cookie, expired token, invalid token, Bearer token.
 - **DELETE /session** – with cookie, no cookie, expired token, Bearer token.
-- **Rate limiting** – POST over 5/min → 429 (PUT limit test skipped; see plan).
+- **Rate limiting** – moved to `tests/session-rate-limit.test.js` to avoid polluting session/auth runs.
 - **Access** – public reads (countries, votes, proposals), POST /proposals without/with auth, own proposals.
 - **Optional** – Set-Cookie HttpOnly.
 
