@@ -80,6 +80,16 @@ router.get("/", async (req, res) => {
   try {
     const { search, slug, page = 1, limit = 10 } = req.query;
 
+    const stringQueryParams = { slug, search };
+    for (const [paramName, paramValue] of Object.entries(stringQueryParams)) {
+      if (paramValue !== undefined && typeof paramValue !== "string") {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${paramName} parameter type. Must be a string.`,
+        });
+      }
+    }
+
     // Validate pagination parameters
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
