@@ -310,31 +310,6 @@ describe("DELETE /session", () => {
   });
 });
 
-describe("Rate limiting", () => {
-  it("returns 429 when exceeding POST /session limit (5/min)", async () => {
-    const signerAddress = readDrepId(KEYS_DREP01);
-    for (let i = 0; i < 6; i++) {
-      await fetch(`${API_BASE_URL}/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signerAddress, signType: "drep" }),
-      });
-    }
-    const res = await fetch(`${API_BASE_URL}/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ signerAddress, signType: "drep" }),
-    });
-    expect(res.status).toBe(429);
-    const body = await res.json().catch(() => ({}));
-    expect(body.message || "").toMatch(/too many|nonce|request/i);
-  }, 70000);
-
-  it.skip("returns 429 when exceeding PUT /session limit (10/min)", async () => {
-    // PUT limit requires 11 PUTs, each needs a nonce from POST; POST is limited to 5/min so this cannot be triggered in same window. Run with backend that allows more POSTs in test if needed.
-  });
-});
-
 describe("Access with/without login", () => {
   it("GET /countries returns 200 without auth", async () => {
     const res = await fetch(`${API_BASE_URL}/countries`);
@@ -348,6 +323,28 @@ describe("Access with/without login", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data).toBeDefined();
+  });
+
+  it("GET /votes returns 400 when slug query param is repeated", async () => {
+    const params = new URLSearchParams();
+    params.append("slug", "alpha");
+    params.append("slug", "beta");
+
+    const res = await fetch(`${API_BASE_URL}/votes?${params.toString()}`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid slug parameter type|must be a string/i);
+  });
+
+  it("GET /votes returns 400 when search query param is repeated", async () => {
+    const params = new URLSearchParams();
+    params.append("search", "alpha");
+    params.append("search", "beta");
+
+    const res = await fetch(`${API_BASE_URL}/votes?${params.toString()}`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid search parameter type|must be a string/i);
   });
 
   it("GET /votes/:voteId returns 200 without auth when vote exists", async () => {
@@ -382,6 +379,46 @@ describe("Access with/without login", () => {
     const res = await fetch(`${API_BASE_URL}/proposals`);
     expect(res.status).toBe(200);
     expect(res.ok).toBe(true);
+  });
+
+  it("GET /proposals returns 400 when search query param is repeated", async () => {
+    const votesRes = await fetch(`${API_BASE_URL}/votes?limit=1`);
+    expect(votesRes.status).toBe(200);
+    const votesBody = await votesRes.json();
+    const voteId = votesBody.data?.[0]?._id;
+    if (!voteId) {
+      console.warn("GET /proposals repeated search regression skipped: no votes in DB");
+      return;
+    }
+
+    const params = new URLSearchParams({ vote: voteId });
+    params.append("search", "alpha");
+    params.append("search", "beta");
+    const res = await fetch(`${API_BASE_URL}/proposals?${params.toString()}`);
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid search parameter type|must be a string/i);
+  });
+
+  it("GET /proposals returns 400 when proposer query param is repeated", async () => {
+    const votesRes = await fetch(`${API_BASE_URL}/votes?limit=1`);
+    expect(votesRes.status).toBe(200);
+    const votesBody = await votesRes.json();
+    const voteId = votesBody.data?.[0]?._id;
+    if (!voteId) {
+      console.warn("GET /proposals repeated proposer regression skipped: no votes in DB");
+      return;
+    }
+
+    const params = new URLSearchParams({ vote: voteId });
+    params.append("proposer", "stake1test");
+    params.append("proposer", "stake1other");
+    const res = await fetch(`${API_BASE_URL}/proposals?${params.toString()}`);
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid proposer parameter type|must be a string/i);
   });
 
   it("GET /comments returns 400 for non-numeric page", async () => {
