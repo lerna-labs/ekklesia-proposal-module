@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import { dirname, join } from "path";
+import { pathToFileURL } from "url";
 
 /**
  * Recursively loads route files from a directory and registers them with the Express app
@@ -26,7 +27,7 @@ export async function loadRoutes(directory, app, baseRoute = "") {
         const routePath = `/${baseRoute}/${routeName}`.replace(/\/+/g, "/");
 
         // Use dynamic import for ESM compatibility
-        const routeModule = await import(`file://${fullPath}`);
+        const routeModule = await import(pathToFileURL(fullPath).href);
         const router = routeModule.default;
 
         if (router && typeof router.use === "function") {
