@@ -325,6 +325,28 @@ describe("Access with/without login", () => {
     expect(body.data).toBeDefined();
   });
 
+  it("GET /votes returns 400 when slug query param is repeated", async () => {
+    const params = new URLSearchParams();
+    params.append("slug", "alpha");
+    params.append("slug", "beta");
+
+    const res = await fetch(`${API_BASE_URL}/votes?${params.toString()}`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid slug parameter type|must be a string/i);
+  });
+
+  it("GET /votes returns 400 when search query param is repeated", async () => {
+    const params = new URLSearchParams();
+    params.append("search", "alpha");
+    params.append("search", "beta");
+
+    const res = await fetch(`${API_BASE_URL}/votes?${params.toString()}`);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.message).toMatch(/invalid search parameter type|must be a string/i);
+  });
+
   it("GET /votes/:voteId returns 200 without auth when vote exists", async () => {
     const listRes = await fetch(`${API_BASE_URL}/votes?limit=1`);
     expect(listRes.status).toBe(200);
