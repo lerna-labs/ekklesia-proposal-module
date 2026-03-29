@@ -28,6 +28,13 @@ export async function verifySignature(
         };
     }
 
+    // Special eject in case signature is null
+    if (signature === null) {
+        return {
+            error: "Signature is not a valid JSON object"
+        };
+    }
+
     // check if the signature is a JSON object
     if (typeof signature !== "object") {
         return {
