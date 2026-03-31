@@ -9,6 +9,7 @@
   import HashIcon from "@lucide/svelte/icons/hash";
   import UserIcon from "@lucide/svelte/icons/user";
   import ClockIcon from "@lucide/svelte/icons/clock";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
@@ -166,7 +167,7 @@
           {#if showVersionBadge && proposal.updatedAt != null}
             <span class={labelClass}>Last updated:</span>
             <span>
-              {new Date(proposal.updatedAt).toLocaleString(undefined, {
+              {formatUtcInstant(proposal.updatedAt, {
                 dateStyle: "long",
                 timeStyle: "short",
               })}
@@ -174,7 +175,7 @@
           {:else if proposal.submittedAt != null}
             <span class={labelClass}>Submitted at:</span>
             <span>
-              {new Date(proposal.submittedAt).toLocaleString(undefined, {
+              {formatUtcInstant(proposal.submittedAt, {
                 dateStyle: "long",
                 timeStyle: "short",
               })}
@@ -193,7 +194,7 @@
     {#if proposal.withdrawalDetails}
       {@const wd = proposal.withdrawalDetails}
       {@const withdrawalDate = wd?.date
-        ? new Date(wd.date).toLocaleString(undefined, {
+        ? formatUtcInstant(wd.date, {
             dateStyle: "long",
             timeStyle: "short",
           })

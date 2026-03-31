@@ -7,6 +7,7 @@
   import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import { Button } from "$lib/components/ui/button";
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
@@ -60,11 +61,7 @@
   }
 
   function formatUpdatedAt(updatedAt) {
-    if (!updatedAt) return "—";
-    const d = new Date(updatedAt);
-    return Number.isNaN(d.getTime())
-      ? "—"
-      : d.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+    return formatUtcInstant(updatedAt, { dateStyle: "short", timeStyle: "short" });
   }
 
   function displayTitle(proposal) {

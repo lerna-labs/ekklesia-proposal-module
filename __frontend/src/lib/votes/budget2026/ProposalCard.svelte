@@ -10,6 +10,7 @@
   import HomeIcon from "@lucide/svelte/icons/home";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import * as Popover from "$lib/components/ui/popover";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import { formatAda } from "$lib/utils.js";
@@ -142,7 +143,7 @@
           >Submitted on:</span
         >
         <span class="text-black text-xs"
-          >{new Date(proposal.updatedAt).toLocaleString(undefined, {
+          >{formatUtcInstant(proposal.submittedAt, {
             dateStyle: "short",
             timeStyle: "short",
           })}</span
@@ -153,7 +154,7 @@
           >Last edited on:</span
         >
         <span class="text-black font-normal text-xs">
-          {new Date(proposal.submittedAt).toLocaleString(undefined, {
+          {formatUtcInstant(proposal.updatedAt, {
             dateStyle: "short",
             timeStyle: "short",
           })}
@@ -164,7 +165,7 @@
     {#if proposal.withdrawalDetails}
       {@const wd = proposal.withdrawalDetails}
       {@const withdrawalDate = wd?.date
-        ? new Date(wd.date).toLocaleString(undefined, {
+        ? formatUtcInstant(wd.date, {
             dateStyle: "long",
             timeStyle: "short",
           })

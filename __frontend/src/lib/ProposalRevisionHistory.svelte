@@ -10,6 +10,7 @@
     sectionMapping as budget2026SectionMapping,
     sectionOrder as budget2026SectionOrder,
   } from "$lib/forms/budget2026/revisionSectionMapping.js";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -181,7 +182,7 @@
 
   function formatTimestamp(d) {
     if (!d) return "";
-    return new Date(d).toLocaleString(undefined, {
+    return formatUtcInstant(d, {
       dateStyle: "long",
       timeStyle: "short",
     });

@@ -16,6 +16,10 @@
   import InfoIcon from "@lucide/svelte/icons/info";
   import { toast } from "svelte-sonner";
 
+  import { formatUtcInstant } from "$lib/formatUtc.js";
+  import Markdown from "$lib/base/Markdown.svelte";
+  import * as Accordion from "$lib/components/ui/accordion/index.js";
+
   let { proposal, vote, pillars = [] } = $props();
 
   let otherAdminModalOpen = $state(false);
@@ -237,7 +241,7 @@
                   title="Click to see submitted date"
                   aria-label="Show submitted date"
                 >
-                  {new Date(updatedAt).toLocaleString(undefined, dateOptions)}
+                  {formatUtcInstant(updatedAt, dateOptions)}
                 </Popover.Trigger>
                 <Popover.Content class="w-auto p-3" align="start">
                   <div class="text-xs space-y-1">
@@ -246,10 +250,7 @@
                         <span class="font-medium text-muted-foreground">
                           Submitted:
                         </span>
-                        {new Date(submittedAt).toLocaleString(
-                          undefined,
-                          dateOptions,
-                        )}
+                        {formatUtcInstant(submittedAt, dateOptions)}
                       </p>
                     {:else}
                       <p class="text-muted-foreground">
@@ -262,7 +263,7 @@
             {:else if submittedAt != null}
               <span class={labelClass}>Submitted at:</span>
               <span>
-                {new Date(submittedAt).toLocaleString(undefined, dateOptions)}
+                {formatUtcInstant(submittedAt, dateOptions)}
               </span>
             {/if}
           </div>

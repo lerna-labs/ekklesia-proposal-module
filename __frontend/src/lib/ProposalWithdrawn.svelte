@@ -1,5 +1,6 @@
 <script>
   import * as Alert from "$lib/components/ui/alert-dialog/index.js";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
 
   let { proposal, open = $bindable(false) } = $props();
@@ -10,7 +11,7 @@
     {#if proposal}
       {@const wd = proposal.withdrawalDetails}
       {@const withdrawalDate = wd?.date
-        ? new Date(wd.date).toLocaleString(undefined, {
+        ? formatUtcInstant(wd.date, {
             dateStyle: "medium",
             timeStyle: "short",
           })

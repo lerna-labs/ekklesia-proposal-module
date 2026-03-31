@@ -4,7 +4,8 @@
   import { shortenString } from "$lib/utils.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
-  import Timestamp from "$lib/base/Timestamp.svelte";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
+  import Timestamp from "./CommentCardTimestamp.svelte";
   import {
     Heart,
     MessageSquare,
@@ -106,13 +107,10 @@
         </p>
 
         <p class="text-black italic text-xs">
-          Withdrawn on {new Date(comment.withdrawalDetails.date).toLocaleString(
-            undefined,
-            {
-              dateStyle: "long",
-              timeStyle: "short",
-            },
-          )}
+          Withdrawn on {formatUtcInstant(comment.withdrawalDetails.date, {
+            dateStyle: "long",
+            timeStyle: "short",
+          })}
           by {shortenString(comment.withdrawalDetails.userId, 12, true)}
         </p>
       </div>
