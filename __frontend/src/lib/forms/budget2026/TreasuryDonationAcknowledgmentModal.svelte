@@ -49,7 +49,7 @@
           Proposals submitted through this form will follow the defined
           budgeting workflow, which includes
           <strong>
-            DRep feedback, DRep off-chain voting, ahead of the on-chain treasury
+            DRep feedback, DRep Hydra voting, ahead of the on-chain treasury
             withdrawals.
           </strong>
         </p>
