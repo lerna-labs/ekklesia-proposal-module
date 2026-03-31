@@ -261,18 +261,67 @@ export function pubKeyToBech32(key, prefix = "drep", script = false) {
                 const [addr_header, addr_body] = extractParts(key);
                 const payment_key_hash = addr_body.substring(0, 56);
                 const stake_key_hash = addr_body.substring(56);
-                switch (addr_header) {
-                    case "00":
-                        prefix = "addr_test";
-                        paymentKeyHash = Ed25519KeyHash.from_hex(payment_key_hash);
-                        stakeKeyHash = Ed25519KeyHash.from_hex(stake_key_hash);
-                        break;
-                    case "01":
-                        prefix = "addr";
-                        paymentKeyHash = Ed25519KeyHash.from_hex(payment_key_hash);
-                        stakeKeyHash = Ed25519KeyHash.from_hex(stake_key_hash);
-                        break;
+
+                // Determine network prefix from header
+                const testnet_headers = [
+                    "00", "10", "20", "30", "40", "50", "60", "70",
+                ];
+                const mainnet_headers = [
+                    "01", "11", "21", "31", "41", "51", "61", "71",
+                ];
+
+                if (testnet_headers.includes(addr_header)) {
+                    prefix = "addr_test";
+                } else if (mainnet_headers.includes(addr_header)) {
+                    prefix = "addr";
+                } else {
+                    throw new Error("Invalid address header");
                 }
+
+                // Enterprise addresses (6x, 7x) have no stake portion
+                const is_enterprise = ["60", "61", "70", "71"].includes(addr_header);
+                // Pointer addresses (4x, 5x) have variable-length stake pointer
+                const is_pointer = ["40", "41", "50", "51"].includes(addr_header);
+
+                // Payment credential uses ScriptHash for types 1, 3, 5, 7
+                const payment_is_script = [
+                    "10", "11", "30", "31", "50", "51", "70", "71",
+                ].includes(addr_header);
+
+                // Stake credential uses ScriptHash for types 2, 3
+                const stake_is_script = [
+                    "20", "21", "30", "31",
+                ].includes(addr_header);
+
+                // Length validation
+                if (is_enterprise) {
+                    if (addr_body.length !== 56) {
+                        throw new Error("Invalid enterprise address length");
+                    }
+                } else if (!is_pointer) {
+                    // Base addresses must have payment (56) + stake (56) = 112
+                    if (addr_body.length !== 112) {
+                        throw new Error("Invalid base address length");
+                    }
+                }
+                // Pointer addresses have variable length, skip strict check
+
+                // Validate payment credential
+                if (payment_is_script) {
+                    paymentKeyHash = ScriptHash.from_hex(payment_key_hash);
+                } else {
+                    paymentKeyHash = Ed25519KeyHash.from_hex(payment_key_hash);
+                }
+
+                // Validate stake credential (if present)
+                if (!is_enterprise && !is_pointer) {
+                    if (stake_is_script) {
+                        stakeKeyHash = ScriptHash.from_hex(stake_key_hash);
+                    } else {
+                        stakeKeyHash = Ed25519KeyHash.from_hex(stake_key_hash);
+                    }
+                }
+
                 key_hex = key;
                 break;
             case "drep":
