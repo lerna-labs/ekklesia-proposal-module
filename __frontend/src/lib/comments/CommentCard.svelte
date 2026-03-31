@@ -4,7 +4,7 @@
   import { shortenString } from "$lib/utils.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
-  import Timestamp from "./Timestamp.svelte";
+  import Timestamp from "./CommentCardTimestamp.svelte";
   import {
     Heart,
     MessageSquare,
