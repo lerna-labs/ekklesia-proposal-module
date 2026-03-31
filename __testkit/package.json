@@ -1,0 +1,30 @@
+{
+  "name": "__testkit",
+  "version": "1.0.0",
+  "description": "Tests for the Ekklesia Proposal Module API",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:login": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/login.test.js",
+    "test:session": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session.test.js",
+    "test:session:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session-rate-limit.test.js --testTimeout=70000",
+    "test:loadroutes": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/loadRoutes.test.js",
+    "test:perf": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance.test.js --testTimeout=300000",
+    "test:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance-rate-limit.test.js --testTimeout=60000",
+    "seed:perf": "node scripts/seed-perf.js",
+    "seed:perf:teardown": "node scripts/seed-perf.js --teardown"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "jest": "^30.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.0"
+  }
+}

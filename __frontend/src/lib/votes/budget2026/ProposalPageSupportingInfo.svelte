@@ -15,8 +15,8 @@
 </script>
 
 {#if links.length > 0}
-  <section class="text-sm mb-8 mt-12">
-    <h2 class="text-2xl font-medium mb-4">Other supporting information</h2>
+  <section class="text-sm mb-8 mt-12" id="supporting-info">
+    <h2 class="text-2xl font-medium mb-4">Other Supporting Information</h2>
     <ul class="space-y-0.5 list-none p-0">
       {#each links as link (link.url)}
         <li>

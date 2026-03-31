@@ -382,7 +382,7 @@
         </AlertDialog.Action>
       {/if}
       <AlertDialog.Action
-        class={buttonVariants({ variant: "secondary" })}
+        class={buttonVariants({ variant: "destructive" })}
         onclick={confirmLeave}
       >
         Yes, discard unsaved changes

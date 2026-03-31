@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 /**
  * Rate limiter for nonce requests (POST /session).
@@ -82,7 +82,8 @@ export const deleteSessionLimiter = rateLimit({
 export const authenticatedWriteLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10,
-  keyGenerator: (req) => req.userId?.toString() ?? req.ip,
+  // Use express-rate-limit helper for IPv6-safe IP fallback keying.
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
   message: {
     status: "error",
     message: "Too many requests. Please try again later.",

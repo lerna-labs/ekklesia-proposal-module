@@ -18,6 +18,12 @@
   let { proposal, vote, showLink = true, class: className } = $props();
   let revisionDrawerOpen = $state(false);
 
+  function capitalizeFirst(val) {
+    const s = (val ?? "").toString();
+    if (!s) return "";
+    return s[0].toUpperCase() + s.slice(1);
+  }
+
   const isOwnProposal = $derived(
     $user?.userId &&
       proposal?.proposerId &&
@@ -73,17 +79,19 @@
       >
     </Card.Title>
     <Card.Description>
-      <div class="line-clamp-1 text-md mb-1">
-        <span class="text-foreground-muted italic">Proposer Name:</span>
-        <span class="text-black">
+      <div class="text-xs font-medium text-muted-foreground mb-1">
+        <span class="">Proposer Name:</span>
+        <span class="text-black font-normal">
           {proposal.metaData?.proposerDetails?.name}
         </span>
       </div>
 
-      <div class="text-xs text-foreground-muted">
-        <span class="text-foreground-muted italic">
-          Proposer type: <span class="text-black">
-            {proposal.metaData?.contractingParty?.legalEntityType}
+      <div class="text-xs font-medium text-muted-foreground mb-1">
+        <span class="">
+          Proposer Type: <span class="text-black font-normal">
+            {capitalizeFirst(
+              proposal.metaData?.contractingParty?.legalEntityType,
+            )}
           </span>
         </span>
       </div>
@@ -92,22 +100,34 @@
   <Card.Content class="space-y-3 px-4 sm:px-6">
     <!-- Description block: medium bold labels -->
 
-    <div class="border-2 border-black p-1 px-2 w-fit mt-2 mb-4">
-      <div class="text-black/50 italic text-xs">Requested Budget</div>
-      <div class="text-black font-semibold text-md">
-        {formatAda(proposal.metaData?.totalBudget)} ADA
-      </div>
-      <div class="text-black/50 italic text-xs">
-        USD equivalent ${formatUsd(
-          proposal.metaData?.totalBudget *
-            (proposal.metaData?.conversionRate ?? 0),
-        )} (ADA/USD {proposal.metaData?.conversionRate ?? 0})
-      </div>
-    </div>
+    <Card.Root
+      class="rounded-lg border bg-card shadow-sm p-4 mt-2 mb-6 w-fit min-w-[200px] gap-0"
+    >
+      <Card.Header class="p-0 m-0">
+        <Card.Title
+          class="text-xs font-medium text-muted-foreground leading-none"
+        >
+          Requested Budget
+        </Card.Title>
+      </Card.Header>
+      <Card.Content class="p-0 pt-0 space-y-1">
+        <div class="text-black font-semibold text-md">
+          {formatAda(proposal.metaData?.totalBudget)} ADA
+        </div>
+        <div class="text-muted-foreground text-xs">
+          USD equivalent ${formatUsd(
+            proposal.metaData?.totalBudget *
+              (proposal.metaData?.conversionRate ?? 0),
+          )} (ADA/USD {proposal.metaData?.conversionRate ?? 0})
+        </div>
+      </Card.Content>
+    </Card.Root>
 
     {#if proposal.summary}
       <div>
-        <div class="text-xs text-black/50 italic">Overview:</div>
+        <div class="text-xs font-medium text-muted-foreground mb-1"
+          >Overview:</div
+        >
         <div class="text-sm line-clamp-10 ++:first:mt-0">
           <Markdown
             content={proposal.summary}
@@ -117,20 +137,24 @@
       </div>
     {/if}
 
-    <div class="flex justify-between text-xs italic mt-0">
+    <div class="flex justify-between mt-0">
       <div>
-        <span class="text-black/50">Submitted on:</span>
-        <span class="text-black font-semibold"
-          >{formatUtcInstant(proposal.updatedAt, {
+        <span class="text-xs font-medium text-muted-foreground mb-1"
+          >Submitted on:</span
+        >
+        <span class="text-black text-xs"
+          >{formatUtcInstant(proposal.submittedAt, {
             dateStyle: "short",
             timeStyle: "short",
           })}</span
         >
       </div>
       <div>
-        <span class="text-black/50">Last edited on:</span>
-        <span class="text-black font-semibold">
-          {formatUtcInstant(proposal.submittedAt, {
+        <span class="text-xs font-medium text-muted-foreground mb-1"
+          >Last edited on:</span
+        >
+        <span class="text-black font-normal text-xs">
+          {formatUtcInstant(proposal.updatedAt, {
             dateStyle: "short",
             timeStyle: "short",
           })}

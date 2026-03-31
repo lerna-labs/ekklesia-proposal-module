@@ -8,8 +8,9 @@
   import ProposalPageWorkPackages from "./ProposalPageWorkPackages.svelte";
   import ProposalPageBudgetSummary from "./ProposalPageBudgetSummary.svelte";
   import ProposalPageSupportingInfo from "./ProposalPageSupportingInfo.svelte";
+  import ProposalPageExecutiveSummary from "./ProposalPageExecutiveSummary.svelte";
+  import ProposalPageBudgetAdministration from "./ProposalPageBudgetAdministration.svelte";
   import ProposalPageComments from "./ProposalPageComments.svelte";
-  import * as Card from "$lib/components/ui/card";
 
   let {
     proposal,
@@ -50,14 +51,20 @@
         </Button>
       </div>
     {/if}
-    <ProposalPageTitle {proposal} {vote} />
+    <ProposalPageTitle {proposal} {vote} {commentCount} {commentsHref} {showComments} />
 
     <ProposalPageKeyDetails {proposal} {vote} {pillars} />
 
+    <ProposalPageExecutiveSummary {proposal} />
+
     <ProposalPageStrategyFramework {proposal} {pillars} />
 
-    <ProposalPageBudgetSummary {proposal} />
     <ProposalPageWorkPackages {proposal} />
+
+    <ProposalPageBudgetSummary {proposal} />
+
+    <ProposalPageBudgetAdministration {proposal} />
+
     <ProposalPageSupportingInfo {proposal} />
   </div>
 </div>

@@ -133,7 +133,7 @@ export async function getProposal(req, res, next) {
  * - req.isScript: Boolean indicating if the address is a script address
  */
 export function validateSessionRequest(req, res, next) {
-  let { signerAddress, signType } = req.body;
+  let { signerAddress, signType } = req.body || {};
 
   // Check if signerAddress exists in the request
   if (!signerAddress) {
@@ -148,6 +148,22 @@ export function validateSessionRequest(req, res, next) {
     return res.status(400).json({
       status: "error",
       message: "Missing signType in request body",
+    });
+  }
+
+  // Check if signerAddress is a string
+  if (typeof signerAddress !== "string") {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid address format",
+    });
+  }
+
+  // Check if signType is a string
+  if (typeof signType !== "string") {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid signType format",
     });
   }
 

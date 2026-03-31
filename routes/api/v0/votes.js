@@ -16,22 +16,18 @@ import mongoose from "mongoose";
  * @param {string} voteId - MongoDB ObjectId of the vote cycle
  *
  * @returns {Object} 200 - Vote document
- * @returns {Object} 400 - Invalid voteId format
  * @returns {Object} 404 - Vote not found
  */
-router.get("/:voteId", async (req, res) => {
+router.get("/:voteId", async (req, res, next) => {
   try {
     const { voteId } = req.params;
 
-    // Validate voteId format
+    // Not an ObjectId candidate: let the slug route handle it.
     if (
       !mongoose.Types.ObjectId.isValid(voteId) ||
       voteId.length !== 24
     ) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid voteId parameter. Must be a valid ObjectId.",
-      });
+      return next();
     }
 
     // Find vote by ID (exclude validationScript from response)
@@ -83,6 +79,16 @@ router.get("/:voteId", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const { search, slug, page = 1, limit = 10 } = req.query;
+
+    const stringQueryParams = { slug, search };
+    for (const [paramName, paramValue] of Object.entries(stringQueryParams)) {
+      if (paramValue !== undefined && typeof paramValue !== "string") {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${paramName} parameter type. Must be a string.`,
+        });
+      }
+    }
 
     // Validate pagination parameters
     const pageNum = parseInt(page, 10);
@@ -188,7 +194,8 @@ router.get("/", async (req, res) => {
  * @route GET /api/v0/votes/:slug
  * @description Get a single vote by slug.
  * @access Public
- * @note This route should come after /:voteId routes. Slugs that are 24-character hex strings will match :voteId first.
+ * @note This route is a fallback for non-ObjectId single-segment paths.
+ *       If :voteId receives a non-ObjectId value, it calls next() and falls through to this route.
  *
  * @param {string} slug - The slug of the vote to retrieve
  *

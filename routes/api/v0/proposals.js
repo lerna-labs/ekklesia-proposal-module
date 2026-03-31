@@ -546,7 +546,8 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       ];
       const validationResult = await validateProposalTreasuryTxHash(
         txHash,
-        String(tokenResult.userId ?? "").trim(),
+        // Requester identity is already resolved by isAuthenticated -> req.userId.
+        userId,
         voteDoc,
         { excludeProposalIds },
       );
@@ -746,6 +747,22 @@ router.get("/", async (req, res) => {
       limit = 10,
     } = req.query;
 
+    const stringQueryParams = {
+      search,
+      vote: voteParam,
+      proposer,
+      sort: sortParam,
+      direction,
+    };
+    for (const [paramName, paramValue] of Object.entries(stringQueryParams)) {
+      if (paramValue !== undefined && typeof paramValue !== "string") {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${paramName} parameter type. Must be a string.`,
+        });
+      }
+    }
+
     // Validate pagination parameters
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
@@ -766,7 +783,7 @@ router.get("/", async (req, res) => {
     }
 
     // Require vote parameter
-    if (!voteParam || typeof voteParam !== "string") {
+    if (!voteParam) {
       return res.status(400).json({
         status: "error",
         message: "The vote query parameter is required.",

@@ -1,7 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
-  import PillarContainer from "./PillarContainer.svelte";
+  import FormPillarCard from "$lib/forms/budget2026/FormPillarCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
@@ -9,8 +9,6 @@
 
   let { proposal, pillars = [] } = $props();
 
-  /** Which pillar rows are expanded. Index -> boolean. */
-  let expandedPillars = $state({});
   let expandedRationale = $state(true);
   let expandedKpi = $state(true);
 
@@ -20,18 +18,8 @@
   const selectedPillars = $derived.by(() => {
     const ids = Array.isArray(selectedPillarIds) ? selectedPillarIds : [];
     const options = Array.isArray(pillars) ? pillars : [];
-    return ids
-      .map((id) => options.find((p) => p?._id === id))
-      .filter(Boolean)
-      .map((p) => ({
-        title: p?.title ?? p?._id ?? "",
-        description: (p?.description ?? "").toString().trim(),
-      }));
+    return ids.map((id) => options.find((p) => p?._id === id)).filter(Boolean);
   });
-
-  function togglePillar(index) {
-    expandedPillars = { ...expandedPillars, [index]: !expandedPillars[index] };
-  }
 
   const pillarRationale = $derived(
     proposal?.metaData?.strategyFramework?.pillarRationale ?? "",
@@ -47,24 +35,21 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-4 mt-8">
-    <h2 class="text-2xl font-medium mb-2"
-      >Alignment to Cardano 2030 Strategy framework</h2
-    >
+  <section class="text-sm space-y-4 mt-8" id="strategy-framework">
+    <h2 class="text-2xl font-medium mb-2">
+      Alignment to Cardano 2030 Strategy framework
+    </h2>
+
+    <h3 class="text-lg font-medium mb-2 mt-4">
+      To which strategic pillar does your proposal align the most?
+    </h3>
 
     {#if selectedPillars.length > 0}
-      <ul class="list-none p-0 flex flex-wrap gap-2 mb-4">
-        {#each selectedPillars as pillar, i}
-          <li>
-            <PillarContainer
-              title={pillar.title}
-              content={pillar.description}
-              expanded={expandedPillars[i] === true}
-              ontoggle={() => togglePillar(i)}
-            />
-          </li>
+      <div class="space-y-2 rounded-md mb-4">
+        {#each selectedPillars as pillar (pillar?._id)}
+          <FormPillarCard {pillar} selected={false} readOnly={true} />
         {/each}
-      </ul>
+      </div>
     {/if}
 
     {#if pillarRationale.trim()}
@@ -82,7 +67,9 @@
             title="Pillar rationale"
             onclick={() => (expandedRationale = !expandedRationale)}
           >
-            <span class="truncate">Pillar Rationale</span>
+            <h3 class="text-lg font-medium">
+              Why have you selected those pillars?
+            </h3>
           </button>
           <Button
             type="button"
@@ -118,15 +105,29 @@
           : 'pb-2'} bg-slate-50 rounded-md border"
       >
         <Card.Header
-          class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
+          class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm {expandedKpi
+            ? 'items-start min-h-10'
+            : 'items-center h-10 min-h-10'}"
         >
           <button
             type="button"
-            class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
+            class="min-w-0 flex-1 font-medium text-left cursor-pointer focus:outline-none text-lg leading-6 flex items-center gap-2 {expandedKpi
+              ? ''
+              : 'truncate'}"
             title="KPI alignment"
             onclick={() => (expandedKpi = !expandedKpi)}
           >
-            <span class="truncate">KPI Alignment</span>
+            {#if expandedKpi}
+              <span class="pt-2 block">
+                Does your proposal support any of the KPIs of the strategy
+                framework?
+              </span>
+            {:else}
+              <span class="truncate">
+                Does your proposal support any of the KPIs of the strategy
+                framework?
+              </span>
+            {/if}
           </button>
           <Button
             type="button"

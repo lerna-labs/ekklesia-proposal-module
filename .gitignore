@@ -3,7 +3,7 @@ node_modules/
 logs/
 backup/data/
 public/
-__testkit/
+__testkit/keys
 
 .env*
 !.env.example
