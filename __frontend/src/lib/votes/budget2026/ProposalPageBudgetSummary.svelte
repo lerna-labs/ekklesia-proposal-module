@@ -131,7 +131,9 @@
         <div class="rounded-md border overflow-x-auto bg-white">
           <table class="w-full caption-bottom text-sm border-collapse">
             <thead class="text-xs">
-              <tr class="border-b transition-colors hover:bg-muted/50">
+              <tr
+                class="text-muted-foreground transition-colors hover:bg-muted/50"
+              >
                 <th class="h-9 px-3 text-left align-middle font-medium">
                   Work Package / Item
                 </th>
@@ -150,7 +152,9 @@
             <tbody>
               {#each summaryRows as row, idx}
                 {@const wp = workPackageBudgetItems[idx]}
-                <tr class="border-b bg-(--mbo-cardano-blue)/10">
+                <tr
+                  class="border-b bg-[#E7E9F5] border-t-2 border-t-(--mbo-cardano-blue)"
+                >
                   <td class="p-3 align-top font-medium" colspan="2">
                     <a
                       href={`#work-package-${idx + 1}`}
@@ -160,9 +164,10 @@
                     </a>
                   </td>
                   <td class="p-3 text-right align-top tabular-nums">
-                    <span class="font-medium"
-                      >{formatAda(row.totalAda)} ADA</span
-                    ><br />
+                    <span class="font-medium">
+                      {formatAda(row.totalAda)} ADA
+                    </span>
+                    <br />
                     <span class="text-xs text-muted-foreground">
                       {row.totalUsd != null
                         ? "$" + formatUsd(row.totalUsd)
@@ -191,7 +196,8 @@
                       <td
                         class="px-3 py-2 text-right align-top tabular-nums text-xs"
                       >
-                        {formatAda(item.totalAda)} ADA<br />
+                        {formatAda(item.totalAda)} ADA
+                        <br />
                         <span class="text-[11px] text-muted-foreground">
                           {item.totalUsd != null
                             ? "$" + formatUsd(item.totalUsd)
@@ -207,15 +213,18 @@
             </tbody>
             <tfoot>
               {#if isIntersect}
-                <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
+                <tr
+                  class="bg-[#B5C0FF] text-(--mbo-cardano-blue) font-medium border-t-2 border-t-(--mbo-cardano-blue)"
+                >
                   <td class="p-3" colspan="3">
                     <div class="flex items-baseline justify-between gap-2">
-                      <span class="font-medium"
-                        >Intersect Budget Administration fee</span
-                      >
+                      <span class="font-medium">
+                        Intersect Budget Administration fee
+                      </span>
                       <span class="text-right tabular-nums">
-                        {formatAda(adminFeeAda)} ADA<br />
-                        <span class="text-xs text-white/50">
+                        {formatAda(adminFeeAda)} ADA
+                        <br />
+                        <span class="text-xs text-(--mbo-cardano-blue)/60">
                           {adminFeeUsd != null
                             ? "$" + formatUsd(adminFeeUsd)
                             : "—"} (ADA/USD {conversionRateNum})
@@ -230,7 +239,8 @@
                   <div class="flex items-baseline justify-between gap-2">
                     <span class="font-medium">Total budget</span>
                     <span class="text-right tabular-nums">
-                      {formatAda(totalDisplayAda)} ADA<br />
+                      {formatAda(totalDisplayAda)} ADA
+                      <br />
                       <span class="text-xs text-white/50">
                         {totalDisplayUsd != null
                           ? "$" + formatUsd(totalDisplayUsd)
@@ -253,8 +263,9 @@
           {#if treasuryRepayment === "Yes"}
             <Badge
               class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-              >Yes</Badge
             >
+              Yes
+            </Badge>
 
             <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
               Under what circumstances would a repayment occur?
@@ -267,8 +278,9 @@
           {:else}
             <Badge
               class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-              >No</Badge
             >
+              No
+            </Badge>
           {/if}
         </section>
 
