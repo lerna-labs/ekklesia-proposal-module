@@ -7,6 +7,7 @@
     writePreviewPayload,
     clearPreviewStorage,
   } from "$lib/previewProposalStorage.js";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
   const DEBUG_AUTOSAVE = true;
@@ -296,11 +297,7 @@
   });
 
   function formatLastSaved(ts) {
-    if (ts == null) return "—";
-    return new Date(ts).toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatUtcInstant(ts, { hour: "2-digit", minute: "2-digit" });
   }
 </script>
 

@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import ArrowRightIcon from "@lucide/svelte/icons/arrow-right";
   import { Badge } from "$lib/components/ui/badge";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import Budget2026ProposalPage from "$lib/votes/budget2026/ProposalPage.svelte";
   import DefaultProposalPage from "$lib/votes/default/ProposalPage.svelte";
@@ -91,7 +92,7 @@
   const withdrawalDate = $derived.by(() => {
     const d = withdrawalDetails?.date;
     if (!d) return null;
-    return new Date(d).toLocaleString(undefined, {
+    return formatUtcInstant(d, {
       dateStyle: "long",
       timeStyle: "short",
     });

@@ -1,5 +1,6 @@
 <script>
   import * as Popover from "$lib/components/ui/popover";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
 
   let { value = null, class: className = "" } = $props();
 
@@ -14,8 +15,6 @@
       return () => clearInterval(id);
     }
   });
-
-  const utc = { timeZone: "UTC" };
 
   function formatRelative(date) {
     if (!date || isNaN(date.getTime())) return "—";
@@ -41,16 +40,19 @@
     ) {
       return "Yesterday";
     }
-    return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", ...utc })} UTC`;
+    return formatUtcInstant(d, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   function formatExact(date) {
     if (!date || isNaN(date.getTime())) return "—";
-    return `${date.toLocaleString(undefined, {
+    return formatUtcInstant(date, {
       dateStyle: "medium",
       timeStyle: "short",
-      ...utc,
-    })} UTC`;
+    });
   }
 
   const date = $derived(value ? new Date(value) : null);

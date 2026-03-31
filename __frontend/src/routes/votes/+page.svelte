@@ -4,15 +4,14 @@
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
   import * as Pagination from "$lib/components/ui/pagination";
+  import { formatUtcInstant } from "$lib/formatUtc.js";
 
   let { data } = $props();
   let votes = $derived(data.votes ?? []);
   let meta = $derived(data.meta ?? {});
 
   function formatDate(iso) {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { dateStyle: "medium" });
+    return formatUtcInstant(iso, { dateStyle: "medium" });
   }
 
   function navigate(pageNum) {
