@@ -15,6 +15,8 @@
     }
   });
 
+  const utc = { timeZone: "UTC" };
+
   function formatRelative(date) {
     if (!date || isNaN(date.getTime())) return "—";
     const d = date;
@@ -25,22 +27,30 @@
 
     if (diffSec < 60) return "Just now";
     if (diffMin < 60) return diffMin === 1 ? "1 minute ago" : `${diffMin} minutes ago`;
-    const sameDay = d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+    const sameDay =
+      d.getUTCDate() === n.getUTCDate() &&
+      d.getUTCMonth() === n.getUTCMonth() &&
+      d.getUTCFullYear() === n.getUTCFullYear();
     if (sameDay) return "Today";
-    const yesterday = new Date(n);
-    yesterday.setDate(yesterday.getDate() - 1);
-    if (d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear()) {
+    const yesterdayUtc = new Date(n.getTime());
+    yesterdayUtc.setUTCDate(yesterdayUtc.getUTCDate() - 1);
+    if (
+      d.getUTCDate() === yesterdayUtc.getUTCDate() &&
+      d.getUTCMonth() === yesterdayUtc.getUTCMonth() &&
+      d.getUTCFullYear() === yesterdayUtc.getUTCFullYear()
+    ) {
       return "Yesterday";
     }
-    return d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+    return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", ...utc })} UTC`;
   }
 
   function formatExact(date) {
     if (!date || isNaN(date.getTime())) return "—";
-    return date.toLocaleString(undefined, {
+    return `${date.toLocaleString(undefined, {
       dateStyle: "medium",
       timeStyle: "short",
-    });
+      ...utc,
+    })} UTC`;
   }
 
   const date = $derived(value ? new Date(value) : null);
