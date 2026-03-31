@@ -252,7 +252,7 @@
 
           {#if treasuryRepayment === "Yes"}
             <Badge
-              class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal shrink-0"
+              class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
               >Yes</Badge
             >
 
@@ -266,7 +266,7 @@
             />
           {:else}
             <Badge
-              class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0 font-normal shrink-0"
+              class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
               >No</Badge
             >
           {/if}
