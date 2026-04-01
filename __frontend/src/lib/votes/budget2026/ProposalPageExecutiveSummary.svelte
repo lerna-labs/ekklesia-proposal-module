@@ -1,24 +1,47 @@
 <script>
   import Markdown from "$lib/base/Markdown.svelte";
+  import ItemContainer from "./ItemContainer.svelte";
+  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   let { proposal } = $props();
+  let expandedSummary = $state(true);
+  let expandedTrackRecord = $state(true);
 </script>
 
 <section id="executive-summary">
-  <h2 class="text-2xl font-medium mb-4 mt-8"> Proposal Overview </h2>
+  <h2 class="text-2xl font-medium mb-4 mt-8">Proposal Overview</h2>
 
-  <h3 class="text-lg font-medium mb-2 mt-4"
-    >Please describe your whole proposal at high level</h3
+  <CollapsibleCard
+    class="mt-4"
+    expanded={expandedSummary}
+    onToggle={() => (expandedSummary = !expandedSummary)}
+    expandLabel="Expand proposal overview"
+    collapseLabel="Collapse proposal overview"
+    titleClass="text-lg font-medium leading-6"
   >
-  <p class="text-sm">
-    <Markdown content={proposal?.summary} />
-  </p>
+    {#snippet title()}
+      Please describe your whole proposal at high level
+    {/snippet}
+    <ItemContainer>
+      <Markdown content={proposal?.summary} class="text-sm" />
+    </ItemContainer>
+  </CollapsibleCard>
 
   {#if proposal?.metaData?.trackRecord}
-    <h3 class="text-lg font-medium mb-2 mt-4" id="track-record"
-      >Why are you the best suited to deliver this work?</h3
+    <CollapsibleCard
+      id="track-record"
+      class="mt-2"
+      expanded={expandedTrackRecord}
+      onToggle={() => (expandedTrackRecord = !expandedTrackRecord)}
+      expandLabel="Expand track record"
+      collapseLabel="Collapse track record"
+      titleClass="text-lg font-medium leading-6"
     >
-    <p class="text-sm">
-      <Markdown content={proposal?.metaData?.trackRecord} />
-    </p>
+      {#snippet title()}
+        Why are you the best suited to deliver this work?
+      {/snippet}
+      <ItemContainer>
+        <Markdown content={proposal?.metaData?.trackRecord} class="text-sm" />
+      </ItemContainer>
+    </CollapsibleCard>
   {/if}
 </section>

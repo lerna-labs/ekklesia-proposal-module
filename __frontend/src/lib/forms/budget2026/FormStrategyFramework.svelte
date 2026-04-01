@@ -47,8 +47,9 @@
         class="link"
       >
         info action
-      </a>, which one does your proposal support or relate to the most. Before
-      selecting read the whole
+      </a>
+      , which one does your proposal support or relate to the most. Before selecting
+      read the whole
       <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
@@ -101,7 +102,7 @@
   <Field.Field class="gap-2">
     <h4>Why have you selected those pillars?</h4>
 
-    <p>
+    <p class="text-muted-foreground">
       Provide a rationale about why those pillars align the most to your
       proposal and how your proposal supports them. Look also at the <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
@@ -129,7 +130,7 @@
     <h4>
       Does your proposal support any of the KPIs of the strategy framework?
     </h4>
-    <p>
+    <p class="text-muted-foreground">
       Looking at the <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
@@ -139,14 +140,14 @@
       </a>
       provided in the strategy framwork, explain:
     </p>
-    <ul>
+    <ul class="text-muted-foreground">
       <li>if your proposal directly supports any of those and how</li>
       <li>
         AND / OR propose other additional to the existing list, describe why
         they are relevant and how your proposal relates to them.
       </li>
     </ul>
-    <p>
+    <p class="text-muted-foreground">
       For each selected KPI, explain the specific actions, methods, or
       approaches you will use to drive meaningful impact.
     </p>

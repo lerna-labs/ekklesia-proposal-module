@@ -27,13 +27,13 @@
 
 <h3 class="text-lg!">Please describe your whole proposal at high level</h3>
 
-<p>
+<p class="text-muted-foreground">
   Provide an high-level overview of the problem, proposed solution and value
   your overall proposal is providing with reference to Cardano's vision.
   Remember this is the first thing DReps will see.
 </p>
 
-<p>
+<p class="text-muted-foreground">
   Current Drep supported Cardano's Vision: "Cardano is the most secure, reliable
   and censorship-resistant blockchain for mission critical applications to power
   economies and societies of the future." <a
@@ -58,7 +58,7 @@
 />
 
 <h4>Why are you the best suited to deliver this work?</h4>
-<p>
+<p class="text-muted-foreground">
   Describe what previous experience and expertise you or your team have which is
   relevant for your proposal. Focus on proven history of delivery, mention
   previous successful proposals, mainnet deployments, or relevant enterprise
@@ -80,7 +80,7 @@
   How long will your proposal need to be fully delivered? Or if you are
   requesting funding for operations, how many months will this budget cover?
 </h4>
-<p>
+<p class="text-muted-foreground">
   Provide an estimated duration from the start of the work to completion. Or if
   your proposal covers ongoing operations or services, specify the number of
   months this budget is intended to support.

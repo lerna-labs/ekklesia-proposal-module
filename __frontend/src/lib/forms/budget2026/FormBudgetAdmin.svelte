@@ -161,7 +161,7 @@
 
 <h3>Who will be the Administrator for this budget proposal if approved?</h3>
 
-<p>
+<p class="text-muted-foreground">
   Cardano's Constitution requires each Treasury Withdrawal to specify an
   Administrator and a third-party auditor. Fields marked with the eye-off icon
   contain information that will not be publicly visible and will only be used

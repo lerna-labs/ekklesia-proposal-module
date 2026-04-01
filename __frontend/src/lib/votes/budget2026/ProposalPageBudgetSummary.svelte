@@ -1,12 +1,15 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Badge } from "$lib/components/ui/badge";
+  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
 
   let { proposal } = $props();
+  let expandedPriorFunding = $state(true);
+  let expandedTreasuryRepayment = $state(true);
 
   const treasuryRepayment = $derived(
     proposal?.metaData?.treasuryRepayment ?? "",
@@ -131,7 +134,9 @@
         <div class="rounded-md border overflow-x-auto bg-white">
           <table class="w-full caption-bottom text-sm border-collapse">
             <thead class="text-xs">
-              <tr class="border-b transition-colors hover:bg-muted/50">
+              <tr
+                class="text-muted-foreground transition-colors hover:bg-muted/50"
+              >
                 <th class="h-9 px-3 text-left align-middle font-medium">
                   Work Package / Item
                 </th>
@@ -150,7 +155,9 @@
             <tbody>
               {#each summaryRows as row, idx}
                 {@const wp = workPackageBudgetItems[idx]}
-                <tr class="border-b bg-(--mbo-cardano-blue)/10">
+                <tr
+                  class="border-b bg-slate-200 border-t-2 border-t-(--mbo-cardano-blue)"
+                >
                   <td class="p-3 align-top font-medium" colspan="2">
                     <a
                       href={`#work-package-${idx + 1}`}
@@ -159,10 +166,13 @@
                       {row.title}
                     </a>
                   </td>
-                  <td class="p-3 text-right align-top tabular-nums">
-                    <span class="font-medium"
-                      >{formatAda(row.totalAda)} ADA</span
-                    ><br />
+                  <td
+                    class="p-3 text-right align-top tabular-nums whitespace-nowrap"
+                  >
+                    <span class="font-medium">
+                      {formatAda(row.totalAda)} ADA
+                    </span>
+                    <br />
                     <span class="text-xs text-muted-foreground">
                       {row.totalUsd != null
                         ? "$" + formatUsd(row.totalUsd)
@@ -191,7 +201,8 @@
                       <td
                         class="px-3 py-2 text-right align-top tabular-nums text-xs"
                       >
-                        {formatAda(item.totalAda)} ADA<br />
+                        {formatAda(item.totalAda)} ADA
+                        <br />
                         <span class="text-[11px] text-muted-foreground">
                           {item.totalUsd != null
                             ? "$" + formatUsd(item.totalUsd)
@@ -207,15 +218,18 @@
             </tbody>
             <tfoot>
               {#if isIntersect}
-                <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
+                <tr
+                  class="bg-[#B5C0FF] text-(--mbo-cardano-blue) font-medium border-t-2 border-t-(--mbo-cardano-blue)"
+                >
                   <td class="p-3" colspan="3">
                     <div class="flex items-baseline justify-between gap-2">
-                      <span class="font-medium"
-                        >Intersect Budget Administration fee</span
-                      >
+                      <span class="font-medium">
+                        Intersect Budget Administration fee
+                      </span>
                       <span class="text-right tabular-nums">
-                        {formatAda(adminFeeAda)} ADA<br />
-                        <span class="text-xs text-white/50">
+                        {formatAda(adminFeeAda)} ADA
+                        <br />
+                        <span class="text-xs text-(--mbo-cardano-blue)/60">
                           {adminFeeUsd != null
                             ? "$" + formatUsd(adminFeeUsd)
                             : "—"} (ADA/USD {conversionRateNum})
@@ -230,7 +244,8 @@
                   <div class="flex items-baseline justify-between gap-2">
                     <span class="font-medium">Total budget</span>
                     <span class="text-right tabular-nums">
-                      {formatAda(totalDisplayAda)} ADA<br />
+                      {formatAda(totalDisplayAda)} ADA
+                      <br />
                       <span class="text-xs text-white/50">
                         {totalDisplayUsd != null
                           ? "$" + formatUsd(totalDisplayUsd)
@@ -243,47 +258,63 @@
             </tfoot>
           </table>
         </div>
-
-        <section class="space-y-4 mt-8">
-          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-            Will any portion of the requested funds be returned to the Cardano
-            Treasury?
-          </h3>
-
-          {#if treasuryRepayment === "Yes"}
-            <Badge
-              class="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-0 font-normal shrink-0"
-              >Yes</Badge
-            >
-
-            <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-              Under what circumstances would a repayment occur?
-            </h3>
-
-            <Markdown
-              content={treasuryRepaymentCircumstances.trim() || "—"}
-              class="text-sm"
-            />
-          {:else}
-            <Badge
-              class="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-0 font-normal shrink-0"
-              >No</Badge
-            >
-          {/if}
-        </section>
-
-        <section class="mt-6 space-y-2">
-          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-            Have you previously received funding from Cardano or related
-            ecosystem programs?
-          </h3>
-          <ItemContainer>
-            <div class="text-sm">
-              <Markdown content={priorFunding.trim() || "—"} />
-            </div>
-          </ItemContainer>
-        </section>
       </Card.Content>
     </Card.Root>
+
+    <CollapsibleCard
+      class="mt-2"
+      expanded={expandedTreasuryRepayment}
+      onToggle={() => (expandedTreasuryRepayment = !expandedTreasuryRepayment)}
+      expandLabel="Expand treasury repayment details"
+      collapseLabel="Collapse treasury repayment details"
+      titleClass="text-lg font-medium leading-6"
+    >
+      {#snippet title()}
+        Will any portion of the requested funds be returned to the Cardano
+        Treasury?
+      {/snippet}
+
+      {#if treasuryRepayment === "Yes"}
+        <Badge
+          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+        >
+          Yes
+        </Badge>
+
+        <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
+          Under what circumstances would a repayment occur?
+        </h3>
+
+        <Markdown
+          content={treasuryRepaymentCircumstances.trim() || "—"}
+          class="text-sm"
+        />
+      {:else}
+        <Badge
+          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+        >
+          No
+        </Badge>
+      {/if}
+    </CollapsibleCard>
+
+    <CollapsibleCard
+      class="mt-2"
+      expanded={expandedPriorFunding}
+      onToggle={() => (expandedPriorFunding = !expandedPriorFunding)}
+      expandLabel="Expand prior funding details"
+      collapseLabel="Collapse prior funding details"
+      titleClass="text-lg font-medium leading-6"
+    >
+      {#snippet title()}
+        Have you previously received funding from Cardano or related ecosystem
+        programs?
+      {/snippet}
+      <ItemContainer>
+        <div class="text-sm">
+          <Markdown content={priorFunding.trim() || "—"} />
+        </div>
+      </ItemContainer>
+    </CollapsibleCard>
   {/if}
 </section>

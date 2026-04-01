@@ -1,17 +1,12 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
-  import { formatAda } from "$lib/utils.js";
+  import { formatAda, formatUsd } from "$lib/utils.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import BoxIcon from "@lucide/svelte/icons/box";
-  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import ItemContainer from "./ItemContainer.svelte";
-  import ProposalPageWorkPackageBudgetCards from "./ProposalPageWorkPackageBudgetCards.svelte";
-  import CollapsibleCard from "./CollapsibleCard.svelte";
+  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   let { proposal } = $props();
   let linkWarningDialog;
 
@@ -38,6 +33,8 @@
   let expanded = $state({});
   /** Which milestone cards are expanded. Key "wpIndex-milestoneIndex" -> boolean. */
   let expandedMilestones = $state({});
+  /** Which budget row cards are expanded. Key "wpIndex-rowIndex" -> boolean. */
+  let expandedBudgetRows = $state({});
 
   $effect(() => {
     const list = Array.isArray(workPackages) ? workPackages : [];
@@ -60,6 +57,22 @@
       ...expandedMilestones,
       [key]: !expandedMilestones[key],
     };
+  }
+
+  function budgetRowKey(wpIndex, rowIndex) {
+    return `${wpIndex}-${rowIndex}`;
+  }
+
+  function toggleBudgetRow(wpIndex, rowIndex) {
+    const key = budgetRowKey(wpIndex, rowIndex);
+    expandedBudgetRows = {
+      ...expandedBudgetRows,
+      [key]: !expandedBudgetRows[key],
+    };
+  }
+
+  function rowTotal(row) {
+    return row.total ?? Number(row.quantity || 0) * Number(row.unitPrice || 0);
   }
 
   const hasContent = $derived(workPackages.length > 0);
@@ -122,288 +135,323 @@
           ? wp.supportingDocuments
           : []}
         <li>
-          <Card.Root
+          <CollapsibleCard
             id={`work-package-${i + 1}`}
-            class="py-2 {isExpanded ? 'pb-0' : 'pb-2'} bg-slate-50"
+            expanded={isExpanded}
+            onToggle={() => toggle(i)}
+            expandLabel="Expand work package"
+            collapseLabel="Collapse work package"
+            titleClass="text-lg font-medium leading-6"
           >
-            <Card.Header
-              class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm {isExpanded
-                ? 'items-start min-h-10'
-                : 'items-center h-10 min-h-10'}"
-            >
-              <div
-                class="flex-1 min-w-0 flex {isExpanded
-                  ? 'min-h-10 items-start'
-                  : 'h-10 items-center'}"
-              >
-                <button
-                  type="button"
-                  class="min-w-0 w-full font-medium text-left cursor-pointer focus:outline-none text-lg leading-6 relative pl-7"
-                  title={name}
-                  onclick={() => toggle(i)}
-                >
-                  <span
-                    class="absolute left-0 {isExpanded ? 'top-2' : 'top-0'}"
-                    aria-hidden="true"
+            {#snippet title()}
+              {name}
+            {/snippet}
+            {#snippet titleLeading()}
+              <BoxIcon class="size-5 shrink-0" />
+            {/snippet}
+            <div class="mt-4">
+              {#if (wp?.summary ?? "").toString().trim()}
+                <section class="mb-6">
+                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                    Please describe this Work Package at a high level
+                  </h4>
+                  <ItemContainer>
+                    <Markdown content={wp.summary} />
+                  </ItemContainer>
+                </section>
+              {/if}
+
+              {#if wp.initiativeType}
+                <section class="mb-2">
+                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                    Is this a new initiative or a continuation of existing work?
+                  </h4>
+                  <Badge
+                    class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
                   >
-                    <BoxIcon class="size-5 shrink-0 top-0.5 relative" />
-                  </span>
+                    {wp.initiativeType}
+                  </Badge>
+                </section>
+              {/if}
 
-                  {#if isExpanded}
-                    <span class="block pt-2">{name}</span>
-                  {:else}
-                    <span class="truncate block">{name}</span>
-                  {/if}
-                </button>
-              </div>
+              {#if wp.proposalType}
+                <section class="mb-2">
+                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                    How would you classify the primary nature of this work
+                    proposal?
+                  </h4>
+                  <Badge
+                    class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+                  >
+                    {wp.proposalType}
+                  </Badge>
+                </section>
+              {/if}
 
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                class="shrink-0 size-8 cursor-pointer"
-                title={isExpanded
-                  ? "Collapse work package"
-                  : "Expand work package"}
-                aria-expanded={isExpanded}
-                aria-label={isExpanded
-                  ? "Collapse work package"
-                  : "Expand work package"}
-                onclick={() => toggle(i)}
-              >
-                {#if isExpanded}
-                  <ChevronUpIcon class="size-4" aria-hidden="true" />
-                {:else}
-                  <ChevronDownIcon class="size-4" aria-hidden="true" />
-                {/if}
-              </Button>
-            </Card.Header>
-            {#if isExpanded}
-              <Card.Content class="pl-4 pr-3 pt-0 pb-4 -mt-4">
-                {#if (wp?.summary ?? "").toString().trim()}
-                  <section class="mb-6">
-                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
-                      >Please describe this Work Package at a high level</h4
-                    >
-                    <ItemContainer>
-                      <Markdown content={wp.summary} />
-                    </ItemContainer>
-                  </section>
-                {/if}
+              {#if coreObjectives.length > 0}
+                <section class="mb-6">
+                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                    What is this work package intended to achieve?
+                  </h4>
+                  <ul class="space-y-1">
+                    {#each coreObjectives as obj}
+                      <li>
+                        <ItemContainer>
+                          <strong class="text-sm font-medium inline-block mb-1">
+                            Core Objective
+                          </strong>
+                          <br />
+                          {#if typeof obj === "string"}
+                            {obj}
+                          {:else}
+                            {obj?.text ?? String(obj)}
+                          {/if}
+                        </ItemContainer>
+                      </li>
+                    {/each}
+                  </ul>
+                </section>
+              {/if}
 
-                {#if wp.initiativeType}
-                  <section class="mb-2">
-                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
-                      >Is this a new initiative or a continuation of existing
-                      work?</h4
-                    >
-                    <Badge
-                      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-                    >
-                      {wp.initiativeType}
-                    </Badge>
-                  </section>
-                {/if}
+              <section class="mb-6">
+                <h4
+                  class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
+                >
+                  Why does this work matter to Cardano, and how will success be
+                  measured?
+                </h4>
+                <ItemContainer>
+                  <Markdown content={wp.expectedValue} />
+                </ItemContainer>
+              </section>
 
-                {#if wp.proposalType}
-                  <section class="mb-2">
-                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
-                      >How would you classify the primary nature of this work
-                      proposal?</h4
-                    >
-                    <Badge
-                      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-                    >
-                      {wp.proposalType}
-                    </Badge>
-                  </section>
-                {/if}
+              <section class="mb-6">
+                <h4
+                  class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
+                >
+                  How will success be measured?
+                </h4>
+                <ItemContainer>
+                  <Markdown content={wp.metric} />
+                </ItemContainer>
+              </section>
 
-                {#if coreObjectives.length > 0}
-                  <section class="mb-6">
-                    <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)"
-                      >What is this work package intended to achieve?</h4
-                    >
-                    <ul class="space-y-1">
-                      {#each coreObjectives as obj}
-                        <li>
-                          <ItemContainer>
-                            <strong
-                              class="text-sm font-medium inline-block mb-1"
-                              >Core Objective</strong
-                            ><br />
-                            {#if typeof obj === "string"}
-                              {obj}
-                            {:else}
-                              {obj?.text ?? String(obj)}
-                            {/if}
-                          </ItemContainer>
-                        </li>
+              {#if supportingDocs.length > 0}
+                <section class="mb-6">
+                  <h4
+                    class="text-normal font-medium mb-1.5 text-(--mbo-tangy-blue)"
+                  >
+                    Is there any extra material you would like to share about
+                    this work package?
+                  </h4>
+                  <ItemContainer>
+                    <ul class="space-y-0.5 list-none p-0">
+                      {#each supportingDocs as doc}
+                        {@const url = (doc?.url ?? "").toString().trim()}
+                        {@const title = (doc?.title ?? url ?? "Link")
+                          .toString()
+                          .trim()}
+                        {#if url}
+                          <li>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+                              onclick={(e) => {
+                                e.preventDefault();
+                                linkWarningDialog.show(url, title);
+                              }}
+                            >
+                              <ExternalLinkIcon
+                                class="size-3.5 shrink-0 mt-0.5"
+                                aria-hidden="true"
+                              />
+                              <span class="min-w-0 wrap-break-word">
+                                {title}
+                              </span>
+                            </a>
+                          </li>
+                        {/if}
                       {/each}
                     </ul>
-                  </section>
-                {/if}
-
-                <section class="mb-6">
-                  <h4
-                    class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
-                    >Why does this work matter to Cardano, and how will success
-                    be measured?</h4
-                  >
-                  <ItemContainer>
-                    <Markdown content={wp.expectedValue} />
                   </ItemContainer>
                 </section>
+              {/if}
 
-                <section class="mb-6">
-                  <h4
-                    class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
-                    >How will success be measured?</h4
+              {#if noMilestones && milestoneAlt}
+                <section>
+                  <h4 class="text-normal font-medium mb-2">
+                    Milestone alternative
+                  </h4>
+                  <p class="text-sm text-muted-foreground mb-4">
+                    Progress is described as follows (no milestone breakdown).
+                  </p>
+                  <div
+                    class="prose prose-sm max-w-none dark:prose-invert **:first:mt-0"
                   >
-                  <ItemContainer>
-                    <Markdown content={wp.metric} />
-                  </ItemContainer>
+                    <Markdown content={milestoneAlt} />
+                  </div>
                 </section>
-
-                {#if supportingDocs.length > 0}
-                  <section class="mb-6">
-                    <h4
-                      class="text-normal font-medium mb-1.5 text-(--mbo-tangy-blue)"
-                      >Is there any extra material you would like to share about
-                      this work package?</h4
-                    >
-                    <ItemContainer>
-                      <ul class="space-y-0.5 list-none p-0">
-                        {#each supportingDocs as doc}
-                          {@const url = (doc?.url ?? "").toString().trim()}
-                          {@const title = (doc?.title ?? url ?? "Link")
-                            .toString()
-                            .trim()}
-                          {#if url}
-                            <li>
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
-                                onclick={(e) => {
-                                  e.preventDefault();
-                                  linkWarningDialog.show(url, title);
-                                }}
-                              >
-                                <ExternalLinkIcon
-                                  class="size-3.5 shrink-0 mt-0.5"
-                                  aria-hidden="true"
-                                />
-                                <span class="min-w-0 wrap-break-word">
-                                  {title}
-                                </span>
-                              </a>
-                            </li>
+              {:else if milestones.length > 0}
+                <section>
+                  <h4 class="text-lg font-medium mb-2">
+                    How will this work package be delivered?
+                  </h4>
+                  <ul
+                    class="milestone-list-editor-list space-y-2 list-none p-0 m-0 mb-1!"
+                  >
+                    {#each milestones as m, mi}
+                      {@const msExpanded =
+                        expandedMilestones[milestoneKey(i, mi)] === true}
+                      {@const hasDetails =
+                        (m?.deliverables ?? "").toString().trim() ||
+                        (m?.acceptanceCriteria ?? "").toString().trim()}
+                      <li>
+                        <CollapsibleCard
+                          expanded={msExpanded}
+                          onToggle={() => toggleMilestone(i, mi)}
+                          showButton={hasDetails}
+                          expandLabel="Expand milestone"
+                          collapseLabel="Collapse milestone"
+                          class="bg-white"
+                          titleClass="text-base font-medium leading-6"
+                        >
+                          {#snippet title()}
+                            {m?.name ?? "Unnamed milestone"}
+                          {/snippet}
+                          {#if (m?.duration ?? "").toString().trim()}
+                            <div
+                              class="text-sm text-muted-foreground mt-0 mb-4"
+                            >
+                              <span class="font-medium text-foreground">
+                                How many weeks will you need to complete this
+                                milestone?
+                              </span>
+                              <p>
+                                {m.duration} weeks
+                              </p>
+                            </div>
                           {/if}
-                        {/each}
-                      </ul>
-                    </ItemContainer>
-                  </section>
-                {/if}
+                          {#if (m?.deliverables ?? "").toString().trim()}
+                            <div
+                              class="text-sm text-muted-foreground mt-0 mb-4"
+                            >
+                              <span class="font-medium text-foreground">
+                                What will you deliver in this milestone?
+                              </span>
+                              <Markdown
+                                content={m.deliverables}
+                                class="mt-0.5"
+                              />
+                            </div>
+                          {/if}
+                          {#if (m?.acceptanceCriteria ?? "").toString().trim()}
+                            <div class="text-sm text-muted-foreground mt-4">
+                              <span class="font-medium text-foreground">
+                                How do you know it's "done"?
+                              </span>
+                              <Markdown
+                                content={m.acceptanceCriteria}
+                                class="mt-0.5"
+                              />
+                            </div>
+                          {/if}
+                        </CollapsibleCard>
+                      </li>
+                    {/each}
+                  </ul>
+                </section>
+              {/if}
 
-                {#if noMilestones && milestoneAlt}
-                  <section>
-                    <h4 class="text-normal font-medium mb-2"
-                      >Milestone alternative</h4
-                    >
+              {#if breakdown.length > 0}
+                {@const totalAda = wpTotals[i] ?? 0}
+                {@const totalUsd =
+                  conversionRateNum != null && Number.isFinite(totalAda)
+                    ? totalAda * conversionRateNum
+                    : null}
+                <section
+                  class={noMilestones || milestones.length > 0 ? "mt-8" : ""}
+                >
+                  <section class="space-y-2">
+                    <h4 class="text-lg font-medium mb-2">
+                      What's the budget estimated for this Work Package?
+                    </h4>
                     <p class="text-sm text-muted-foreground mb-4">
-                      Progress is described as follows (no milestone breakdown).
+                      Budget breakdown by category and item.
                     </p>
-                    <div
-                      class="prose prose-sm max-w-none dark:prose-invert **:first:mt-0"
-                    >
-                      <Markdown content={milestoneAlt} />
-                    </div>
-                  </section>
-                {:else if milestones.length > 0}
-                  <section>
-                    <h4 class="text-lg font-medium mb-2"
-                      >How will this work package be delivered?</h4
-                    >
-                    <ul
-                      class="milestone-list-editor-list space-y-2 list-none p-0 m-0 mb-1!"
-                    >
-                      {#each milestones as m, mi}
-                        {@const msExpanded =
-                          expandedMilestones[milestoneKey(i, mi)] === true}
-                        {@const hasDetails =
-                          (m?.deliverables ?? "").toString().trim() ||
-                          (m?.acceptanceCriteria ?? "").toString().trim()}
+
+                    <ul class="space-y-2 list-none p-0 m-0 mb-1!">
+                      {#each breakdown as row, rowIdx}
+                        {@const total = rowTotal(row)}
+                        {@const isBudgetExpanded =
+                          expandedBudgetRows[budgetRowKey(i, rowIdx)] === true}
+                        {@const itemName =
+                          (row.name ?? row.itemName) ||
+                          row.costCategory ||
+                          `Item ${rowIdx + 1}`}
                         <li>
                           <CollapsibleCard
-                            title={m?.name ?? "Unnamed milestone"}
-                            expanded={msExpanded}
-                            onToggle={() => toggleMilestone(i, mi)}
-                            showButton={hasDetails}
-                            expandLabel="Expand milestone"
-                            collapseLabel="Collapse milestone"
+                            expanded={isBudgetExpanded}
+                            onToggle={() => toggleBudgetRow(i, rowIdx)}
+                            expandLabel="Expand budget item"
+                            collapseLabel="Collapse budget item"
+                            class="bg-white"
+                            titleClass="text-base font-medium leading-6"
                           >
-                            {#if (m?.duration ?? "").toString().trim()}
-                              <div
-                                class="text-sm text-muted-foreground mt-0 mb-4"
+                            {#snippet title()}
+                              {itemName}
+                            {/snippet}
+                            <div class="text-sm text-muted-foreground mt-0 mb-1">
+                              <span class="font-medium text-foreground"
+                                >Cost category:</span
                               >
-                                <span class="font-medium text-foreground"
-                                  >How many weeks will you need to complete this
-                                  milestone?</span
-                                >
-                                <p>
-                                  {m.duration} weeks
-                                </p>
-                              </div>
-                            {/if}
-                            {#if (m?.deliverables ?? "").toString().trim()}
-                              <div
-                                class="text-sm text-muted-foreground mt-0 mb-4"
+                              <span>{row.costCategory ?? "—"}</span>
+                            </div>
+                            <div class="text-sm text-muted-foreground mt-3">
+                              <span class="font-medium text-foreground"
+                                >ADA costs:</span
                               >
-                                <span class="font-medium text-foreground"
-                                  >What will you deliver in this milestone?</span
+                              <span>
+                                {formatAda(total)} ADA
+                                {#if conversionRateNum != null && Number.isFinite(total)}
+                                  <br />
+                                  <span class="text-muted-foreground">
+                                    USD equivalent ${formatUsd(total * conversionRateNum)}
+                                    (ADA/USD {conversionRateNum})
+                                  </span>
+                                {/if}
+                              </span>
+                            </div>
+                            {#if (row.description ?? "").trim()}
+                              <div class="text-sm text-muted-foreground mt-3">
+                                <span class="font-medium text-foreground block mb-1"
+                                  >Item description:</span
                                 >
-                                <Markdown
-                                  content={m.deliverables}
-                                  class="mt-0.5"
-                                />
-                              </div>
-                            {/if}
-                            {#if (m?.acceptanceCriteria ?? "")
-                              .toString()
-                              .trim()}
-                              <div class="text-sm text-muted-foreground mt-4">
-                                <span class="font-medium text-foreground"
-                                  >How do you know it's "done"?</span
-                                >
-                                <Markdown
-                                  content={m.acceptanceCriteria}
-                                  class="mt-0.5"
-                                />
+                                <Markdown content={row.description ?? ""} class="mt-0.5" />
                               </div>
                             {/if}
                           </CollapsibleCard>
                         </li>
                       {/each}
                     </ul>
-                  </section>
-                {/if}
 
-                {#if breakdown.length > 0}
-                  <section
-                    class={noMilestones || milestones.length > 0 ? "mt-8" : ""}
-                  >
-                    <ProposalPageWorkPackageBudgetCards
-                      {breakdown}
-                      totalAda={wpTotals[i] ?? 0}
-                      {conversionRateNum}
-                    />
+                    <div
+                      class="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-md border bg-(--mbo-cardano-blue) text-white font-medium mt-2"
+                    >
+                      <span>Total work package budget</span>
+                      <div class="flex items-center gap-4 tabular-nums">
+                        <span>{formatAda(totalAda)} ADA</span>
+                        {#if totalUsd != null}
+                          <span>${formatUsd(totalUsd)} (ADA/USD {conversionRateNum})</span>
+                        {/if}
+                      </div>
+                    </div>
                   </section>
-                {/if}
-              </Card.Content>
-            {/if}
-          </Card.Root>
+                </section>
+              {/if}
+            </div>
+          </CollapsibleCard>
         </li>
       {/each}
     </ul>
