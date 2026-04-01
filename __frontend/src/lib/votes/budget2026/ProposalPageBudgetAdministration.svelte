@@ -2,6 +2,7 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
+  import ItemContainer from "./ItemContainer.svelte";
   let { proposal } = $props();
   let expandedAdministrator = $state(true);
   let expandedLegalEntity = $state(true);
@@ -78,10 +79,11 @@
     {#snippet title()}
       How will independent audits or assurance be handled for this proposal?
     {/snippet}
-    <div class="text-sm">
+    <ItemContainer>
       <Markdown
         content={proposal?.metaData?.independentAudits?.trim() || "—"}
+        class="text-sm"
       />
-    </div>
+    </ItemContainer>
   </CollapsibleCard>
 </section>
