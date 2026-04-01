@@ -273,7 +273,11 @@
         Will any portion of the requested funds be returned to the Cardano
         Treasury?
       {/snippet}
-
+      {#snippet popover()}
+        If yes: Describe the specific conditions or triggers that would result
+        in funds being returned to the Treasury (e.g. surplus funds, revenue
+        thresholds, loan, project cancellation).
+      {/snippet}
       {#if treasuryRepayment === "Yes"}
         <Badge
           class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
@@ -309,6 +313,11 @@
       {#snippet title()}
         Have you previously received funding from Cardano or related ecosystem
         programs?
+      {/snippet}
+      {#snippet popover()}
+        List any prior funding received from Catalyst, Treasury withdrawals,
+        Intersect programs, or other Cardano ecosystem grants. If not
+        applicable, you may enter “N/A”.
       {/snippet}
       <ItemContainer>
         <div class="text-sm">

@@ -21,6 +21,13 @@
     {#snippet title()}
       Who will be your administrator for this proposal?
     {/snippet}
+    {#snippet popover()}
+      Cardano's Constitution requires each Treasury Withdrawal to specify an
+      Administrator and a third-party auditor. Fields marked with the eye-off
+      icon contain information that will not be publicly visible and will only
+      be used for administration or contracting purposes if the proposal is
+      approved.
+    {/snippet}
     <Badge
       class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
     >
@@ -78,6 +85,11 @@
   >
     {#snippet title()}
       How will independent audits or assurance be handled for this proposal?
+    {/snippet}
+    {#snippet popover()}
+      Describe whether funds are being set aside for independent audits or
+      third-party assurance, and how oversight of treasury funds will be
+      ensured.
     {/snippet}
     <ItemContainer>
       <Markdown

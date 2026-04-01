@@ -1,8 +1,10 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
+  import * as Popover from "$lib/components/ui/popover";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
+  import CircleHelpIcon from "@lucide/svelte/icons/circle-help";
 
   let {
     expanded = false,
@@ -13,8 +15,11 @@
     class: className = "",
     titleClass = "text-lg font-medium leading-6",
     titleRowClass = "",
+    popoverButtonLabel = "Show details",
+    popoverContentClass = "p-3 text-sm max-w-sm",
     title,
     titleLeading,
+    popover,
     children,
     ...restProps
   } = $props();
@@ -69,6 +74,25 @@
         {/if}
       </button>
     </div>
+    {#if popover}
+      <Popover.Root>
+        <Popover.Trigger asChild={true}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            class="shrink-0 size-8 cursor-pointer top-1 relative"
+            title={popoverButtonLabel}
+            aria-label={popoverButtonLabel}
+          >
+            <CircleHelpIcon class="size-4" aria-hidden="true" />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content class={popoverContentClass} align="start">
+          {@render popover?.()}
+        </Popover.Content>
+      </Popover.Root>
+    {/if}
     {#if showButton}
       <Button
         type="button"
