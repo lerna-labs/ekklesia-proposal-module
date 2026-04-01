@@ -11,7 +11,10 @@
     collapseLabel = "Collapse",
     showButton = true,
     class: className = "",
+    titleClass = "text-lg font-medium leading-6",
+    titleRowClass = "",
     title,
+    titleLeading,
     children,
     ...restProps
   } = $props();
@@ -38,14 +41,30 @@
         title={ariaLabel}
       >
         {#if expanded}
-          <span class="pt-2 block text-lg font-medium leading-6">
-            {@render title?.()}
+          <span class="pt-2 block {titleClass}">
+            <span class="flex items-start gap-2 min-w-0 {titleRowClass}">
+              {#if titleLeading}
+                <span class="shrink-0 mt-0.5" aria-hidden="true">
+                  {@render titleLeading?.()}
+                </span>
+              {/if}
+              <span class="block min-w-0">
+                {@render title?.()}
+              </span>
+            </span>
           </span>
         {:else}
-          <span
-            class="pt-2 block overflow-hidden text-ellipsis whitespace-nowrap text-lg font-medium leading-6"
-          >
-            {@render title?.()}
+          <span class="pt-2 block {titleClass}">
+            <span class="flex items-center gap-2 min-w-0 {titleRowClass}">
+              {#if titleLeading}
+                <span class="shrink-0" aria-hidden="true">
+                  {@render titleLeading?.()}
+                </span>
+              {/if}
+              <span class="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                {@render title?.()}
+              </span>
+            </span>
           </span>
         {/if}
       </button>
