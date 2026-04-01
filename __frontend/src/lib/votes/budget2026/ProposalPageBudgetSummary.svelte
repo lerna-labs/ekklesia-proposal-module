@@ -1,12 +1,15 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Badge } from "$lib/components/ui/badge";
+  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
 
   let { proposal } = $props();
+  let expandedPriorFunding = $state(true);
+  let expandedTreasuryRepayment = $state(true);
 
   const treasuryRepayment = $derived(
     proposal?.metaData?.treasuryRepayment ?? "",
@@ -255,49 +258,63 @@
             </tfoot>
           </table>
         </div>
-
-        <section class="space-y-4 mt-8">
-          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-            Will any portion of the requested funds be returned to the Cardano
-            Treasury?
-          </h3>
-
-          {#if treasuryRepayment === "Yes"}
-            <Badge
-              class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-            >
-              Yes
-            </Badge>
-
-            <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-              Under what circumstances would a repayment occur?
-            </h3>
-
-            <Markdown
-              content={treasuryRepaymentCircumstances.trim() || "—"}
-              class="text-sm"
-            />
-          {:else}
-            <Badge
-              class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-            >
-              No
-            </Badge>
-          {/if}
-        </section>
-
-        <section class="mt-6 space-y-2">
-          <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
-            Have you previously received funding from Cardano or related
-            ecosystem programs?
-          </h3>
-          <ItemContainer>
-            <div class="text-sm">
-              <Markdown content={priorFunding.trim() || "—"} />
-            </div>
-          </ItemContainer>
-        </section>
       </Card.Content>
     </Card.Root>
+
+    <CollapsibleCard
+      class="mt-2"
+      expanded={expandedTreasuryRepayment}
+      onToggle={() => (expandedTreasuryRepayment = !expandedTreasuryRepayment)}
+      expandLabel="Expand treasury repayment details"
+      collapseLabel="Collapse treasury repayment details"
+      titleClass="text-lg font-medium leading-6"
+    >
+      {#snippet title()}
+        Will any portion of the requested funds be returned to the Cardano
+        Treasury?
+      {/snippet}
+
+      {#if treasuryRepayment === "Yes"}
+        <Badge
+          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+        >
+          Yes
+        </Badge>
+
+        <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
+          Under what circumstances would a repayment occur?
+        </h3>
+
+        <Markdown
+          content={treasuryRepaymentCircumstances.trim() || "—"}
+          class="text-sm"
+        />
+      {:else}
+        <Badge
+          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+        >
+          No
+        </Badge>
+      {/if}
+    </CollapsibleCard>
+
+    <CollapsibleCard
+      class="mt-2"
+      expanded={expandedPriorFunding}
+      onToggle={() => (expandedPriorFunding = !expandedPriorFunding)}
+      expandLabel="Expand prior funding details"
+      collapseLabel="Collapse prior funding details"
+      titleClass="text-lg font-medium leading-6"
+    >
+      {#snippet title()}
+        Have you previously received funding from Cardano or related ecosystem
+        programs?
+      {/snippet}
+      <ItemContainer>
+        <div class="text-sm">
+          <Markdown content={priorFunding.trim() || "—"} />
+        </div>
+      </ItemContainer>
+    </CollapsibleCard>
   {/if}
 </section>
