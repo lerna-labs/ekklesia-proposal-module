@@ -1,14 +1,12 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
+  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import FormPillarCard from "$lib/forms/budget2026/FormPillarCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
-  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
 
   let { proposal, pillars = [] } = $props();
 
+  let expandedPillars = $state(true);
   let expandedRationale = $state(true);
   let expandedKpi = $state(true);
 
@@ -35,125 +33,59 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-4 mt-8" id="strategy-framework">
+  <section class="text-sm space-y-2 mt-8" id="strategy-framework">
     <h2 class="text-2xl font-medium mb-2">
       Alignment to Cardano 2030 Strategy framework
     </h2>
 
-    <h3 class="text-lg font-medium mb-2 mt-4">
-      To which strategic pillar does your proposal align the most?
-    </h3>
-
     {#if selectedPillars.length > 0}
-      <div class="space-y-2 rounded-md mb-4">
-        {#each selectedPillars as pillar (pillar?._id)}
-          <FormPillarCard {pillar} selected={false} readOnly={true} />
-        {/each}
-      </div>
+      <CollapsibleCard
+        expanded={expandedPillars}
+        onToggle={() => (expandedPillars = !expandedPillars)}
+        expandLabel="Expand selected strategic pillars"
+        collapseLabel="Collapse selected strategic pillars"
+      >
+        {#snippet title()}
+          To which strategic pillar does your proposal align the most?
+        {/snippet}
+        <div class="space-y-2 rounded-md">
+          {#each selectedPillars as pillar (pillar?._id)}
+            <FormPillarCard {pillar} selected={false} readOnly={true} class="bg-white" />
+          {/each}
+        </div>
+      </CollapsibleCard>
     {/if}
 
     {#if pillarRationale.trim()}
-      <Card.Root
-        class="py-2 {expandedRationale
-          ? 'pb-0'
-          : 'pb-2'} bg-slate-50 rounded-md border"
+      <CollapsibleCard
+        expanded={expandedRationale}
+        onToggle={() => (expandedRationale = !expandedRationale)}
+        expandLabel="Expand pillar rationale"
+        collapseLabel="Collapse pillar rationale"
       >
-        <Card.Header
-          class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm"
-        >
-          <button
-            type="button"
-            class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none text-lg flex items-center gap-2"
-            title="Pillar rationale"
-            onclick={() => (expandedRationale = !expandedRationale)}
-          >
-            <h3 class="text-lg font-medium">
-              Why have you selected those pillars?
-            </h3>
-          </button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            class="shrink-0 size-8 cursor-pointer"
-            title={expandedRationale ? "Collapse" : "Expand"}
-            aria-expanded={expandedRationale}
-            aria-label={expandedRationale ? "Collapse" : "Expand"}
-            onclick={() => (expandedRationale = !expandedRationale)}
-          >
-            {#if expandedRationale}
-              <ChevronUpIcon class="size-4" aria-hidden="true" />
-            {:else}
-              <ChevronDownIcon class="size-4" aria-hidden="true" />
-            {/if}
-          </Button>
-        </Card.Header>
-        {#if expandedRationale}
-          <Card.Content class="pl-4 pr-3 pt-0 pb-4 **:first:mt-0">
-            <ItemContainer>
-              <Markdown content={pillarRationale} />
-            </ItemContainer>
-          </Card.Content>
-        {/if}
-      </Card.Root>
+        {#snippet title()}
+          Why have you selected those pillars?
+        {/snippet}
+        <ItemContainer>
+          <Markdown content={pillarRationale} />
+        </ItemContainer>
+      </CollapsibleCard>
     {/if}
 
     {#if kpiAlignment.trim()}
-      <Card.Root
-        class="py-2 {expandedKpi
-          ? 'pb-0'
-          : 'pb-2'} bg-slate-50 rounded-md border"
+      <CollapsibleCard
+        expanded={expandedKpi}
+        onToggle={() => (expandedKpi = !expandedKpi)}
+        expandLabel="Expand KPI alignment"
+        collapseLabel="Collapse KPI alignment"
       >
-        <Card.Header
-          class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm {expandedKpi
-            ? 'items-start min-h-10'
-            : 'items-center h-10 min-h-10'}"
-        >
-          <button
-            type="button"
-            class="min-w-0 flex-1 font-medium text-left cursor-pointer focus:outline-none text-lg leading-6 flex items-center gap-2 {expandedKpi
-              ? ''
-              : 'truncate'}"
-            title="KPI alignment"
-            onclick={() => (expandedKpi = !expandedKpi)}
-          >
-            {#if expandedKpi}
-              <span class="pt-2 block">
-                Does your proposal support any of the KPIs of the strategy
-                framework?
-              </span>
-            {:else}
-              <span class="truncate">
-                Does your proposal support any of the KPIs of the strategy
-                framework?
-              </span>
-            {/if}
-          </button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            class="shrink-0 size-8 cursor-pointer"
-            title={expandedKpi ? "Collapse" : "Expand"}
-            aria-expanded={expandedKpi}
-            aria-label={expandedKpi ? "Collapse" : "Expand"}
-            onclick={() => (expandedKpi = !expandedKpi)}
-          >
-            {#if expandedKpi}
-              <ChevronUpIcon class="size-4" aria-hidden="true" />
-            {:else}
-              <ChevronDownIcon class="size-4" aria-hidden="true" />
-            {/if}
-          </Button>
-        </Card.Header>
-        {#if expandedKpi}
-          <Card.Content class="pl-4 pr-3 pt-0 pb-4 **:first:mt-0">
-            <ItemContainer>
-              <Markdown content={kpiAlignment} />
-            </ItemContainer>
-          </Card.Content>
-        {/if}
-      </Card.Root>
+        {#snippet title()}
+          Does your proposal support any of the KPIs of the strategy framework?
+        {/snippet}
+        <ItemContainer>
+          <Markdown content={kpiAlignment} />
+        </ItemContainer>
+      </CollapsibleCard>
     {/if}
   </section>
 {/if}

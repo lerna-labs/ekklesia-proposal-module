@@ -10,6 +10,7 @@
     readOnly = false,
     splitBy = ":",
     class: className = "",
+    ...restProps
   } = $props();
 
   const title = $derived((pillar?.title ?? pillar?._id ?? "").toString());
@@ -37,7 +38,8 @@
     ? 'cursor-default'
     : 'cursor-pointer'} {selected
     ? 'bg-(--mbo-electric-blue) text-white border-(--mbo-electric-blue)'
-    : 'bg-slate-100 dark:bg-slate-800 border-muted-foreground/20'} {className}"
+    : 'bg-slate-50 border-muted-foreground/20'} {className}"
+  {...restProps}
   onclick={readOnly ? () => {} : toggleSelect}
   onkeydown={readOnly ? () => {} : (e) => {
     if (e.key === "Enter" || e.key === " ") {
