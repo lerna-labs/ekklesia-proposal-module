@@ -7,7 +7,11 @@ import { User } from "../../../schema/User.js";
 import { Vote } from "../../../schema/Vote.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { isAuthenticated } from "../../../helper/middleWare.js";
-import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
+import {
+  authenticatedWriteLimiter,
+  commentWritePerHourLimiter,
+  commentWritePerMinuteLimiter,
+} from "../../../helper/rateLimiters.js";
 
 const router = Router();
 
@@ -387,7 +391,12 @@ router.get("/", async (req, res) => {
  * API spec §5.5 — Create a comment on a live proposal. Auth required. Before vote feedbackEndDate. Body: proposalId, content, optional parentId.
  * Only authenticated users can create comments; userId is taken exclusively from the verified token, never from the request body.
  */
-router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
+router.post(
+  "/",
+  isAuthenticated,
+  commentWritePerMinuteLimiter,
+  commentWritePerHourLimiter,
+  async (req, res) => {
   try {
     const userId = req.userId.toString();
 
@@ -460,6 +469,18 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     };
     if (parentId != null && parentId !== "") {
       doc.parentId = new mongoose.Types.ObjectId(typeof parentId === "string" ? parentId.trim() : parentId);
+    }
+
+    const duplicate = await Comment.exists({
+      proposalId: doc.proposalId,
+      userId,
+      content: contentStr,
+    });
+    if (duplicate) {
+      return res.status(400).json({
+        status: "error",
+        message: "You have already posted this same comment on this proposal.",
+      });
     }
 
     const comment = await Comment.create(doc);
@@ -748,7 +769,12 @@ router.get("/:commentId", async (req, res) => {
  * PUT /comments/:commentId
  * API spec §5.6 — Update comment content. Author only; within 15 minutes of creation.
  */
-router.put("/:commentId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
+router.put(
+  "/:commentId",
+  isAuthenticated,
+  commentWritePerMinuteLimiter,
+  commentWritePerHourLimiter,
+  async (req, res) => {
   try {
     const userId = req.userId.toString();
     const { commentId } = req.params;

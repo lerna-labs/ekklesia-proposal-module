@@ -91,3 +91,37 @@ export const authenticatedWriteLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Rate limiter for comment create/update writes.
+ * 5 requests per minute per authenticated user.
+ */
+export const commentWritePerMinuteLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5,
+  // Use express-rate-limit helper for IPv6-safe IP fallback keying.
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many comment requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for comment create/update writes.
+ * 20 requests per hour per authenticated user.
+ */
+export const commentWritePerHourLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 20,
+  // Use express-rate-limit helper for IPv6-safe IP fallback keying.
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many comment requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
