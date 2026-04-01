@@ -23,10 +23,10 @@
   const DEFAULT_SORT = "submittedAt";
   const sortFromData = $derived(data.listState?.sort ?? DEFAULT_SORT);
   const ascendingFromData = $derived(
-    (data.listState?.direction ?? "asc") !== "desc",
+    (data.listState?.direction ?? "desc") !== "desc",
   );
   let sort = $state("submittedAt");
-  let ascending = $state(true);
+  let ascending = $state(false);
   $effect(() => {
     sort = sortFromData;
     ascending = ascendingFromData;

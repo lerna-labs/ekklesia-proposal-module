@@ -9,7 +9,7 @@ export async function load({ params, url, fetch }) {
 	const validLimits = [10, 25, 50, 100];
 	const limit = validLimits.includes(Number(limitParam)) ? limitParam : '10';
 	const search = url.searchParams.get('search') || '';
-	const direction = url.searchParams.get('direction') || 'asc';
+	const direction = url.searchParams.get('direction') || 'desc';
 	const category = url.searchParams.get('category') || '';
 	const status = url.searchParams.get('status') || 'live';
 	const proposer = url.searchParams.get('proposer') || '';

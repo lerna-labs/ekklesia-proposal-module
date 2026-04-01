@@ -27,14 +27,14 @@
 
   let open = $state(false);
   let pendingSort = $state("submittedAt");
-  let pendingDirection = $state("up");
+  let pendingDirection = $state("down");
   let pendingLimit = $state("10");
 
   $effect(() => {
     const valid = new Set(sortOptions.map((o) => o.value));
     const urlSort = page.url.searchParams.get("sort");
     const resolvedSort = urlSort && valid.has(urlSort) ? urlSort : DEFAULT_SORT;
-    const urlDirection = page.url.searchParams.get("direction") ?? "asc";
+    const urlDirection = page.url.searchParams.get("direction") ?? "desc";
     const urlLimit = page.url.searchParams.get("limit") ?? defaultLimit;
     const resolvedAscending = urlDirection !== "desc";
     const resolvedDirection = urlDirection === "desc" ? "down" : "up";
@@ -55,11 +55,11 @@
     const urlSort = page.url.searchParams.get("sort");
     const valid = new Set(sortOptions.map((o) => o.value));
     const resolvedSort = urlSort && valid.has(urlSort) ? urlSort : DEFAULT_SORT;
-    const urlDirection = page.url.searchParams.get("direction") ?? "asc";
+    const urlDirection = page.url.searchParams.get("direction") ?? "desc";
     const urlLimit = page.url.searchParams.get("limit") ?? defaultLimit;
     return (
       resolvedSort !== DEFAULT_SORT ||
-      urlDirection === "desc" ||
+      urlDirection !== "desc" ||
       urlLimit !== defaultLimit
     );
   });
@@ -80,13 +80,16 @@
   function resetSort() {
     const searchParams = new URLSearchParams(page.url.searchParams);
     searchParams.set("sort", DEFAULT_SORT);
-    searchParams.set("direction", "asc");
+    searchParams.set("direction", "desc");
     searchParams.set("limit", defaultLimit);
     searchParams.set("page", "1");
     const url = `${page.url.pathname}?${queryStringWithLiteralCommas(searchParams)}`;
     goto(url);
     sort = DEFAULT_SORT;
-    ascending = true;
+    ascending = false;
+    pendingSort = DEFAULT_SORT;
+    pendingDirection = "down";
+    pendingLimit = defaultLimit;
     open = false;
   }
 </script>
@@ -167,9 +170,9 @@
               </Select.Root>
             </div>
             <div class="space-y-2 min-w-0 overflow-hidden">
-              <Label class="text-xs text-muted-foreground"
-                >Entries per Page</Label
-              >
+              <Label class="text-xs text-muted-foreground">
+                Entries per Page
+              </Label>
               <Select.Root
                 type="single"
                 bind:value={pendingLimit}
