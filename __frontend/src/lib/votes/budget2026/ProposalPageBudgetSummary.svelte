@@ -153,7 +153,7 @@
               {#each summaryRows as row, idx}
                 {@const wp = workPackageBudgetItems[idx]}
                 <tr
-                  class="border-b bg-[#E7E9F5] border-t-2 border-t-(--mbo-cardano-blue)"
+                  class="border-b bg-slate-200 border-t-2 border-t-(--mbo-cardano-blue)"
                 >
                   <td class="p-3 align-top font-medium" colspan="2">
                     <a
@@ -163,7 +163,9 @@
                       {row.title}
                     </a>
                   </td>
-                  <td class="p-3 text-right align-top tabular-nums">
+                  <td
+                    class="p-3 text-right align-top tabular-nums whitespace-nowrap"
+                  >
                     <span class="font-medium">
                       {formatAda(row.totalAda)} ADA
                     </span>
