@@ -19,7 +19,7 @@
 <!-- Proposer details – content to be added -->
 <h3>What's the display name of the proposer?</h3>
 
-<p>
+<p class="text-muted-foreground">
   Depending if you are submitting this proposal as an individual or a company,
   this could either be your name or your company name
 </p>
@@ -48,7 +48,9 @@
 
 <h3>What's the best email an Intersect admin can use to contact you?</h3>
 
-<p>This will be used for anything related to this proposal submission</p>
+<p class="text-muted-foreground">
+  This will be used for anything related to this proposal submission
+</p>
 
 <Input
   id="email"

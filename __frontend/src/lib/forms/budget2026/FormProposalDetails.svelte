@@ -31,7 +31,7 @@
   What ADA to USD conversion rate are you using for your overall proposal? *
 </h3>
 
-<p>
+<p class="text-muted-foreground">
   Please specify the rate used for all USD estimations in this proposal. This
   helps DReps understand the approximate dollar value of your budget.
 </p>
@@ -59,7 +59,7 @@
     aria-invalid={hasWorkPackagesSectionError || undefined}
   >
     <h3>How can your proposal be broken down in work packages?</h3>
-    <p>
+    <p class="text-muted-foreground">
       One proposal may include one or multiple work packages or work streams.
       Please provide details for each one below.
     </p>

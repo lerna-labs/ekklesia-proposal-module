@@ -78,7 +78,7 @@
 </script>
 
 {#if workPackages.length > 0}
-  <p class="mb-4">
+  <p class="mb-4 text-muted-foreground">
     Please review if all the details in the summary of your budget are correct
     before going to the next step.
   </p>
@@ -144,7 +144,7 @@
   Will any portion of the requested funds be returned to the Cardano Treasury?
 </h3>
 
-<p>
+<p class="text-muted-foreground">
   Select whether your proposal includes any form of treasury repayment (for
   example, unused funds, profit-sharing, or conditional returns).
 </p>
@@ -166,7 +166,7 @@
 {#if formData.metaData.treasuryRepayment === "Yes"}
   <h3>Under what circumstances would a repayment occur?</h3>
 
-  <p>
+  <p class="text-muted-foreground">
     Describe the specific conditions or triggers that would result in funds
     being returned to the Treasury (e.g. surplus funds, revenue thresholds,
     loan, project cancellation).
@@ -190,7 +190,7 @@
   programs?
 </h3>
 
-<p>
+<p class="text-muted-foreground">
   List any prior funding received from Catalyst, Treasury withdrawals, Intersect
   programs, or other Cardano ecosystem grants. If not applicable, you may enter
   “N/A”.
