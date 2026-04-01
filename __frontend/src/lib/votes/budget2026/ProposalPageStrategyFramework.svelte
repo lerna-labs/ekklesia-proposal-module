@@ -50,7 +50,12 @@
         {/snippet}
         <div class="space-y-2 rounded-md">
           {#each selectedPillars as pillar (pillar?._id)}
-            <FormPillarCard {pillar} selected={false} readOnly={true} class="bg-white" />
+            <FormPillarCard
+              {pillar}
+              selected={false}
+              readOnly={true}
+              class="bg-white"
+            />
           {/each}
         </div>
       </CollapsibleCard>
