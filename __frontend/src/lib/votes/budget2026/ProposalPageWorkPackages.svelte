@@ -143,8 +143,11 @@
             collapseLabel="Collapse work package"
             titleClass="text-lg font-medium leading-6"
           >
+            {#snippet titleEyebrow()}
+              <div class="text-muted-foreground text-xs">Work Package</div>
+            {/snippet}
             {#snippet title()}
-              {name}
+              <div class="mb-1">{name}</div>
             {/snippet}
             {#snippet titleLeading()}
               <BoxIcon class="size-5 shrink-0" />
@@ -402,22 +405,26 @@
                             {#snippet title()}
                               {itemName}
                             {/snippet}
-                            <div class="text-sm text-muted-foreground mt-0 mb-1">
-                              <span class="font-medium text-foreground"
-                                >Cost category:</span
-                              >
+                            <div
+                              class="text-sm text-muted-foreground mt-0 mb-1"
+                            >
+                              <span class="font-medium text-foreground">
+                                Cost category:
+                              </span>
                               <span>{row.costCategory ?? "—"}</span>
                             </div>
                             <div class="text-sm text-muted-foreground mt-3">
-                              <span class="font-medium text-foreground"
-                                >ADA costs:</span
-                              >
+                              <span class="font-medium text-foreground">
+                                ADA costs:
+                              </span>
                               <span>
                                 {formatAda(total)} ADA
                                 {#if conversionRateNum != null && Number.isFinite(total)}
                                   <br />
                                   <span class="text-muted-foreground">
-                                    USD equivalent ${formatUsd(total * conversionRateNum)}
+                                    USD equivalent ${formatUsd(
+                                      total * conversionRateNum,
+                                    )}
                                     (ADA/USD {conversionRateNum})
                                   </span>
                                 {/if}
@@ -425,10 +432,15 @@
                             </div>
                             {#if (row.description ?? "").trim()}
                               <div class="text-sm text-muted-foreground mt-3">
-                                <span class="font-medium text-foreground block mb-1"
-                                  >Item description:</span
+                                <span
+                                  class="font-medium text-foreground block mb-1"
                                 >
-                                <Markdown content={row.description ?? ""} class="mt-0.5" />
+                                  Item description:
+                                </span>
+                                <Markdown
+                                  content={row.description ?? ""}
+                                  class="mt-0.5"
+                                />
                               </div>
                             {/if}
                           </CollapsibleCard>
@@ -443,7 +455,9 @@
                       <div class="flex items-center gap-4 tabular-nums">
                         <span>{formatAda(totalAda)} ADA</span>
                         {#if totalUsd != null}
-                          <span>${formatUsd(totalUsd)} (ADA/USD {conversionRateNum})</span>
+                          <span>
+                            ${formatUsd(totalUsd)} (ADA/USD {conversionRateNum})
+                          </span>
                         {/if}
                       </div>
                     </div>

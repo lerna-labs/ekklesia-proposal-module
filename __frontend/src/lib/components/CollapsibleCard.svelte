@@ -18,6 +18,7 @@
     popoverButtonLabel = "Show details",
     popoverContentClass = "p-3 text-sm max-w-sm",
     title,
+    titleEyebrow,
     titleLeading,
     popover,
     children,
@@ -25,6 +26,29 @@
   } = $props();
 
   const ariaLabel = $derived(expanded ? collapseLabel : expandLabel);
+
+  /** Same grid as title column alignment; minmax(0,1fr) for truncation. */
+  const mainRowGridClass = $derived.by(() => {
+    const trailing = !!(popover || showButton);
+    if (titleLeading) {
+      return trailing
+        ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+        : "grid-cols-[auto_minmax(0,1fr)]";
+    }
+    return trailing
+      ? "grid-cols-[minmax(0,1fr)_auto]"
+      : "grid-cols-[minmax(0,1fr)]";
+  });
+
+  /** Title + eyebrow share this column (past optional icon column). */
+  const titleColClass = $derived(titleLeading ? "col-start-2" : "col-start-1");
+  /** Eyebrow row 1; title/icon/trailing row 2 when eyebrow exists. */
+  const titleRowClassStart = $derived(
+    titleEyebrow ? "row-start-2" : "row-start-1",
+  );
+  const trailingColClass = $derived(
+    titleLeading ? "col-start-3" : "col-start-2",
+  );
 </script>
 
 <Card.Root
@@ -33,87 +57,94 @@
     : 'pb-2'} bg-slate-50 rounded-md border {className}"
   {...restProps}
 >
-  <Card.Header
-    class="flex flex-row gap-1 py-0 pl-4 pr-3 text-sm items-start min-h-10"
-  >
-    <div class="flex-1 min-w-0 flex min-h-10 items-start">
+  <!-- Override card-header defaults: grid-rows-[auto_auto] + gap-1.5 adds dead space below our single child -->
+  <Card.Header class="grid-rows-1 gap-0 py-1 pl-4 pr-3 text-sm min-w-0">
+    <div
+      class="grid w-full min-w-0 items-start gap-x-2 gap-y-0 {mainRowGridClass}"
+    >
+      {#if titleEyebrow}
+        <div class="min-w-0 row-start-1 {titleColClass} {titleRowClass}">
+          {@render titleEyebrow?.()}
+        </div>
+      {/if}
+
+      {#if titleLeading}
+        <span
+          class="col-start-1 flex shrink-0 items-center justify-center self-start pt-1.5 {titleRowClassStart}"
+          aria-hidden="true"
+        >
+          {@render titleLeading?.()}
+        </span>
+      {/if}
+
       <button
         type="button"
-        class="min-w-0 w-full text-left cursor-pointer focus:outline-none"
+        class="min-w-0 w-full overflow-hidden text-left focus:outline-none {titleClass} {titleColClass} {titleRowClassStart}"
         onclick={onToggle}
         aria-expanded={expanded}
         aria-label={ariaLabel}
         title={ariaLabel}
       >
         {#if expanded}
-          <span class="pt-2 block {titleClass}">
-            <span class="flex items-start gap-2 min-w-0 {titleRowClass}">
-              {#if titleLeading}
-                <span class="shrink-0 mt-0.5" aria-hidden="true">
-                  {@render titleLeading?.()}
-                </span>
-              {/if}
-              <span class="block min-w-0">
-                {@render title?.()}
-              </span>
-            </span>
-          </span>
+          <span class="block w-full pt-1">{@render title?.()}</span>
         {:else}
-          <span class="pt-2 block {titleClass}">
-            <span class="flex items-center gap-2 min-w-0 {titleRowClass}">
-              {#if titleLeading}
-                <span class="shrink-0" aria-hidden="true">
-                  {@render titleLeading?.()}
-                </span>
-              {/if}
-              <span class="block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                {@render title?.()}
-              </span>
-            </span>
+          <span
+            class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1"
+          >
+            {@render title?.()}
           </span>
         {/if}
       </button>
+
+      {#if popover || showButton}
+        <div
+          class="flex shrink-0 flex-row items-center gap-1 justify-self-end {trailingColClass} {titleRowClassStart}"
+        >
+          {#if popover}
+            <div class="flex shrink-0 items-center">
+              <Popover.Root>
+                <Popover.Trigger asChild={true}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    class="size-8 shrink-0 cursor-pointer"
+                    title={popoverButtonLabel}
+                    aria-label={popoverButtonLabel}
+                  >
+                    <CircleHelpIcon class="size-4" aria-hidden="true" />
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Content class={popoverContentClass} align="start">
+                  {@render popover?.()}
+                </Popover.Content>
+              </Popover.Root>
+            </div>
+          {/if}
+          {#if showButton}
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              class="size-8 shrink-0 cursor-pointer"
+              title={ariaLabel}
+              aria-expanded={expanded}
+              aria-label={ariaLabel}
+              onclick={onToggle}
+            >
+              {#if expanded}
+                <ChevronUpIcon class="size-4" aria-hidden="true" />
+              {:else}
+                <ChevronDownIcon class="size-4" aria-hidden="true" />
+              {/if}
+            </Button>
+          {/if}
+        </div>
+      {/if}
     </div>
-    {#if popover}
-      <Popover.Root>
-        <Popover.Trigger asChild={true}>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            class="shrink-0 size-8 cursor-pointer top-1 relative"
-            title={popoverButtonLabel}
-            aria-label={popoverButtonLabel}
-          >
-            <CircleHelpIcon class="size-4" aria-hidden="true" />
-          </Button>
-        </Popover.Trigger>
-        <Popover.Content class={popoverContentClass} align="start">
-          {@render popover?.()}
-        </Popover.Content>
-      </Popover.Root>
-    {/if}
-    {#if showButton}
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        class="shrink-0 size-8 cursor-pointer top-1 relative"
-        title={ariaLabel}
-        aria-expanded={expanded}
-        aria-label={ariaLabel}
-        onclick={onToggle}
-      >
-        {#if expanded}
-          <ChevronUpIcon class="size-4" aria-hidden="true" />
-        {:else}
-          <ChevronDownIcon class="size-4" aria-hidden="true" />
-        {/if}
-      </Button>
-    {/if}
   </Card.Header>
   {#if expanded}
-    <Card.Content class="pl-4 pr-3 pt-0 mt-2 pb-4">
+    <Card.Content class="mt-2 pb-4 pl-4 pr-3 pt-0">
       {@render children?.()}
     </Card.Content>
   {/if}
