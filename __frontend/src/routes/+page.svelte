@@ -45,7 +45,7 @@
       </Card.Header>
       <Card.Footer>
         <Button
-          href="https://budgetcommittee.docs.intersectmbo.org/cardano-budget-process/cardano-2026-budget-process-faqs"
+          href="https://docs.hydra-voting.intersectmbo.org"
           target="_blank"
           size="sm"
           class="w-full text-xs"
