@@ -6,7 +6,7 @@ import { Proposal } from "../../../schema/Proposal.js";
 import { User } from "../../../schema/User.js";
 import { Vote } from "../../../schema/Vote.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
-import { isAuthenticated } from "../../../helper/middleWare.js";
+import { isAuthenticated, rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
 import {
   authenticatedWriteLimiter,
   commentWritePerHourLimiter,
@@ -123,40 +123,20 @@ async function formatComment(
   return result;
 }
 
-function parsePaginationParams(query) {
-  const rawPage = query.page;
-  const rawLimit = query.limit;
-
-  const integerPattern = /^\d+$/;
-  const page =
-    rawPage === undefined
-      ? 1
-      : (typeof rawPage === "string" && integerPattern.test(rawPage.trim())
-          ? Number(rawPage.trim())
-          : Number.NaN);
-  const limit =
-    rawLimit === undefined
-      ? 10
-      : (typeof rawLimit === "string" && integerPattern.test(rawLimit.trim())
-          ? Number(rawLimit.trim())
-          : Number.NaN);
-
-  return { page, limit };
-}
 
 /**
  * GET /comments
  * API spec §3.6 — Paginated top-level comments for a proposal. Query: proposal (required), status, sort, direction, page, limit.
  * Public: live only. Admins can filter by status (live, withdrawn, withdrawnByAdmin). Response excludes proposalId, status, parentId, userId.
  */
-router.get("/", async (req, res) => {
+router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction", "userType"), parsePagination, async (req, res) => {
   try {
     const proposalId = req.query.proposal;
     const statusParam = req.query.status;
     const sortParam = (req.query.sort || "date").toString().trim().toLowerCase();
     const direction = (req.query.direction || "desc").toString().trim().toLowerCase();
     const userTypeParam = (req.query.userType || "").toString().trim().toLowerCase();
-    const { page, limit } = parsePaginationParams(req.query);
+    const { page, limit } = req.pagination;
 
     if (!proposalId || typeof proposalId !== "string") {
       return res.status(400).json({
@@ -173,21 +153,6 @@ router.get("/", async (req, res) => {
       return res.status(400).json({
         status: "error",
         message: "Invalid proposal parameter. Must be a valid ObjectId.",
-      });
-    }
-
-    if (page < 1 || isNaN(page)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid page parameter. Must be a positive integer.",
-      });
-    }
-
-    if (limit < 1 || isNaN(limit) || limit > 100) {
-      return res.status(400).json({
-        status: "error",
-        message:
-          "Invalid limit parameter. Must be a positive integer between 1 and 100.",
       });
     }
 
@@ -504,20 +469,14 @@ router.post(
  * GET /comments/:commentId/replies
  * API spec §3.8 — Paginated replies to a comment. Query: status, page, limit. Ordered by createdAt asc. Parent must exist and be live.
  */
-router.get("/:commentId/replies", async (req, res) => {
+router.get("/:commentId/replies", rejectDuplicateParams("status"), parsePagination, async (req, res) => {
   try {
     const { commentId } = req.params;
     const statusParam = req.query.status;
-    const { page, limit } = parsePaginationParams(req.query);
+    const { page, limit } = req.pagination;
 
     if (!mongoose.Types.ObjectId.isValid(commentId) || commentId.length !== 24) {
       return res.status(400).json({ status: "error", message: "Invalid commentId parameter. Must be a valid ObjectId." });
-    }
-    if (page < 1 || isNaN(page)) {
-      return res.status(400).json({ status: "error", message: "Invalid page parameter. Must be a positive integer." });
-    }
-    if (limit < 1 || isNaN(limit) || limit > 100) {
-      return res.status(400).json({ status: "error", message: "Invalid limit parameter. Must be a positive integer between 1 and 100." });
     }
 
     const parentComment = await Comment.findById(commentId).lean();

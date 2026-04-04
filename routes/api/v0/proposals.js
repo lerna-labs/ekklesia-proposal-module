@@ -10,7 +10,7 @@ import { Comment } from "../../../schema/Comment.js";
 // helper imports
 import mongoose from "mongoose";
 import { z } from "zod";
-import { isAuthenticated } from "../../../helper/middleWare.js";
+import { isAuthenticated, rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
 import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
@@ -734,7 +734,7 @@ router.get("/:proposalId", async (req, res) => {
  * @returns {Object} 400 - Error if query parameters are invalid
  * @returns {Object} 404 - Vote not found
  */
-router.get("/", async (req, res) => {
+router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "sort", "direction"), parsePagination, async (req, res) => {
   try {
     const {
       search,
@@ -743,44 +743,8 @@ router.get("/", async (req, res) => {
       status: statusParam,
       sort: sortParam,
       direction = "desc",
-      page = 1,
-      limit = 10,
     } = req.query;
-
-    const stringQueryParams = {
-      search,
-      vote: voteParam,
-      proposer,
-      sort: sortParam,
-      direction,
-    };
-    for (const [paramName, paramValue] of Object.entries(stringQueryParams)) {
-      if (paramValue !== undefined && typeof paramValue !== "string") {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${paramName} parameter type. Must be a string.`,
-        });
-      }
-    }
-
-    // Validate pagination parameters
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || pageNum < 1) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid page parameter. Must be a positive integer.",
-      });
-    }
-
-    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      return res.status(400).json({
-        status: "error",
-        message:
-          "Invalid limit parameter. Must be a positive integer between 1 and 100.",
-      });
-    }
+    const { page, limit } = req.pagination;
 
     // Require vote parameter
     if (!voteParam) {
@@ -850,12 +814,7 @@ router.get("/", async (req, res) => {
     // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
     // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
     const statusOption = resolvedFilterOptions.find((o) => o.param === "status");
-    const statusStr =
-      typeof statusParam === "string"
-        ? statusParam
-        : Array.isArray(statusParam)
-          ? statusParam.join(",")
-          : "";
+    const statusStr = statusParam ?? "";
     if (filterParamSet.has("status") && statusOption) {
       if (statusStr) {
         const statusTerms = statusStr
@@ -1053,7 +1012,7 @@ router.get("/", async (req, res) => {
 
     const sortOption = { [sortField]: sortDirection };
 
-    const skip = (pageNum - 1) * limitNum;
+    const skip = (page - 1) * limit;
     const totalItems = await Proposal.countDocuments(query);
 
     let proposals;
@@ -1085,7 +1044,7 @@ router.get("/", async (req, res) => {
         },
         { $sort: { commentCount: sortDirection } },
         { $skip: skip },
-        { $limit: limitNum },
+        { $limit: limit },
       ];
       proposals = await Proposal.aggregate(pipeline);
       proposals = proposals.map((p) => ({ ...p, commentCount: p.commentCount ?? 0 }));
@@ -1093,7 +1052,7 @@ router.get("/", async (req, res) => {
       proposals = await Proposal.find(query)
         .sort(sortOption)
         .skip(skip)
-        .limit(limitNum)
+        .limit(limit)
         .lean();
       const proposalIds = proposals.map((p) => p._id).filter(Boolean);
       let commentCountsById = new Map();
@@ -1157,15 +1116,15 @@ router.get("/", async (req, res) => {
     });
 
     // Calculate pagination metadata
-    const totalPages = Math.ceil(totalItems / limitNum);
-    const hasNextPage = pageNum < totalPages;
-    const hasPreviousPage = pageNum > 1;
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).json({
       data: formattedProposals,
       meta: {
-        page: pageNum,
-        limit: limitNum,
+        page: page,
+        limit: limit,
         total: totalItems,
         totalPages,
         hasNextPage,

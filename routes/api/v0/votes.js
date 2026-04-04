@@ -7,6 +7,7 @@ import { Vote } from "../../../schema/Vote.js";
 
 // helper imports
 import mongoose from "mongoose";
+import { rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
 
 /**
  * @route GET /api/v0/votes/:voteId
@@ -76,38 +77,10 @@ router.get("/:voteId", async (req, res, next) => {
  * @returns {Object} 400 - Error if pagination parameters are invalid
  * @returns {Object} 404 - No votes found when search or slug parameters are provided
  */
-router.get("/", async (req, res) => {
+router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async (req, res) => {
   try {
-    const { search, slug, page = 1, limit = 10 } = req.query;
-
-    const stringQueryParams = { slug, search };
-    for (const [paramName, paramValue] of Object.entries(stringQueryParams)) {
-      if (paramValue !== undefined && typeof paramValue !== "string") {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${paramName} parameter type. Must be a string.`,
-        });
-      }
-    }
-
-    // Validate pagination parameters
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || pageNum < 1) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid page parameter. Must be a positive integer.",
-      });
-    }
-
-    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      return res.status(400).json({
-        status: "error",
-        message:
-          "Invalid limit parameter. Must be a positive integer between 1 and 100.",
-      });
-    }
+    const { search, slug } = req.query;
+    const { page, limit } = req.pagination;
 
     // Build search query
     let query = {};
@@ -135,7 +108,7 @@ router.get("/", async (req, res) => {
     }
 
     // Calculate skip value for pagination
-    const skip = (pageNum - 1) * limitNum;
+    const skip = (page - 1) * limit;
 
     // Execute query with pagination (exclude validationScript from response)
     const [votesRaw, totalItems] = await Promise.all([
@@ -143,7 +116,7 @@ router.get("/", async (req, res) => {
         .select("-validationScript")
         .sort({ createdAt: -1 }) // Sort by newest first
         .skip(skip)
-        .limit(limitNum)
+        .limit(limit)
         .lean(), // Use lean() for better performance
       Vote.countDocuments(query), // Get total count for pagination
     ]);
@@ -166,15 +139,15 @@ router.get("/", async (req, res) => {
     }));
 
     // Calculate pagination metadata
-    const totalPages = Math.ceil(totalItems / limitNum);
-    const hasNextPage = pageNum < totalPages;
-    const hasPreviousPage = pageNum > 1;
+    const totalPages = Math.ceil(totalItems / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).json({
       data: votesWithOptions,
       meta: {
-        page: pageNum,
-        limit: limitNum,
+        page: page,
+        limit: limit,
         total: totalItems,
         totalPages,
         hasNextPage,

@@ -2,12 +2,12 @@
 import validator from "validator";
 
 // schema imports
-import { Proposal } from "../schema/Proposal.js";
+import {Proposal} from "../schema/Proposal.js";
 
 // helper imports
-import { verifyToken } from "../helper/verifyToken.js";
-import { validateAddress } from "../helper/validateAddress.js";
-import { PublicKey } from "@emurgo/cardano-serialization-lib-nodejs";
+import {verifyToken} from "../helper/verifyToken.js";
+import {validateAddress} from "../helper/validateAddress.js";
+import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
 
 /**
  * Middleware to verify user authentication token
@@ -28,6 +28,69 @@ import { PublicKey } from "@emurgo/cardano-serialization-lib-nodejs";
  * - req.signType: The type of signature used ('drep', etc.)
  * - req.multiSig: Boolean indicating if this is a multisig authentication
  */
+/**
+ * Middleware factory that rejects requests containing duplicate (array) query parameters.
+ * Express parses repeated params (e.g. ?page=1&page=2) as arrays — this middleware
+ * returns 400 for any listed param that arrives as an array.
+ *
+ * @param {...string} paramNames - Query parameter names that must not be duplicated
+ * @returns {Function} Express middleware
+ */
+export function rejectDuplicateParams(...paramNames) {
+  return (req, res, next) => {
+    for (const name of paramNames) {
+      if (Array.isArray(req.query[name])) {
+        return res.status(400).json({
+          status: "error",
+          message: `Duplicate ${name} parameter.`,
+        });
+      }
+    }
+    next();
+  };
+}
+
+/**
+ * Middleware that validates and parses pagination query parameters (page, limit).
+ * Rejects duplicate params, applies defaults (page=1, limit=10), validates ranges,
+ * and sets req.pagination = { page, limit } for downstream handlers.
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+export function parsePagination(req, res, next) {
+  const { page: rawPage, limit: rawLimit } = req.query;
+
+  if (Array.isArray(rawPage) || Array.isArray(rawLimit)) {
+    return res.status(400).json({
+      status: "error",
+      message: `Duplicate ${Array.isArray(rawPage) ? "page" : "limit"} parameter.`,
+    });
+  }
+
+  const page = rawPage === undefined ? 1 : parseInt(rawPage, 10);
+  const limit = rawLimit === undefined ? 10 : parseInt(rawLimit, 10);
+
+  if (isNaN(page) || page < 1) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid page parameter. Must be a positive integer.",
+    });
+  }
+
+  if (isNaN(limit) || limit < 1 || limit > 100) {
+    return res.status(400).json({
+      status: "error",
+      message:
+        "Invalid limit parameter. Must be a positive integer between 1 and 100.",
+    });
+  }
+
+  req.pagination = { page, limit };
+  next();
+}
+
 export function isAuthenticated(req, res, next) {
   try {
     const userToken = verifyToken(req);
@@ -200,8 +263,7 @@ export function validateSessionRequest(req, res, next) {
   if (signerAddress.length === 64 && signType === "drep") {
     const pubkey = PublicKey.from_hex(signerAddress);
     let keyhash = pubkey.hash();
-    const keyHashHex = Buffer.from(keyhash.to_bytes()).toString("hex");
-    signerAddress = keyHashHex;
+    signerAddress = Buffer.from(keyhash.to_bytes()).toString("hex");
   }
 
   // Store validated address for use in the handler
