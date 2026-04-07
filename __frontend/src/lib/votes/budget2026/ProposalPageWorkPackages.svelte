@@ -1,10 +1,13 @@
 <script>
   import { Badge } from "$lib/components/ui/badge";
-  import { formatAda, formatUsd } from "$lib/utils.js";
+  import { buttonVariants } from "$lib/components/ui/button";
+  import { cn, formatAda, formatUsd } from "$lib/utils.js";
+  import * as Popover from "$lib/components/ui/popover";
   import Markdown from "$lib/base/Markdown.svelte";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import BoxIcon from "@lucide/svelte/icons/box";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+  import InfoIcon from "@lucide/svelte/icons/info";
   import ItemContainer from "./ItemContainer.svelte";
   import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   let { proposal } = $props();
@@ -218,10 +221,40 @@
 
               <section class="mb-6">
                 <h4
-                  class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
+                  class="text-normal font-medium mb-2 leading-snug text-(--mbo-tangy-blue) inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
-                  Why does this work matter to Cardano, and how will success be
-                  measured?
+                  Why does this work matter to Cardano? (Expected Value - ROI)
+                  <Popover.Root>
+                    <Popover.Trigger
+                      class={cn(
+                        buttonVariants({
+                          variant: "ghost",
+                          size: "icon-sm",
+                        }),
+                        "size-fit shrink-0 p-0 px-0 py-0 h-auto w-auto min-h-0 gap-0",
+                        "-ml-px text-(--mbo-tangy-blue) transition-none",
+                        "hover:bg-transparent hover:text-(--mbo-tangy-blue)",
+                        "dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent",
+                        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+                      )}
+                      openOnHover={true}
+                      openDelay={150}
+                      closeDelay={150}
+                      aria-label="About Expected Value (ROI)"
+                    >
+                      <InfoIcon class="size-3" aria-hidden="true" />
+                    </Popover.Trigger>
+                    <Popover.Content class="p-3 text-sm max-w-sm" align="start">
+                      <div class="font-medium">
+                        Describe what will change or improve as a result of this
+                        Work Package.
+                      </div>
+                      <p class="text-xs mt-2">
+                        This may be qualitative or quantitative and does not
+                        need to be financial.
+                      </p>
+                    </Popover.Content>
+                  </Popover.Root>
                 </h4>
                 <ItemContainer>
                   <Markdown content={wp.expectedValue} />
@@ -230,9 +263,39 @@
 
               <section class="mb-6">
                 <h4
-                  class="text-normal font-medium mb-2 text-(--mbo-tangy-blue)"
+                  class="text-normal font-medium mb-2 leading-snug text-(--mbo-tangy-blue) inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
                   How will success be measured?
+                  <Popover.Root>
+                    <Popover.Trigger
+                      class={cn(
+                        buttonVariants({
+                          variant: "ghost",
+                          size: "icon-sm",
+                        }),
+                        "size-fit shrink-0 p-0 px-0 py-0 h-auto w-auto min-h-0 gap-0",
+                        "-ml-px text-(--mbo-tangy-blue) transition-none",
+                        "hover:bg-transparent hover:text-(--mbo-tangy-blue)",
+                        "dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent",
+                        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+                      )}
+                      openOnHover={true}
+                      openDelay={150}
+                      closeDelay={150}
+                      aria-label="About success metrics"
+                    >
+                      <InfoIcon class="size-3" aria-hidden="true" />
+                    </Popover.Trigger>
+                    <Popover.Content class="p-3 text-sm max-w-sm" align="start">
+                      <div class="font-medium">
+                        How will success be measured?
+                      </div>
+                      <p class="text-xs mt-2">
+                        Provide one or more metrics that demonstrate whether the
+                        expected value has been achieved.
+                      </p>
+                    </Popover.Content>
+                  </Popover.Root>
                 </h4>
                 <ItemContainer>
                   <Markdown content={wp.metric} />
