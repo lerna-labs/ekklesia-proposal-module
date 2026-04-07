@@ -169,7 +169,7 @@ const proposerDetailsSchema = z.object({
       const emailSchema = z.string().email("Enter a valid email");
       const result = emailSchema.safeParse(val);
       if (!result.success) {
-        const msg = result.error.errors[0]?.message ?? "Enter a valid email";
+        const msg = result.error.issues[0]?.message ?? "Enter a valid email";
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
       }
     }),
@@ -208,7 +208,7 @@ const legalDeclarationsSchema = z.object({
       const emailSchema = z.string().email("Enter a valid email");
       const result = emailSchema.safeParse(val);
       if (!result.success) {
-        const msg = result.error.errors[0]?.message ?? "Enter a valid email";
+        const msg = result.error.issues[0]?.message ?? "Enter a valid email";
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg });
       }
     }),
