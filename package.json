@@ -21,6 +21,7 @@
     "bech32": "^2.0.0",
     "blakejs": "^1.2.1",
     "cbor": "^10.0.12",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dayjs": "^1.11.20",

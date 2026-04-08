@@ -11,6 +11,7 @@ import {
   checkDatabaseConnectionMW,
 } from "./helper/dbManager.js";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
 
 // Initialize console with timestamps
@@ -33,6 +34,8 @@ const app = express();
 
 // Trust first proxy (e.g. nginx) so req.ip and rate-limit use X-Forwarded-For
 app.set("trust proxy", 1);
+
+app.use(compression());
 
 const PORT = process.env.SERVER_PORT || 3000;
 
