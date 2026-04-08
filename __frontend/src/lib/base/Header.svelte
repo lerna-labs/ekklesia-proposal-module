@@ -12,7 +12,13 @@
     class="container mx-auto max-w-4xl pt-0 pb-4 px-4 flex justify-between items-end"
   >
     <a href="/">
-      <img src="/images/logo.svg" alt="Intersect Logo" class="h-12 sm:h-18" />
+      <img
+        src="/images/logo.svg"
+        alt="Intersect Logo"
+        width="136"
+        height="52"
+        class="h-12 w-auto sm:h-18"
+      />
     </a>
     <nav>
       <ul class="flex items-center gap-2">
