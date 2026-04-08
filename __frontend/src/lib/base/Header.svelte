@@ -8,23 +8,17 @@
 
 <header class="relative bg-(--mbo-tangy-blue) text-white">
   <div class="h-8 bg-(--mbo-tangy-blue)"></div>
-  <div
-    class="container mx-auto max-w-4xl pt-0 pb-4 px-4 flex justify-between items-end"
-  >
-    <a href="/">
-      <img
-        src="/images/logo.svg"
-        alt="Intersect Logo"
-        width="136"
-        height="52"
-        class="h-12 w-auto sm:h-18"
-      />
+  <div class="container mx-auto max-w-4xl pt-0 pb-4 px-4 flex justify-between items-end">
+    <a href="/" title="Home">
+      <img src="/images/logo.svg" alt="Intersect Logo" width="136" height="52" class="h-12 w-auto sm:h-18" />
     </a>
     <nav>
       <ul class="flex items-center gap-2">
         <li>
           <Button
             href="/votes/cardano-budget-2026"
+            title="View Proposals"
+            aria-label="View Proposals"
             variant="outline"
             size="sm"
             class="text-xs text-black"
@@ -40,6 +34,8 @@
             <div class="flex items-center gap-2">
               <Button
                 href="/dashboard"
+                title="My Dashboard"
+                aria-label="My Dashboard"
                 size="sm"
                 class="bg-white text-black hover:bg-gray-200 text-xs"
               >
@@ -49,6 +45,7 @@
               <Button
                 size="sm"
                 variant="destructive"
+                title="Log out"
                 class="text-white text-xs cursor-point"
                 onclick={() => logout()}
                 aria-label="Log out"

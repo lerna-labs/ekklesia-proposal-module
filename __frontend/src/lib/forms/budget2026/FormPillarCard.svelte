@@ -34,6 +34,7 @@
 <Card.Root
   role={readOnly ? undefined : "button"}
   tabindex={readOnly ? undefined : 0}
+  aria-pressed={readOnly ? undefined : selected}
   class="pt-4 pb-4 rounded-md border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring {readOnly
     ? 'cursor-default'
     : 'cursor-pointer'} {selected
@@ -59,7 +60,7 @@
         <span class="text-xs">{firstPart}</span>
       </div>
     {/if}
-    <div class="min-w-0 w-full" aria-pressed={selected}>
+    <div class="min-w-0 w-full">
       <span
         class="text-lg font-medium truncate block mt-2 {selected
           ? 'text-white'

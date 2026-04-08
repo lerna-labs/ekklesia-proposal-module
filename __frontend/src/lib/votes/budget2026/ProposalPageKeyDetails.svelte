@@ -110,7 +110,7 @@
                 >This conversion rate was specified by the proposer
 
                 <Popover.Root>
-                  <Popover.Trigger class="cursor-pointer">
+                  <Popover.Trigger class="cursor-pointer" aria-label="info">
                     <InfoIcon class="size-3 shrink-0" aria-hidden="true" />
                   </Popover.Trigger>
                   <Popover.Content class="p-3 text-xs" align="start">
