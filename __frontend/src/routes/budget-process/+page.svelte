@@ -1,6 +1,11 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
+  import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
+  import { budgetPhases } from "$lib/votes/budget2026/timeline.js";
+
+  /** Pin “now” for the timeline while testing (`undefined` = real time). Example: `"2026-05-26T12:00:00.000Z"` or `1716724800000`. */
+  // const timelineTestNow = "2026-07-29T12:00:00.000Z";
 </script>
 
 <section class="container mx-auto max-w-4xl py-8 px-4">
@@ -40,26 +45,34 @@
     </p>
   </div>
 
-  <Card.Root class="mt-8 sm:w-1/2">
-    <Card.Header>
-      <Card.Title class="pb-4">Proposals</Card.Title>
-      <Card.Description class="text-black">
-        In this section you can <strong>Submit</strong>
-        ,
-        <strong>View</strong>
-        and
-        <strong>Comment</strong>
-        on Proposals.
-      </Card.Description>
-    </Card.Header>
-    <Card.Footer>
-      <Button
-        href="/votes/cardano-budget-2026"
-        size="sm"
-        class="w-full text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
-      >
-        View Proposals
-      </Button>
-    </Card.Footer>
-  </Card.Root>
+  <div
+    class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 sm:items-stretch sm:gap-6"
+  >
+    <div class="flex h-full min-w-0 flex-col">
+      <BudgetProcessTimeline phases={budgetPhases} />
+    </div>
+
+    <Card.Root class="min-h-0 min-w-0 h-full">
+      <Card.Header>
+        <Card.Title class="pb-4">Proposals</Card.Title>
+        <Card.Description class="text-black">
+          In this section you can <strong>Submit</strong>
+          ,
+          <strong>View</strong>
+          and
+          <strong>Comment</strong>
+          on Proposals.
+        </Card.Description>
+      </Card.Header>
+      <Card.Footer class="h-full flex items-end">
+        <Button
+          href="/votes/cardano-budget-2026"
+          size="sm"
+          class="w-full text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+        >
+          View Proposals
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+  </div>
 </section>

@@ -9,11 +9,11 @@
   let { voteSlug = "" } = $props();
 </script>
 
-<Card.Root class="mt-4">
+<Card.Root class="mt-4 h-full">
   <Card.Header class="pb-0">
     <Card.Title class="text-base">Submit your proposal</Card.Title>
   </Card.Header>
-  <Card.Content class="flex flex-wrap gap-2 pt-0!">
+  <Card.Content class="flex flex-wrap gap-2 pt-0! h-full items-end">
     <Button
       href="/dashboard/{voteSlug}/new"
       data-walletsigner-action="navigateAfterLogin"

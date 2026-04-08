@@ -9,14 +9,41 @@
   import Search from "$lib/Search.svelte";
   import SearchFilter from "$lib/SearchFilter.svelte";
   import SearchSort from "$lib/SearchSort.svelte";
-  import {
-    queryStringWithLiteralCommas,
-    shortenString,
-  } from "$lib/utils.js";
+  import { queryStringWithLiteralCommas, shortenString } from "$lib/utils.js";
+  import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
   import VoteCTA from "$lib/votes/VoteCTA.svelte";
   import XIcon from "@lucide/svelte/icons/x";
+
+  const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
+    eager: true,
+  });
+
+  /** @param {string} path */
+  function voteFormFromTimelinePath(path) {
+    const m = path.match(/\/votes\/([^/]+)\/timeline\.js$/);
+    return m ? m[1] : null;
+  }
+
+  const timelinePhasesByVoteForm = Object.fromEntries(
+    Object.entries(voteTimelineModules)
+      .map(([path, mod]) => {
+        const form = voteFormFromTimelinePath(path);
+        const phases =
+          mod && typeof mod === "object" && "budgetPhases" in mod
+            ? /** @type {unknown[]} */ (mod.budgetPhases)
+            : undefined;
+        return form && Array.isArray(phases) && phases.length > 0
+          ? [form, phases]
+          : null;
+      })
+      .filter((entry) => entry != null),
+  );
+
   let { data } = $props();
   let vote = $derived(data.vote);
+  const listTimelinePhases = $derived(
+    (vote?.form && timelinePhasesByVoteForm[vote.form]) || null,
+  );
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let pillars = $derived(data.pillars ?? []);
@@ -129,11 +156,25 @@
     <h1 class="text-2xl font-semibold">
       {vote.name || vote.title || "Vote"}
     </h1>
+
     <!-- {#if vote.description}
       <p class="text-muted-foreground mt-2">{vote.description}</p>
     {/if} -->
 
-    <VoteCTA voteSlug={voteSlug} />
+    {#if listTimelinePhases}
+      <div
+        class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"
+      >
+        <div class="flex h-full min-w-0 flex-col">
+          <BudgetProcessTimeline phases={listTimelinePhases} />
+        </div>
+        <div class="flex h-full min-w-0 flex-col *:mt-0">
+          <VoteCTA {voteSlug} />
+        </div>
+      </div>
+    {:else}
+      <VoteCTA {voteSlug} />
+    {/if}
 
     <div class="mt-4 space-y-2">
       {#if vote.year}
