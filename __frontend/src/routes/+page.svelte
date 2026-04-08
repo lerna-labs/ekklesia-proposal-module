@@ -1,6 +1,7 @@
 <script>
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
+  import { ExternalLinkIcon } from "lucide-svelte";
 </script>
 
 <section class="container mx-auto max-w-4xl py-8 px-4">
@@ -51,7 +52,7 @@
           class="w-full text-xs"
           variant="outline"
         >
-          View Docs
+          View Docs <ExternalLinkIcon class="size-3" />
         </Button>
       </Card.Footer>
     </Card.Root>
