@@ -75,11 +75,10 @@
                 href="https://docs.hydra-voting.intersectmbo.org/budget-process/2026-budget-process-guides/budget-proposal-submission/how-to-donate-to-the-cardano-treasury-1-000-ada"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-primary underline underline-offset-4 hover:no-underline"
+                class="link"
               >
-                this guide
+                this guide.
               </a>
-              .
             </p>
 
             <Separator class="my-4" />

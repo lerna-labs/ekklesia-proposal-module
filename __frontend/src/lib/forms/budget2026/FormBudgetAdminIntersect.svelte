@@ -29,9 +29,7 @@
     if (!cp || typeof cp !== "object") return false;
     const fields =
       entityType === "company" ? COMPANY_FIELDS : INDIVIDUAL_FIELDS;
-    return fields.some(
-      (f) => (cp[f] ?? "").toString().trim() !== "",
-    );
+    return fields.some((f) => (cp[f] ?? "").toString().trim() !== "");
   }
 
   /** Display value for legal entity type radio; kept in sync with formData when no pending change. */
@@ -115,7 +113,15 @@
 <p class="text-sm text-muted-foreground mt-4">
   If Intersect is selected as the Administrator, a 3% administration fee will be
   applied to the total budget amount. This fee covers treasury administration,
-  contracting, payment execution, and reporting.
+  contracting, payment execution, and reporting. <a
+    href="https://admin-services.docs.intersectmbo.org/overview/budget-proposal-administration-for-2026-cycle
+"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="link"
+  >
+    Read more
+  </a>
 </p>
 
 <Checkbox
@@ -126,9 +132,9 @@
   validationErrors={feeConsentErrors}
 />
 
-<h3 class="mt-8"
-  >Are you applying as a registered company or as an individual?</h3
->
+<h3 class="mt-8">
+  Are you applying as a registered company or as an individual?
+</h3>
 
 <RadioGroup
   id="legalEntityType"
@@ -410,8 +416,8 @@
         {formData.metaData.contractingParty?.legalEntityType === "company"
           ? "company"
           : "individual"}
-        details you entered. You will need to re-enter the information for the
-        new type. Do you want to continue?
+        details you entered. You will need to re-enter the information for the new
+        type. Do you want to continue?
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">

@@ -39,12 +39,12 @@
     {#if proposal?.metaData?.administrator === "Intersect"}
       <div class="text-sm">
         For more info about Intersect administration service and process click <a
-          href="https://admin-services.docs.intersectmbo.org"
-          class="link"
+          href="https://admin-services.docs.intersectmbo.org/overview/budget-proposal-administration-for-2026-cycle"
           target="_blank"
           rel="noopener noreferrer"
+          class="link"
         >
-          here
+          here.
         </a>
       </div>
     {/if}
