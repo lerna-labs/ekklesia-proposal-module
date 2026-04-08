@@ -10,12 +10,7 @@
   import Checkbox from "$lib/components/form/Checkbox.svelte";
   import { Separator } from "$lib/components/ui/separator/index.js";
 
-  let {
-    open = $bindable(false),
-    onContinue,
-    onCancel,
-    guideUrl = "https://intersectmbo.org",
-  } = $props();
+  let { open = $bindable(false), onContinue, onCancel } = $props();
 
   let acknowledged = $state(false);
 </script>
@@ -77,14 +72,13 @@
             <p class="mb-4">
               Read how to in
               <a
-                href={guideUrl}
+                href="https://docs.hydra-voting.intersectmbo.org/budget-process/2026-budget-process-guides/budget-proposal-submission/how-to-donate-to-the-cardano-treasury-1-000-ada"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-primary underline underline-offset-4 hover:no-underline"
+                class="link"
               >
-                this guide
+                this guide.
               </a>
-              .
             </p>
 
             <Separator class="my-4" />

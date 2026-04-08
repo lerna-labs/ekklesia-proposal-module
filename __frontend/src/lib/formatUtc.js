@@ -15,5 +15,22 @@ export function formatUtcInstant(value, options = {}) {
 	if (Number.isNaN(d.getTime())) return "—";
 	const merged = { timeZone: "UTC", ...intlOptions };
 	const text = new Intl.DateTimeFormat(undefined, merged).format(d);
-	return suffixUtc ? `${text} UTC` : text;
+	return suffixUtc ? `${text} (UTC)` : text;
+}
+
+/**
+ * Full UTC wall time: long month + day + year, time to the second (24h), then ` UTC`. No weekday.
+ * @param {Date | string | number | null | undefined} value
+ * @returns {string}
+ */
+export function formatUtcFullDateTime(value) {
+	return formatUtcInstant(value, {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
+		second: "2-digit",
+		hour12: false,
+	});
 }
