@@ -77,7 +77,11 @@
   });
 
   let cardTitlePrefix = $derived.by(() =>
-    activePhaseIndex !== null ? "" : upcomingPhaseIndex !== null ? "Upcoming: " : "",
+    activePhaseIndex !== null
+      ? ""
+      : upcomingPhaseIndex !== null
+        ? "Upcoming: "
+        : "",
   );
 </script>
 
@@ -180,12 +184,12 @@
   </div>
 {/snippet}
 
-<Card.Root class="h-full w-full min-w-0 gap-4">
-  <Card.Header>
-    <Card.Title class="pb-0">Timeline</Card.Title>
+<Card.Root class="min-h-0 min-w-0 h-full gap-3">
+  <Card.Header class="pb-0">
+    <Card.Title>Timeline</Card.Title>
   </Card.Header>
   <Card.Content
-    class="flex w-full min-w-0 flex-col items-stretch text-left text-xs"
+    class="flex w-full min-w-0 flex-col items-stretch text-left text-xs pt-0!"
   >
     {#if cardPhaseIndex !== null}
       {@render phaseTimelineRow(

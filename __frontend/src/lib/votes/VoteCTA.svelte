@@ -9,9 +9,12 @@
   let { voteSlug = "" } = $props();
 </script>
 
-<Card.Root class="mt-4 h-full">
-  <Card.Header class="pb-0">
+<Card.Root class="min-h-0 min-w-0 h-full gap-3">
+  <Card.Header>
     <Card.Title class="text-base">Submit your proposal</Card.Title>
+    <Card.Description class="text-black mt-1.5">
+      Create and manage your proposals for the Cardano Budget 2026 process.
+    </Card.Description>
   </Card.Header>
   <Card.Content class="flex flex-wrap gap-2 pt-0! h-full items-end">
     <Button

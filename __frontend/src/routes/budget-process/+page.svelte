@@ -12,20 +12,25 @@
   <div>
     <h1 class="text-2xl font-semibold mb-6">Cardano Budget Process</h1>
     <p class="mb-4">
-      This portal exists to support the <strong>Cardano Ecosystem Budget Process</strong>
+      This portal exists to support the <strong>
+        Cardano Ecosystem Budget Process
+      </strong>
       facilitated by Intersect.
     </p>
 
     <p class="mb-4">
-      This budget process, designed by the Cardano Budget Committee and supported by Cardano DReps, provides a <strong>
+      This budget process, designed by the Cardano Budget Committee and
+      supported by Cardano DReps, provides a <strong>
         transparent, structured, and strategic way to allocate Treasury funds
       </strong>
       to initiatives that contribute to the long-term growth of the Cardano ecosystem.
     </p>
 
     <p class="mb-4">
-      Proposals submitted through this process will follow the defined budgeting workflow, which includes <strong>
-        DRep feedback, DRep Hydra voting, ahead of the on-chain treasury withdrawals.
+      Proposals submitted through this process will follow the defined budgeting
+      workflow, which includes <strong>
+        DRep feedback, DRep Hydra voting, ahead of the on-chain treasury
+        withdrawals.
       </strong>
     </p>
 
@@ -40,16 +45,18 @@
     </p>
   </div>
 
-  <div class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 sm:items-stretch sm:gap-6">
+  <div
+    class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 sm:items-stretch sm:gap-6"
+  >
     <div class="flex h-full min-w-0 flex-col">
       <BudgetProcessTimeline phases={budgetPhases} />
     </div>
 
-    <Card.Root class="min-h-0 min-w-0 h-full">
+    <Card.Root class="min-h-0 min-w-0 h-full gap-3">
       <Card.Header>
-        <Card.Title class="pb-4">Proposals</Card.Title>
+        <Card.Title>Proposals</Card.Title>
         <!-- prettier-ignore -->
-        <Card.Description class="text-black">
+        <Card.Description class="text-black mt-3">
           In this section you can <strong>Submit</strong>,
           <strong>View</strong> and <strong>Comment</strong>
           on Proposals.
