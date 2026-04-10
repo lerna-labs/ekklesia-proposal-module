@@ -17,7 +17,8 @@ import {
   isPartyToScript,
 } from "../../../helper/verifySignature.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
-import { fetchDrepName, fetchHandle, validateDrep } from "../../../helper/koios.js";
+import { fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
+import { validateDrep } from "../../../helper/koios.js";
 import {
   nonceRequestLimiter,
   sessionVerificationLimiter,
@@ -411,8 +412,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
   let userName;
   try {
-    if (signType === "drep") userName = await fetchDrepName(addressBech32);
-    else if (signType === "stake" || signType === "addr") userName = await fetchHandle(addressBech32);
+    userName = await fetchName(addressBech32);
   } catch (error) {
     console.error("Error fetching user name:", error);
   }
