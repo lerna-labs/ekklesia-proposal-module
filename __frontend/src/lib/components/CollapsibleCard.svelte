@@ -15,6 +15,8 @@
     class: className = "",
     titleClass = "text-lg font-medium leading-6",
     titleRowClass = "",
+    /** If 1–6, wraps the title control in that heading level (valid `h*` + `button` pattern). */
+    titleHeadingLevel = undefined,
     popoverButtonLabel = "Show details",
     popoverContentClass = "p-3 text-sm max-w-sm",
     title,
@@ -26,6 +28,12 @@
   } = $props();
 
   const ariaLabel = $derived(expanded ? collapseLabel : expandLabel);
+
+  const titleHeadingTag = $derived.by(() => {
+    const n = Number(titleHeadingLevel);
+    if (!Number.isInteger(n) || n < 1 || n > 6) return null;
+    return `h${n}`;
+  });
 
   /** Same grid as title column alignment; minmax(0,1fr) for truncation. */
   const mainRowGridClass = $derived.by(() => {
@@ -77,24 +85,50 @@
         </span>
       {/if}
 
-      <button
-        type="button"
-        class="min-w-0 w-full overflow-hidden text-left focus:outline-none {titleClass} {titleColClass} {titleRowClassStart}"
-        onclick={onToggle}
-        aria-expanded={expanded}
-        aria-label={ariaLabel}
-        title={ariaLabel}
-      >
-        {#if expanded}
-          <span class="block w-full pt-1">{@render title?.()}</span>
-        {:else}
-          <span
-            class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1"
+      {#if titleHeadingTag}
+        <svelte:element
+          this={titleHeadingTag}
+          class="min-w-0 m-0 p-0 font-[inherit] {titleClass} {titleColClass} {titleRowClassStart}"
+        >
+          <button
+            type="button"
+            class="w-full min-w-0 cursor-pointer overflow-hidden border-0 bg-transparent p-0 text-left focus:outline-none"
+            onclick={onToggle}
+            aria-expanded={expanded}
+            aria-label={ariaLabel}
+            title={ariaLabel}
           >
-            {@render title?.()}
-          </span>
-        {/if}
-      </button>
+            {#if expanded}
+              <span class="block w-full pt-1">{@render title?.()}</span>
+            {:else}
+              <span
+                class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1"
+              >
+                {@render title?.()}
+              </span>
+            {/if}
+          </button>
+        </svelte:element>
+      {:else}
+        <button
+          type="button"
+          class="min-w-0 w-full overflow-hidden text-left focus:outline-none {titleClass} {titleColClass} {titleRowClassStart}"
+          onclick={onToggle}
+          aria-expanded={expanded}
+          aria-label={ariaLabel}
+          title={ariaLabel}
+        >
+          {#if expanded}
+            <span class="block w-full pt-1">{@render title?.()}</span>
+          {:else}
+            <span
+              class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1"
+            >
+              {@render title?.()}
+            </span>
+          {/if}
+        </button>
+      {/if}
 
       {#if popover || showButton}
         <div

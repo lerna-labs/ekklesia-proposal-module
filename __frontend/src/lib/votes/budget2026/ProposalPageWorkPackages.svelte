@@ -145,6 +145,7 @@
             expandLabel="Expand work package"
             collapseLabel="Collapse work package"
             titleClass="text-lg font-medium leading-6"
+            titleHeadingLevel={3}
           >
             {#snippet titleEyebrow()}
               <div class="text-muted-foreground text-xs">Work Package</div>
