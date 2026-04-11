@@ -44,6 +44,7 @@
         onToggle={() => (expandedPillars = !expandedPillars)}
         expandLabel="Expand selected strategic pillars"
         collapseLabel="Collapse selected strategic pillars"
+        titleHeadingLevel={3}
       >
         {#snippet title()}
           To which strategic pillar does your proposal align the most?
@@ -94,6 +95,7 @@
         onToggle={() => (expandedRationale = !expandedRationale)}
         expandLabel="Expand pillar rationale"
         collapseLabel="Collapse pillar rationale"
+        titleHeadingLevel={3}
       >
         {#snippet title()}
           Why have you selected those pillars?
@@ -121,6 +123,7 @@
         onToggle={() => (expandedKpi = !expandedKpi)}
         expandLabel="Expand KPI alignment"
         collapseLabel="Collapse KPI alignment"
+        titleHeadingLevel={3}
       >
         {#snippet title()}
           Does your proposal support any of the KPIs of the strategy framework?
