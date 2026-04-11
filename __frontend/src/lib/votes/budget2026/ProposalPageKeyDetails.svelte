@@ -78,7 +78,8 @@
 
 <Card.Root class="bg-slate-50" id="key-details">
   <Card.Header class="py-0">
-    <Card.Title class="text-xl font-medium">Key Details</Card.Title>
+    <h2 id="key-details-heading" class="sr-only">Key Details</h2>
+    <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
   </Card.Header>
   <Card.Content
     class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
