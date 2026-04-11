@@ -220,10 +220,14 @@
               {/if}
 
               <section class="mb-6">
-                <h4
-                  class="text-normal font-medium mb-2 leading-snug text-(--mbo-tangy-blue) inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
+                <div
+                  class="mb-2 flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
-                  Why does this work matter to Cardano? (Expected Value - ROI)
+                  <h4
+                    class="text-normal min-w-0 font-medium leading-snug text-(--mbo-tangy-blue)"
+                  >
+                    Why does this work matter to Cardano? (Expected Value - ROI)
+                  </h4>
                   <Popover.Root>
                     <Popover.Trigger
                       class={cn(
@@ -255,17 +259,21 @@
                       </p>
                     </Popover.Content>
                   </Popover.Root>
-                </h4>
+                </div>
                 <ItemContainer>
                   <Markdown content={wp.expectedValue} />
                 </ItemContainer>
               </section>
 
               <section class="mb-6">
-                <h4
-                  class="text-normal font-medium mb-2 leading-snug text-(--mbo-tangy-blue) inline-flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
+                <div
+                  class="mb-2 flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
-                  How will success be measured?
+                  <h4
+                    class="text-normal min-w-0 font-medium leading-snug text-(--mbo-tangy-blue)"
+                  >
+                    How will success be measured?
+                  </h4>
                   <Popover.Root>
                     <Popover.Trigger
                       class={cn(
@@ -296,7 +304,7 @@
                       </p>
                     </Popover.Content>
                   </Popover.Root>
-                </h4>
+                </div>
                 <ItemContainer>
                   <Markdown content={wp.metric} />
                 </ItemContainer>
