@@ -1,7 +1,6 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
-  import { logout } from "$stores/sessionManager.js";
   import ProposalDelete from "$lib/ProposalDelete.svelte";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
   import * as Card from "$lib/components/ui/card";
@@ -13,8 +12,6 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import EyeIcon from "@lucide/svelte/icons/eye";
-  import LogOutIcon from "@lucide/svelte/icons/log-out";
-
   let { data } = $props();
   let user = $derived(data.user ?? null);
   let proposals = $derived(data.proposals.data);
@@ -81,20 +78,8 @@
   <div class="space-y-6">
     {#if user}
       <Card.Root>
-        <Card.Header
-          class="flex flex-row flex-wrap items-center justify-between gap-3"
-        >
+        <Card.Header>
           <Card.Title>Account</Card.Title>
-          <Button
-            variant="outline"
-            class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
-            aria-label="Log out"
-            size="sm"
-            onclick={() => logout()}
-          >
-            <LogOutIcon class="size-4" />
-            Log out
-          </Button>
         </Card.Header>
         <Card.Content class="flex flex-col gap-2">
           {#if user.name}
