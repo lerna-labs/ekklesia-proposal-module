@@ -1,7 +1,8 @@
 @reference "$lib/css/layout.css";
 
+/* Match global h3 (layout.css) — accordion uses h2 for semantics but same visual scale as field group titles */
 form .section-title {
-  @apply text-[2rem]! font-medium cursor-pointer max-w-4xl mx-auto;
+  @apply text-2xl! font-medium! leading-tight! text-foreground cursor-pointer max-w-4xl mx-auto;
 }
 
 form .section-title:hover {
@@ -15,6 +16,11 @@ form .section-title svg {
   min-width: 1.5rem;
   min-height: 1.5rem;
   color: black;
+}
+
+/* Non-accordion section title: typography is on inner h2 (global h2 would be text-3xl) */
+#legal-declarations .section-title h2 {
+  @apply text-2xl! font-medium! leading-tight! text-foreground;
 }
 
 /* Spacing only — typography comes from global h1–h6 in layout.css */
