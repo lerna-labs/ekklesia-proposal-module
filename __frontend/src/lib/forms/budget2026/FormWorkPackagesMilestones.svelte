@@ -126,9 +126,7 @@
           {@const m = normalizeMilestone(milestone)}
           <li>
             <Card.Root class="py-2">
-              <Card.Header
-                class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm"
-              >
+              <Card.Header class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm">
                 <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                 <div
                   class="min-w-0 flex-1 min-h-8 flex flex-col justify-center text-left cursor-pointer focus:outline-none"
@@ -148,9 +146,7 @@
                       {m.name || "Unnamed milestone"}
                     </span>
                     {#if m.duration}
-                      <span class="text-muted-foreground"
-                        >— {m.duration} weeks</span
-                      >
+                      <span class="text-muted-foreground">— {m.duration} weeks</span>
                     {/if}
                   </span>
                 </div>
@@ -215,76 +211,78 @@
           : "Add a milestone with name, deliverables, acceptance criteria, and duration (in weeks)."}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-4 overflow-y-auto min-h-0 flex-1 px-2">
-      <Input
-        id="name"
-        label="Milestone (and reference name)"
-        bind:value={draft.name}
-        placeholder="e.g. Milestone 1 – Design Approval"
-        description="You may use labels like “Milestone 1,” but please include a descriptive name afterward (e.g., “Milestone 1 – Design Approval”)."
-        required
-        maxLength={100}
-        validationErrors={draftErrors}
-      />
+    <div class="grid gap-6 py-4 overflow-y-auto min-h-0 flex-1 px-2">
+      <div class="flex flex-col gap-3">
+        <Input
+          id="name"
+          label="Milestone (and reference name)"
+          bind:value={draft.name}
+          placeholder="e.g. Milestone 1 – Design Approval"
+          description="You may use labels like “Milestone 1,” but please include a descriptive name afterward (e.g., “Milestone 1 – Design Approval”)."
+          required
+          maxLength={100}
+          validationErrors={draftErrors}
+        />
+      </div>
 
-      <h3 class="font-medium mt-2">What will you deliver in this milestone?</h3>
-      <Textarea
-        id="deliverables"
-        label="Deliverables"
-        bind:value={draft.deliverables}
-        placeholder="e.g. Architectural diagram and MVP"
-        description="Concrete outputs produced in this milestone (reports, code, documentation, audits, etc.)."
-        required
-        maxLength={4000}
-        validationErrors={draftErrors}
-      />
+      <div class="flex flex-col gap-3">
+        <h5 class="text-base font-medium">What will you deliver in this milestone?</h5>
+        <Textarea
+          id="deliverables"
+          label="Deliverables"
+          bind:value={draft.deliverables}
+          placeholder="e.g. Architectural diagram and MVP"
+          description="Concrete outputs produced in this milestone (reports, code, documentation, audits, etc.)."
+          required
+          maxLength={4000}
+          validationErrors={draftErrors}
+        />
+      </div>
 
-      <h3 class="font-medium mt-2">How do you know it's "done"?</h3>
-      <Textarea
-        id="acceptanceCriteria"
-        label="Acceptance Criteria"
-        bind:value={draft.acceptanceCriteria}
-        placeholder="e.g. The architectural diagram file has been shared, the MVP is accessible via a simple URL"
-        description="Define the objective conditions that must be met for this milestone to be considered complete and eligible for approval or payment."
-        required
-        maxLength={4000}
-        validationErrors={draftErrors}
-      />
+      <div class="flex flex-col gap-3">
+        <h5 class="text-base font-medium">How do you know it's "done"?</h5>
+        <Textarea
+          id="acceptanceCriteria"
+          label="Acceptance Criteria"
+          bind:value={draft.acceptanceCriteria}
+          placeholder="e.g. The architectural diagram file has been shared, the MVP is accessible via a simple URL"
+          description="Define the objective conditions that must be met for this milestone to be considered complete and eligible for approval or payment."
+          required
+          maxLength={4000}
+          validationErrors={draftErrors}
+        />
+      </div>
 
-      <h3 class="font-medium mt-2">
-        How many weeks will you need to complete this milestone?
-      </h3>
-      <InputNumber
-        id="duration"
-        label="Duration"
-        type="number"
-        bind:value={draft.duration}
-        placeholder="e.g. 2"
-        description="How long do you expect it to take for this milestone to be finished?"
-        required
-        suffix="weeks"
-        min="1"
-        max="240"
-        step="1"
-        maxDecimals={0}
-        class="w-1/4"
-        validationErrors={draftErrors}
-      />
+      <div class="flex flex-col gap-3">
+        <h5 class="text-base font-medium">How many weeks will you need to complete this milestone?</h5>
+        <InputNumber
+          id="duration"
+          label="Duration"
+          type="number"
+          bind:value={draft.duration}
+          placeholder="e.g. 2"
+          description="How long do you expect it to take for this milestone to be finished?"
+          required
+          suffix="weeks"
+          min="1"
+          max="240"
+          step="1"
+          maxDecimals={0}
+          class="w-1/4"
+          validationErrors={draftErrors}
+        />
+      </div>
 
-      <p class="text-xs text-muted-foreground">
-        If Intersect is chosen and agrees to act as an Administrator, milestones
-        and payments submitted will be adjusted to a monthly cycle for smart
-        contracting.
-      </p>
+      <div>
+        <p class="text-xs text-muted-foreground">
+          If Intersect is chosen and agrees to act as an Administrator, milestones and payments submitted will be
+          adjusted to a monthly cycle for smart contracting.
+        </p>
+      </div>
     </div>
     <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
       {#if editingIndex != null}
-        <Button
-          type="button"
-          variant="destructive"
-          class="mr-auto cursor-pointer"
-          onclick={deleteFromDialog}
-        >
+        <Button type="button" variant="destructive" class="mr-auto cursor-pointer" onclick={deleteFromDialog}>
           <TrashIcon class="size-4 mr-1" />
           Delete
         </Button>

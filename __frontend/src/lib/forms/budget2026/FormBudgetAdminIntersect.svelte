@@ -152,7 +152,7 @@
 
 {#if formData.metaData.contractingParty?.legalEntityType === "company"}
   <section class="mb-8">
-    <h3>Entity Details</h3>
+    <h4>Entity Details</h4>
     <p class="text-sm text-muted-foreground mb-4">
       This section collects the legal and registration details of the entity
       that will receive funds if the proposal is approved. The information
@@ -233,7 +233,7 @@
 
 {#if formData.metaData.contractingParty?.legalEntityType === "individual"}
   <section class="mb-8">
-    <h3>Identity & Legal Details</h3>
+    <h4>Identity & Legal Details</h4>
     <p class="text-sm text-muted-foreground mb-4">
       This information is used for verification, contracting, and compliance.
     </p>

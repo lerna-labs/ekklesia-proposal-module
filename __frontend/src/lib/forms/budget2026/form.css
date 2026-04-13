@@ -29,6 +29,10 @@ form h4 {
   @apply text-base font-medium mb-2;
 }
 
+form h5 {
+  @apply text-base font-medium mb-2;
+}
+
 form p {
   @apply text-sm mb-4;
 }

@@ -41,9 +41,9 @@
   />
 
   <div class="space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       Please describe this Work Package at a high level
-    </h3>
+    </h4>
     <p class="text-sm text-muted-foreground">
       Describe the main activities and, where relevant, the key outputs or
       deliverables. The goal is to give reviewers enough context to understand
@@ -64,9 +64,9 @@
   />
 
   <div class="space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       What is this work package intended to achieve?
-    </h3>
+    </h4>
   </div>
 
   <FormWorkPackagesObjectives
@@ -75,9 +75,9 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       Why does this work matter to Cardano, and how will success be measured?
-    </h3>
+    </h4>
     <p class="text-sm text-muted-foreground">
       Describe what will change or improve for Cardano as a result of this
       work package, and why that change justifies the investment. Then define
@@ -109,9 +109,9 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       Is this a new initiative or a continuation of existing work?
-    </h3>
+    </h4>
     <p class="text-sm text-muted-foreground">
       Select the option that best describes the nature of this work package.
     </p>
@@ -130,9 +130,9 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       How would you classify the primary nature of this work proposal?
-    </h3>
+    </h4>
     <p class="text-sm text-muted-foreground">
       This helps reviewers understand whether the work is primarily technical or non-technical.
     </p>
@@ -151,10 +151,10 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h3 class="font-medium">
+    <h4 class="font-medium">
       Is there any extra material you would like to share about this work
       package?
-    </h3>
+    </h4>
   </div>
 
   <LinkListEditor
