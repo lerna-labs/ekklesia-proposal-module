@@ -153,7 +153,7 @@
 <div class="container mx-auto max-w-4xl py-8 px-4">
   <!-- Vote/Ballot Info -->
   <div class="mb-8">
-    <h1 class="text-2xl font-semibold">
+    <h1>
       {vote.name || vote.title || "Vote"}
     </h1>
 
@@ -207,7 +207,7 @@
     <div
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <h2 class="text-xl font-medium flex flex-wrap items-center gap-2">
+      <h2 class="flex flex-wrap items-center gap-2">
         {#if shortProposerId}
           Proposals from {shortProposerId}
         {:else}

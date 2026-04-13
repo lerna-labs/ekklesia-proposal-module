@@ -165,4 +165,29 @@
   p strong {
     font-weight: 550;
   }
+
+  /* Locked heading scale (see typography plan): element selectors only */
+  h1 {
+    @apply text-4xl font-medium text-foreground;
+  }
+  h2 {
+    @apply text-3xl font-medium text-foreground;
+  }
+  h3 {
+    @apply text-2xl font-medium leading-tight text-foreground;
+  }
+  h4 {
+    @apply text-lg font-medium text-foreground;
+  }
+  h5 {
+    @apply text-lg font-semibold text-[#575960];
+  }
+  h6 {
+    @apply text-base font-semibold text-foreground;
+  }
+
+  /* Comments block title stays smaller than section h2 */
+  .comments-section h2 {
+    @apply text-xl font-medium text-foreground;
+  }
 }

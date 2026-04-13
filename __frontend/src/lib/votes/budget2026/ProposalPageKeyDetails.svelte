@@ -78,7 +78,8 @@
 
 <Card.Root class="bg-slate-50" id="key-details">
   <Card.Header class="py-0">
-    <Card.Title class="text-xl font-medium">Key Details</Card.Title>
+    <h2 id="key-details-heading" class="sr-only">Key Details</h2>
+    <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
   </Card.Header>
   <Card.Content
     class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
@@ -139,7 +140,11 @@
           class="rounded-lg border bg-card text-card-foreground grid grid-cols-2 divide-x divide-border overflow-hidden"
         >
           <Popover.Root>
-            <Popover.Trigger class="cursor-pointer" openOnHover={true}>
+            <Popover.Trigger
+              class="cursor-pointer"
+              openOnHover={true}
+              aria-label="More information about estimated duration"
+            >
               <div class="p-4 min-w-0 flex gap-1.5">
                 <ClockIcon
                   class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"

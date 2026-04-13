@@ -45,7 +45,11 @@
             </span>{/if}
         </Field.Label>
         {#if descriptionProp}
-          <ToolTip content={descriptionProp} class="shrink-0 mt-0.5" />
+          <ToolTip
+            content={descriptionProp}
+            class="shrink-0 mt-0.5"
+            fieldLabel={label}
+          />
         {/if}
       </div>
     </div>

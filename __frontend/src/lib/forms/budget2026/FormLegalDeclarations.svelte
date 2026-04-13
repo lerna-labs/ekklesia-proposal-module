@@ -19,7 +19,7 @@
   </p>
   <div class="space-y-6">
         <section class="space-y-3">
-          <h3 class="text-base font-medium">1. Data Protection</h3>
+          <h3>1. Data Protection</h3>
           <p class="text-sm text-muted-foreground">
             The proposer acknowledges and consents that personal data submitted
             in this form may be shared with relevant internal stakeholders
@@ -51,9 +51,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium"
-            >2. Anti-Bribery and Anti-Corruption</h3
-          >
+          <h3>2. Anti-Bribery and Anti-Corruption</h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms that neither they nor any of their
             representatives have offered, nor will offer, any bribes, improper
@@ -62,9 +60,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">
-            3. Proposal Authenticity and Intellectual Property
-          </h3>
+          <h3>3. Proposal Authenticity and Intellectual Property</h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms that this proposal is original, all information
             provided is accurate and complete to the best of their knowledge,
@@ -79,9 +75,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">
-            4. Conflicts with Existing Obligations
-          </h3>
+          <h3>4. Conflicts with Existing Obligations</h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms that accepting this contract (if awarded) would
             not violate any existing obligations to other parties.
@@ -89,9 +83,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">
-            5. Compliance with Laws and Regulations
-          </h3>
+          <h3>5. Compliance with Laws and Regulations</h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms compliance with all applicable laws,
             regulations, and export controls in connection with this proposal.
@@ -99,9 +91,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium"
-            >6. Sanctions / Restricted Parties</h3
-          >
+          <h3>6. Sanctions / Restricted Parties</h3>
           <p class="text-sm text-muted-foreground">
             The vendor confirms that neither they nor any associated parties are
             located in, or otherwise subject to, countries or individuals on
@@ -110,9 +100,7 @@
         </section>
 
         <section class="space-y-2">
-          <h3 class="text-base font-medium">
-            7. No Contract Formation / Limitation of Liability
-          </h3>
+          <h3>7. No Contract Formation / Limitation of Liability</h3>
           <p class="text-sm text-muted-foreground">
             The vendor acknowledges that submission of this proposal does not
             create a contract, obligation, or entitlement to award.
@@ -126,7 +114,7 @@
         </section>
 
         <section class="space-y-4">
-          <h3 class="text-base font-medium">8. Declaration of Submitter</h3>
+          <h3>8. Declaration of Submitter</h3>
           <div class="grid gap-3">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input

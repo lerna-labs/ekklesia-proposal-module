@@ -46,11 +46,28 @@
   }
 
   let visibleLength = $derived(stripMarkdownForCount(value).length);
+
+  /** Stable id for the visible label when pairing with the Lexical root via aria-labelledby. */
+  let labelElementId = $derived(
+    id && String(label ?? "").trim() !== "" ? `${id}-label` : undefined,
+  );
+  let editorAriaLabelledBy = $derived(labelElementId);
+  let editorAriaLabel = $derived(
+    labelElementId
+      ? undefined
+      : String(label ?? "").trim() !== ""
+        ? String(label).trim()
+        : (placeholder?.trim() ? placeholder.trim() : "Rich text"),
+  );
 </script>
 
 <Field.Field class="gap-2 {className}">
   <div class="flex items-center gap-1 w-full">
-    <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+    <Field.Label
+      id={labelElementId}
+      for={id}
+      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
+    >
       {label}
       {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
@@ -60,7 +77,7 @@
       <PrivateFieldIndicator />
     {/if}
     {#if descriptionProp}
-      <ToolTip content={descriptionProp} />
+      <ToolTip content={descriptionProp} fieldLabel={label} />
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
     {#if maxLength}
@@ -74,7 +91,12 @@
     aria-invalid={displayError ? true : false}
   >
     {#if EditorComponent}
-      <EditorComponent bind:value />
+      <EditorComponent
+        {id}
+        ariaLabel={editorAriaLabel}
+        ariaLabelledBy={editorAriaLabelledBy}
+        bind:value
+      />
     {:else}
       <div
         class="min-h-[120px] flex items-center justify-center text-muted-foreground text-sm p-4"

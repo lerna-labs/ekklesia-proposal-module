@@ -1,10 +1,8 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
-  import { logout } from "$stores/sessionManager.js";
   import ProposalDelete from "$lib/ProposalDelete.svelte";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
-  import { formatAda } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
   import { formatUtcInstant } from "$lib/formatUtc.js";
@@ -14,8 +12,6 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import EyeIcon from "@lucide/svelte/icons/eye";
-  import LogOutIcon from "@lucide/svelte/icons/log-out";
-
   let { data } = $props();
   let user = $derived(data.user ?? null);
   let proposals = $derived(data.proposals.data);
@@ -77,25 +73,13 @@
 </script>
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
-  <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
+  <h1 class="mb-6">Dashboard</h1>
 
   <div class="space-y-6">
     {#if user}
       <Card.Root>
-        <Card.Header
-          class="flex flex-row flex-wrap items-center justify-between gap-3"
-        >
+        <Card.Header>
           <Card.Title>Account</Card.Title>
-          <Button
-            variant="outline"
-            class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
-            aria-label="Log out"
-            size="sm"
-            onclick={() => logout()}
-          >
-            <LogOutIcon class="size-4" />
-            Log out
-          </Button>
         </Card.Header>
         <Card.Content class="flex flex-col gap-2">
           {#if user.name}
@@ -159,21 +143,16 @@
             <table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-border">
-                  <th class="text-left font-medium py-3 pl-0 pr-4 align-middle">
+                  <th class="text-left font-medium py-3 pl-0 pr-4 align-top min-w-0">
                     Title
                   </th>
                   <th
-                    class="text-right font-medium py-3 px-4 whitespace-nowrap align-middle"
-                  >
-                    Total Budget
-                  </th>
-                  <th
-                    class="text-left font-medium py-3 px-4 whitespace-nowrap align-middle"
+                    class="text-left font-medium py-3 px-4 w-[1%] whitespace-nowrap align-top"
                   >
                     Last updated
                   </th>
                   <th
-                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] align-middle"
+                    class="text-right font-medium py-3 pr-0 pl-4 w-[1%] whitespace-nowrap align-top"
                   >
                     Actions
                   </th>
@@ -195,8 +174,8 @@
                       ? 'border-border'
                       : 'border-border/50'}"
                   >
-                    <td class="py-3 pl-0 pr-4 text-left align-middle">
-                      <div class="flex flex-wrap items-center gap-2">
+                    <td class="py-3 pl-0 pr-4 text-left align-top min-w-0">
+                      <div class="flex flex-wrap items-start gap-2">
                         {#if isWithdrawn}
                           <span class="font-medium">
                             {displayTitle(proposal)}
@@ -227,7 +206,9 @@
                           </button>
                         {:else}
                           <span
-                            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+                            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium text-white {proposal.status === 'live'
+                              ? 'bg-green-600'
+                              : 'bg-black'}"
                           >
                             {formatStatus(proposal.status)}
                           </span>
@@ -235,19 +216,14 @@
                       </div>
                     </td>
                     <td
-                      class="py-3 px-4 text-right tabular-nums whitespace-nowrap align-middle"
-                    >
-                      {proposal.metaData?.totalBudget != null
-                        ? `${formatAda(proposal.metaData.totalBudget)} ADA`
-                        : "—"}
-                    </td>
-                    <td
-                      class="py-3 px-4 text-muted-foreground whitespace-nowrap align-middle"
+                      class="py-3 px-4 w-[1%] text-muted-foreground whitespace-nowrap align-top"
                     >
                       {formatUpdatedAt(proposal.updatedAt)}
                     </td>
-                    <td class="py-3 pr-0 pl-4 text-right align-middle">
-                      <div class="flex items-center justify-end gap-1">
+                    <td
+                      class="py-3 pr-0 pl-4 w-[1%] whitespace-nowrap text-right align-top"
+                    >
+                      <div class="inline-flex items-center justify-end gap-1">
                         {#if isWithdrawn}
                           <Button
                             variant="outline"

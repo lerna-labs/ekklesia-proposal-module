@@ -8,7 +8,7 @@
 </script>
 
 <section id="executive-summary">
-  <h2 class="text-2xl font-medium mb-4 mt-8">Proposal Overview</h2>
+  <h2 class="mb-4 mt-8">Proposal Overview</h2>
 
   <CollapsibleCard
     class="mt-4"
@@ -17,6 +17,7 @@
     expandLabel="Expand proposal overview"
     collapseLabel="Collapse proposal overview"
     titleClass="text-lg font-medium leading-6"
+    titleHeadingLevel={3}
   >
     {#snippet title()}
       Please describe your whole proposal at high level
@@ -35,6 +36,7 @@
       expandLabel="Expand track record"
       collapseLabel="Collapse track record"
       titleClass="text-lg font-medium leading-6"
+      titleHeadingLevel={3}
     >
       {#snippet title()}
         Why are you the best suited to deliver this work?

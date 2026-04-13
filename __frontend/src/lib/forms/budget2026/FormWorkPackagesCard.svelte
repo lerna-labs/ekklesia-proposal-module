@@ -212,9 +212,9 @@
       {/if}
       <section>
         <div class={sectionRingClass}>
-          <h3 class="text-normal font-medium mb-2">
+          <h4 class="mb-2">
             How will this work package be delivered?
-          </h3>
+          </h4>
           <p class="text-sm text-muted-foreground">
             Break this Work Package into milestones or delivery phases. This
             helps reviewers understand how progress will be structured and
@@ -282,9 +282,9 @@
 
       <section class="mt-8">
         <div class={budgetSectionRingClass}>
-          <h3 class="text-normal font-medium mb-2">
+          <h4 class="mb-2">
             What's the budget estimated for this Work Package?
-          </h3>
+          </h4>
           <p class="text-sm text-muted-foreground">
             Breakdown your estimated budget into the appropriate categories.
             Make sure to provide context so DReps can understand why each item

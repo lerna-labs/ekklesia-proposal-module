@@ -28,7 +28,7 @@
 
 <Field.Set class="space-y-1">
   <div>
-    <h3 class="text-lg! font-medium">
+    <h3>
       To which strategic pillar does your proposal align the most?
     </h3>
 
@@ -68,6 +68,7 @@
       </Field.Label>
       <ToolTip
         content="Select the pillars that align most with your proposal. Look at the focus areas provided as example for each pillar."
+        fieldLabel="Strategic Pillars"
       />
       <span class="flex-1 min-w-0" aria-hidden="true"></span>
     </div>

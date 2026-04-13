@@ -10,13 +10,14 @@
 </script>
 
 <section class="mt-12" id="budget-administration">
-  <h2 class="text-2xl font-medium mb-4">Budget Administration</h2>
+  <h2 class="mb-4">Budget Administration</h2>
 
   <CollapsibleCard
     expanded={expandedAdministrator}
     onToggle={() => (expandedAdministrator = !expandedAdministrator)}
     expandLabel="Expand administrator details"
     collapseLabel="Collapse administrator details"
+    titleHeadingLevel={3}
   >
     {#snippet title()}
       Who will be your administrator for this proposal?
@@ -62,6 +63,7 @@
     onToggle={() => (expandedLegalEntity = !expandedLegalEntity)}
     expandLabel="Expand legal entity details"
     collapseLabel="Collapse legal entity details"
+    titleHeadingLevel={3}
   >
     {#snippet title()}
       Are you applying as a registered company or as an individual?
@@ -82,6 +84,7 @@
     onToggle={() => (expandedIndependentAudits = !expandedIndependentAudits)}
     expandLabel="Expand independent audits details"
     collapseLabel="Collapse independent audits details"
+    titleHeadingLevel={3}
   >
     {#snippet title()}
       How will independent audits or assurance be handled for this proposal?

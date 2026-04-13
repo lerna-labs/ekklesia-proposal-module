@@ -126,7 +126,7 @@
 
 <section id="budget-summary" class="mt-12">
   <div class="flex items-center gap-2 flex-wrap mb-4">
-    <h2 class="text-2xl font-medium">Budget Summary</h2>
+    <h2>Budget Summary</h2>
   </div>
   {#if hasContent}
     <Card.Root class="bg-slate-50 py-0">
@@ -268,6 +268,7 @@
       expandLabel="Expand treasury repayment details"
       collapseLabel="Collapse treasury repayment details"
       titleClass="text-lg font-medium leading-6"
+      titleHeadingLevel={3}
     >
       {#snippet title()}
         Will any portion of the requested funds be returned to the Cardano
@@ -285,9 +286,9 @@
           Yes
         </Badge>
 
-        <h3 class="text-lg font-medium text-(--mbo-cardano-blue)">
+        <h4 class="mb-4">
           Under what circumstances would a repayment occur?
-        </h3>
+        </h4>
 
         <Markdown
           content={treasuryRepaymentCircumstances.trim() || "—"}
@@ -309,6 +310,7 @@
       expandLabel="Expand prior funding details"
       collapseLabel="Collapse prior funding details"
       titleClass="text-lg font-medium leading-6"
+      titleHeadingLevel={3}
     >
       {#snippet title()}
         Have you previously received funding from Cardano or related ecosystem

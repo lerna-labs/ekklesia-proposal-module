@@ -33,7 +33,7 @@
   class="mb-4"
 />
 
-<p class="font-medium mb-2">Before you submit your proposal, please confirm</p>
+<h3>Before you submit your proposal, please confirm</h3>
 
 <Checkbox
   id="treasuryDonationConfirmed"

@@ -114,7 +114,7 @@
           </span>
         {/if}
         {#if description}
-          <ToolTip content={description} />
+          <ToolTip content={description} fieldLabel={label} />
         {/if}
         <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>

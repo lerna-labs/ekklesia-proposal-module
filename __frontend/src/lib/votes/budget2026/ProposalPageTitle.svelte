@@ -17,7 +17,7 @@
   });
 </script>
 
-<h1 class="text-4xl font-medium min-w-0">
+<h1 class="min-w-0">
   {proposal?.title || proposal?.name || "Untitled Proposal"}
 </h1>
 

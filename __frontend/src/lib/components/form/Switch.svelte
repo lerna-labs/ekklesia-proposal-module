@@ -46,7 +46,7 @@
           <PrivateFieldIndicator />
         {/if}
         {#if descriptionProp}
-          <ToolTip content={descriptionProp} />
+          <ToolTip content={descriptionProp} fieldLabel={label} />
         {/if}
         <span class="flex-1 min-w-0" aria-hidden="true"></span>
       </div>

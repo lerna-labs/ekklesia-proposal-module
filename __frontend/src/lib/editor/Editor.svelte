@@ -39,7 +39,14 @@
   const DEBUG_EDITOR = false;
 
   /** When true, the quote formatting option is shown in the toolbar. Default false. */
-  let { quote = false, initialQuotedContent, value = $bindable("") } = $props();
+  let {
+    quote = false,
+    initialQuotedContent,
+    value = $bindable(""),
+    id = undefined,
+    ariaLabel = undefined,
+    ariaLabelledBy = undefined,
+  } = $props();
 
   const initialConfig = {
     theme: theme,
@@ -207,7 +214,12 @@
     <div class="editor-container">
       <div class="editor-scroller" bind:this={editorScroller}>
         <div class="editor">
-          <ContentEditable />
+          <ContentEditable
+            {id}
+            ariaLabel={ariaLabel}
+            ariaLabelledBy={ariaLabelledBy}
+            ariaMultiline={true}
+          />
         </div>
       </div>
       <RichTextPlugin />
