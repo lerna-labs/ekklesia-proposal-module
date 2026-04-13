@@ -31,7 +31,7 @@
       <Dialog.Header class="shrink-0">
         <Dialog.Title>Edit Comment</Dialog.Title>
       </Dialog.Header>
-      <div class="py-4 overflow-y-auto min-h-0 flex-1">
+      <div class="py-4 px-1.5 overflow-y-auto min-h-0 flex-1">
         <Textarea
           id="edit-content"
           label="Comment"

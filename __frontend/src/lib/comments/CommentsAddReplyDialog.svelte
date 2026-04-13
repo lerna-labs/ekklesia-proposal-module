@@ -41,7 +41,7 @@
           {/if}
         </AlertDialog.Title>
       </AlertDialog.Header>
-      <div class="py-4 overflow-y-auto min-h-0 flex-1">
+      <div class="py-4 px-1.5 overflow-y-auto min-h-0 flex-1">
         {#key replyTo ? replyTo._id : "add"}
           <Textarea
             id="comment-content"
