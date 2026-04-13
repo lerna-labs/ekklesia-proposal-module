@@ -201,7 +201,7 @@
         {/if}
       </Popover.Trigger>
       <Popover.Content align="end" class="w-64 p-3">
-        <h3 class="text-sm font-medium mb-2">Filter Options</h3>
+        <div class="text-sm font-medium mb-2">Filter Options</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           {#if statusOption}

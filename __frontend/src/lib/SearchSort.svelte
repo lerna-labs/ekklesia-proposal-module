@@ -117,7 +117,7 @@
         align="end"
         class="w-72 min-w-0 max-w-[calc(100vw-1rem)] p-3 overflow-hidden"
       >
-        <h3 class="text-sm font-medium mb-2">Sort Options</h3>
+        <div class="text-sm font-medium mb-2">Sort Options</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           <div class="space-y-1">
