@@ -4,7 +4,7 @@
  * Run from __testkit: node scripts/seed-perf.js [--teardown]
  * Requires: MONGO_URI or MONGODB_* in .env (same as backend for seed to be visible to API).
  *
- * Seed: creates vote (slug perf-test-20k) and 20k proposals, then prints env vars for remote perf test.
+ * Seed: creates vote (slug ekklesia-testkit, see testkitConstants.js) and 20k proposals, then prints env vars for remote perf test.
  * Teardown: deletes that vote and its proposals.
  */
 import dotenv from "dotenv";

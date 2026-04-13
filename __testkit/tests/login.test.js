@@ -24,7 +24,7 @@ function log(step, message, detail) {
   if (detail !== undefined) console.log(prefix, " ", detail);
 }
 
-describe("Session (login / logout)", () => {
+describe("Login (sign-in / sign-out)", () => {
   it("logs in as DRep with cardano-signer and logs out", async () => {
     log(1, "Login via helper (POST → sign → PUT /session)");
     const session = await login(API_BASE_URL);

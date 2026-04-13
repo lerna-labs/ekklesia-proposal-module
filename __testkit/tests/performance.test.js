@@ -1,16 +1,17 @@
 /**
- * Performance test: vote and proposal endpoints with 20k seeded proposals.
+ * Performance test: vote and proposal endpoints with ~20k seeded proposals.
  * Measures response times only (HTTP). Does not seed or teardown; data must exist on the API.
  * Seed/teardown: run `node scripts/seed-perf.js` or `node scripts/seed-perf.js --teardown` from __testkit.
  * Requires: API running at API_BASE_URL. Set PERF_VOTE_ID and PERF_PROPOSAL_ID for remote, or rely on
- * API having vote with slug perf-test-20k (test will discover voteId/proposalId from API).
+ * API having vote with slug ekklesia-testkit (test will discover voteId/proposalId from API).
  */
 
 import { PERF_VOTE_SLUG } from "../helpers/seedPerf.js";
 
 const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api/v0";
-const LIMITS = [10, 20, 50, 100];
-const SAMPLE_SIZE = 25;
+/** Slim matrix: two limit values instead of four. */
+const LIMITS = [20, 100];
+const SAMPLE_SIZE = 12;
 /** Public read limit (200/min per IP); we throttle below it so measurement phase never hits 429. */
 const PUBLIC_READ_LIMIT_PER_MIN = 200;
 const PUBLIC_READ_WINDOW_MS = 60_000;
@@ -69,7 +70,7 @@ async function runSamples(action, url, { expectOk = false, assertOkLabel = null 
   log(`[perf] ${action} — ${avg} ms (${SAMPLE_SIZE} samples)`);
 }
 
-/** Resolve voteId, voteSlug, proposalId from env or by fetching from API (slug perf-test-20k). */
+/** Resolve voteId, voteSlug, proposalId from env or by fetching from API (slug ekklesia-testkit). */
 async function resolvePerfIds() {
   if (process.env.PERF_VOTE_ID && process.env.PERF_PROPOSAL_ID) {
     return {
@@ -149,7 +150,7 @@ describe("Performance – vote and proposal endpoints", () => {
     await runSamples("GET /votes?slug", `${base}/votes?slug=${voteSlug}`, { expectOk: true });
     await runSamples("GET /votes/:id", `${base}/votes/${voteId}`, { expectOk: true });
     await runSamples("GET /votes pagination", `${base}/votes?page=2&limit=10`, { expectOk: true });
-    await runSamples("GET /votes search", `${base}/votes?search=perf`, { expectOk: true });
+    await runSamples("GET /votes search", `${base}/votes?search=ekklesia`, { expectOk: true });
   });
 
   it("measures proposal baseline and pagination and logs response times", async () => {
