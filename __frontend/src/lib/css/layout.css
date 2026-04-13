@@ -174,10 +174,10 @@
     @apply text-3xl font-medium text-foreground;
   }
   h3 {
-    @apply text-2xl font-medium text-foreground;
+    @apply text-2xl font-medium leading-tight text-foreground;
   }
   h4 {
-    @apply text-xl font-medium text-foreground;
+    @apply text-lg font-medium text-foreground;
   }
   h5 {
     @apply text-lg font-semibold text-[#575960];
