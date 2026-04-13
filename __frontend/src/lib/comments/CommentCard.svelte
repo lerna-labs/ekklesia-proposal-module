@@ -6,13 +6,8 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import Timestamp from "./CommentCardTimestamp.svelte";
-  import {
-    Heart,
-    MessageSquare,
-    MessagesSquare,
-    Pencil,
-    Trash2Icon,
-  } from "lucide-svelte";
+  import { commentAuthorLabel } from "./commentAuthorLabel.js";
+  import { Heart, MessageSquare, MessagesSquare, Pencil, Trash2Icon } from "lucide-svelte";
 
   let {
     comment,
@@ -26,13 +21,7 @@
     likeDisabled = false,
     isVoteAdmin = false,
     repliesData = [],
-    authorLabel = (c) => {
-      const a = c?.author;
-      const name = a?.name && String(a.name).trim();
-      if (name) return name;
-      const id = a?._id ?? "";
-      return shortenString(id, 12, true) || "—";
-    },
+    authorLabel = commentAuthorLabel,
     canEditComment = () => false,
     onToggleLike,
     onToggleReplies,
@@ -41,48 +30,25 @@
     onWithdraw,
   } = $props();
 
-  const isOwn = $derived(
-    currentUserId && comment?.author?._id === currentUserId,
-  );
+  const isOwn = $derived(currentUserId && comment?.author?._id === currentUserId);
 </script>
 
-<Card.Root
-  class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails
-    ? 'bg-white opacity-50'
-    : ''}"
->
+<Card.Root class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-white opacity-50' : ''}">
   <Card.Header>
     <Card.Title class="flex flex-wrap justify-between items-start gap-2 pb-0">
       <div class="flex flex-wrap items-center gap-1.5 font-medium text-sm">
         {authorLabel(comment)}
         {#if comment?.author?.type === "admin"}
-          <Badge
-            variant="secondary"
-            class="text-xs bg-(--mbo-orange) text-white"
-          >
-            Admin
-          </Badge>
+          <Badge variant="secondary" class="text-xs bg-(--mbo-orange) text-white">Admin</Badge>
         {/if}
         {#if comment?.author?.type === "proposer"}
-          <Badge
-            variant="secondary"
-            class="text-xs bg-(--mbo-electric-blue) text-white"
-          >
-            Proposer
-          </Badge>
+          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Proposer</Badge>
         {/if}
         {#if comment?.author?._id?.startsWith?.("drep")}
-          <Badge variant="secondary" class="text-xs bg-black text-white">
-            DRep
-          </Badge>
+          <Badge variant="secondary" class="text-xs bg-black text-white">DRep</Badge>
         {/if}
         {#if isOwn}
-          <Badge
-            variant="secondary"
-            class="text-xs bg-(--mbo-electric-blue) text-white"
-          >
-            Your Comment
-          </Badge>
+          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Your Comment</Badge>
         {/if}
         {#if comment?.withdrawalDetails}
           <Badge variant="destructive" class="text-xs">Withdrawn</Badge>
@@ -128,21 +94,12 @@
           disabled={isOwn || likeDisabled}
           onclick={() => onToggleLike?.(comment)}
         >
-          <Heart
-            class="size-3.5 {comment?.userLiked
-              ? 'fill-current text-destructive'
-              : ''}"
-          />
+          <Heart class="size-3.5 {comment?.userLiked ? 'fill-current text-destructive' : ''}" />
           <span class="ml-1">{comment?.likeCount ?? 0}</span>
         </Button>
       {/if}
       {#if showReplyCountButton && (comment?.replyCount ?? 0) > 0}
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-xs"
-          onclick={() => onToggleReplies?.(comment)}
-        >
+        <Button variant="outline" size="sm" class="text-xs" onclick={() => onToggleReplies?.(comment)}>
           <MessagesSquare class="size-3.5" />
           <span class="ml-1">{comment?.replyCount ?? 0}</span>
         </Button>

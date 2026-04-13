@@ -4,7 +4,7 @@
   import { untrack } from "svelte";
   import { user, showLogin, loggedIn } from "$stores/sessionManager.js";
   import { fetchJson } from "./fetchJson.js";
-  import { shortenString } from "$lib/utils.js";
+  import { commentAuthorLabel as authorLabel } from "./commentAuthorLabel.js";
   import CommentsHeader from "./CommentsHeader.svelte";
   import CommentCard from "./CommentCard.svelte";
   import CommentsAddReplyDialog from "./CommentsAddReplyDialog.svelte";
@@ -130,14 +130,6 @@
     }
     queueMicrotask(() => openAddDialog(replyToComment));
   });
-
-  function authorLabel(c) {
-    const a = c?.author;
-    const name = a?.name && String(a.name).trim();
-    if (name) return name;
-    const id = a?._id ?? "";
-    return shortenString(id, 12, true) || "—";
-  }
 
   function canEditComment(c) {
     const authorId = c?.author?._id;

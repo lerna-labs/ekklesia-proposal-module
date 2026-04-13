@@ -2,6 +2,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { Button } from "$lib/components/ui/button";
   import Textarea from "$lib/components/form/Textarea.svelte";
+  import { commentAuthorLabel } from "./commentAuthorLabel.js";
 
   let {
     open = $bindable(false),
@@ -9,7 +10,7 @@
     value = $bindable(""),
     submitError = $bindable(null),
     isSubmitting = false,
-    authorLabel = (c) => c?.author?.name ?? "Anonymous",
+    authorLabel = commentAuthorLabel,
     onClose,
     onSubmit,
   } = $props();
