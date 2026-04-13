@@ -1,0 +1,46 @@
+/**
+ * QA overlay: enable with ?headingPreview=1 (see +layout.svelte).
+ * Reasserts the locked heading scale with !important for visual checks.
+ */
+
+html[data-heading-preview] h1 {
+  font-size: 2.5rem !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+html[data-heading-preview] h2 {
+  font-size: 2rem !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+}
+
+html[data-heading-preview] .comments-section h2 {
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+}
+
+html[data-heading-preview] h3 {
+  font-size: 1.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+}
+
+html[data-heading-preview] h4 {
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+}
+
+html[data-heading-preview] h5 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #575960 !important;
+  line-height: 1.4 !important;
+}
+
+html[data-heading-preview] h6 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.5 !important;
+}

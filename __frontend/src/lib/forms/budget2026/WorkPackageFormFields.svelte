@@ -41,7 +41,7 @@
   />
 
   <div class="space-y-1">
-    <h4 class="font-medium">
+    <h4>
       Please describe this Work Package at a high level
     </h4>
     <p class="text-sm text-muted-foreground">
@@ -64,7 +64,7 @@
   />
 
   <div class="space-y-1">
-    <h4 class="font-medium">
+    <h4>
       What is this work package intended to achieve?
     </h4>
   </div>
@@ -75,7 +75,7 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4 class="font-medium">
+    <h4>
       Why does this work matter to Cardano, and how will success be measured?
     </h4>
     <p class="text-sm text-muted-foreground">
@@ -109,7 +109,7 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4 class="font-medium">
+    <h4>
       Is this a new initiative or a continuation of existing work?
     </h4>
     <p class="text-sm text-muted-foreground">
@@ -130,7 +130,7 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4 class="font-medium">
+    <h4>
       How would you classify the primary nature of this work proposal?
     </h4>
     <p class="text-sm text-muted-foreground">
@@ -151,7 +151,7 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4 class="font-medium">
+    <h4>
       Is there any extra material you would like to share about this work
       package?
     </h4>

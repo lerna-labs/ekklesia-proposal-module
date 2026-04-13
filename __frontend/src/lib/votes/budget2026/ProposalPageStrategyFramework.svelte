@@ -34,7 +34,7 @@
 
 {#if hasContent}
   <section class="text-sm space-y-2 mt-8" id="strategy-framework">
-    <h2 class="text-2xl font-medium mb-2">
+    <h2 class="mb-2">
       Alignment to Cardano 2030 Strategy framework
     </h2>
 

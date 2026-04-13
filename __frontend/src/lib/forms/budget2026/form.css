@@ -1,7 +1,7 @@
 @reference "$lib/css/layout.css";
 
 form .section-title {
-  @apply text-xl font-medium cursor-pointer max-w-4xl mx-auto;
+  @apply text-[2rem]! font-medium cursor-pointer max-w-4xl mx-auto;
 }
 
 form .section-title:hover {
@@ -17,20 +17,26 @@ form .section-title svg {
   color: black;
 }
 
+/* Spacing only — typography comes from global h1–h6 in layout.css */
 form h2 {
-  @apply text-2xl font-medium mb-2;
+  @apply mb-2;
 }
 
 form h3 {
-  @apply text-lg font-medium mb-2;
+  @apply mb-2;
 }
 
 form h4 {
-  @apply text-base font-medium mb-2;
+  @apply mb-2;
 }
 
 form h5 {
-  @apply text-base font-medium mb-2;
+  @apply mb-2;
+}
+
+/* Numbered legal clauses stay body-sized (override global h3) */
+#legal-declarations h3 {
+  @apply text-base font-medium text-foreground;
 }
 
 form p {

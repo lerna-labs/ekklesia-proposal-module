@@ -457,7 +457,7 @@
   />
 {:else}
   <div class="container mx-auto max-w-4xl py-8 px-4 pb-0">
-    <h1 class="text-2xl font-semibold mb-4">{formTitle}</h1>
+    <h1 class="mb-4">{formTitle}</h1>
   </div>
   <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
     <Accordion.Root
@@ -467,7 +467,7 @@
     >
       <Accordion.Item value="section-1" id="project-definition">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             1. Proposal Overview
             {#if sectionErrorCounts["section-1"] > 0}
               <Badge variant="destructive">
@@ -488,7 +488,7 @@
 
       <Accordion.Item value="section-2" id="strategy-framework">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             2. Alignment to Strategy framework
             {#if sectionErrorCounts["section-2"] > 0}
               <Badge variant="destructive">
@@ -510,7 +510,7 @@
 
       <Accordion.Item value="section-5" id="proposer-details">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             3. Proposer
             {#if sectionErrorCounts["section-5"] > 0}
               <Badge variant="destructive">
@@ -531,7 +531,7 @@
 
       <Accordion.Item value="section-3" id="proposal-details">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             4. Proposal Details
             {#if sectionErrorCounts["section-3"] > 0}
               <Badge variant="destructive">
@@ -552,7 +552,7 @@
 
       <Accordion.Item value="section-6" id="budget-administration">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             5. Budget Administration
             {#if sectionErrorCounts["section-6"] > 0}
               <Badge variant="destructive">
@@ -568,7 +568,7 @@
 
       <Accordion.Item value="section-4" id="budget-summary">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             6. Budget Summary
             {#if sectionErrorCounts["section-4"] > 0}
               <Badge variant="destructive">
@@ -589,7 +589,7 @@
 
       <Accordion.Item value="section-7" id="other-info">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             7. Other Supporting Info
             {#if sectionErrorCounts["section-7"] > 0}
               <Badge variant="destructive">
@@ -614,7 +614,7 @@
         class="last:border-b"
       >
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 text-xl! mb-0!">
+          <span class="flex items-center gap-2 mb-0">
             8. Treasury Donation Verification
             {#if sectionErrorCounts["section-8"] > 0}
               <Badge variant="destructive">
@@ -639,7 +639,7 @@
       class="max-w-4xl mx-auto px-4 w-full pt-4"
     >
       <div class="section-title pb-4">
-        <h2 class="flex items-center gap-2 text-xl! mb-0!">
+        <h2 class="flex items-center gap-2 mb-0">
           9. Legal declarations
           {#if sectionErrorCounts["section-9"] > 0}
             <Badge variant="destructive">

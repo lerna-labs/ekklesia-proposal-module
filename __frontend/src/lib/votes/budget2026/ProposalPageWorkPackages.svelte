@@ -115,7 +115,7 @@
 
 {#if hasContent}
   <section class="text-sm space-y-3 mb-2! mt-12" id="proposal-details">
-    <h2 class="text-2xl font-medium mb-4">Proposal Details</h2>
+    <h2 class="mb-4">Proposal Details</h2>
 
     <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
       {#each workPackages as wp, i}
@@ -159,7 +159,7 @@
             <div class="mt-4">
               {#if (wp?.summary ?? "").toString().trim()}
                 <section class="mb-6">
-                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                  <h4 class="min-w-0 leading-snug mb-2">
                     Please describe this Work Package at a high level
                   </h4>
                   <ItemContainer>
@@ -170,7 +170,7 @@
 
               {#if wp.initiativeType}
                 <section class="mb-2">
-                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                  <h4 class="min-w-0 leading-snug mb-2">
                     Is this a new initiative or a continuation of existing work?
                   </h4>
                   <Badge
@@ -183,7 +183,7 @@
 
               {#if wp.proposalType}
                 <section class="mb-2">
-                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                  <h4 class="min-w-0 leading-snug mb-2">
                     How would you classify the primary nature of this work
                     proposal?
                   </h4>
@@ -197,7 +197,7 @@
 
               {#if coreObjectives.length > 0}
                 <section class="mb-6">
-                  <h4 class="text-md font-medium mb-2 text-(--mbo-tangy-blue)">
+                  <h4 class="min-w-0 leading-snug mb-2">
                     What is this work package intended to achieve?
                   </h4>
                   <ul class="space-y-1">
@@ -224,9 +224,7 @@
                 <div
                   class="mb-2 flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
-                  <h4
-                    class="text-normal min-w-0 font-medium leading-snug text-(--mbo-tangy-blue)"
-                  >
+                  <h4 class="min-w-0 leading-snug">
                     Why does this work matter to Cardano? (Expected Value - ROI)
                   </h4>
                   <Popover.Root>
@@ -270,9 +268,7 @@
                 <div
                   class="mb-2 flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5"
                 >
-                  <h4
-                    class="text-normal min-w-0 font-medium leading-snug text-(--mbo-tangy-blue)"
-                  >
+                  <h4 class="min-w-0 leading-snug">
                     How will success be measured?
                   </h4>
                   <Popover.Root>
@@ -313,9 +309,7 @@
 
               {#if supportingDocs.length > 0}
                 <section class="mb-6">
-                  <h4
-                    class="text-normal font-medium mb-1.5 text-(--mbo-tangy-blue)"
-                  >
+                  <h4 class="mb-1.5">
                     Is there any extra material you would like to share about
                     this work package?
                   </h4>
@@ -356,7 +350,7 @@
 
               {#if noMilestones && milestoneAlt}
                 <section>
-                  <h4 class="text-normal font-medium mb-2">
+                  <h4 class="mb-2">
                     Milestone alternative
                   </h4>
                   <p class="text-sm text-muted-foreground mb-4">
@@ -370,7 +364,7 @@
                 </section>
               {:else if milestones.length > 0}
                 <section>
-                  <h4 class="text-lg font-medium mb-2">
+                  <h4 class="mb-2">
                     How will this work package be delivered?
                   </h4>
                   <ul
@@ -449,7 +443,7 @@
                   class={noMilestones || milestones.length > 0 ? "mt-8" : ""}
                 >
                   <section class="space-y-2">
-                    <h4 class="text-lg font-medium mb-2">
+                    <h4 class="mb-2">
                       What's the budget estimated for this Work Package?
                     </h4>
                     <p class="text-sm text-muted-foreground mb-4">

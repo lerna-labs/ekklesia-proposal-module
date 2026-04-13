@@ -10,7 +10,7 @@
 
 <section class="container mx-auto max-w-4xl py-8 px-4">
   <div>
-    <h1 class="text-2xl font-semibold mb-6">Cardano Budget Process</h1>
+    <h1 class="mb-6">Cardano Budget Process</h1>
     <p class="mb-4">
       This portal exists to support the <strong>
         Cardano Ecosystem Budget Process

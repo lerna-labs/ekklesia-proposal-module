@@ -126,7 +126,7 @@
 
 <section id="budget-summary" class="mt-12">
   <div class="flex items-center gap-2 flex-wrap mb-4">
-    <h2 class="text-2xl font-medium">Budget Summary</h2>
+    <h2>Budget Summary</h2>
   </div>
   {#if hasContent}
     <Card.Root class="bg-slate-50 py-0">
@@ -286,7 +286,7 @@
           Yes
         </Badge>
 
-        <h4 class="text-lg font-medium text-(--mbo-cardano-blue)">
+        <h4 class="mb-4">
           Under what circumstances would a repayment occur?
         </h4>
 

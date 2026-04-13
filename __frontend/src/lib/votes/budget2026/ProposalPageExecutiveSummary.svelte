@@ -8,7 +8,7 @@
 </script>
 
 <section id="executive-summary">
-  <h2 class="text-2xl font-medium mb-4 mt-8">Proposal Overview</h2>
+  <h2 class="mb-4 mt-8">Proposal Overview</h2>
 
   <CollapsibleCard
     class="mt-4"

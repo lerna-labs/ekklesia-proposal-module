@@ -24,7 +24,7 @@
 
 <div class="container mx-auto max-w-4xl py-8 px-4">
   <div class="mb-8">
-    <h1 class="text-3xl font-semibold tracking-tight">Votes</h1>
+    <h1 class="tracking-tight">Votes</h1>
     <p class="text-muted-foreground mt-1">
       Browse vote cycles and view proposals.
     </p>

@@ -28,7 +28,7 @@
 
 <Field.Set class="space-y-1">
   <div>
-    <h3 class="text-lg! font-medium">
+    <h3>
       To which strategic pillar does your proposal align the most?
     </h3>
 

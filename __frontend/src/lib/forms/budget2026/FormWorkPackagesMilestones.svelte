@@ -226,7 +226,7 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <h5 class="text-base font-medium">What will you deliver in this milestone?</h5>
+        <h5>What will you deliver in this milestone?</h5>
         <Textarea
           id="deliverables"
           label="Deliverables"
@@ -240,7 +240,7 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <h5 class="text-base font-medium">How do you know it's "done"?</h5>
+        <h5>How do you know it's "done"?</h5>
         <Textarea
           id="acceptanceCriteria"
           label="Acceptance Criteria"
@@ -254,7 +254,7 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <h5 class="text-base font-medium">How many weeks will you need to complete this milestone?</h5>
+        <h5>How many weeks will you need to complete this milestone?</h5>
         <InputNumber
           id="duration"
           label="Duration"

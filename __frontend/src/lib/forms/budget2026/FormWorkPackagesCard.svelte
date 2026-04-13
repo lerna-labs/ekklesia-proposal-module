@@ -212,7 +212,7 @@
       {/if}
       <section>
         <div class={sectionRingClass}>
-          <h4 class="text-normal font-medium mb-2">
+          <h4 class="mb-2">
             How will this work package be delivered?
           </h4>
           <p class="text-sm text-muted-foreground">
@@ -282,7 +282,7 @@
 
       <section class="mt-8">
         <div class={budgetSectionRingClass}>
-          <h4 class="text-normal font-medium mb-2">
+          <h4 class="mb-2">
             What's the budget estimated for this Work Package?
           </h4>
           <p class="text-sm text-muted-foreground">
