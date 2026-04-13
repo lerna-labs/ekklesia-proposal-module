@@ -139,13 +139,13 @@
       {/if}
     </div>
     <div class="w-full space-y-1.5 pb-6 pt-0.5">
-      <h3
+      <div
         class="mb-0 text-sm font-medium {timelineState === 'upcoming'
           ? 'text-muted-foreground'
           : 'text-(--mbo-electric-blue)'}"
       >
         {titlePrefix}{phase.title}
-      </h3>
+      </div>
       <p class="m-0 mt-1 text-xs leading-relaxed">
         <span class="italic font-medium text-muted-foreground">from</span>
         <span
