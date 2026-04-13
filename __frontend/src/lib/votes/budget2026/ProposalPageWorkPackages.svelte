@@ -144,6 +144,7 @@
             onToggle={() => toggle(i)}
             expandLabel="Expand work package"
             collapseLabel="Collapse work package"
+            denseCollapsed={true}
             titleClass="text-lg font-medium leading-6"
             titleHeadingLevel={3}
           >
