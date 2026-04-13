@@ -347,6 +347,7 @@
           <span class="text-(--mbo-electric-blue) mr-1">*</span>
           <ToolTip
             content="Select the category that best describes this cost (e.g. Labor, Development, Infrastructure, Security, Operations, Governance)."
+            fieldLabel="Cost Category"
           />
         </Field.Label>
         <Select.Root

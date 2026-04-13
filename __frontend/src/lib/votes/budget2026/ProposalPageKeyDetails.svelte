@@ -140,7 +140,11 @@
           class="rounded-lg border bg-card text-card-foreground grid grid-cols-2 divide-x divide-border overflow-hidden"
         >
           <Popover.Root>
-            <Popover.Trigger class="cursor-pointer" openOnHover={true}>
+            <Popover.Trigger
+              class="cursor-pointer"
+              openOnHover={true}
+              aria-label="More information about estimated duration"
+            >
               <div class="p-4 min-w-0 flex gap-1.5">
                 <ClockIcon
                   class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
