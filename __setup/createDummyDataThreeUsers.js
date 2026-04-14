@@ -261,6 +261,10 @@ async function createDummyDataThreeUsers() {
     reviewStart.setDate(reviewStart.getDate() + 1);
     const reviewEnd = new Date(reviewStart);
     reviewEnd.setMonth(reviewEnd.getMonth() + 1);
+    const votingStart = new Date(reviewEnd);
+    votingStart.setDate(votingStart.getDate() + 1);
+    const votingEnd = new Date(votingStart);
+    votingEnd.setMonth(votingEnd.getMonth() + 1);
 
     console.log("Creating vote...");
     const vote = await Vote.create({
@@ -274,6 +278,8 @@ async function createDummyDataThreeUsers() {
       feedbackEndDate: feedbackEnd,
       reviewStartDate: reviewStart,
       reviewEndDate: reviewEnd,
+      votingStartDate: votingStart,
+      votingEndDate: votingEnd,
       validationScript: "budget2026/validationScript.js",
       excludeScript: "budget2026/excludeScript.js",
       form: "budget2026",

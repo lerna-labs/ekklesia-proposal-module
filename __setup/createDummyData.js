@@ -418,6 +418,10 @@ async function createDummyData() {
         reviewStart.setDate(reviewStart.getDate() + 1);
         const reviewEnd = new Date(reviewStart);
         reviewEnd.setMonth(reviewEnd.getMonth() + 1);
+        const votingStart = new Date(reviewEnd);
+        votingStart.setDate(votingStart.getDate() + 1);
+        const votingEnd = new Date(votingStart);
+        votingEnd.setMonth(votingEnd.getMonth() + 1);
 
         // Build pillars from categories.csv (same path as on proposals: metaData.strategyFramework.pillars)
         console.log("Building pillars from categories.csv...");
@@ -438,6 +442,8 @@ async function createDummyData() {
             feedbackEndDate: feedbackEnd,
             reviewStartDate: reviewStart,
             reviewEndDate: reviewEnd,
+            votingStartDate: votingStart,
+            votingEndDate: votingEnd,
             validationScript: "budget2026/validationScript.js",
             excludeScript: "budget2026/excludeScript.js",
             form: "budget2026",
