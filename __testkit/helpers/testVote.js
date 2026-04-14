@@ -34,6 +34,8 @@ export async function ensureTestkitVote() {
   const now = new Date();
   const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
   const oneYearAhead = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  const votingStartDate = new Date(oneYearAhead.getTime() + 24 * 60 * 60 * 1000);
+  const votingEndDate = new Date(votingStartDate.getTime() + 365 * 24 * 60 * 60 * 1000);
   const pillarIds = [
     new mongoose.Types.ObjectId(),
     new mongoose.Types.ObjectId(),
@@ -56,6 +58,8 @@ export async function ensureTestkitVote() {
     feedbackEndDate: oneYearAhead,
     reviewStartDate: oneYearAgo,
     reviewEndDate: oneYearAhead,
+    votingStartDate,
+    votingEndDate,
     validationScript: "budget2026/validationScript.js",
     excludeScript: "budget2026/excludeScript.js",
     form: "budget2026",

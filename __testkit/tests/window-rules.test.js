@@ -64,57 +64,90 @@ function cloneWithoutMongoMeta(doc) {
   return obj;
 }
 
+/** Schedules voting to begin the day after review ends (+ 8d voting end), except `voting_started` / overrides. */
+function withVotingDates(w) {
+  const day = 24 * 60 * 60 * 1000;
+  const re = w.reviewEndDate.getTime();
+  return {
+    ...w,
+    votingStartDate: new Date(re + day),
+    votingEndDate: new Date(re + 8 * day),
+  };
+}
+
 function buildWindowDates(mode, now = Date.now()) {
   const day = 24 * 60 * 60 * 1000;
   if (mode === "submission_not_open") {
-    return {
+    return withVotingDates({
       submissionStartDate: new Date(now + day),
       submissionEndDate: new Date(now + 2 * day),
       feedbackStartDate: new Date(now + 2 * day),
       feedbackEndDate: new Date(now + 3 * day),
       reviewStartDate: new Date(now + 3 * day),
       reviewEndDate: new Date(now + 4 * day),
-    };
+    });
   }
   if (mode === "submission_closed") {
-    return {
+    return withVotingDates({
       submissionStartDate: new Date(now - 4 * day),
       submissionEndDate: new Date(now - 3 * day),
       feedbackStartDate: new Date(now - 3 * day),
       feedbackEndDate: new Date(now - 2 * day),
       reviewStartDate: new Date(now - 2 * day),
       reviewEndDate: new Date(now - day),
-    };
+    });
   }
   if (mode === "review_open") {
-    return {
+    return withVotingDates({
       submissionStartDate: new Date(now - 4 * day),
       submissionEndDate: new Date(now - 3 * day),
       feedbackStartDate: new Date(now - 2 * day),
       feedbackEndDate: new Date(now - day),
       reviewStartDate: new Date(now - 6 * 60 * 60 * 1000),
       reviewEndDate: new Date(now + 6 * 60 * 60 * 1000),
-    };
+    });
   }
   if (mode === "review_closed") {
-    return {
+    return withVotingDates({
       submissionStartDate: new Date(now - 5 * day),
       submissionEndDate: new Date(now - 4 * day),
       feedbackStartDate: new Date(now - 3 * day),
       feedbackEndDate: new Date(now - 2 * day),
       reviewStartDate: new Date(now - day),
       reviewEndDate: new Date(now - 60 * 60 * 1000),
+    });
+  }
+  if (mode === "voting_started") {
+    return {
+      submissionStartDate: new Date(now - 14 * day),
+      submissionEndDate: new Date(now - 13 * day),
+      feedbackStartDate: new Date(now - 12 * day),
+      feedbackEndDate: new Date(now - 11 * day),
+      reviewStartDate: new Date(now - 10 * day),
+      reviewEndDate: new Date(now - 9 * day),
+      votingStartDate: new Date(now - day),
+      votingEndDate: new Date(now + 30 * day),
     };
   }
+  if (mode === "feedback_not_yet") {
+    return withVotingDates({
+      submissionStartDate: new Date(now - 5 * day),
+      submissionEndDate: new Date(now - 2 * day),
+      feedbackStartDate: new Date(now + day),
+      feedbackEndDate: new Date(now + 5 * day),
+      reviewStartDate: new Date(now + 4 * day),
+      reviewEndDate: new Date(now + 10 * day),
+    });
+  }
   // feedback_closed
-  return {
+  return withVotingDates({
     submissionStartDate: new Date(now - 4 * day),
     submissionEndDate: new Date(now - 3 * day),
     feedbackStartDate: new Date(now - 2 * day),
     feedbackEndDate: new Date(now - 60 * 60 * 1000),
     reviewStartDate: new Date(now - 30 * 60 * 1000),
     reviewEndDate: new Date(now + day),
-  };
+  });
 }
 
 describe("Vote timing window rules", () => {
@@ -208,6 +241,20 @@ describe("Vote timing window rules", () => {
       fixtures.voteFeedbackClosed._id,
       "live",
       "live-feedback-closed"
+    );
+
+    fixtures.voteFeedbackNotYet = await makeVote("fbnotyet", "feedback_not_yet");
+    fixtures.liveFeedbackNotYet = await makeProposal(
+      fixtures.voteFeedbackNotYet._id,
+      "live",
+      "live-feedback-not-yet"
+    );
+
+    fixtures.voteVotingStarted = await makeVote("votingstarted", "voting_started");
+    fixtures.liveVotingStarted = await makeProposal(
+      fixtures.voteVotingStarted._id,
+      "live",
+      "live-voting-started"
     );
 
     const comment = await Comment.create({
@@ -447,6 +494,87 @@ describe("Vote timing window rules", () => {
       text,
       /cannot be withdrawn by an admin after the vote feedback period has ended|feedbackenddate/i,
       "extra: admin withdraw comment after feedback closed"
+    );
+  });
+
+  it("extra: rejects comment before feedback period starts", async () => {
+    const res = await fetch(`${API_BASE_URL}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: drepASession.cookieHeader,
+      },
+      body: JSON.stringify({
+        proposalId: String(fixtures.liveFeedbackNotYet._id),
+        content: `before feedback ${Date.now()}`,
+      }),
+    });
+    const text = await res.text();
+    assertWindowError(
+      res.status,
+      text,
+      /feedbackstartdate|feedback period has not started|not started yet/i,
+      "extra: comment before feedback window"
+    );
+  });
+
+  it("extra: allows POST draft before submission window opens", async () => {
+    const res = await fetch(`${API_BASE_URL}/proposals`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: drepASession.cookieHeader,
+      },
+      body: JSON.stringify({
+        voteId: String(fixtures.votePreOpen._id),
+        title: `early draft ${Date.now()}`,
+        status: "draft",
+      }),
+    });
+    const text = await res.text();
+    expectHttpStatus(res.status, 201, text, "extra: POST draft before submission opens");
+  });
+
+  it("extra: admin can withdraw live proposal before voting starts", async () => {
+    const res = await fetch(
+      `${API_BASE_URL}/proposals/${fixtures.liveReviewOpen._id}/withdraw`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: drepBSession.cookieHeader,
+        },
+        body: JSON.stringify({
+          category: "Other",
+          comment: "admin withdraw before voting",
+        }),
+      }
+    );
+    const text = await res.text();
+    expectHttpStatus(res.status, 200, text, "extra: admin withdraw proposal before voting");
+  });
+
+  it("extra: admin cannot withdraw live proposal after voting has started", async () => {
+    const res = await fetch(
+      `${API_BASE_URL}/proposals/${fixtures.liveVotingStarted._id}/withdraw`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: drepBSession.cookieHeader,
+        },
+        body: JSON.stringify({
+          category: "Other",
+          comment: "admin withdraw after voting start",
+        }),
+      }
+    );
+    const text = await res.text();
+    assertWindowError(
+      res.status,
+      text,
+      /votingstartdate|before voting starts|voting has started/i,
+      "extra: admin withdraw after voting started"
     );
   });
 });
