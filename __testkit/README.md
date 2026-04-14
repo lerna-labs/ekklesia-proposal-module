@@ -14,10 +14,11 @@ HTTP and integration tests for the Ekklesia Proposal Module API.
 | `test:login` | `tests/login.test.js` | Sign-in with cardano-signer, GET /session, sign-out, 401 |
 | `test:session:ratelimit` | `tests/session-rate-limit.test.js` | Session endpoint limits: POST (6th), PUT (11th), GET (61st), DELETE (21st) return 429 |
 | `test:permissions` | `tests/proposal-permissions.test.js` | Permission checks across proposals and comments: draft visibility, draft update denial, proposal/comment withdraw denial, and comment edit denial for non-proposer/non-admin |
+| `test:window:rules` | `tests/window-rules.test.js` | Vote time-window enforcement and error-message checks (submission/review/feedback) across proposals/comments |
 | `test:comment:ratelimit` | `tests/comment-rate-limit.test.js` | 6th POST /comments in a window returns 429 (5/min per user) |
 | `test:public:ratelimit` | `tests/z-public-rate-limit.test.js` | 201st GET on public read returns 429 (200/min per IP); `z-` prefix sorts it last in `npm test` |
-| `test:timing` | `tests/timing-conditions.test.js` | Latency smoke for GET/POST comments |
-| `test:perf` | `tests/performance.test.js` | Public GET timings with ~20k seeded proposals |
+| `test:perf:smoke` | `tests/performance/timing.test.js` | Latency smoke for GET/POST comments |
+| `test:perf` | `tests/performance.test.js`, `tests/performance/timing.test.js` | Performance suite (public GET timings + timing smoke) |
 
 `npm test` runs **all** of the above **in band** (one file after another) so shared rate limits behave predictably; the public read limiter test is named `z-*.test.js` so it runs after perf and timing. You can still run heavy scripts alone when debugging.
 
@@ -46,15 +47,18 @@ npm test                      # all tests
 npm run test:login
 npm run test:session:ratelimit
 npm run test:permissions
-npm run test:perf             # needs seeded data + API
+npm run test:window:rules     # requires TESTKIT_TREASURY_HASH
+npm run test:perf             # full performance suite (benchmark + timing smoke)
+npm run test:perf:smoke       # timing smoke only
 npm run test:public:ratelimit # 201 GETs → 429; API only
 npm run test:comment:ratelimit
-npm run test:timing
 npm run seed:perf             # vote + 20k proposals; prints PERF_* ids
 npm run seed:perf:teardown
 ```
 
 Disable step logs: `TESTKIT_LOG=0 npm test`.
+
+For `test:window:rules`, set `TESTKIT_TREASURY_HASH` in `.env` (or legacy `TESTKIT_TREASURY_DONATION_TX_HASH`).
 
 ### Debugging PUT /session (400)
 

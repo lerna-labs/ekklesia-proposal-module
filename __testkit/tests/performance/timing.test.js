@@ -7,11 +7,11 @@
 
 import path from "path";
 import { fileURLToPath } from "url";
-import { login } from "../helpers/session.js";
-import { resolveVoteAndLiveProposal } from "../helpers/testProposal.js";
+import { login } from "../../helpers/session.js";
+import { resolveVoteAndLiveProposal } from "../../helpers/testProposal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTKIT_ROOT = path.resolve(__dirname, "..");
+const TESTKIT_ROOT = path.resolve(__dirname, "../..");
 const KEYS_DREP02 = path.join(TESTKIT_ROOT, "keys", "drep02_w9c");
 
 const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api/v0";

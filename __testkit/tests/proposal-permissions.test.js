@@ -17,6 +17,7 @@ import { fileURLToPath } from "url";
 import { readDrepId, login } from "../helpers/session.js";
 import { connect, disconnect } from "../helpers/testkitMongo.js";
 import { ensureTestkitVote } from "../helpers/testVote.js";
+import { resolveVoteAndLiveProposal } from "../helpers/testProposal.js";
 import { Proposal } from "../../schema/Proposal.js";
 import { Comment } from "../../schema/Comment.js";
 
@@ -31,6 +32,10 @@ const WITHDRAW_BODY = {
   category: "Other",
   comment: "permission test withdrawal attempt",
 };
+const TREASURY_HASH =
+  process.env.TESTKIT_TREASURY_HASH?.trim() ||
+  process.env.TESTKIT_TREASURY_DONATION_TX_HASH?.trim() ||
+  "";
 
 function log(step, message, detail) {
   if (!LOG) return;
@@ -60,20 +65,71 @@ function assertNonPublicFieldsExcluded(payload) {
   expect(payload?.metaData?.contractingParty?.legalEntityRegistrationNumber).toBeUndefined();
 }
 
+/**
+ * Seed/perf proposals in Mongo can drift vs current budget2026 validation (long strings,
+ * duration caps). Clamp so draft->live PUT passes validation while preserving structure.
+ */
+function sanitizeMetaDataForLiveSubmit(meta) {
+  const m = structuredClone(meta ?? {});
+  if (typeof m.estimatedDuration === "number" && m.estimatedDuration >= 60) {
+    m.estimatedDuration = 12;
+  }
+  if (m.proposerDetails && typeof m.proposerDetails.name === "string") {
+    m.proposerDetails.name = m.proposerDetails.name.slice(0, 60);
+  }
+  if (m.strategyFramework) {
+    const sf = m.strategyFramework;
+    if (typeof sf.pillarRationale === "string" && sf.pillarRationale.length > 10000) {
+      sf.pillarRationale = sf.pillarRationale.slice(0, 10000);
+    }
+    if (typeof sf.kpiAlignment === "string" && sf.kpiAlignment.length > 10000) {
+      sf.kpiAlignment = sf.kpiAlignment.slice(0, 10000);
+    }
+  }
+  if (m.proposalDetails && Array.isArray(m.proposalDetails.workPackages)) {
+    for (const wp of m.proposalDetails.workPackages) {
+      if (typeof wp.summary === "string" && wp.summary.length > 2000) {
+        wp.summary = wp.summary.slice(0, 2000);
+      }
+      if (Array.isArray(wp.milestones)) {
+        for (const ms of wp.milestones) {
+          if (typeof ms.duration === "number" && ms.duration > 240) {
+            ms.duration = 240;
+          }
+        }
+      }
+    }
+  }
+  return m;
+}
+
 describe("Proposal permissions", () => {
   let voteId;
   let proposerId;
+  let proposerSession;
   let otherDrepSession;
   let seededDraftId;
   let seededLiveId;
   let seededCommentId;
+  let liveTemplateProposal;
 
   beforeAll(async () => {
+    // Resolve a known-good live proposal id first.
+    const resolved = await resolveVoteAndLiveProposal(API_BASE_URL);
+
     await connect();
+    // IMPORTANT: load from DB (not public GET /proposals/:id), because API responses
+    // may exclude non-public fields required for live validation.
+    liveTemplateProposal = await Proposal.findById(resolved.proposalId).lean();
+    if (!liveTemplateProposal) {
+      throw new Error("Could not resolve a live proposal template for treasury hash uniqueness test.");
+    }
+
     const { vote } = await ensureTestkitVote();
     voteId = vote._id;
 
     proposerId = readDrepId(KEYS_DREP01);
+    proposerSession = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
     otherDrepSession = await login(API_BASE_URL, { keysDir: KEYS_DREP02 });
 
     const baseMetaData = {
@@ -257,4 +313,78 @@ describe("Proposal permissions", () => {
     const body = await res.text();
     expect(body.toLowerCase()).toMatch(/do not have permission|forbidden|permission/);
   });
+
+  it("rejects submitting two different proposals with the same treasury hash", async () => {
+    if (!TREASURY_HASH) {
+      throw new Error(
+        "Missing TESTKIT_TREASURY_HASH (or TESTKIT_TREASURY_DONATION_TX_HASH) in __testkit/.env"
+      );
+    }
+
+    const createdIds = [];
+    try {
+      const makeDraft = async (label) => {
+        const doc = await Proposal.create({
+          proposerId,
+          voteId,
+          title: `Treasury hash uniqueness ${label} ${Date.now()}`,
+          summary: liveTemplateProposal.summary ?? "",
+          status: "draft",
+          metaData: liveTemplateProposal.metaData ?? {},
+        });
+        createdIds.push(doc._id);
+        return doc;
+      };
+
+      const firstDraft = await makeDraft("A");
+      const secondDraft = await makeDraft("B");
+
+      const buildLiveBody = (draft) => {
+        const metaData = sanitizeMetaDataForLiveSubmit(liveTemplateProposal.metaData);
+        metaData.treasuryDonationTxHash = TREASURY_HASH;
+        metaData.treasuryDonationConfirmed = true;
+        return {
+          voteId: String(voteId),
+          title: draft.title,
+          summary: draft.summary ?? "",
+          status: "live",
+          metaData,
+        };
+      };
+
+      const firstRes = await fetch(`${API_BASE_URL}/proposals/${firstDraft._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: proposerSession.cookieHeader,
+        },
+        body: JSON.stringify(buildLiveBody(firstDraft)),
+      });
+      if (firstRes.status !== 200) {
+        const firstErrorBody = await firstRes.text();
+        const hint =
+          /stake key did not contribute/i.test(firstErrorBody)
+            ? " TESTKIT_TREASURY_HASH must be a mainnet tx hash where the proposer stake (keys/drep01_jag) appears in transaction inputs (Koios)."
+            : "";
+        throw new Error(
+          `First draft->live submit failed (${firstRes.status}): ${firstErrorBody}${hint}`
+        );
+      }
+      const secondRes = await fetch(`${API_BASE_URL}/proposals/${secondDraft._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: proposerSession.cookieHeader,
+        },
+        body: JSON.stringify(buildLiveBody(secondDraft)),
+      });
+      expect(secondRes.status).toBe(400);
+      const bodyText = await secondRes.text();
+      expect(bodyText.toLowerCase()).toMatch(/already used|already.*hash|transaction hash/);
+    } finally {
+      if (createdIds.length > 0) {
+        await Proposal.deleteMany({ _id: { $in: createdIds } });
+      }
+    }
+  }, 120000);
 });
