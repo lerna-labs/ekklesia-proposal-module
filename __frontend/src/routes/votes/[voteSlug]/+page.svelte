@@ -169,11 +169,11 @@
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
         <div class="flex h-full min-w-0 flex-col *:mt-0">
-          <VoteCTA {voteSlug} />
+          <VoteCTA {voteSlug} vote={vote} />
         </div>
       </div>
     {:else}
-      <VoteCTA {voteSlug} />
+      <VoteCTA {voteSlug} vote={vote} />
     {/if}
 
     <div class="mt-4 space-y-2">

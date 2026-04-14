@@ -12,6 +12,13 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import EyeIcon from "@lucide/svelte/icons/eye";
+  import {
+    draftSubmissionOpen,
+    liveResubmitOpen,
+    proposerWithdrawOpen,
+    voteForProposalRow,
+  } from "$lib/voteWindowPolicy.js";
+
   let { data } = $props();
   let user = $derived(data.user ?? null);
   let proposals = $derived(data.proposals.data);
@@ -19,6 +26,19 @@
   let voteSlugs = $derived(data.voteSlugs ?? {});
   let voteTitles = $derived(data.voteTitles ?? {});
   let votes = $derived(data.votes ?? []);
+  /** Single instant for all policy checks (UTC timeline via Date). */
+  let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
+  let primaryVote = $derived(votes[0] ?? null);
+  let canCreateDraft = $derived(
+    primaryVote ? draftSubmissionOpen(primaryVote, policyNow) : false,
+  );
+
+  const closedSubmissionTitle =
+    "The submission period for this vote has ended (submission end date in UTC).";
+  const closedReviewTitle =
+    "The review period for this vote has ended; editing is not available (review end date in UTC).";
+  const closedWithdrawTitle =
+    "Proposer withdrawal is not allowed after the vote review period has ended.";
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
@@ -107,18 +127,7 @@
           </span>
         </Card.Title>
         {#if votes.length === 1}
-          <Button
-            variant="outline"
-            class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
-            href="/dashboard/{votes[0].slug}/new"
-            aria-label="New proposal"
-            size="sm"
-          >
-            <PlusIcon class="size-4" />
-            New proposal
-          </Button>
-        {:else if votes.length > 1}
-          <div class="flex items-center gap-1">
+          {#if canCreateDraft}
             <Button
               variant="outline"
               class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
@@ -129,6 +138,45 @@
               <PlusIcon class="size-4" />
               New proposal
             </Button>
+          {:else}
+            <Button
+              variant="outline"
+              class="add-item-btn w-fit gap-1 text-xs opacity-60"
+              disabled
+              aria-label="New proposal unavailable — submission period ended"
+              title={closedSubmissionTitle}
+              size="sm"
+            >
+              <PlusIcon class="size-4" />
+              New proposal
+            </Button>
+          {/if}
+        {:else if votes.length > 1}
+          <div class="flex items-center gap-1">
+            {#if canCreateDraft}
+              <Button
+                variant="outline"
+                class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+                href="/dashboard/{votes[0].slug}/new"
+                aria-label="New proposal"
+                size="sm"
+              >
+                <PlusIcon class="size-4" />
+                New proposal
+              </Button>
+            {:else}
+              <Button
+                variant="outline"
+                class="add-item-btn w-fit gap-1 text-xs opacity-60"
+                disabled
+                aria-label="New proposal unavailable — submission period ended"
+                title={closedSubmissionTitle}
+                size="sm"
+              >
+                <PlusIcon class="size-4" />
+                New proposal
+              </Button>
+            {/if}
             <!-- TODO: dropdown for other votes -->
           </div>
         {/if}
@@ -164,11 +212,29 @@
                   {@const editHref = slug
                     ? `/dashboard/${slug}/${proposal._id}`
                     : null}
-                  {@const viewUrl = viewHref(proposal)}
-                  {@const isLastRow = i === proposals.length - 1}
+                  {@const rowVote = voteForProposalRow(proposal, votes)}
                   {@const isWithdrawn =
                     proposal.status === "withdrawnByProposer" ||
                     proposal.status === "withdrawnByAdmin"}
+                  {@const canEdit =
+                    !isWithdrawn &&
+                    editHref &&
+                    rowVote &&
+                    (proposal.status === "draft"
+                      ? draftSubmissionOpen(rowVote, policyNow)
+                      : proposal.status === "live"
+                        ? liveResubmitOpen(rowVote, policyNow)
+                        : false)}
+                  {@const canWithdrawLive =
+                    proposal.status === "live" &&
+                    rowVote &&
+                    proposerWithdrawOpen(rowVote, policyNow)}
+                  {@const editLockedTitle =
+                    proposal.status === "draft"
+                      ? closedSubmissionTitle
+                      : closedReviewTitle}
+                  {@const viewUrl = viewHref(proposal)}
+                  {@const isLastRow = i === proposals.length - 1}
                   <tr
                     class="border-b hover:bg-muted/50 {isLastRow
                       ? 'border-border'
@@ -180,13 +246,20 @@
                           <span class="font-medium">
                             {displayTitle(proposal)}
                           </span>
-                        {:else if editHref}
+                        {:else if canEdit && editHref}
                           <a
                             href={editHref}
                             class="text-primary hover:underline font-medium"
                           >
                             {displayTitle(proposal)}
                           </a>
+                        {:else if editHref}
+                          <span
+                            class="font-medium text-muted-foreground"
+                            title={editLockedTitle}
+                          >
+                            {displayTitle(proposal)}
+                          </span>
                         {:else}
                           <span class="font-medium">
                             {displayTitle(proposal)}
@@ -234,13 +307,23 @@
                           >
                             <PencilIcon class="size-4" />
                           </Button>
-                        {:else if editHref}
+                        {:else if canEdit && editHref}
                           <Button
                             variant="outline"
                             size="icon"
                             href={editHref}
                             aria-label="Edit proposal"
                             title="Edit proposal"
+                          >
+                            <PencilIcon class="size-4" />
+                          </Button>
+                        {:else if editHref}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled
+                            aria-label="Edit proposal unavailable"
+                            title={editLockedTitle}
                           >
                             <PencilIcon class="size-4" />
                           </Button>
@@ -289,15 +372,27 @@
                             <Trash2Icon class="size-4 text-black" />
                           </Button>
                         {:else if proposal.status === "live"}
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            aria-label="Withdraw proposal"
-                            title="Withdraw proposal"
-                            onclick={() => openWithdrawDialog(proposal)}
-                          >
-                            <Trash2Icon class="size-4 text-black" />
-                          </Button>
+                          {#if canWithdrawLive}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label="Withdraw proposal"
+                              title="Withdraw proposal"
+                              onclick={() => openWithdrawDialog(proposal)}
+                            >
+                              <Trash2Icon class="size-4 text-black" />
+                            </Button>
+                          {:else}
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              disabled
+                              aria-label="Withdraw proposal unavailable"
+                              title={closedWithdrawTitle}
+                            >
+                              <Trash2Icon class="size-4 text-black opacity-50" />
+                            </Button>
+                          {/if}
                         {:else if isWithdrawn}
                           <Button
                             variant="outline"

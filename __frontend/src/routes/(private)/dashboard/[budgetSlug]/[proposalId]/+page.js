@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
+import { draftSubmissionOpen, liveResubmitOpen } from '$lib/voteWindowPolicy.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
@@ -36,6 +37,20 @@ export async function load({ fetch, params, parent }) {
 	// Ensure URL slug matches this proposal's vote
 	if (vote.slug && vote.slug !== budgetSlug) {
 		error(404, 'Proposal does not belong to this vote');
+	}
+
+	const now = new Date();
+	if (proposal.status === 'draft' && !draftSubmissionOpen(vote, now)) {
+		error(
+			403,
+			'The submission period for this vote has ended. You cannot edit this draft.',
+		);
+	}
+	if (proposal.status === 'live' && !liveResubmitOpen(vote, now)) {
+		error(
+			403,
+			'The review period for this vote has ended. You cannot edit this proposal.',
+		);
 	}
 
 	return { proposal, vote };
