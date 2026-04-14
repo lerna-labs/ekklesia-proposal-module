@@ -61,7 +61,12 @@ async function runSamples(action, url, { expectOk = false, assertOkLabel = null 
     await throttleForRateLimit();
     const r = await measureGet(url);
     if (assertOkLabel) await assertOk(r, assertOkLabel);
-    else if (expectOk) expect(r.res.ok).toBe(true);
+    else if (expectOk) {
+      if (!r.res.ok) {
+        const body = await r.res.text();
+        throw new Error(`Request failed: ${r.res.status}\n${body}`);
+      }
+    }
     recordTiming(action, r.ms);
   }
   const arr = timings[action];

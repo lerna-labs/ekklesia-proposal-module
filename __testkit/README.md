@@ -11,7 +11,7 @@ HTTP and integration tests for the Ekklesia Proposal Module API.
 
 | Script | File | Purpose |
 |--------|------|---------|
-| `test:login` | `tests/login.test.js` | Sign-in with cardano-signer, GET /session, sign-out, 401 |
+| `test:login` | `tests/login.test.js` | DRep sign-in (`keys/drep02_w9c`) and stake sign-in (`keys/stake_43wf`); GET /session, sign-out, 401 |
 | `test:session:ratelimit` | `tests/session-rate-limit.test.js` | Session endpoint limits: POST (6th), PUT (11th), GET (61st), DELETE (21st) return 429 |
 | `test:permissions` | `tests/proposal-permissions.test.js` | Permission checks across proposals and comments: draft visibility, draft update denial, proposal/comment withdraw denial, and comment edit denial for non-proposer/non-admin |
 | `test:window:rules` | `tests/window-rules.test.js` | Vote time-window enforcement and error-message checks (submission/review/feedback) across proposals/comments |
@@ -28,7 +28,8 @@ Shared seed: one vote with slug **`ekklesia-testkit`** (`helpers/testkitConstant
 
 - **Backend** at `API_BASE_URL` (default `http://localhost:3000/api/v0`).
 - **cardano-signer** on `PATH` — see [docs/cardano-signer.md](docs/cardano-signer.md).
-- **DRep keys** in `keys/drep01_jag/` and `keys/drep02_w9c/` (`drep.skey`, `drep_id.txt`). Accounts used for login must be registered so the backend can validate signing.
+- **Stake keys** in `keys/stake_<suffix>/` (DRep fixtures may use names like `drep02_w9c`) with `id.txt` (stake/DRep bech32 id) and `skey.json`. Default login uses `stake_43wf`; the “other user” in permission/window tests uses `drep02_w9c`. Override with `TESTKIT_DEFAULT_STAKE_KEYS` / `TESTKIT_OTHER_STAKE_KEYS`. Legacy `drep_id.txt` + `drep.skey` are still supported. Accounts must be registered so the backend can validate signing.
+- **Testnet stake** (`stake_test1…` in `id.txt`): `session.js` passes `cardano-signer --testnet-magic` using a built-in default (Preview). For Preprod keys, change `DEFAULT_TESTNET_MAGIC_FOR_STAKE_TEST1` in `helpers/session.js` to `1`. Mainnet stake (`stake1…`) does not use `--testnet-magic`.
 
 ## Configuration
 
@@ -58,13 +59,13 @@ npm run seed:perf:teardown
 
 Disable step logs: `TESTKIT_LOG=0 npm test`.
 
-For `test:window:rules`, set `TESTKIT_TREASURY_HASH` in `.env` (or legacy `TESTKIT_TREASURY_DONATION_TX_HASH`).
+For `test:window:rules` (and the treasury-hash permission test), set `TESTKIT_TREASURY_HASH` in `.env` (or legacy `TESTKIT_TREASURY_DONATION_TX_HASH`), and `TESTKIT_TREASURY_DONATION_USER` to the stake bech32 that matches `keys/<folder>/id.txt` for the signing keys used on submit.
 
 ### Debugging PUT /session (400)
 
 1. Run the backend with visible logs.
 2. Run `npm run test:login`.
-3. Check `drep_id.txt` matches `drep.skey`.
+3. Check `id.txt` matches `skey.json` (or legacy `drep_id.txt` / `drep.skey`).
 
 ---
 

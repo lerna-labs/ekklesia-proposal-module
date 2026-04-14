@@ -17,10 +17,12 @@
  * Treasury hash strategy:
  * - Reuse one hash for all live transitions via TESTKIT_TREASURY_HASH
  *   (fallback: TESTKIT_TREASURY_DONATION_TX_HASH).
+ * - Proposer / live-submit identity: TESTKIT_TREASURY_DONATION_USER (stake bech32) → keys dir via id.txt match.
  */
-import path from "path";
-import { fileURLToPath } from "url";
 import { login, readDrepId } from "../helpers/session.js";
+import { getTreasuryDonationKeysDir, getOtherStakeKeysDir } from "../helpers/stakeKeys.js";
+import { sanitizeMetaDataForLiveSubmit } from "../helpers/sanitizeMetaDataForLiveSubmit.js";
+import { expectHttpStatus, expectBodyMatches } from "../helpers/httpAssert.js";
 import { resolveVoteAndLiveProposal } from "../helpers/testProposal.js";
 import { connect, disconnect } from "../helpers/testkitMongo.js";
 import { Vote } from "../../schema/Vote.js";
@@ -34,10 +36,8 @@ const TREASURY_HASH =
   process.env.TESTKIT_TREASURY_DONATION_TX_HASH?.trim() ||
   "";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTKIT_ROOT = path.resolve(__dirname, "..");
-const KEYS_DREP01 = path.join(TESTKIT_ROOT, "keys", "drep01_jag");
-const KEYS_DREP02 = path.join(TESTKIT_ROOT, "keys", "drep02_w9c");
+const KEYS_TREASURY_USER = getTreasuryDonationKeysDir();
+const KEYS_OTHER_STAKE = getOtherStakeKeysDir();
 
 const createdVoteIds = [];
 const createdProposalIds = [];
@@ -50,9 +50,9 @@ function log(step, message, detail) {
   if (detail !== undefined) console.log(prefix, " ", detail);
 }
 
-function assertWindowError(status, bodyText, expectedRegex) {
-  expect(status).toBe(400);
-  expect((bodyText || "").toLowerCase()).toMatch(expectedRegex);
+function assertWindowError(status, bodyText, expectedRegex, context = "") {
+  expectHttpStatus(status, 400, bodyText, context);
+  expectBodyMatches(bodyText, expectedRegex, context);
 }
 
 function cloneWithoutMongoMeta(doc) {
@@ -134,9 +134,9 @@ describe("Vote timing window rules", () => {
       );
     }
 
-    drepAId = readDrepId(KEYS_DREP01);
-    drepASession = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
-    drepBSession = await login(API_BASE_URL, { keysDir: KEYS_DREP02 });
+    drepAId = readDrepId(KEYS_TREASURY_USER);
+    drepASession = await login(API_BASE_URL, { keysDir: KEYS_TREASURY_USER });
+    drepBSession = await login(API_BASE_URL, { keysDir: KEYS_OTHER_STAKE });
 
     await connect();
 
@@ -158,7 +158,7 @@ describe("Vote timing window rules", () => {
         ...sourceVoteObj,
         title: `[testkit window] ${name}`,
         slug: `testkit-window-${name}-${runSuffix}`,
-        admins: [drepAId, readDrepId(KEYS_DREP02)],
+        admins: [drepAId, readDrepId(KEYS_OTHER_STAKE)],
         ...w,
       });
       createdVoteIds.push(vote._id);
@@ -240,7 +240,7 @@ describe("Vote timing window rules", () => {
   }, 60000);
 
   function buildLiveBodyFromStored(proposalDoc, voteId) {
-    const liveMeta = { ...(proposalDoc.metaData || {}) };
+    const liveMeta = sanitizeMetaDataForLiveSubmit(proposalDoc.metaData ?? {});
     liveMeta.treasuryDonationTxHash = TREASURY_HASH;
     liveMeta.treasuryDonationConfirmed = true;
     return {
@@ -263,7 +263,12 @@ describe("Vote timing window rules", () => {
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    assertWindowError(res.status, text, /submission|window|start|not yet open|validation failed/);
+    assertWindowError(
+      res.status,
+      text,
+      /submission|window|start|not yet open|validation failed/,
+      "1) draft->live before submission window opens"
+    );
   });
 
   it("2) rejects draft->live when submission window is closed", async () => {
@@ -283,7 +288,12 @@ describe("Vote timing window rules", () => {
       }
     );
     const text = await res.text();
-    assertWindowError(res.status, text, /submission|window|end|closed|validation failed/);
+    assertWindowError(
+      res.status,
+      text,
+      /submission|window|end|closed|validation failed/,
+      "2) draft->live after submission window closed"
+    );
   });
 
   it("3) allows re-submit during review window", async () => {
@@ -292,7 +302,7 @@ describe("Vote timing window rules", () => {
       title: `${fixtures.liveReviewOpen.title} updated`,
       summary: fixtures.liveReviewOpen.summary ?? "",
       status: "live",
-      metaData: fixtures.liveReviewOpen.metaData,
+      metaData: sanitizeMetaDataForLiveSubmit(fixtures.liveReviewOpen.metaData),
     };
     const res = await fetch(`${API_BASE_URL}/proposals/${fixtures.liveReviewOpen._id}`, {
       method: "PUT",
@@ -302,7 +312,8 @@ describe("Vote timing window rules", () => {
       },
       body: JSON.stringify(body),
     });
-    expect(res.status).toBe(200);
+    const text = await res.text();
+    expectHttpStatus(res.status, 200, text, "3) re-submit during review window");
   });
 
   it("4) rejects re-submit after review window", async () => {
@@ -311,7 +322,7 @@ describe("Vote timing window rules", () => {
       title: `${fixtures.liveReviewClosed.title} updated`,
       summary: fixtures.liveReviewClosed.summary ?? "",
       status: "live",
-      metaData: fixtures.liveReviewClosed.metaData,
+      metaData: sanitizeMetaDataForLiveSubmit(fixtures.liveReviewClosed.metaData),
     };
     const res = await fetch(`${API_BASE_URL}/proposals/${fixtures.liveReviewClosed._id}`, {
       method: "PUT",
@@ -322,7 +333,12 @@ describe("Vote timing window rules", () => {
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    assertWindowError(res.status, text, /reviewenddate|review period|after the vote review/i);
+    assertWindowError(
+      res.status,
+      text,
+      /reviewenddate|review period|after the vote review/i,
+      "4) re-submit after review window"
+    );
   });
 
   it("5) rejects posting comment outside feedback window", async () => {
@@ -338,7 +354,12 @@ describe("Vote timing window rules", () => {
       }),
     });
     const text = await res.text();
-    assertWindowError(res.status, text, /feedbackenddate|feedback period|can only be added/i);
+    assertWindowError(
+      res.status,
+      text,
+      /feedbackenddate|feedback period|can only be added/i,
+      "5) comment outside feedback window"
+    );
   });
 
   it("extra: rejects creating draft after submission window closes", async () => {
@@ -355,7 +376,12 @@ describe("Vote timing window rules", () => {
       }),
     });
     const text = await res.text();
-    assertWindowError(res.status, text, /submission|end|closed|window|validation failed/);
+    assertWindowError(
+      res.status,
+      text,
+      /submission|end|closed|window|validation failed/,
+      "extra: POST draft after submission closed"
+    );
   });
 
   it("extra: rejects updating draft after submission window closes", async () => {
@@ -375,7 +401,12 @@ describe("Vote timing window rules", () => {
       }
     );
     const text = await res.text();
-    assertWindowError(res.status, text, /submission|end|closed|window|validation failed/);
+    assertWindowError(
+      res.status,
+      text,
+      /submission|end|closed|window|validation failed/,
+      "extra: PUT draft after submission closed"
+    );
   });
 
   it("extra: rejects liking comment after feedback window closes", async () => {
@@ -387,7 +418,12 @@ describe("Vote timing window rules", () => {
       }
     );
     const text = await res.text();
-    assertWindowError(res.status, text, /feedback period|no longer be liked|feedbackenddate/i);
+    assertWindowError(
+      res.status,
+      text,
+      /feedback period|no longer be liked|feedbackenddate/i,
+      "extra: like comment after feedback closed"
+    );
   });
 
   it("extra: rejects admin comment withdraw after feedback window closes", async () => {
@@ -409,7 +445,8 @@ describe("Vote timing window rules", () => {
     assertWindowError(
       res.status,
       text,
-      /cannot be withdrawn by an admin after the vote feedback period has ended|feedbackenddate/i
+      /cannot be withdrawn by an admin after the vote feedback period has ended|feedbackenddate/i,
+      "extra: admin withdraw comment after feedback closed"
     );
   });
 });

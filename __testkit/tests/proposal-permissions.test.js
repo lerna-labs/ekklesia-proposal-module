@@ -15,6 +15,12 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { readDrepId, login } from "../helpers/session.js";
+import {
+  getTreasuryDonationKeysDir,
+  getTreasuryDonationUserAddress,
+  getOtherStakeKeysDir,
+} from "../helpers/stakeKeys.js";
+import { sanitizeMetaDataForLiveSubmit } from "../helpers/sanitizeMetaDataForLiveSubmit.js";
 import { connect, disconnect } from "../helpers/testkitMongo.js";
 import { ensureTestkitVote } from "../helpers/testVote.js";
 import { resolveVoteAndLiveProposal } from "../helpers/testProposal.js";
@@ -25,8 +31,8 @@ const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api/v0";
 const LOG = process.env.TESTKIT_LOG !== "0" && process.env.TESTKIT_LOG !== "false";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const KEYS_DREP01 = path.join(__dirname, "..", "keys", "drep01_jag");
-const KEYS_DREP02 = path.join(__dirname, "..", "keys", "drep02_w9c");
+const KEYS_TREASURY_USER = getTreasuryDonationKeysDir();
+const KEYS_OTHER_STAKE = getOtherStakeKeysDir();
 
 const WITHDRAW_BODY = {
   category: "Other",
@@ -65,44 +71,6 @@ function assertNonPublicFieldsExcluded(payload) {
   expect(payload?.metaData?.contractingParty?.legalEntityRegistrationNumber).toBeUndefined();
 }
 
-/**
- * Seed/perf proposals in Mongo can drift vs current budget2026 validation (long strings,
- * duration caps). Clamp so draft->live PUT passes validation while preserving structure.
- */
-function sanitizeMetaDataForLiveSubmit(meta) {
-  const m = structuredClone(meta ?? {});
-  if (typeof m.estimatedDuration === "number" && m.estimatedDuration >= 60) {
-    m.estimatedDuration = 12;
-  }
-  if (m.proposerDetails && typeof m.proposerDetails.name === "string") {
-    m.proposerDetails.name = m.proposerDetails.name.slice(0, 60);
-  }
-  if (m.strategyFramework) {
-    const sf = m.strategyFramework;
-    if (typeof sf.pillarRationale === "string" && sf.pillarRationale.length > 10000) {
-      sf.pillarRationale = sf.pillarRationale.slice(0, 10000);
-    }
-    if (typeof sf.kpiAlignment === "string" && sf.kpiAlignment.length > 10000) {
-      sf.kpiAlignment = sf.kpiAlignment.slice(0, 10000);
-    }
-  }
-  if (m.proposalDetails && Array.isArray(m.proposalDetails.workPackages)) {
-    for (const wp of m.proposalDetails.workPackages) {
-      if (typeof wp.summary === "string" && wp.summary.length > 2000) {
-        wp.summary = wp.summary.slice(0, 2000);
-      }
-      if (Array.isArray(wp.milestones)) {
-        for (const ms of wp.milestones) {
-          if (typeof ms.duration === "number" && ms.duration > 240) {
-            ms.duration = 240;
-          }
-        }
-      }
-    }
-  }
-  return m;
-}
-
 describe("Proposal permissions", () => {
   let voteId;
   let proposerId;
@@ -128,9 +96,9 @@ describe("Proposal permissions", () => {
     const { vote } = await ensureTestkitVote();
     voteId = vote._id;
 
-    proposerId = readDrepId(KEYS_DREP01);
-    proposerSession = await login(API_BASE_URL, { keysDir: KEYS_DREP01 });
-    otherDrepSession = await login(API_BASE_URL, { keysDir: KEYS_DREP02 });
+    proposerId = readDrepId(KEYS_TREASURY_USER);
+    proposerSession = await login(API_BASE_URL, { keysDir: KEYS_TREASURY_USER });
+    otherDrepSession = await login(API_BASE_URL, { keysDir: KEYS_OTHER_STAKE });
 
     const baseMetaData = {
       proposerDetails: { name: "Permission Test Proposer", email: "private@example.com" },
@@ -364,7 +332,7 @@ describe("Proposal permissions", () => {
         const firstErrorBody = await firstRes.text();
         const hint =
           /stake key did not contribute/i.test(firstErrorBody)
-            ? " TESTKIT_TREASURY_HASH must be a mainnet tx hash where the proposer stake (keys/drep01_jag) appears in transaction inputs (Koios)."
+            ? ` TESTKIT_TREASURY_HASH must be a mainnet tx hash where TESTKIT_TREASURY_DONATION_USER (${getTreasuryDonationUserAddress()}) appears in transaction inputs (Koios).`
             : "";
         throw new Error(
           `First draft->live submit failed (${firstRes.status}): ${firstErrorBody}${hint}`
