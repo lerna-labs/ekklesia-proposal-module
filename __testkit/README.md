@@ -2,8 +2,8 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | 1.2.0 |
-| **Last revised** | 2026-04-13 |
+| **Version** | 1.3.0 |
+| **Last revised** | 2026-04-14 |
 
 HTTP and integration tests for the Ekklesia Proposal Module API.
 
@@ -16,11 +16,11 @@ HTTP and integration tests for the Ekklesia Proposal Module API.
 | `test:permissions` | `tests/proposal-permissions.test.js` | Permission checks across proposals and comments: draft visibility, draft update denial, proposal/comment withdraw denial, and comment edit denial for non-proposer/non-admin |
 | `test:window:rules` | `tests/window-rules.test.js` | Vote time-window enforcement and error-message checks (submission/review/feedback) across proposals/comments |
 | `test:comment:ratelimit` | `tests/comment-rate-limit.test.js` | 6th POST /comments in a window returns 429 (5/min per user) |
-| `test:public:ratelimit` | `tests/z-public-rate-limit.test.js` | 201st GET on public read returns 429 (200/min per IP); `z-` prefix sorts it last in `npm test` |
+| `test:public:ratelimit` | `tests/z-public-rate-limit.test.js` | 201st GET on public read returns 429 (200/min per IP); `z-` prefix sorts it last in `npm run test:full` |
 | `test:perf:smoke` | `tests/performance/timing.test.js` | Latency smoke for GET/POST comments |
 | `test:perf` | `tests/performance.test.js`, `tests/performance/timing.test.js` | Performance suite (public GET timings + timing smoke) |
 
-`npm test` runs **all** of the above **in band** (one file after another) so shared rate limits behave predictably; the public read limiter test is named `z-*.test.js` so it runs after perf and timing. You can still run heavy scripts alone when debugging.
+`npm test` runs **in band** (one file after another) but **skips** performance and rate-limit files (`tests/performance.test.js`, `tests/performance/`, `session-rate-limit`, `comment-rate-limit`, `z-public-rate-limit`). Use **`npm run test:full`** for the previous “everything” run (still in band; `z-public-rate-limit` last by filename). Individual scripts in the table still target one suite each.
 
 Shared seed: one vote with slug **`ekklesia-testkit`** (`helpers/testkitConstants.js`) and 20k proposals via `npm run seed:perf`. Older setups used slug `perf-test-20k`; that document is no longer created automatically—delete it in Mongo if it is obsolete.
 
@@ -44,7 +44,8 @@ Copy `.env.example` to `.env`.
 From `__testkit`:
 
 ```bash
-npm test                      # all tests
+npm test                      # integration tests (excludes perf + rate-limit)
+npm run test:full             # all tests including perf + rate-limit
 npm run test:login
 npm run test:session:ratelimit
 npm run test:permissions
@@ -73,6 +74,7 @@ For `test:window:rules` (and the treasury-hash permission test), set `TESTKIT_TR
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.3.0 | 2026-04-14 | Default `npm test` excludes performance and rate-limit suites; added `npm run test:full` and `jest.config.full.js` for the full matrix. |
 | 1.2.0 | 2026-04-13 | Shared vote slug `ekklesia-testkit`, helpers `testkitMongo` / `testVote`, slim perf matrix, login-only auth smoke, public + comment rate-limit tests, timing smoke; removed session suite and loadRoutes test. |
 | 1.1.0 | 2026-03-14 | Performance test and seed scripts. |
 | 1.0.0 | 2026-03-14 | Initial release. |

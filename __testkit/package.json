@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:full": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --config jest.config.full.js",
     "test:login": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/login.test.js",
     "test:session:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session-rate-limit.test.js --testTimeout=120000",
     "test:permissions": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/proposal-permissions.test.js --testTimeout=120000",
