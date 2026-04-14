@@ -19,6 +19,11 @@
     showReplyCountButton = false,
     canLike = false,
     likeDisabled = false,
+    likeDisabledTitle = "",
+    replyDisabled = false,
+    replyDisabledTitle = "",
+    withdrawDisabled = false,
+    withdrawDisabledTitle = "",
     isVoteAdmin = false,
     repliesData = [],
     authorLabel = commentAuthorLabel,
@@ -92,6 +97,16 @@
           size="sm"
           class="text-xs"
           disabled={isOwn || likeDisabled}
+          title={isOwn
+            ? undefined
+            : likeDisabled
+              ? likeDisabledTitle || undefined
+              : undefined}
+          aria-label={isOwn
+            ? undefined
+            : likeDisabled
+              ? `Like unavailable. ${likeDisabledTitle}`
+              : "Like comment"}
           onclick={() => onToggleLike?.(comment)}
         >
           <Heart class="size-3.5 {comment?.userLiked ? 'fill-current text-destructive' : ''}" />
@@ -111,7 +126,17 @@
           variant="secondary"
           size="sm"
           class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
-          disabled={isOwn}
+          disabled={isOwn || replyDisabled}
+          title={isOwn
+            ? undefined
+            : replyDisabled
+              ? replyDisabledTitle || undefined
+              : undefined}
+          aria-label={isOwn
+            ? undefined
+            : replyDisabled
+              ? `Reply unavailable. ${replyDisabledTitle}`
+              : "Reply to comment"}
           onclick={() => onReply?.(comment)}
         >
           <MessageSquare class="size-3.5" />
@@ -134,8 +159,11 @@
           variant="destructive"
           size="sm"
           class="text-xs bg-destructive text-white hover:bg-destructive/90"
-          aria-label="Withdraw comment"
-          title="Withdraw comment"
+          disabled={withdrawDisabled}
+          aria-label={withdrawDisabled
+            ? `Withdraw comment unavailable. ${withdrawDisabledTitle}`
+            : "Withdraw comment"}
+          title={withdrawDisabled ? withdrawDisabledTitle || undefined : "Withdraw comment"}
           onclick={() => onWithdraw?.(comment)}
         >
           <Trash2Icon class="size-4 mr-1" />

@@ -30,6 +30,9 @@
     onResetFilter,
     /** When set, show a small "Add comment" button in front of filter/sort that calls this. */
     onAddComment = null,
+    /** When true, New Comment is visible but not actionable (e.g. outside feedback window). */
+    addCommentDisabled = false,
+    addCommentDisabledTitle = "",
   } = $props();
 
   const SORT_OPTIONS = [
@@ -55,8 +58,18 @@
         type="button"
         variant="outline"
         size="sm"
-        class="add-item-btn cursor-pointer text-xs h-8 gap-1 text-white"
-        onclick={() => onAddComment()}
+        class="add-item-btn text-xs h-8 gap-1 text-white {addCommentDisabled
+          ? 'cursor-not-allowed opacity-60'
+          : 'cursor-pointer'}"
+        disabled={addCommentDisabled}
+        title={addCommentDisabled ? addCommentDisabledTitle : undefined}
+        aria-label={addCommentDisabled
+          ? `New comment unavailable. ${addCommentDisabledTitle}`
+          : "New comment"}
+        onclick={() => {
+          if (addCommentDisabled) return;
+          onAddComment();
+        }}
       >
         <PlusIcon class="size-3.5" />
         New

@@ -12,7 +12,10 @@
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
-  import PlusIcon from "@lucide/svelte/icons/plus";
+  import {
+    feedbackActionsOpen,
+    feedbackWindowActionsDisabledTitle,
+  } from "$lib/voteWindowPolicy.js";
 
   let { proposalId, proposal, vote, readOnly = false } = $props();
 
@@ -55,25 +58,35 @@
   /** Comment to reply to after login, or null for new top-level comment. */
   let pendingReplyTo = $state(null);
 
-  const canComment = $derived(
-    currentUserId &&
-      proposal?.status === "live" &&
-      vote?.feedbackEndDate &&
-      new Date() < new Date(vote.feedbackEndDate),
+  /** Bumps every 60s so feedback-window disabled state updates without navigation. */
+  let policyNowMs = $state(Date.now());
+  $effect(() => {
+    const id = setInterval(() => {
+      policyNowMs = Date.now();
+    }, 60000);
+    return () => clearInterval(id);
+  });
+
+  const policyNow = $derived(new Date(policyNowMs));
+
+  /** Show comment actions chrome (new / reply / like) for live, non-withdrawn proposal context. */
+  const showCommentActionChrome = $derived(
+    proposal?.status === "live" && !readOnly,
   );
 
-  const showAddCommentButton = $derived(
-    proposal?.status === "live" &&
-      vote?.feedbackEndDate &&
-      new Date() < new Date(vote.feedbackEndDate),
+  const feedbackOpen = $derived(
+    showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow),
   );
 
-  const canLike = $derived(
-    currentUserId &&
-      proposal?.status === "live" &&
-      vote?.feedbackEndDate &&
-      new Date() < new Date(vote.feedbackEndDate),
+  const feedbackClosedTitle = $derived(
+    vote && showCommentActionChrome && !feedbackOpen
+      ? feedbackWindowActionsDisabledTitle(vote, policyNow)
+      : "",
   );
+
+  const canComment = $derived(currentUserId && feedbackOpen);
+
+  const canLike = $derived(currentUserId && feedbackOpen);
 
   const isVoteAdmin = $derived(
     currentUserId &&
@@ -271,12 +284,25 @@
     queueMicrotask(() => showLogin.set(true));
   }
 
+  function feedbackActionBlockedMessage() {
+    const now = new Date(policyNowMs);
+    if (!vote) return "Vote is not loaded.";
+    return (
+      feedbackWindowActionsDisabledTitle(vote, now) ||
+      "Comments and replies are not available."
+    );
+  }
+
   async function openAddDialog(replyingTo = null) {
     if (!currentUserId) {
       pendingAddAfterLogin = true;
       pendingReplyTo = replyingTo;
       requestLoginModal();
       toast.info("Please log in to comment or reply.");
+      return;
+    }
+    if (!vote || !feedbackActionsOpen(vote, new Date(policyNowMs))) {
+      toast.error(feedbackActionBlockedMessage());
       return;
     }
     if (addDialogClearTimeoutId) {
@@ -296,6 +322,11 @@
   }
 
   async function submitComment() {
+    if (!vote || !feedbackActionsOpen(vote, new Date(policyNowMs))) {
+      submitError = feedbackActionBlockedMessage();
+      toast.error(feedbackActionBlockedMessage());
+      return;
+    }
     const content = String(commentValue ?? "").trim();
     if (!content) {
       submitError = "Comment cannot be empty.";
@@ -340,6 +371,10 @@
     if (!currentUserId) {
       requestLoginModal();
       toast.info("Please log in to like.");
+      return;
+    }
+    if (!vote || !feedbackActionsOpen(vote, new Date(policyNowMs))) {
+      toast.error(feedbackActionBlockedMessage());
       return;
     }
     if (!canLike) return;
@@ -438,6 +473,11 @@
   }
 
   async function submitWithdraw() {
+    if (!vote || !feedbackActionsOpen(vote, new Date(policyNowMs))) {
+      withdrawError = feedbackActionBlockedMessage();
+      toast.error(feedbackActionBlockedMessage());
+      return;
+    }
     if (!withdrawComment || !withdrawCategory) {
       withdrawError = "Please select a category.";
       toast.error("Please select a category.");
@@ -492,7 +532,9 @@
     onResetSort={resetSort}
     onApplyFilter={applyFilter}
     onResetFilter={resetFilter}
-    onAddComment={!readOnly && showAddCommentButton ? openAddDialog : null}
+    onAddComment={showCommentActionChrome ? () => openAddDialog(null) : null}
+    addCommentDisabled={showCommentActionChrome && !feedbackOpen}
+    addCommentDisabledTitle={feedbackClosedTitle}
   />
 
   {#if commentsState.loading}
@@ -507,11 +549,18 @@
           isReply={false}
           {repliesByParent}
           {currentUserId}
+          {readOnly}
           {canComment}
-          showReplyButton={!readOnly && showAddCommentButton}
-          showLikeButton={showAddCommentButton}
-          showReplyCountButton={showAddCommentButton}
+          showReplyButton={showCommentActionChrome}
+          showLikeButton={showCommentActionChrome}
+          showReplyCountButton={showCommentActionChrome}
           {canLike}
+          likeDisabled={!feedbackOpen}
+          likeDisabledTitle={feedbackClosedTitle}
+          replyDisabled={!feedbackOpen}
+          replyDisabledTitle={feedbackClosedTitle}
+          withdrawDisabled={!feedbackOpen}
+          withdrawDisabledTitle={feedbackClosedTitle}
           isVoteAdmin={!readOnly && isVoteAdmin}
           {authorLabel}
           canEditComment={readOnly ? () => false : canEditComment}

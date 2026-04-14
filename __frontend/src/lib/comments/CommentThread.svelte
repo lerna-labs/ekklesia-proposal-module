@@ -13,6 +13,12 @@
     showLikeButton = false,
     showReplyCountButton = false,
     canLike = false,
+    likeDisabled = false,
+    likeDisabledTitle = "",
+    replyDisabled = false,
+    replyDisabledTitle = "",
+    withdrawDisabled = false,
+    withdrawDisabledTitle = "",
     isVoteAdmin = false,
     readOnly = false,
     authorLabel,
@@ -34,7 +40,12 @@
   {showLikeButton}
   {showReplyCountButton}
   {canLike}
-  likeDisabled={readOnly}
+  likeDisabled={readOnly || likeDisabled}
+  {likeDisabledTitle}
+  replyDisabled={readOnly || replyDisabled}
+  {replyDisabledTitle}
+  withdrawDisabled={readOnly || withdrawDisabled}
+  {withdrawDisabledTitle}
   isVoteAdmin={!readOnly && isVoteAdmin}
   repliesData={repliesByParent[comment._id]?.data ?? []}
   {authorLabel}
@@ -69,6 +80,12 @@
           {showLikeButton}
           {showReplyCountButton}
           {canLike}
+          {likeDisabled}
+          {likeDisabledTitle}
+          {replyDisabled}
+          {replyDisabledTitle}
+          {withdrawDisabled}
+          {withdrawDisabledTitle}
           {isVoteAdmin}
           {readOnly}
           {authorLabel}
