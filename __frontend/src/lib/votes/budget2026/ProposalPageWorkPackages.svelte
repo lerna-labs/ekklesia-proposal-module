@@ -391,17 +391,17 @@
                             {#snippet title()}
                               {itemName}
                             {/snippet}
-                            <div class="text-sm text-muted-foreground mt-0 mb-1">
-                              <span class="font-medium text-foreground">Cost category:</span>
-                              <span>{row.costCategory ?? "—"}</span>
+                            <div class="text-sm mt-0 mb-1">
+                              <span class="font-medium text-muted-foreground">Cost category:</span>
+                              <span class="text-foreground">{row.costCategory ?? "—"}</span>
                             </div>
-                            <div class="text-sm text-muted-foreground mt-3">
-                              <span class="font-medium text-foreground">ADA costs:</span>
-                              <span>
+                            <div class="text-sm mt-3">
+                              <span class="font-medium text-muted-foreground">ADA costs:</span>
+                              <span class="text-foreground">
                                 {formatAda(total)} ADA
                                 {#if conversionRateNum != null && Number.isFinite(total)}
                                   <br />
-                                  <span class="text-muted-foreground">
+                                  <span class="text-muted-foreground text-xs">
                                     USD equivalent ${formatUsd(total * conversionRateNum)}
                                     (ADA/USD {conversionRateNum})
                                   </span>
@@ -409,8 +409,8 @@
                               </span>
                             </div>
                             {#if (row.description ?? "").trim()}
-                              <div class="text-sm text-muted-foreground mt-3">
-                                <span class="font-medium text-foreground block mb-1">Item description:</span>
+                              <div class="text-sm mt-3">
+                                <span class="font-medium text-muted-foreground block mb-1">Item description:</span>
                                 <Markdown content={row.description ?? ""} class="mt-0.5" />
                               </div>
                             {/if}
