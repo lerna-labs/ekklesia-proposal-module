@@ -12,6 +12,7 @@ import {
   commentWritePerHourLimiter,
   commentWritePerMinuteLimiter,
 } from "../../../helper/rateLimiters.js";
+import { getFeedbackWindowBlockPhase } from "../../../helper/voteWindows.js";
 
 const router = Router();
 
@@ -397,9 +398,16 @@ router.post(
     }
 
     const vote = proposal.voteId
-      ? await Vote.findById(proposal.voteId).select("feedbackEndDate").lean()
+      ? await Vote.findById(proposal.voteId).select("feedbackStartDate feedbackEndDate").lean()
       : null;
-    if (vote && vote.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
+    const feedbackPhase = vote ? getFeedbackWindowBlockPhase(vote, new Date()) : null;
+    if (feedbackPhase === "before_start") {
+      return res.status(400).json({
+        status: "error",
+        message: "The vote feedback period has not started yet (feedbackStartDate).",
+      });
+    }
+    if (feedbackPhase === "after_end") {
       return res.status(400).json({
         status: "error",
         message: "Comments can only be added to live proposals before the vote feedback period ends (feedbackEndDate).",
@@ -549,9 +557,16 @@ router.post("/:commentId/like", isAuthenticated, authenticatedWriteLimiter, asyn
       return res.status(400).json({ status: "error", message: "Only live comments can be liked." });
     }
     const vote = proposal.voteId
-      ? await Vote.findById(proposal.voteId).select("feedbackEndDate").lean()
+      ? await Vote.findById(proposal.voteId).select("feedbackStartDate feedbackEndDate").lean()
       : null;
-    if (vote?.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
+    const likePhase = vote ? getFeedbackWindowBlockPhase(vote, new Date()) : null;
+    if (likePhase === "before_start") {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments on this proposal cannot be liked before the vote feedback period starts (feedbackStartDate).",
+      });
+    }
+    if (likePhase === "after_end") {
       return res.status(400).json({
         status: "error",
         message: "Comments on this proposal can no longer be liked (feedback period has ended).",
@@ -621,12 +636,19 @@ router.put("/:commentId/withdraw", isAuthenticated, authenticatedWriteLimiter, a
       ? await Proposal.findById(comment.proposalId).select("voteId").lean()
       : null;
     const vote = proposal?.voteId
-      ? await Vote.findById(proposal.voteId).select("admins feedbackEndDate").lean()
+      ? await Vote.findById(proposal.voteId).select("admins feedbackStartDate feedbackEndDate").lean()
       : null;
     if (!vote || !Array.isArray(vote.admins) || !vote.admins.includes(userId)) {
       return res.status(403).json({ status: "error", message: "You do not have permission to withdraw this comment." });
     }
-    if (vote.feedbackEndDate && new Date() > new Date(vote.feedbackEndDate)) {
+    const withdrawPhase = getFeedbackWindowBlockPhase(vote, new Date());
+    if (withdrawPhase === "before_start") {
+      return res.status(400).json({
+        status: "error",
+        message: "Comments cannot be withdrawn by an admin before the vote feedback period starts (feedbackStartDate).",
+      });
+    }
+    if (withdrawPhase === "after_end") {
       return res.status(400).json({
         status: "error",
         message: "Comments cannot be withdrawn by an admin after the vote feedback period has ended (feedbackEndDate).",
