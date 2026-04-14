@@ -134,6 +134,7 @@ describe("Performance – vote and proposal endpoints", () => {
       const maxActionLen = Math.max(...rows.map((r) => r.action.length));
       const lines = [
         "",
+        `[perf] API base URL: ${API_BASE_URL}`,
         "[perf] Average response times (ms):",
         "  " + "Action".padEnd(maxActionLen) + "  Avg (ms)  Samples",
         "  " + "-".repeat(maxActionLen) + "  --------  -------",

@@ -12,6 +12,7 @@ HTTP and integration tests for the Ekklesia Proposal Module API.
 | Script | File | Purpose |
 |--------|------|---------|
 | `test:login` | `tests/login.test.js` | Sign-in with cardano-signer, GET /session, sign-out, 401 |
+| `test:session:ratelimit` | `tests/session-rate-limit.test.js` | Session endpoint limits: POST (6th), PUT (11th), GET (61st), DELETE (21st) return 429 |
 | `test:comment:ratelimit` | `tests/comment-rate-limit.test.js` | 6th POST /comments in a window returns 429 (5/min per user) |
 | `test:public:ratelimit` | `tests/z-public-rate-limit.test.js` | 201st GET on public read returns 429 (200/min per IP); `z-` prefix sorts it last in `npm test` |
 | `test:timing` | `tests/timing-conditions.test.js` | Latency smoke for GET/POST comments |
@@ -42,6 +43,7 @@ From `__testkit`:
 ```bash
 npm test                      # all tests
 npm run test:login
+npm run test:session:ratelimit
 npm run test:perf             # needs seeded data + API
 npm run test:public:ratelimit # 201 GETs → 429; API only
 npm run test:comment:ratelimit
