@@ -4,9 +4,10 @@
  * Covers:
  * 1) Submit draft->live before submission window opens.
  * 2) Submit draft->live after submission window closes.
- * 3) Re-submit live proposal during review window.
- * 4) Re-submit live proposal after review window.
- * 5) Post comment outside feedback window.
+ * 3) Allow first-time draft->live when submission window is open.
+ * 4) Re-submit live proposal during review window.
+ * 5) Re-submit live proposal after review window.
+ * 6) Post comment outside feedback window.
  *
  * Additional sensible window checks:
  * - Create draft after submission window closes.
@@ -95,6 +96,17 @@ function buildWindowDates(mode, now = Date.now()) {
       feedbackEndDate: new Date(now - 2 * day),
       reviewStartDate: new Date(now - 2 * day),
       reviewEndDate: new Date(now - day),
+    });
+  }
+  /** Now is inside [submissionStartDate, submissionEndDate] (first-time publish allowed). */
+  if (mode === "submission_open") {
+    return withVotingDates({
+      submissionStartDate: new Date(now - 4 * day),
+      submissionEndDate: new Date(now + 5 * day),
+      feedbackStartDate: new Date(now + 6 * day),
+      feedbackEndDate: new Date(now + 7 * day),
+      reviewStartDate: new Date(now + 8 * day),
+      reviewEndDate: new Date(now + 12 * day),
     });
   }
   if (mode === "review_open") {
@@ -200,6 +212,7 @@ describe("Vote timing window rules", () => {
 
     fixtures.votePreOpen = await makeVote("preopen", "submission_not_open");
     fixtures.voteSubmissionClosed = await makeVote("subclosed", "submission_closed");
+    fixtures.voteSubmissionOpen = await makeVote("subopen", "submission_open");
     fixtures.voteReviewOpen = await makeVote("reviewopen", "review_open");
     fixtures.voteReviewClosed = await makeVote("reviewclosed", "review_closed");
     fixtures.voteFeedbackClosed = await makeVote("feedbackclosed", "feedback_closed");
@@ -226,6 +239,11 @@ describe("Vote timing window rules", () => {
       fixtures.voteSubmissionClosed._id,
       "draft",
       "draft-subclosed"
+    );
+    fixtures.draftSubmissionOpen = await makeProposal(
+      fixtures.voteSubmissionOpen._id,
+      "draft",
+      "draft-first-live-submit"
     );
     fixtures.liveReviewOpen = await makeProposal(
       fixtures.voteReviewOpen._id,
@@ -343,7 +361,32 @@ describe("Vote timing window rules", () => {
     );
   });
 
-  it("3) allows re-submit during review window", async () => {
+  it("3) allows draft->live (first submission) when submission window is open", async () => {
+    const body = buildLiveBodyFromStored(
+      fixtures.draftSubmissionOpen,
+      fixtures.voteSubmissionOpen._id
+    );
+    const res = await fetch(
+      `${API_BASE_URL}/proposals/${fixtures.draftSubmissionOpen._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: drepASession.cookieHeader,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    const text = await res.text();
+    expectHttpStatus(
+      res.status,
+      200,
+      text,
+      "3) draft->live first submission while submission window open"
+    );
+  });
+
+  it("4) allows re-submit during review window", async () => {
     const body = {
       voteId: String(fixtures.voteReviewOpen._id),
       title: `${fixtures.liveReviewOpen.title} updated`,
@@ -360,10 +403,10 @@ describe("Vote timing window rules", () => {
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    expectHttpStatus(res.status, 200, text, "3) re-submit during review window");
+    expectHttpStatus(res.status, 200, text, "4) re-submit during review window");
   });
 
-  it("4) rejects re-submit after review window", async () => {
+  it("5) rejects re-submit after review window", async () => {
     const body = {
       voteId: String(fixtures.voteReviewClosed._id),
       title: `${fixtures.liveReviewClosed.title} updated`,
@@ -384,11 +427,11 @@ describe("Vote timing window rules", () => {
       res.status,
       text,
       /reviewenddate|review period|after the vote review/i,
-      "4) re-submit after review window"
+      "5) re-submit after review window"
     );
   });
 
-  it("5) rejects posting comment outside feedback window", async () => {
+  it("6) rejects posting comment outside feedback window", async () => {
     const res = await fetch(`${API_BASE_URL}/comments`, {
       method: "POST",
       headers: {
@@ -405,7 +448,7 @@ describe("Vote timing window rules", () => {
       res.status,
       text,
       /feedbackenddate|feedback period|can only be added/i,
-      "5) comment outside feedback window"
+      "6) comment outside feedback window"
     );
   });
 
