@@ -7,13 +7,16 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:login": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/login.test.js",
-    "test:session": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session.test.js",
-    "test:session:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session-rate-limit.test.js --testTimeout=70000",
-    "test:loadroutes": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/loadRoutes.test.js",
-    "test:perf": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance.test.js --testTimeout=300000",
-    "test:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance-rate-limit.test.js --testTimeout=60000",
+    "test:session:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session-rate-limit.test.js --testTimeout=120000",
+    "test:permissions": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/proposal-permissions.test.js --testTimeout=120000",
+    "test:window:rules": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/window-rules.test.js --testTimeout=180000",
+    "test:comment:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/comment-rate-limit.test.js --testTimeout=120000",
+    "test:public:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/z-public-rate-limit.test.js --testTimeout=120000",
+    "test:perf:smoke": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance/timing.test.js --testTimeout=120000",
+    "test:perf": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance.test.js tests/performance/timing.test.js --testTimeout=300000",
+    "test:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/z-public-rate-limit.test.js --testTimeout=120000",
     "seed:perf": "node scripts/seed-perf.js",
     "seed:perf:teardown": "node scripts/seed-perf.js --teardown"
   },

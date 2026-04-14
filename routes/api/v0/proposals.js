@@ -17,6 +17,10 @@ import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
 import { verifyDeposit } from "../../../helper/verifyDeposit.js";
+import {
+  getDraftOnlySubmissionBlockMessage,
+  getLiveSubmissionWindowBlockMessage,
+} from "../../../helper/voteWindows.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -143,6 +147,19 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     }
 
     const { voteId, title, summary, status, metaData } = validation.data;
+
+    const nowPost = new Date();
+    if (status === "draft") {
+      const draftMsg = getDraftOnlySubmissionBlockMessage(voteDoc, nowPost);
+      if (draftMsg) {
+        return res.status(400).json({ status: "error", message: draftMsg });
+      }
+    } else {
+      const liveMsg = getLiveSubmissionWindowBlockMessage(voteDoc, nowPost);
+      if (liveMsg) {
+        return res.status(400).json({ status: "error", message: liveMsg });
+      }
+    }
 
     // For draft, merge with minimal defaults so Mongoose metaData subfields exist
     const defaultDraftMetaData =
@@ -315,16 +332,20 @@ router.put("/:proposalId/withdraw", isAuthenticated, authenticatedWriteLimiter, 
     const now = new Date();
     // Date limits apply only to live proposals
     if (proposal.status === "live") {
-      if (isProposer && voteDoc.feedbackEndDate && now > new Date(voteDoc.feedbackEndDate)) {
+      if (isProposer && voteDoc.reviewEndDate && now > new Date(voteDoc.reviewEndDate)) {
         return res.status(400).json({
           status: "error",
-          message: "Proposer withdrawal is only allowed until the vote feedback end date.",
+          message: "Proposer withdrawal is not allowed after the vote review period has ended (reviewEndDate).",
         });
       }
-      if (isVoteAdmin && voteDoc.reviewEndDate && now > new Date(voteDoc.reviewEndDate)) {
+      if (
+        isVoteAdmin &&
+        voteDoc.votingStartDate &&
+        now >= new Date(voteDoc.votingStartDate)
+      ) {
         return res.status(400).json({
           status: "error",
-          message: "Admin withdrawal is only allowed until the vote review end date.",
+          message: "Admin withdrawal is only allowed before voting starts (votingStartDate).",
         });
       }
     }
@@ -488,6 +509,29 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
     }
 
     const { voteId, title, summary, status, metaData } = validation.data;
+    const targetVoteDoc = await Vote.findById(voteId).lean();
+    if (!targetVoteDoc) {
+      return res.status(400).json({
+        status: "error",
+        message: "Vote not found",
+      });
+    }
+
+    const nowPut = new Date();
+    if (proposal.status === "draft") {
+      if (status === "draft") {
+        const draftMsg = getDraftOnlySubmissionBlockMessage(targetVoteDoc, nowPut);
+        if (draftMsg) {
+          return res.status(400).json({ status: "error", message: draftMsg });
+        }
+      } else if (status === "live") {
+        const liveMsg = getLiveSubmissionWindowBlockMessage(targetVoteDoc, nowPut);
+        if (liveMsg) {
+          return res.status(400).json({ status: "error", message: liveMsg });
+        }
+      }
+    }
+
     const previousStatus = proposal.status;
 
     // When proposal is already live: reject status change; enforce reviewEndDate lock; archive current version then apply update
@@ -530,7 +574,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         proposal.metaData?.treasuryDonationTxHash ?? sanitizedMetaData.treasuryDonationTxHash;
     } else if (
       status === "live" &&
-      voteDoc.depositOptions?.treasuryDonation != null
+      targetVoteDoc.depositOptions?.treasuryDonation != null
     ) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
@@ -548,7 +592,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         txHash,
         // Requester identity is already resolved by isAuthenticated -> req.userId.
         userId,
-        voteDoc,
+        targetVoteDoc,
         { excludeProposalIds },
       );
       if (!validationResult.ok) {

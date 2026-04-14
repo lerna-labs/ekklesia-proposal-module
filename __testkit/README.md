@@ -1,83 +1,78 @@
 # Testkit
 
-| Field       | Value   |
-|------------|---------|
-| **Version** | 1.0.0   |
-| **Last revised** | 2026-03-14 |
+| Field | Value |
+|-------|--------|
+| **Version** | 1.2.0 |
+| **Last revised** | 2026-04-13 |
 
-Tests for the Ekklesia Proposal Module API. **Login smoke test:** `tests/login.test.js`. **Full session/auth suite:** `tests/session.test.js`. **Session rate-limit suite:** `tests/session-rate-limit.test.js`. **Performance (vote/proposal + rate limit):** `tests/performance.test.js`. See [docs/session-tests.md](docs/session-tests.md) and [docs/performance-test-plan.md](docs/performance-test-plan.md).
+HTTP and integration tests for the Ekklesia Proposal Module API.
+
+## What runs here
+
+| Script | File | Purpose |
+|--------|------|---------|
+| `test:login` | `tests/login.test.js` | DRep sign-in (`keys/drep02_w9c`) and stake sign-in (`keys/stake_43wf`); GET /session, sign-out, 401 |
+| `test:session:ratelimit` | `tests/session-rate-limit.test.js` | Session endpoint limits: POST (6th), PUT (11th), GET (61st), DELETE (21st) return 429 |
+| `test:permissions` | `tests/proposal-permissions.test.js` | Permission checks across proposals and comments: draft visibility, draft update denial, proposal/comment withdraw denial, and comment edit denial for non-proposer/non-admin |
+| `test:window:rules` | `tests/window-rules.test.js` | Vote time-window enforcement and error-message checks (submission/review/feedback) across proposals/comments |
+| `test:comment:ratelimit` | `tests/comment-rate-limit.test.js` | 6th POST /comments in a window returns 429 (5/min per user) |
+| `test:public:ratelimit` | `tests/z-public-rate-limit.test.js` | 201st GET on public read returns 429 (200/min per IP); `z-` prefix sorts it last in `npm test` |
+| `test:perf:smoke` | `tests/performance/timing.test.js` | Latency smoke for GET/POST comments |
+| `test:perf` | `tests/performance.test.js`, `tests/performance/timing.test.js` | Performance suite (public GET timings + timing smoke) |
+
+`npm test` runs **all** of the above **in band** (one file after another) so shared rate limits behave predictably; the public read limiter test is named `z-*.test.js` so it runs after perf and timing. You can still run heavy scripts alone when debugging.
+
+Shared seed: one vote with slug **`ekklesia-testkit`** (`helpers/testkitConstants.js`) and 20k proposals via `npm run seed:perf`. Older setups used slug `perf-test-20k`; that document is no longer created automatically—delete it in Mongo if it is obsolete.
 
 ## Prerequisites
 
-- **Backend** running (e.g. at `http://localhost:3000`).
-- **cardano-signer** CLI on `PATH` ([docs/cardano-signer.md](docs/cardano-signer.md)).
-- **DRep keys** in `keys/drep01_jag/` and `keys/drep02_w9c/` (`drep.skey`, `drep_id.txt`). DReps used for login must be registered (backend validates via Koios).
+- **Backend** at `API_BASE_URL` (default `http://localhost:3000/api/v0`).
+- **cardano-signer** on `PATH` — see [docs/cardano-signer.md](docs/cardano-signer.md).
+- **Stake keys** in `keys/stake_<suffix>/` (DRep fixtures may use names like `drep02_w9c`) with `id.txt` (stake/DRep bech32 id) and `skey.json`. Default login uses `stake_43wf`; the “other user” in permission/window tests uses `drep02_w9c`. Override with `TESTKIT_DEFAULT_STAKE_KEYS` / `TESTKIT_OTHER_STAKE_KEYS`. Legacy `drep_id.txt` + `drep.skey` are still supported. Accounts must be registered so the backend can validate signing.
+- **Testnet stake** (`stake_test1…` in `id.txt`): `session.js` passes `cardano-signer --testnet-magic` using a built-in default (Preview). For Preprod keys, change `DEFAULT_TESTNET_MAGIC_FOR_STAKE_TEST1` in `helpers/session.js` to `1`. Mainnet stake (`stake1…`) does not use `--testnet-magic`.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and set:
+Copy `.env.example` to `.env`.
 
-- `API_BASE_URL` – API base URL (default: `http://localhost:3000/api/v0`).
-- `JWT_SECRET` – (optional) Must match the backend secret for expired-token tests. If unset, those tests are skipped.
-- **Performance test:** No MongoDB in the test. For **remote** runs set `API_BASE_URL` and either `PERF_VOTE_ID` + `PERF_PROPOSAL_ID` (and optional `PERF_VOTE_SLUG`), or ensure the API has a vote with slug `perf-test-20k` (test will discover ids). To **seed** that data (e.g. for local or pre-loading remote): `MONGO_URI` or `MONGODB_*` in .env, then run `npm run seed:perf`.
+- `API_BASE_URL` — API base URL (no trailing slash).
+- **Performance discovery:** `PERF_VOTE_ID` and `PERF_PROPOSAL_ID` (optional; otherwise the perf test loads the vote by slug `ekklesia-testkit`).
+- **MongoDB (seed only):** `MONGO_URI` or `MONGODB_HOST`, `MONGODB_PORT`, `MONGODB_DATABASE` (same DB as the running API).
 
 ## Run tests
 
-From the `__testkit` directory:
+From `__testkit`:
 
 ```bash
-npm test              # all tests
-npm run test:login    # only tests/login.test.js
-npm run test:session  # only tests/session.test.js
-npm run test:session:ratelimit  # only tests/session-rate-limit.test.js (POST /session limiter)
-npm run test:perf     # only tests/performance.test.js (HTTP only; set API_BASE_URL; optional PERF_* ids)
-npm run test:ratelimit  # only tests/performance-rate-limit.test.js (201 GETs → 429; no seed)
-npm run seed:perf     # seed one vote + 20k proposals (needs MongoDB); prints PERF_VOTE_ID, PERF_PROPOSAL_ID
-npm run seed:perf:teardown  # delete that vote and its proposals
+npm test                      # all tests
+npm run test:login
+npm run test:session:ratelimit
+npm run test:permissions
+npm run test:window:rules     # requires TESTKIT_TREASURY_HASH
+npm run test:perf             # full performance suite (benchmark + timing smoke)
+npm run test:perf:smoke       # timing smoke only
+npm run test:public:ratelimit # 201 GETs → 429; API only
+npm run test:comment:ratelimit
+npm run seed:perf             # vote + 20k proposals; prints PERF_* ids
+npm run seed:perf:teardown
 ```
 
-To disable step-by-step logging: `TESTKIT_LOG=0 npm test` (or with `test:login` / `test:session`).
+Disable step logs: `TESTKIT_LOG=0 npm test`.
 
-If you see a Node warning about `--localstorage-file` when running from the IDE, the npm script uses `--no-webstorage` when run via `npm test`.
+For `test:window:rules` (and the treasury-hash permission test), set `TESTKIT_TREASURY_HASH` in `.env` (or legacy `TESTKIT_TREASURY_DONATION_TX_HASH`), and `TESTKIT_TREASURY_DONATION_USER` to the stake bech32 that matches `keys/<folder>/id.txt` for the signing keys used on submit.
 
-The **login test** (`tests/login.test.js`) runs login → GET session → logout → GET session 401.
+### Debugging PUT /session (400)
 
-### Session tests
-
-`tests/session.test.js` covers:
-
-- **POST /session** – valid body, missing/invalid params, invalid address/signType.
-- **PUT /session** – valid signature, wrong/tampered signature, missing signature, nonce replay, signer/signature binding, invalid signType.
-- **GET /session** – with cookie, no cookie, expired token, invalid token, Bearer token.
-- **DELETE /session** – with cookie, no cookie, expired token, Bearer token.
-- **Rate limiting** – moved to `tests/session-rate-limit.test.js` to avoid polluting session/auth runs.
-- **Access** – public reads (countries, votes, proposals), POST /proposals without/with auth, own proposals.
-- **Optional** – Set-Cookie HttpOnly.
-
-Stale-nonce and PUT rate-limit tests are skipped by default (see plan).
-
-### Performance test
-
-`tests/performance.test.js` measures response times for vote and proposal endpoints (list, pagination, sort, search, filter) and prints average response times. It does **not** seed or teardown; it only runs HTTP requests against `API_BASE_URL`. Data must already exist (vote with slug `perf-test-20k` and 20k proposals). You can set `PERF_VOTE_ID` and `PERF_PROPOSAL_ID` (and optional `PERF_VOTE_SLUG`) in env, or the test will discover them via GET /votes?slug=perf-test-20k and GET /proposals?vote=...&limit=1. It throttles to stay under the 200/min public-read limit.
-
-To **seed** that data (e.g. for local or to pre-load a remote DB), run from __testkit: `npm run seed:perf`. This needs MongoDB (`MONGO_URI` or `MONGODB_*` in .env) and creates one vote + 20k proposals, then prints the ids for use as `PERF_VOTE_ID` / `PERF_PROPOSAL_ID`. To remove them: `npm run seed:perf:teardown`.
-
-`tests/performance-rate-limit.test.js` runs separately: it sends 201 GET requests to a public read endpoint and asserts the 201st returns **429**. Run with `npm run test:ratelimit`. No seed or MongoDB required; only the API need be running.
-
-### Debugging PUT /session 400
-
-If a test fails at **PUT /session** (400):
-
-1. Run the backend in one terminal so its console is visible.
-2. Run `npm test` in `__testkit`.
-3. In the backend terminal, look for signature verification or nonce errors.
-4. Ensure `drep_id.txt` matches the key in `drep.skey` (e.g. regenerate with cardano-signer if needed).
+1. Run the backend with visible logs.
+2. Run `npm run test:login`.
+3. Check `id.txt` matches `skey.json` (or legacy `drep_id.txt` / `drep.skey`).
 
 ---
 
 ## Changes
 
-| Version | Date       | Description |
-|---------|------------|-------------|
-| 1.1.0   | 2026-03-14 | Added performance test (test:perf), MONGO_URI/MONGODB_* and PERF_KEEP_DATA, performance test summary and rate-limit note. |
-| 1.0.0   | 2026-03-14 | Initial versioned release. Prerequisites, configuration, run commands (test, test:login, test:session), session test summary, debugging PUT /session 400. |
+| Version | Date | Description |
+|---------|------|-------------|
+| 1.2.0 | 2026-04-13 | Shared vote slug `ekklesia-testkit`, helpers `testkitMongo` / `testVote`, slim perf matrix, login-only auth smoke, public + comment rate-limit tests, timing smoke; removed session suite and loadRoutes test. |
+| 1.1.0 | 2026-03-14 | Performance test and seed scripts. |
+| 1.0.0 | 2026-03-14 | Initial release. |

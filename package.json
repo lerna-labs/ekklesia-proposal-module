@@ -1,6 +1,6 @@
 {
   "name": "ekklesia-proposal-module",
-  "version": "0.5",
+  "version": "0.6",
   "description": "Ekklesia Proposal Module",
   "main": "server.js",
   "directories": {

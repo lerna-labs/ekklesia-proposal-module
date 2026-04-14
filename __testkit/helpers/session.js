@@ -3,15 +3,63 @@
  * Reusable across tests. Flow follows docs/login-flow.md.
  */
 
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { spawnSync } from "child_process";
 import jwt from "jsonwebtoken";
+import { getDefaultStakeKeysDir } from "./stakeKeys.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTKIT_ROOT = path.resolve(__dirname, "..");
-const DEFAULT_KEYS_DIR = path.join(TESTKIT_ROOT, "keys", "drep01_jag");
+const DEFAULT_KEYS_DIR = getDefaultStakeKeysDir();
+
+/** Passed to cardano-signer `--testnet-magic` for `stake_test1…` ids (Preview = 2, Preprod = 1). */
+const DEFAULT_TESTNET_MAGIC_FOR_STAKE_TEST1 = "2";
+
+/**
+ * @param {string} keysDir
+ * @returns {string} path to id file (prefer id.txt, else drep_id.txt)
+ */
+function resolveStakeIdPath(keysDir) {
+  const preferred = path.join(keysDir, "id.txt");
+  const legacy = path.join(keysDir, "drep_id.txt");
+  if (existsSync(preferred)) return preferred;
+  if (existsSync(legacy)) return legacy;
+  throw new Error(`Missing id.txt or drep_id.txt in ${keysDir}`);
+}
+
+/**
+ * @param {string} keysDir
+ * @returns {string} path to signing key (prefer skey.json, else drep.skey)
+ */
+function resolveSkeyPath(keysDir) {
+  const preferred = path.join(keysDir, "skey.json");
+  const legacy = path.join(keysDir, "drep.skey");
+  if (existsSync(preferred)) return preferred;
+  if (existsSync(legacy)) return legacy;
+  throw new Error(`Missing skey.json or drep.skey in ${keysDir}`);
+}
+
+/**
+ * Match backend validateAddress + session PUT expectations (signType).
+ * @param {string} address - Bech32 from id.txt
+ * @returns {"drep"|"stake"}
+ */
+function inferSignTypeFromAddress(address) {
+  if (!address || typeof address !== "string") return "drep";
+  const a = address.trim();
+  if (a.startsWith("drep1")) return "drep";
+  if (a.startsWith("stake_test1") || a.startsWith("stake1")) return "stake";
+  return "drep";
+}
+
+/**
+ * Whether this bech32 needs cardano-signer --testnet-magic: true only when the address starts with "stake_test1" (after trim). Mainnet stake uses "stake1" and is not testnet here.
+ */
+function isTestnetStakeAddress(bech32) {
+  if (typeof bech32 !== "string") return false;
+  return bech32.trim().startsWith("stake_test1");
+}
 
 /**
  * Sign dataHex with cardano-signer in CIP-30 (COSE) mode.
@@ -29,6 +77,9 @@ function signWithCardanoSignerCip30(dataHex, secretKeyPath, signerAddressBech32)
     "--secret-key",
     secretKeyPath,
   ];
+  if (isTestnetStakeAddress(signerAddressBech32)) {
+    args.push("--testnet-magic", DEFAULT_TESTNET_MAGIC_FOR_STAKE_TEST1);
+  }
   const result = spawnSync("cardano-signer", args, {
     encoding: "utf-8",
     maxBuffer: 1024 * 1024,
@@ -64,23 +115,23 @@ function signWithCardanoSignerCip30(dataHex, secretKeyPath, signerAddressBech32)
 }
 
 /**
- * Read DRep ID (Bech32) from a key set directory.
- * @param {string} keysDir - Path to directory containing drep_id.txt
+ * Read DRep / stake ID (Bech32) from a key set directory.
+ * @param {string} keysDir - Path to directory containing id.txt (or legacy drep_id.txt)
  * @returns {string}
  */
 export function readDrepId(keysDir = DEFAULT_KEYS_DIR) {
-  return readFileSync(path.join(keysDir, "drep_id.txt"), "utf-8").trim();
+  return readFileSync(resolveStakeIdPath(keysDir), "utf-8").trim();
 }
 
 /**
  * Sign arbitrary dataHex with keys in keysDir. For tests that need a signature of wrong/different data.
  * @param {string} dataHex - Hex string to sign (e.g. from POST /session or a wrong nonce)
- * @param {string} keysDir - Path to directory containing drep_id.txt and drep.skey
+ * @param {string} keysDir - Path to directory containing id.txt + skey.json (or legacy drep_id.txt + drep.skey)
  * @returns {{ COSE_Sign1_hex: string, COSE_Key_hex: string }}
  */
 export function signWithKeys(dataHex, keysDir = DEFAULT_KEYS_DIR) {
   const signerAddress = readDrepId(keysDir);
-  const skeyPath = path.join(keysDir, "drep.skey");
+  const skeyPath = resolveSkeyPath(keysDir);
   return signWithCardanoSignerCip30(dataHex, skeyPath, signerAddress);
 }
 
@@ -92,8 +143,8 @@ export function signWithKeys(dataHex, keysDir = DEFAULT_KEYS_DIR) {
  */
 export async function requestNonceAndSign(apiBaseUrl, options = {}) {
   const keysDir = options.keysDir ?? DEFAULT_KEYS_DIR;
-  const signType = options.signType ?? "drep";
   const signerAddress = readDrepId(keysDir);
+  const signType = options.signType ?? inferSignTypeFromAddress(signerAddress);
   const postRes = await fetch(`${apiBaseUrl}/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -126,10 +177,10 @@ export function createExpiredToken(userId, signType = "drep") {
 }
 
 /**
- * Log in as a DRep using cardano-signer (CIP-30). Uses keys in keysDir (default __testkit/keys/drep01_jag).
+ * Log in as a DRep using cardano-signer (CIP-30). Uses keys in keysDir (default from TESTKIT_DEFAULT_STAKE_KEYS / stake_43wf).
  *
  * @param {string} apiBaseUrl - e.g. http://localhost:3000/api/v0
- * @param {{ keysDir?: string, signType?: string }} options - keysDir overrides path to key set (drep_id.txt, drep.skey); signType defaults to "drep"
+ * @param {{ keysDir?: string, signType?: string }} options - keysDir overrides path to key set (id.txt, skey.json); signType defaults to "drep"
  * @returns {Promise<{ cookieHeader: string, userId: string, token: string, expiresIn: string }>}
  */
 export async function login(apiBaseUrl, options = {}) {

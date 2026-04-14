@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
+import { draftSubmissionOpen } from '$lib/voteWindowPolicy.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
@@ -15,5 +16,12 @@ export async function load({ fetch, params, parent }) {
 	}
 
 	const vote = votes[0];
+	const now = new Date();
+	if (!draftSubmissionOpen(vote, now)) {
+		error(
+			403,
+			'The submission period for this vote has ended. You cannot create a new proposal.',
+		);
+	}
 	return { vote };
 }

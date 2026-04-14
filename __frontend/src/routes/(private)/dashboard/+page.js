@@ -9,8 +9,28 @@ export async function load({ fetch, url, parent }) {
 	const parentData = await parent();
 	const user = parentData?.user;
 	const userId = user?.userId;
+	const policyNowMs = Date.now();
+
 	if (!userId) {
-		return { user, proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } }, voteTitles: {}, voteSlugs: {}, votes: [] };
+		return {
+			user,
+			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			voteTitles: {},
+			voteSlugs: {},
+			votes: [],
+			policyNowMs,
+		};
+	}
+
+	if (!String(userId).startsWith('stake')) {
+		return {
+			user,
+			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			voteTitles: {},
+			voteSlugs: {},
+			votes: [],
+			policyNowMs,
+		};
 	}
 
 	// Load votes first (required for vote-scoped proposals)
@@ -25,6 +45,7 @@ export async function load({ fetch, url, parent }) {
 			voteTitles: {},
 			voteSlugs: {},
 			votes: [],
+			policyNowMs,
 		};
 	}
 
@@ -81,5 +102,6 @@ export async function load({ fetch, url, parent }) {
 		voteTitles,
 		voteSlugs,
 		votes,
+		policyNowMs,
 	};
 }

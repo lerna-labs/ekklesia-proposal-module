@@ -79,6 +79,14 @@ const voteSchema = new Schema(
       type: Date,
       required: true,
     },
+    votingStartDate: {
+      type: Date,
+      required: true,
+    },
+    votingEndDate: {
+      type: Date,
+      required: true,
+    },
     /** Path inside the validation folder to the script (e.g. "budget2026/validationScript.js"). POST/PUT proposals always use this script. */
     validationScript: {
       type: String,

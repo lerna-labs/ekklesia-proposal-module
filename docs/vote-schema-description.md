@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Vote Schema – Field Reference                                                                           |
-| **Version**        | 0.1.3                                                                                                   |
+| **Version**        | 0.1.4                                                                                                   |
 | **Created**        | February 18, 2026                                                                                       |
-| **Last Revised**   | February 20, 2026                                                                                       |
+| **Last Revised**   | April 14, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -29,12 +29,14 @@ Implementation: [../schema/Vote.js](../schema/Vote.js).
 | Description       | `description`            | Yes      | String          | Description of the vote.                                                                                                                                                        |
 | Slug              | `slug`                   | Yes      | String          | URL-friendly identifier; used in `GET /api/v0/votes/:slug` and frontend routes (e.g. `/votes/{slug}`). Must be unique; exact match in list filter.                              |
 | Admins            | `admins`                 | Yes      | Array of String | Bech32 addresses (stake/DRep/pool) of users who can administer this vote (e.g. withdraw proposals, manage comments). Used for `GET /session` `adminVoteIds` and access control. |
-| Submission start  | `submissionStartDate`    | Yes      | Date            | ISO 8601. Proposals can be submitted (as live) from this date.                                                                                                                  |
-| Submission end    | `submissionEndDate`      | Yes      | Date            | ISO 8601. No new proposals (including drafts) after this date.                                                                                                                  |
-| Feedback start    | `feedbackStartDate`      | Yes      | Date            | ISO 8601. Start of feedback period (e.g. comments, proposer withdrawal).                                                                                                        |
-| Feedback end      | `feedbackEndDate`        | Yes      | Date            | ISO 8601. End of feedback period; proposer withdrawal and admin comment withdrawal typically allowed only until this date.                                                      |
+| Submission start  | `submissionStartDate`    | Yes      | Date            | ISO 8601. Live proposals can be submitted from this instant onward (draft create/edit may still be allowed earlier; see API).                                                      |
+| Submission end    | `submissionEndDate`      | Yes      | Date            | ISO 8601. No draft create/update and no new live submits after this date.                                                                                                        |
+| Feedback start    | `feedbackStartDate`      | Yes      | Date            | ISO 8601. Start of feedback (e.g. comments on live proposals).                                                                                                        |
+| Feedback end      | `feedbackEndDate`        | Yes      | Date            | ISO 8601. End of feedback period (e.g. comments).                                                                                                                      |
 | Review start      | `reviewStartDate`        | Yes      | Date            | ISO 8601. Start of review period.                                                                                                                                               |
-| Review end        | `reviewEndDate`          | Yes      | Date            | ISO 8601. End of review period.                                                                                                                                                 |
+| Review end        | `reviewEndDate`          | Yes      | Date            | ISO 8601. End of review period; proposer re-submit and proposer withdrawal of **live** proposals are allowed only until this date.                                                                                                                                                 |
+| Voting start      | `votingStartDate`        | Yes      | Date            | ISO 8601. When on-chain/platform voting begins; vote **admin** withdrawal of **live** proposals is allowed only **before** this instant.                                                                                                                                               |
+| Voting end        | `votingEndDate`          | Yes      | Date            | ISO 8601. When voting ends (for scheduling/display; enforcement may expand later).                                                                                                                                           |
 | Validation Script | `validationScript`       | —        | String          | A string indicating which form validation to use, allows for future proofing later vote rounds                                                                                  |
 | Voting URL        | `votingUrl`              | —        | String          | A URL to the Ekklesia Voting Platform attached to this Vote                                                                                                                     |
 | (timestamps)      | `createdAt`, `updatedAt` | —        | Date            | Set by Mongoose `timestamps: true`.                                                                                                                                             |
@@ -69,6 +71,8 @@ Implementation: [../schema/Vote.js](../schema/Vote.js).
   "feedbackEndDate": "2026-03-15T23:59:59Z",
   "reviewStartDate": "2026-03-16T00:00:00Z",
   "reviewEndDate": "2026-04-15T23:59:59Z",
+  "votingStartDate": "2026-04-16T00:00:00Z",
+  "votingEndDate": "2026-05-15T23:59:59Z",
   "votingUrl": "https://ekklesia.vote/cardano-governance-budget-q1-2026",
   "createdAt": "2026-01-10T08:00:00Z",
   "updatedAt": "2026-01-20T14:30:00Z"
@@ -102,6 +106,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                    |
 |---------|------------|--------------------------------------------------------------------------------|
+| 0.1.4   | 2026-04-14 | Document `votingStartDate` / `votingEndDate`; align window notes with API (drafts, feedback, review, admin withdraw) |
 | 0.1.3   | 2026-02-20 | Update missing `validationScript` and `votingUrl` from schema                  |
 | 0.1.2   | 2026-02-20 | Terminology updates to rename from Budgets to Votes for future-proofing        |
 | 0.1.1   | 2026-02-19 | Grammar and formatting updates.                                                |

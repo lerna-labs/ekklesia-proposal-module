@@ -1,38 +1,86 @@
 /**
- * Session rate-limit tests are isolated from session.test.js
- * to avoid affecting auth/session flow tests with nonce limiter side effects.
+ * Session route rate-limit tests.
+ * Verifies limiter thresholds in helper/rateLimiters.js:
+ * - POST /session: 5/min per IP (6th -> 429)
+ * - PUT /session: 10/min per IP (11th -> 429)
+ * - GET /session: 60/min per IP (61st -> 429)
+ * - DELETE /session: 20/min per IP (21st -> 429)
+ *
+ * Notes:
+ * - These tests intentionally call GET/DELETE without auth; limiter runs before auth middleware.
+ * - These probes validate rate limiting behavior, not authentication success.
  */
-import path from "path";
-import { fileURLToPath } from "url";
-import { readDrepId } from "../helpers/session.js";
+const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000/api/v0";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTKIT_ROOT = path.resolve(__dirname, "..");
-const KEYS_DREP01 = path.join(TESTKIT_ROOT, "keys", "drep01_jag");
-const API_BASE_URL =
-  process.env.API_BASE_URL || "http://localhost:3000/api/v0";
+const LOG = process.env.TESTKIT_LOG !== "0" && process.env.TESTKIT_LOG !== "false";
 
-describe("Session rate limiting", () => {
-  it("returns 429 when exceeding POST /session limit (5/min)", async () => {
-    const signerAddress = readDrepId(KEYS_DREP01);
-    for (let i = 0; i < 6; i++) {
-      await fetch(`${API_BASE_URL}/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signerAddress, signType: "drep" }),
-      });
-    }
-    const res = await fetch(`${API_BASE_URL}/session`, {
+function log(msg) {
+  if (LOG) console.log(msg);
+}
+
+async function assertRateLimited({
+  method,
+  path,
+  attemptsBeforeLimit,
+  requestInit = {},
+}) {
+  const url = `${API_BASE_URL}${path}`;
+  let res;
+
+  for (let i = 0; i < attemptsBeforeLimit; i++) {
+    res = await fetch(url, { method, ...requestInit });
+    // Limiter should not trigger yet.
+    expect(res.status).not.toBe(429);
+  }
+
+  res = await fetch(url, { method, ...requestInit });
+  expect(res.status).toBe(429);
+  const bodyText = await res.text();
+  expect(bodyText.toLowerCase()).toMatch(/too many|rate limit|429/);
+}
+
+describe("Session route rate limits", () => {
+  it("limits POST /session to 5/min per IP (6th is 429)", async () => {
+    await assertRateLimited({
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ signerAddress, signType: "drep" }),
+      path: "/session",
+      attemptsBeforeLimit: 5,
+      requestInit: {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      },
     });
-    expect(res.status).toBe(429);
-    const body = await res.json().catch(() => ({}));
-    expect(body.message || "").toMatch(/too many|nonce|request/i);
-  }, 70000);
+    log("[testkit] POST /session limiter OK (6th request returned 429)");
+  }, 120000);
 
-  it.skip("returns 429 when exceeding PUT /session limit (10/min)", async () => {
-    // PUT limit requires 11 PUTs, each needs a nonce from POST; POST is limited to 5/min so this cannot be triggered in same window. Run with backend that allows more POSTs in test if needed.
-  });
+  it("limits PUT /session to 10/min per IP (11th is 429)", async () => {
+    await assertRateLimited({
+      method: "PUT",
+      path: "/session",
+      attemptsBeforeLimit: 10,
+      requestInit: {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      },
+    });
+    log("[testkit] PUT /session limiter OK (11th request returned 429)");
+  }, 120000);
+
+  it("limits GET /session to 60/min per IP (61st is 429)", async () => {
+    await assertRateLimited({
+      method: "GET",
+      path: "/session",
+      attemptsBeforeLimit: 60,
+    });
+    log("[testkit] GET /session limiter OK (61st request returned 429)");
+  }, 120000);
+
+  it("limits DELETE /session to 20/min per IP (21st is 429)", async () => {
+    await assertRateLimited({
+      method: "DELETE",
+      path: "/session",
+      attemptsBeforeLimit: 20,
+    });
+    log("[testkit] DELETE /session limiter OK (21st request returned 429)");
+  }, 120000);
 });

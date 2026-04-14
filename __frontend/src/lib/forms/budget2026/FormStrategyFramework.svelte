@@ -5,32 +5,20 @@
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import FormPillarCard from "./FormPillarCard.svelte";
 
-  let {
-    formData = $bindable(),
-    vote,
-    pillars: pillarOptions = [],
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), vote, pillars: pillarOptions = [], proposal, validationErrors } = $props();
 
   let sfErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.strategyFramework ??
       validationErrors?.properties?.strategyFramework,
   );
   let pillarsError = $derived(sfErrors?.properties?.pillars?.errors?.[0]);
-  let pillarRationaleError = $derived(
-    sfErrors?.properties?.pillarRationale?.errors?.[0],
-  );
-  let kpiAlignmentError = $derived(
-    sfErrors?.properties?.kpiAlignment?.errors?.[0],
-  );
+  let pillarRationaleError = $derived(sfErrors?.properties?.pillarRationale?.errors?.[0]);
+  let kpiAlignmentError = $derived(sfErrors?.properties?.kpiAlignment?.errors?.[0]);
 </script>
 
 <Field.Set class="space-y-1">
   <div>
-    <h3>
-      To which strategic pillar does your proposal align the most?
-    </h3>
+    <h3>To which strategic pillar does your proposal align the most?</h3>
 
     <p class="text-muted-foreground mb-0!">
       Looking at the <a
@@ -48,8 +36,7 @@
       >
         info action
       </a>
-      , which one does your proposal support or relate to the most. Before selecting
-      read the whole
+      , which one does your proposal support or relate to the most. Before selecting read the whole
       <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
@@ -79,8 +66,7 @@
       aria-invalid={pillarsError ? true : false}
     >
       {#each pillarOptions as pillarOption (pillarOption._id)}
-        {@const selectedPillarIds =
-          formData.metaData.strategyFramework?.pillars ?? []}
+        {@const selectedPillarIds = formData.metaData.strategyFramework?.pillars ?? []}
         <FormPillarCard
           pillar={pillarOption}
           selected={selectedPillarIds.includes(pillarOption._id)}
@@ -101,11 +87,11 @@
   </Field.Field>
 
   <Field.Field class="gap-2">
-    <h4>Why have you selected those pillars?</h4>
+    <h3>Why have you selected those pillars?</h3>
 
     <p class="text-muted-foreground">
-      Provide a rationale about why those pillars align the most to your
-      proposal and how your proposal supports them. Look also at the <a
+      Provide a rationale about why those pillars align the most to your proposal and how your proposal supports them.
+      Look also at the <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
@@ -128,9 +114,7 @@
   </Field.Field>
 
   <Field.Field class="gap-2 mb-8">
-    <h4>
-      Does your proposal support any of the KPIs of the strategy framework?
-    </h4>
+    <h3>Does your proposal support any of the KPIs of the strategy framework?</h3>
     <p class="text-muted-foreground">
       Looking at the <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
@@ -144,13 +128,13 @@
     <ul class="text-muted-foreground">
       <li>if your proposal directly supports any of those and how</li>
       <li>
-        AND / OR propose other additional to the existing list, describe why
-        they are relevant and how your proposal relates to them.
+        AND / OR propose other additional to the existing list, describe why they are relevant and how your proposal
+        relates to them.
       </li>
     </ul>
     <p class="text-muted-foreground">
-      For each selected KPI, explain the specific actions, methods, or
-      approaches you will use to drive meaningful impact.
+      For each selected KPI, explain the specific actions, methods, or approaches you will use to drive meaningful
+      impact.
     </p>
     <Textarea
       id="kpiAlignment"
