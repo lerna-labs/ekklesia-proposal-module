@@ -168,22 +168,28 @@
 
   /* Locked heading scale (see typography plan): element selectors only */
   h1 {
-    @apply text-4xl font-medium text-foreground;
+    @apply font-medium text-foreground;
+    font-size: 2rem;
   }
   h2 {
-    @apply text-3xl font-medium text-foreground;
+    @apply font-medium text-foreground;
+    font-size: 1.5rem;
   }
   h3 {
-    @apply text-2xl font-medium leading-tight text-foreground;
+    @apply font-medium leading-tight text-foreground;
+    font-size: 1.25rem;
   }
   h4 {
-    @apply text-lg font-medium text-foreground;
+    @apply font-medium text-[#575960];
+    font-size: 1.125rem;
   }
   h5 {
-    @apply text-lg font-semibold text-[#575960];
+    @apply font-semibold text-[#575960];
+    font-size: 1.125rem;
   }
   h6 {
-    @apply text-base font-semibold text-foreground;
+    @apply font-semibold text-foreground;
+    font-size: 1rem;
   }
 
   /* Comments block title stays smaller than section h2 */
