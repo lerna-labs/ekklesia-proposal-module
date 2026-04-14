@@ -19,8 +19,14 @@
     voteForProposalRow,
   } from "$lib/voteWindowPolicy.js";
 
+  /** Stake sign-in uses a Cardano stake address as userId (e.g. stake_test1… / stake1…). */
+  function isStakeUserId(userId) {
+    return userId != null && String(userId).startsWith("stake");
+  }
+
   let { data } = $props();
   let user = $derived(data.user ?? null);
+  let showMyProposals = $derived(isStakeUserId(user?.userId));
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let voteSlugs = $derived(data.voteSlugs ?? {});
@@ -116,6 +122,7 @@
       </Card.Root>
     {/if}
 
+    {#if showMyProposals}
     <Card.Root>
       <Card.Header
         class="flex flex-row flex-wrap items-center justify-between gap-3"
@@ -452,6 +459,7 @@
         {/if}
       </Card.Content>
     </Card.Root>
+    {/if}
   </div>
 </div>
 

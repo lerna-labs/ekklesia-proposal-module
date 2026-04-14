@@ -22,6 +22,17 @@ export async function load({ fetch, url, parent }) {
 		};
 	}
 
+	if (!String(userId).startsWith('stake')) {
+		return {
+			user,
+			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			voteTitles: {},
+			voteSlugs: {},
+			votes: [],
+			policyNowMs,
+		};
+	}
+
 	// Load votes first (required for vote-scoped proposals)
 	const votesRes = await api.fetch(fetch, '/votes?limit=50');
 	const votesJson = await votesRes.json();
