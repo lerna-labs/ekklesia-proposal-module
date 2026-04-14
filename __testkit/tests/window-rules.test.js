@@ -14,6 +14,7 @@
  * - Update draft after submission window closes.
  * - Like comment after feedback window closes.
  * - Admin withdraw comment after feedback window closes.
+ * - Proposer withdraw live proposal while review is open / after review ended.
  *
  * Treasury hash strategy:
  * - Reuse one hash for all live transitions via TESTKIT_TREASURY_HASH
@@ -249,6 +250,12 @@ describe("Vote timing window rules", () => {
       fixtures.voteReviewOpen._id,
       "live",
       "live-review-open"
+    );
+    /** Only used for proposer withdraw (keeps admin-withdraw test from consuming this doc). */
+    fixtures.liveProposerWithdraw = await makeProposal(
+      fixtures.voteReviewOpen._id,
+      "live",
+      "live-proposer-withdraw-only"
     );
     fixtures.liveReviewClosed = await makeProposal(
       fixtures.voteReviewClosed._id,
@@ -576,6 +583,54 @@ describe("Vote timing window rules", () => {
     });
     const text = await res.text();
     expectHttpStatus(res.status, 201, text, "extra: POST draft before submission opens");
+  });
+
+  it("extra: proposer can withdraw live proposal while review period is open", async () => {
+    const res = await fetch(
+      `${API_BASE_URL}/proposals/${fixtures.liveProposerWithdraw._id}/withdraw`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: drepASession.cookieHeader,
+        },
+        body: JSON.stringify({
+          category: "Other",
+          comment: "proposer withdrawal during review window",
+        }),
+      }
+    );
+    const text = await res.text();
+    expectHttpStatus(
+      res.status,
+      200,
+      text,
+      "extra: proposer withdraw live proposal while review open"
+    );
+  });
+
+  it("extra: proposer cannot withdraw live proposal after review period ended", async () => {
+    const res = await fetch(
+      `${API_BASE_URL}/proposals/${fixtures.liveReviewClosed._id}/withdraw`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: drepASession.cookieHeader,
+        },
+        body: JSON.stringify({
+          category: "Other",
+          comment: "proposer withdrawal after review should fail",
+        }),
+      }
+    );
+    const text = await res.text();
+    assertWindowError(
+      res.status,
+      text,
+      /review period has ended|reviewEndDate/i,
+      "extra: proposer withdraw after review ended"
+    );
   });
 
   it("extra: admin can withdraw live proposal before voting starts", async () => {
