@@ -9,7 +9,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "backup": "node backup/backup.js"
+    "backup": "node backup/backup.js",
+    "setup:budget2026": "node __setup/setup-budget2026.js"
   },
   "keywords": [],
   "author": "Mad Orkestra for Lerna Labs",
