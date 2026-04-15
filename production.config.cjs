@@ -5,6 +5,8 @@ module.exports = {
     {
       name: "pm-mainnet",
       script: path.resolve(__dirname, "server.js"),
+      exec_mode: "cluster",
+      instances: "max",
       watch: false,
       max_memory_restart: "1G",
       env: {
