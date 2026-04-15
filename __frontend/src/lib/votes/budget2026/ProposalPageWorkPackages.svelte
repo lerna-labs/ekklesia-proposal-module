@@ -332,29 +332,28 @@
                           collapseLabel="Collapse milestone"
                           class="bg-white"
                           titleClass="text-base font-medium leading-6"
+                          titleHeadingLevel={5}
                         >
                           {#snippet title()}
                             {m?.name ?? "Unnamed milestone"}
                           {/snippet}
                           {#if (m?.duration ?? "").toString().trim()}
-                            <div class="text-sm text-muted-foreground mt-0 mb-4">
-                              <span class="font-medium text-foreground">
-                                How many weeks will you need to complete this milestone?
-                              </span>
+                            <div class="text-sm mt-0 mb-4">
+                              <h6>How many weeks will you need to complete this milestone?</h6>
                               <p>
                                 {m.duration} weeks
                               </p>
                             </div>
                           {/if}
                           {#if (m?.deliverables ?? "").toString().trim()}
-                            <div class="text-sm text-muted-foreground mt-0 mb-4">
-                              <span class="font-medium text-foreground">What will you deliver in this milestone?</span>
+                            <div class="text-sm mt-0 mb-4">
+                              <h6>What will you deliver in this milestone?</h6>
                               <Markdown content={m.deliverables} class="mt-0.5" />
                             </div>
                           {/if}
                           {#if (m?.acceptanceCriteria ?? "").toString().trim()}
-                            <div class="text-sm text-muted-foreground mt-4">
-                              <span class="font-medium text-foreground">How do you know it's "done"?</span>
+                            <div class="text-sm mt-4">
+                              <h6>How do you know it's "done"?</h6>
                               <Markdown content={m.acceptanceCriteria} class="mt-0.5" />
                             </div>
                           {/if}
@@ -387,6 +386,7 @@
                             collapseLabel="Collapse budget item"
                             class="bg-white"
                             titleClass="text-base font-medium leading-6"
+                            titleHeadingLevel={5}
                           >
                             {#snippet title()}
                               {itemName}

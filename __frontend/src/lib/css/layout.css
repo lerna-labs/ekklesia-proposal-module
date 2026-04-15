@@ -184,11 +184,11 @@
     font-size: 1.125rem;
   }
   h5 {
-    @apply font-semibold text-[#575960];
+    @apply font-medium text-[#575960];
     font-size: 1.125rem;
   }
   h6 {
-    @apply font-semibold text-foreground;
+    @apply font-medium  text-[#575960];
     font-size: 1rem;
   }
 
