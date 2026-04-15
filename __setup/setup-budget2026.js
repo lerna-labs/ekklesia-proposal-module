@@ -217,7 +217,7 @@ async function main() {
 
     const $set = {
       title: TITLE,
-      description: "",
+      description: "Cardano Budget Process 2026 facilitated by Intersect.",
       slug: SLUG,
       admins: ADMINS,
       ...dates,
