@@ -32,19 +32,7 @@ const linkSchema = z.object({
     .string()
     .min(1, "URL is required")
     .transform(normalizeUrl)
-    .pipe(
-      z
-        .string()
-        .url("Enter a valid URL")
-        .refine((u) => {
-          try {
-            const host = new URL(u).hostname;
-            return /^[^.\s]+\.[A-Za-z0-9-]{2,}$/.test(host);
-          } catch {
-            return false;
-          }
-        }, { message: "Enter a full website address like example.com" }),
-    ),
+    .pipe(z.string().url("Enter a valid URL")),
 });
 
 const budgetRowInputSchema = z.object({
