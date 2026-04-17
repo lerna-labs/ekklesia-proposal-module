@@ -18,6 +18,18 @@ export const jwt = writable(null);
 export const sessionExpiresAt = writable(null);
 export const sessionExpiryBannerVisible = writable(false);
 
+export function safeRedirectPath(input, fallback = '/') {
+	if (typeof window === 'undefined') return fallback;
+
+	try {
+		const parsed = new URL(input ?? fallback, window.location.origin);
+		if (parsed.origin !== window.location.origin) return fallback;
+		return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+	} catch {
+		return fallback;
+	}
+}
+
 function getExpiryFromJwt(token) {
 	try {
 		if (!token || typeof token !== 'string') return null;
@@ -90,7 +102,7 @@ export async function expireSession() {
 	if (typeof window !== 'undefined') {
 		targetAfterLogin =
 			window.location.pathname + window.location.search + window.location.hash;
-		redirectAfterLogin.set(targetAfterLogin);
+		redirectAfterLogin.set(safeRedirectPath(targetAfterLogin));
 	}
 	clearClientSessionState({ openLogin: true, notify: true });
 	if (

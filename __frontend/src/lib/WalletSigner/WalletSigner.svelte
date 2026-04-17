@@ -13,6 +13,7 @@
     setJWT,
     showLogin,
     redirectAfterLogin,
+    safeRedirectPath,
   } from "$stores/sessionManager.js";
   import { get } from "svelte/store";
   import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
@@ -66,7 +67,7 @@
       if (get(loggedIn)) return;
       e.preventDefault();
       e.stopPropagation();
-      redirectAfterLogin.set(el.href);
+      redirectAfterLogin.set(safeRedirectPath(el.href));
       $showLogin = true;
     };
     window.addEventListener("click", handleClick, true);
@@ -123,7 +124,7 @@
     const path = get(redirectAfterLogin);
     if (path) {
       redirectAfterLogin.set(null);
-      await goto(path);
+      await goto(safeRedirectPath(path));
     } else {
       await invalidateAll();
       // If we're on /login, go to dashboard so we don't stay on the login page
