@@ -1,5 +1,4 @@
 import { error } from '@sveltejs/kit';
-import { getJWT } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, url, fetch }) {
@@ -46,10 +45,7 @@ export async function load({ params, url, fetch }) {
 	if (status) proposalsSearchParams.set('status', status);
 	if (proposer) proposalsSearchParams.set('proposer', proposer);
 	const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
-	const token = getJWT();
-	const proposalsOpts = { credentials: 'include' };
-	if (token) proposalsOpts.headers = { Authorization: `Bearer ${token}` };
-	const proposalsResponse = await fetch(proposalsUrl, proposalsOpts);
+	const proposalsResponse = await fetch(proposalsUrl, { credentials: 'include' });
 
 	let proposals = { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } };
 	if (proposalsResponse.ok) {

@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
-import { writable, get } from 'svelte/store';
+import { writable } from 'svelte/store';
 import Cookies from 'js-cookie';
 import { toast } from 'svelte-sonner';
 const API_URL = import.meta.env.VITE_API_URL;
@@ -102,7 +102,7 @@ export async function expireSession() {
 	}
 }
 
-// Set JWT in cookie and localStorage (if cookies are not available)
+// Set JWT in cookie only
 export function setJWT(token, expiresIn) {
 	const expiresAt = getExpiryFromInput(expiresIn) ?? getExpiryFromJwt(token);
 
@@ -122,9 +122,6 @@ export function setJWT(token, expiresIn) {
 		};
 
 		Cookies.set('token', token, cookieOptions);
-
-		// Always store in localStorage as a fallback
-		localStorage.setItem('token', token);
 	}
 
 	// Update Svelte store
@@ -132,17 +129,15 @@ export function setJWT(token, expiresIn) {
 	sessionExpiresAt.set(expiresAt);
 }
 
-// Get JWT from cookie or localStorage
+// Get JWT from cookie
 export function getJWT() {
 	let token = null;
 
 	if (Cookies.get('token')) {
 		token = decodeURIComponent(Cookies.get('token'));
-	} else if (typeof window !== 'undefined' && localStorage.getItem('token')) {
-		token = localStorage.getItem('token');
 	}
 
-	// console.log('Token from cookie/localStorage:', token);
+	// console.log('Token from cookie:', token);
 	jwt.set(token);
 	sessionExpiresAt.set(getExpiryFromJwt(token));
 	return token;
@@ -152,17 +147,9 @@ export function getJWT() {
 export const api = {
 	fetch: async (fetch, url, options = {}) => {
 		try {
-			// Get the current JWT token
-			const token = get(jwt) || getJWT();
-
 			// Set up headers
 			const headers = new Headers(options.headers || {});
 			headers.set('Content-Type', 'application/json');
-
-			// Add Authorization header if we have a token
-			if (token) {
-				headers.set('Authorization', `Bearer ${token}`);
-			}
 
 			const response = await fetch(API_URL + url, {
 				...options,
@@ -217,8 +204,7 @@ export const logout = async () => {
 		const response = await fetch(`${API_URL}/session`, {
 			method: 'DELETE',
 			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${get(jwt) || getJWT()}`
+				'Content-Type': 'application/json'
 			},
 			credentials: 'include'
 		});

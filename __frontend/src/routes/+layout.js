@@ -1,4 +1,4 @@
-import { api, loggedIn, user, getJWT } from '$stores/sessionManager.js';
+import { api, loggedIn, user } from '$stores/sessionManager.js';
 const VITE_SERVER_STATUS = import.meta.env.VITE_SERVER_STATUS;
 import { error } from '@sveltejs/kit';
 
@@ -25,23 +25,19 @@ export async function load({ fetch }) {
         });
     }
 
-
-    // TOKEN CHECKS
-    const jwt = getJWT();
-    if (jwt) {
-        try {
-            const validate = await api.fetch(fetch, '/session/');
-            if (validate.status === 200) {
-                const sessionData = await validate.json();
-                user.set(sessionData);
-                loggedIn.set(true);
-            } else {
-                loggedIn.set(false);
-            }
-        } catch (error) {
-            console.error('Error validating token:', error);
+    // SESSION CHECK (cookie-backed)
+    try {
+        const validate = await api.fetch(fetch, '/session/');
+        if (validate.status === 200) {
+            const sessionData = await validate.json();
+            user.set(sessionData);
+            loggedIn.set(true);
+        } else {
             loggedIn.set(false);
         }
+    } catch (error) {
+        console.error('Error validating session:', error);
+        loggedIn.set(false);
     }
 
     return {
