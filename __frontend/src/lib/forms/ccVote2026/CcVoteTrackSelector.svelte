@@ -54,16 +54,10 @@
 </script>
 
 <div class="space-y-3">
-  <h2 class="text-lg font-semibold">Track Selection</h2>
-  <p class="text-sm text-muted-foreground pb-4">
-    Which type of candidate are you applying for?
-  </p>
+  <h2>Track Selection</h2>
+  <p class="text-sm text-muted-foreground pb-4">Which type of candidate are you applying for?</p>
 
-  <div
-    class="grid gap-3 sm:grid-cols-3"
-    role="radiogroup"
-    aria-label="Track selection"
-  >
+  <div class="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Track selection">
     {#each TRACKS as t (t.id)}
       {@const Icon = t.icon}
       <button
@@ -81,20 +75,14 @@
         onclick={() => requestTrack(/** @type {CcTrack} */ (t.id))}
       >
         <Icon
-          class={cn(
-            "size-8 shrink-0",
-            track === t.id
-              ? "text-(--mbo-electric-blue)"
-              : "text-muted-foreground",
-          )}
+          class={cn("size-8 shrink-0", track === t.id ? "text-(--mbo-electric-blue)" : "text-muted-foreground")}
+          strokeWidth={1.5}
           aria-hidden="true"
         />
         <span
           class={cn(
             "font-medium text-sm",
-            track === t.id
-              ? "text-(--mbo-cardano-blue) dark:text-(--mbo-sky-blue)"
-              : "text-foreground",
+            track === t.id ? "text-(--mbo-cardano-blue) dark:text-(--mbo-sky-blue)" : "text-foreground",
           )}
         >
           {t.label}
@@ -103,9 +91,7 @@
     {/each}
   </div>
   {#if trackLocked}
-    <p class="text-xs text-muted-foreground">
-      Track cannot be changed for a live proposal.
-    </p>
+    <p class="text-xs text-muted-foreground">Track cannot be changed for a live proposal.</p>
   {/if}
 </div>
 
@@ -114,16 +100,13 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Change track?</AlertDialog.Title>
       <AlertDialog.Description>
-        Switching tracks will clear what you have entered for this proposal (including
-        title, summary, and track-specific fields). This cannot be undone from here.
+        Switching tracks will clear what you have entered for this proposal (including title, summary, and
+        track-specific fields). This cannot be undone from here.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="gap-2">
       <AlertDialog.Cancel onclick={cancelSwitch}>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action
-        class="bg-destructive text-white hover:bg-destructive/90"
-        onclick={confirmSwitch}
-      >
+      <AlertDialog.Action class="bg-destructive text-white hover:bg-destructive/90" onclick={confirmSwitch}>
         Reset and switch track
       </AlertDialog.Action>
     </AlertDialog.Footer>
