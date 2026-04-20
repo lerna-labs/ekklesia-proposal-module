@@ -5,7 +5,7 @@ import { draftSubmissionOpen, liveResubmitOpen } from '$lib/voteWindowPolicy.js'
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
 	await parent();
-	const { proposalId, budgetSlug } = params;
+	const { proposalId, voteSlug } = params;
 
 	let proposalRes;
 	try {
@@ -35,7 +35,7 @@ export async function load({ fetch, params, parent }) {
 	const vote = await voteRes.json();
 
 	// Ensure URL slug matches this proposal's vote
-	if (vote.slug && vote.slug !== budgetSlug) {
+	if (vote.slug && vote.slug !== voteSlug) {
 		error(404, 'Proposal does not belong to this vote');
 	}
 
