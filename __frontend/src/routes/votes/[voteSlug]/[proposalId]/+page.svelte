@@ -15,7 +15,6 @@
 
   const PROPOSAL_PAGE_MAP = {
     budget2026: Budget2026ProposalPage,
-    ccVote2026: CcVote2026ProposalPage,
   };
 
   let { data } = $props();
@@ -194,16 +193,28 @@
       </div>
     </div>
   {/if}
-  <ProposalPageComponent
-    {proposal}
-    {vote}
-    {pillars}
-    {commentCount}
-    {backToVoteUrl}
-    {voteUrl}
-    {currentVersionHref}
-    {showComments}
-    {commentsHref}
-    {isWithdrawn}
-  />
+  {#if vote?.form === "ccVote2026"}
+    <CcVote2026ProposalPage
+      {proposal}
+      {vote}
+      {backToVoteUrl}
+      {voteUrl}
+      {currentVersionHref}
+      {showComments}
+      {isWithdrawn}
+    />
+  {:else}
+    <ProposalPageComponent
+      {proposal}
+      {vote}
+      {pillars}
+      {commentCount}
+      {backToVoteUrl}
+      {voteUrl}
+      {currentVersionHref}
+      {showComments}
+      {commentsHref}
+      {isWithdrawn}
+    />
+  {/if}
 </div>

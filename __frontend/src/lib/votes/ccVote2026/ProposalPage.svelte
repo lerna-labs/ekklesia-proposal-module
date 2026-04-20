@@ -9,13 +9,10 @@
   let {
     proposal,
     vote,
-    pillars = [],
-    commentCount = null,
     backToVoteUrl = "",
     voteUrl = "",
     currentVersionHref = null,
     showComments = false,
-    commentsHref = "",
     isWithdrawn = false,
   } = $props();
 
