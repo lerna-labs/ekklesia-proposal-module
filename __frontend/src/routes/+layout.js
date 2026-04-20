@@ -1,5 +1,6 @@
-import { api, loggedIn, user } from '$stores/sessionManager.js';
+import { loggedIn, user } from '$stores/sessionManager.js';
 const VITE_SERVER_STATUS = import.meta.env.VITE_SERVER_STATUS;
+const API_URL = import.meta.env.VITE_API_URL;
 import { error } from '@sveltejs/kit';
 
 export const csr = true; // Client-side rendering only
@@ -25,18 +26,18 @@ export async function load({ fetch }) {
         });
     }
 
-    // SESSION CHECK (cookie-backed)
+    // Session probe: plain fetch only — do not use api.fetch (401 there can run expireSession/goto).
     try {
-        const validate = await api.fetch(fetch, '/session/');
-        if (validate.status === 200) {
-            const sessionData = await validate.json();
+        const sessionRes = await fetch(`${API_URL}/session`, { credentials: 'include' });
+        if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
             user.set(sessionData);
             loggedIn.set(true);
         } else {
             loggedIn.set(false);
         }
-    } catch (error) {
-        console.error('Error validating session:', error);
+    } catch (err) {
+        console.error('Error validating session:', err);
         loggedIn.set(false);
     }
 

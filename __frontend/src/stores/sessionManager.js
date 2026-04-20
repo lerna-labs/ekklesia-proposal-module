@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import Cookies from 'js-cookie';
 import { toast } from 'svelte-sonner';
 const API_URL = import.meta.env.VITE_API_URL;
@@ -159,6 +159,10 @@ export function getJWT() {
 export const api = {
 	fetch: async (fetch, url, options = {}) => {
 		try {
+			const hadAuth =
+				Boolean(typeof document !== 'undefined' && Cookies.get('token')) ||
+				Boolean(get(jwt));
+
 			// Set up headers
 			const headers = new Headers(options.headers || {});
 			headers.set('Content-Type', 'application/json');
@@ -169,13 +173,16 @@ export const api = {
 				credentials: 'include'
 			});
 
-			// Check if the token has expired
+			// 401 with prior credentials = session expired; anonymous 401 = not logged in (no expireSession/goto/toast)
 			if (response.status === 401) {
-				// Token expired: clear client auth state and prompt login in-place.
-				await expireSession();
+				if (hadAuth) {
+					await expireSession();
+				}
 				throw error(401, {
-					message: 'Token expired, please log in again',
-					code: 'SESSION_EXPIRED'
+					message: hadAuth
+						? 'Token expired, please log in again'
+						: 'Unauthorized',
+					code: hadAuth ? 'SESSION_EXPIRED' : 'UNAUTHORIZED'
 				});
 			}
 
