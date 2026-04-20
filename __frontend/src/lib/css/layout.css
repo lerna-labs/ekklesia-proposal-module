@@ -197,3 +197,8 @@
     @apply text-xl font-medium text-foreground;
   }
 }
+
+/** Body-like weight (Tailwind has no font-base weight; not to confuse with text-base size). */
+@utility font-base {
+  font-weight: 400;
+}
