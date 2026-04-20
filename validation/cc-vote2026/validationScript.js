@@ -11,25 +11,51 @@ const objectIdString = z
 
 const trackEnum = z.enum(["individual", "organisation", "consortium"]);
 
-const liveProposalBodySchema = z
-  .object({
-    title: z.string().max(100).optional().default(""),
-    summary: z.string().max(2000).optional().default(""),
-    status: z.literal("live"),
-    metaData: z.record(z.string(), z.unknown()).optional().default({}),
-    voteId: objectIdString,
-  })
-  .superRefine((data, ctx) => {
-    const md = data.metaData ?? {};
-    const trackResult = trackEnum.safeParse(md.track);
-    if (!trackResult.success) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["metaData", "track"],
-        message: "Select a proposal track (Individual, Organisation, or Consortium)",
-      });
-    }
-  });
+/**
+ * @param {{ existingProposal?: { status?: string, metaData?: Record<string, unknown> } }} [context]
+ */
+function liveProposalBodySchemaForContext(context = {}) {
+  return z
+    .object({
+      title: z.string().max(100).optional().default(""),
+      summary: z.string().max(2000).optional().default(""),
+      status: z.literal("live"),
+      metaData: z.record(z.string(), z.unknown()).optional().default({}),
+      voteId: objectIdString,
+    })
+    .superRefine((data, ctx) => {
+      const md = data.metaData ?? {};
+      const trackResult = trackEnum.safeParse(md.track);
+      if (!trackResult.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["metaData", "track"],
+          message: "Select a proposal track (Individual, Organisation, or Consortium)",
+        });
+        return;
+      }
+      const existing = context?.existingProposal;
+      if (existing?.status === "live") {
+        const storedTrack = existing.metaData?.track;
+        const storedParsed = trackEnum.safeParse(storedTrack);
+        if (storedParsed.success) {
+          if (trackResult.data !== storedParsed.data) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["metaData", "track"],
+              message: "Proposal track cannot be changed after submission.",
+            });
+          }
+        } else if (String(storedTrack ?? "") !== String(trackResult.data)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "track"],
+            message: "Proposal track cannot be changed after submission.",
+          });
+        }
+      }
+    });
+}
 
 const draftProposalBodySchema = z.object({
   title: z.string().max(100).optional().default(""),
@@ -41,11 +67,12 @@ const draftProposalBodySchema = z.object({
 
 /**
  * @param {unknown} body - Raw request body
+ * @param {{ existingProposal?: { status?: string, metaData?: Record<string, unknown> } }} [context] - On PUT, include stored proposal snapshot so live→live updates can lock metaData.track
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */
-export function validate(body) {
+export function validate(body, context = {}) {
   if (body?.status === "live") {
-    const result = liveProposalBodySchema.safeParse(body);
+    const result = liveProposalBodySchemaForContext(context).safeParse(body);
     if (result.success) return { success: true, data: result.data };
     return { success: false, error: result.error };
   }

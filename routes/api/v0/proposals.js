@@ -481,7 +481,12 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
-    validation = script.validate(req.body);
+    validation = script.validate(req.body, {
+      existingProposal: {
+        status: proposal.status,
+        metaData: proposal.metaData ?? {},
+      },
+    });
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
