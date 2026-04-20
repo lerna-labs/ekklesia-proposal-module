@@ -1,5 +1,5 @@
 /**
- * CC Vote 2026 proposal validation. Minimal body shape: title, summary, metaData (treasury fields on live).
+ * CC Vote 2026 proposal validation. Track required for live; title/summary optional until track forms define them.
  * Used when validationScript is "cc-vote2026/validationScript.js".
  */
 import { z } from "zod";
@@ -9,29 +9,24 @@ const objectIdString = z
   .length(24, "voteId must be a valid ObjectId")
   .regex(/^[a-fA-F0-9]{24}$/, "voteId must be a valid ObjectId");
 
+const trackEnum = z.enum(["individual", "organisation", "consortium"]);
+
 const liveProposalBodySchema = z
   .object({
-    title: z.string().min(1, "Proposal Title is required").max(100),
-    summary: z.string().min(1, "Summary is required").max(2000),
+    title: z.string().max(100).optional().default(""),
+    summary: z.string().max(2000).optional().default(""),
     status: z.literal("live"),
     metaData: z.record(z.string(), z.unknown()).optional().default({}),
     voteId: objectIdString,
   })
   .superRefine((data, ctx) => {
     const md = data.metaData ?? {};
-    const txHash = (md.treasuryDonationTxHash ?? "").toString().trim();
-    if (!txHash) {
+    const trackResult = trackEnum.safeParse(md.track);
+    if (!trackResult.success) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["metaData", "treasuryDonationTxHash"],
-        message: "Treasury donation verification hash is required to submit",
-      });
-    }
-    if (md.treasuryDonationConfirmed !== true) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["metaData", "treasuryDonationConfirmed"],
-        message: "You must confirm the treasury donation to submit",
+        path: ["metaData", "track"],
+        message: "Select a proposal track (Individual, Organisation, or Consortium)",
       });
     }
   });
