@@ -1,0 +1,75 @@
+@reference "$lib/css/layout.css";
+
+/* Match global h3 (layout.css) — accordion uses h2 for semantics but same visual scale as field group titles */
+form .section-title {
+  @apply text-2xl! font-medium! leading-tight! text-foreground cursor-pointer max-w-4xl mx-auto;
+}
+
+form .section-title:hover {
+  @apply no-underline;
+}
+
+/* Larger chevron for this form only (does not modify ui components) */
+form .section-title svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  color: black;
+}
+
+[id$="-declaration-agreement"] .section-title h2 {
+  @apply text-2xl! font-medium! leading-tight! text-foreground;
+}
+
+/* Tighter gap under subsection headings — spacing from space-y-1 only, not form h3 mb-2 */
+[id$="-declaration-agreement"] section h3 {
+  @apply mb-0;
+}
+
+/* Spacing only — typography comes from global h1–h6 in layout.css */
+form h2 {
+  @apply mb-2;
+}
+
+form h3 {
+  @apply mb-2;
+}
+
+form h4 {
+  @apply mb-2;
+}
+
+form h5 {
+  @apply mb-2;
+}
+
+form p {
+  @apply text-sm mb-4;
+}
+
+form strong {
+  @apply font-medium;
+}
+
+form ul {
+  @apply list-disc mb-4 pl-6 space-y-2;
+  list-style-type: square;
+}
+
+form ul li {
+  @apply text-sm;
+}
+
+form ol {
+  @apply list-decimal mb-4 pl-6 space-y-2;
+}
+
+form ol li {
+  @apply text-sm;
+}
+
+form a.link {
+  color: var(--mbo-electric-blue);
+  border-bottom: 1px dashed var(--mbo-electric-blue);
+}

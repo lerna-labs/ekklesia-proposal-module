@@ -1,4 +1,5 @@
 <script>
+  import "./form.css";
   import CcVoteLegalDisclaimerModal from "./CcVoteLegalDisclaimerModal.svelte";
   import CcVoteTrackSelector from "./CcVoteTrackSelector.svelte";
   import FormTrackIndividual from "./FormTrackIndividual.svelte";
@@ -31,6 +32,15 @@
   function createDefaultMetaData() {
     return {
       track: "",
+      treasuryDonationTxHash: "",
+      treasuryDonationConfirmed: false,
+      coldCredentialHash: "",
+      coldCredentialType: "",
+      declarationAgreement: {
+        accuracyPublicVisibilityConsent: false,
+        termsAndConditionsAgreement: false,
+        memberIdentityVouching: false,
+      },
       individual: {},
       organisation: {},
       consortium: {},
@@ -71,6 +81,22 @@
       },
       consortium: { ...createDefaultMetaData().consortium, ...(md.consortium ?? {}) },
     };
+    if (typeof md.treasuryDonationTxHash === "string") {
+      formData.metaData.treasuryDonationTxHash = md.treasuryDonationTxHash;
+    }
+    formData.metaData.treasuryDonationConfirmed = md.treasuryDonationConfirmed === true;
+    const daIn = md.declarationAgreement;
+    const daDefault = createDefaultMetaData().declarationAgreement;
+    formData.metaData.declarationAgreement = {
+      ...daDefault,
+      ...(daIn && typeof daIn === "object" ? daIn : {}),
+    };
+    formData.metaData.declarationAgreement.accuracyPublicVisibilityConsent =
+      daIn?.accuracyPublicVisibilityConsent === true;
+    formData.metaData.declarationAgreement.termsAndConditionsAgreement =
+      daIn?.termsAndConditionsAgreement === true;
+    formData.metaData.declarationAgreement.memberIdentityVouching =
+      daIn?.memberIdentityVouching === true;
     queueMicrotask(() => formControlsRef?.resetDirtyBaseline?.());
   });
 
@@ -124,20 +150,22 @@
   </div>
 
   <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
-    <div class="max-w-4xl mx-auto px-4 w-full space-y-10 pb-8">
-      <CcVoteTrackSelector
-        bind:track={formData.metaData.track}
-        {trackLocked}
-        hasFormData={hasMeaningfulData}
-        onResetForNewTrack={resetFormForNewTrack}
-      />
+    <div class="max-w-4xl mx-auto w-full space-y-10 pb-8">
+      <div class="px-4">
+        <CcVoteTrackSelector
+          bind:track={formData.metaData.track}
+          {trackLocked}
+          hasFormData={hasMeaningfulData}
+          onResetForNewTrack={resetFormForNewTrack}
+        />
+      </div>
 
       {#if formData.metaData.track === "individual"}
-        <FormTrackIndividual bind:formData {vote} {proposal} {validationErrors} />
+        <FormTrackIndividual bind:formData {proposal} {validationErrors} />
       {:else if formData.metaData.track === "organisation"}
-        <FormTrackOrganisation bind:formData {vote} {proposal} {validationErrors} />
+        <FormTrackOrganisation bind:formData {proposal} {validationErrors} />
       {:else if formData.metaData.track === "consortium"}
-        <FormTrackConsortium bind:formData {vote} {proposal} {validationErrors} />
+        <FormTrackConsortium bind:formData {proposal} {validationErrors} />
       {/if}
     </div>
 
