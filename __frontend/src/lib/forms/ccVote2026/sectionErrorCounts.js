@@ -38,6 +38,8 @@ export function errorCountLabel(n) {
 /**
  * Section id → list of paths (each path counted separately; no overlap between sections).
  * Paths are relative to the `validationErrors` root.
+ * Omit root `title` from section-1: it mirrors the track name field and would double-count
+ * when both fail (e.g. empty name + empty title on live submit).
  * @type {Record<'individual' | 'organisation' | 'consortium', Record<string, string[][]>>}
  */
 export const CC_VOTE_SECTION_PATHS = {

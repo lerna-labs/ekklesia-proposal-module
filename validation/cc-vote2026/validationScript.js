@@ -722,7 +722,13 @@ const consortiumMembersArraySchema = z
 function liveProposalBodySchemaForContext(context = {}) {
   return z
     .object({
-      title: z.string().max(100).optional().default(""),
+      title: z.preprocess(
+        (v) => (typeof v === "string" ? v.trim() : ""),
+        z
+          .string()
+          .min(1, "Candidate name is required")
+          .max(100, "Title must be at most 100 characters"),
+      ),
       summary: z.string().max(2000).optional().default(""),
       status: z.literal("live"),
       metaData: z.record(z.string(), z.unknown()).optional().default({}),
@@ -765,6 +771,24 @@ function liveProposalBodySchemaForContext(context = {}) {
             message: "Proposal track cannot be changed after submission.",
           });
         }
+      }
+
+      const expectedTitle =
+        track === "individual"
+          ? trimStr(normalizeIndividualInput(md.individual).fullNameOrAlias)
+          : track === "organisation"
+            ? trimStr(
+                normalizeOrganisationInput(md.organisation).organisationName,
+              )
+            : trimStr(normalizeConsortiumInput(md.consortium).consortiumName);
+
+      if (trimStr(data.title) !== expectedTitle) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["title"],
+          message:
+            "Proposal title must match the candidate name for the selected track",
+        });
       }
 
       if (track === "individual") {

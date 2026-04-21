@@ -106,6 +106,22 @@
 
   let formControlsRef = $state(null);
 
+  /** Proposal `title` is always the display name for the selected track (public listing). */
+  function syncProposalTitleFromTrackName() {
+    const track = formData.metaData?.track;
+    if (track === "individual") {
+      formData.title = String(formData.metaData.individual?.fullNameOrAlias ?? "").trim();
+    } else if (track === "organisation") {
+      formData.title = String(formData.metaData.organisation?.organisationName ?? "").trim();
+    } else if (track === "consortium") {
+      formData.title = String(formData.metaData.consortium?.consortiumName ?? "").trim();
+    }
+  }
+
+  $effect(() => {
+    syncProposalTitleFromTrackName();
+  });
+
   $effect(() => {
     if (formRef && formControlsRef) {
       formRef.clearDirty = () => formControlsRef?.resetDirtyBaseline?.();
@@ -157,6 +173,7 @@
       daIn?.accuracyPublicVisibilityConsent === true;
     formData.metaData.declarationAgreement.termsAndConditionsAgreement = daIn?.termsAndConditionsAgreement === true;
     formData.metaData.declarationAgreement.memberIdentityVouching = daIn?.memberIdentityVouching === true;
+    syncProposalTitleFromTrackName();
     queueMicrotask(() => formControlsRef?.resetDirtyBaseline?.());
   });
 
