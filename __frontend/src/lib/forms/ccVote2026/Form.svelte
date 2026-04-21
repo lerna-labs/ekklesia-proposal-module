@@ -41,7 +41,17 @@
         termsAndConditionsAgreement: false,
         memberIdentityVouching: false,
       },
-      individual: {},
+      individual: {
+        fullNameOrAlias: "",
+        contactEmail: "",
+        geographicRegion: "",
+        poolId: "",
+        drepId: "",
+        xUsername: "",
+        linkedinUsername: "",
+        website: "",
+        otherLinks: [],
+      },
       organisation: {},
       consortium: {},
     };
@@ -103,11 +113,34 @@
   /** Live proposals cannot change track; drafts may still switch (with reset warning). */
   const trackLocked = $derived(proposal?.status === "live");
 
+  /** True if some user-entered value would be lost when switching tracks (defaults do not count). */
   function hasMeaningfulData() {
+    if (formData.title?.trim()) return true;
+    if (formData.summary?.trim()) return true;
     const md = formData.metaData ?? {};
+    if (typeof md.treasuryDonationTxHash === "string" && md.treasuryDonationTxHash.trim()) return true;
+    if (md.treasuryDonationConfirmed === true) return true;
+    if (typeof md.coldCredentialHash === "string" && md.coldCredentialHash.trim()) return true;
+    if (typeof md.coldCredentialType === "string" && md.coldCredentialType.trim()) return true;
+    const da = md.declarationAgreement;
+    if (da && typeof da === "object" && Object.values(da).some((v) => v === true)) return true;
     for (const key of ["individual", "organisation", "consortium"]) {
-      const o = md[key];
-      if (o && typeof o === "object" && Object.keys(o).length > 0) return true;
+      if (metaSubtreeHasMeaningfulValues(md[key])) return true;
+    }
+    return false;
+  }
+
+  /** @param {unknown} v */
+  function metaSubtreeHasMeaningfulValues(v) {
+    if (v === null || v === undefined) return false;
+    if (typeof v === "boolean") return v;
+    if (typeof v === "number") return v !== 0 && !Number.isNaN(v);
+    if (typeof v === "string") return v.trim().length > 0;
+    if (Array.isArray(v)) return v.some((item) => metaSubtreeHasMeaningfulValues(item));
+    if (typeof v === "object") {
+      return Object.values(/** @type {Record<string, unknown>} */ (v)).some((x) =>
+        metaSubtreeHasMeaningfulValues(x),
+      );
     }
     return false;
   }

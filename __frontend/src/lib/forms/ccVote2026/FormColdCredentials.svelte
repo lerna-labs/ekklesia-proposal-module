@@ -1,5 +1,6 @@
 <script>
   import Input from "$lib/components/form/Input.svelte";
+  import * as Field from "$lib/components/ui/field/index.js";
   import { cn } from "$lib/utils.js";
 
   /** @typedef {'keyCredential' | 'scriptCredential'} ColdCredentialType */
@@ -7,6 +8,9 @@
   let { formData = $bindable(), validationErrors } = $props();
 
   let coldErrors = $derived(validationErrors?.properties?.metaData);
+  let coldTypeError = $derived(
+    coldErrors?.properties?.coldCredentialType?.errors?.[0],
+  );
 
   const liveLocked = $derived(formData.status === "live");
 
@@ -59,7 +63,15 @@
       Credential Type
       <span class="text-(--mbo-electric-blue)">*</span>
     </div>
-    <div class="flex flex-col gap-3" role="radiogroup" aria-label="Credential type">
+    <div
+      class={cn(
+        "flex flex-col gap-3 rounded-md",
+        coldTypeError ? "ring-[3px] ring-destructive/20" : "",
+      )}
+      role="radiogroup"
+      aria-label="Credential type"
+      aria-invalid={coldTypeError ? true : undefined}
+    >
       {#each CREDENTIAL_TYPES as opt (opt.id)}
         <button
           type="button"
@@ -83,5 +95,8 @@
         </button>
       {/each}
     </div>
+    {#if coldTypeError}
+      <Field.Error class="text-xs">{coldTypeError}</Field.Error>
+    {/if}
   </div>
 </div>
