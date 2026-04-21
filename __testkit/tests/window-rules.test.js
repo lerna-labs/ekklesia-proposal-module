@@ -583,6 +583,10 @@ describe("Vote timing window rules", () => {
     });
     const text = await res.text();
     expectHttpStatus(res.status, 201, text, "extra: POST draft before submission opens");
+    const payload = JSON.parse(text);
+    if (payload?._id) {
+      createdProposalIds.push(payload._id);
+    }
   });
 
   it("extra: proposer can withdraw live proposal while review period is open", async () => {
