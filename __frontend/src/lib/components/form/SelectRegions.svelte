@@ -47,13 +47,24 @@
           : Array.isArray(data)
             ? data
             : [];
-        items = raw
+        const mapped = raw
           .map((r) => {
             const oid = r._id != null ? String(r._id) : "";
             const name = r.name != null ? String(r.name) : "";
             return { id: oid, name: name || oid };
           })
           .filter((r) => r.id && r.name);
+        /** Keep API order; "Other / Global" always last (see regions seed). */
+        const otherGlobal = [];
+        const rest = [];
+        for (const r of mapped) {
+          if (r.name.trim().toLowerCase() === "other / global") {
+            otherGlobal.push(r);
+          } else {
+            rest.push(r);
+          }
+        }
+        items = [...rest, ...otherGlobal];
         loading = false;
       })
       .catch((err) => {
