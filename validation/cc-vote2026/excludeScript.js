@@ -1,6 +1,6 @@
 /**
- * CC Vote 2026: strip non-public proposal fields from JSON for unauthenticated viewers
- * (and anyone who is neither the proposer nor a vote admin).
+ * CC Vote 2026: strip non-public proposal fields from JSON for viewers who are neither
+ * the proposer nor a vote admin (e.g. public listing / unauthenticated API consumers).
  *
  * @param {Object} proposal - Full proposal document (plain object)
  * @param {{ isProposer: boolean, isAdmin: boolean }} context - Whether requester is proposer or vote admin
@@ -13,6 +13,8 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
 
   const paths = [
     "metaData.individual.contactEmail",
+    "metaData.organisation.contactEmail",
+    "metaData.consortium.contactEmail",
     "metaData.consortium.conflictOfInterestStatement",
   ];
 
