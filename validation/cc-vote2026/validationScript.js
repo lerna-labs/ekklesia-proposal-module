@@ -14,6 +14,9 @@ const trackEnum = z.enum(["individual", "organisation", "consortium"]);
 
 const TITLE_MAX_LENGTH = 100;
 
+/** Long-form markdown fields on individual proposals (aligned with frontend Textarea maxLength). */
+const INDIVIDUAL_LONG_TEXT_MAX = 2000;
+
 function normalizeUrl(val) {
   const trimmed = (val ?? "").trim();
   if (!trimmed) return trimmed;
@@ -100,6 +103,16 @@ function normalizeIndividualInput(raw) {
     linkedinUsername: o.linkedinUsername ?? "",
     website: o.website ?? "",
     otherLinks: links,
+    professionalBackground: o.professionalBackground ?? "",
+    governanceExperience: o.governanceExperience ?? "",
+    briefBiography: o.briefBiography ?? "",
+    conflictOfInterestStatement: o.conflictOfInterestStatement ?? "",
+    contributionsToCardano: o.contributionsToCardano ?? "",
+    motivation: o.motivation ?? "",
+    decentralisedGovernanceImportance: o.decentralisedGovernanceImportance ?? "",
+    constitutionalInterpretation: o.constitutionalInterpretation ?? "",
+    perspectiveYouWouldBring: o.perspectiveYouWouldBring ?? "",
+    transparencyApproach: o.transparencyApproach ?? "",
   };
 }
 
@@ -143,6 +156,125 @@ const individualIdentityLiveSchema = z.object({
   linkedinUsername: handleOptional,
   website: websiteOptional,
   otherLinks: z.array(individualLinkItemSchema).default([]),
+  professionalBackground: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Professional background is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Professional background must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  governanceExperience: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Governance experience is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Governance experience must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  briefBiography: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Brief biography is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Brief biography must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  conflictOfInterestStatement: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Conflict of interest statement must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  contributionsToCardano: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Contributions to Cardano is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Contributions to Cardano must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  motivation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Motivation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Motivation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  decentralisedGovernanceImportance: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Why decentralised governance is important is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `This field must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  constitutionalInterpretation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Constitutional familiarity and interpretation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Constitutional familiarity and interpretation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  perspectiveYouWouldBring: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Perspective you would bring is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Perspective you would bring must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  transparencyApproach: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Transparency approach is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Transparency approach must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
 });
 
 /**
