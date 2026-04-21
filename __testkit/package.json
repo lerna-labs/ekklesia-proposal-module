@@ -12,6 +12,7 @@
     "test:login": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/login.test.js",
     "test:session:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/session-rate-limit.test.js --testTimeout=120000",
     "test:permissions": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/proposal-permissions.test.js --testTimeout=120000",
+    "test:treasury:hash": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/proposal-treasury-hash-validation.test.js --testTimeout=120000",
     "test:window:rules": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/window-rules.test.js --testTimeout=180000",
     "test:comment:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/comment-rate-limit.test.js --testTimeout=120000",
     "test:public:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/z-public-rate-limit.test.js --testTimeout=120000",
