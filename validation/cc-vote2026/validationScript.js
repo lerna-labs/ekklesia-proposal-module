@@ -1,5 +1,6 @@
 /**
- * CC Vote 2026 proposal validation. Track required for live; title/summary optional until track forms define them.
+ * CC Vote 2026 proposal validation. Track required for live; individual Identity & Contact
+ * validated when track is individual.
  * Used when validationScript is "cc-vote2026/validationScript.js".
  */
 import { z } from "zod";
@@ -11,8 +12,144 @@ const objectIdString = z
 
 const trackEnum = z.enum(["individual", "organisation", "consortium"]);
 
+const TITLE_MAX_LENGTH = 100;
+
+function normalizeUrl(val) {
+  const trimmed = (val ?? "").trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+const individualLinkItemSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(
+      TITLE_MAX_LENGTH,
+      `Title must be at most ${TITLE_MAX_LENGTH} characters`,
+    ),
+  url: z
+    .string()
+    .min(1, "URL is required")
+    .transform(normalizeUrl)
+    .pipe(z.string().url("Enter a valid URL")),
+});
+
+const regionIdOptional = z.union([
+  z.literal(""),
+  z
+    .string()
+    .length(24, "Geographic region must be a valid Id")
+    .regex(/^[a-fA-F0-9]{24}$/, "Geographic region must be a valid Id"),
+]);
+
+const poolIdOptional = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim() : ""),
+  z.union([
+    z.literal(""),
+    z
+      .string()
+      .regex(
+        /^pool1/,
+        "Pool ID must start with pool1 when provided",
+      ),
+  ]),
+);
+
+const drepIdOptional = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim() : ""),
+  z.union([
+    z.literal(""),
+    z
+      .string()
+      .regex(
+        /^drep1/,
+        "DRep ID must start with drep1 when provided",
+      ),
+  ]),
+);
+
+const handleOptional = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim() : ""),
+  z.string().max(100, "Must be at most 100 characters"),
+);
+
+const websiteOptional = z.preprocess(
+  (v) => (typeof v === "string" ? v.trim() : ""),
+  z.union([
+    z.literal(""),
+    z
+      .string()
+      .transform(normalizeUrl)
+      .pipe(z.string().url("Enter a valid URL")),
+  ]),
+);
+
+/** @param {unknown} raw */
+function normalizeIndividualInput(raw) {
+  const o = raw && typeof raw === "object" ? raw : {};
+  const links = Array.isArray(o.otherLinks) ? o.otherLinks : [];
+  return {
+    fullNameOrAlias: o.fullNameOrAlias ?? "",
+    contactEmail: o.contactEmail ?? "",
+    geographicRegion: o.geographicRegion ?? "",
+    poolId: o.poolId ?? "",
+    drepId: o.drepId ?? "",
+    xUsername: o.xUsername ?? "",
+    linkedinUsername: o.linkedinUsername ?? "",
+    website: o.website ?? "",
+    otherLinks: links,
+  };
+}
+
+const coldCredentialTypeEnum = z.enum(["keyCredential", "scriptCredential"]);
+
+const COLD_HASH_MAX = 256;
+
+/** @param {unknown} val */
+function trimStr(val) {
+  return typeof val === "string" ? val.trim() : "";
+}
+
+/** @param {unknown} val */
+function normalizeTxHash(val) {
+  return String(val ?? "").trim().toLowerCase();
+}
+
+const individualIdentityLiveSchema = z.object({
+  fullNameOrAlias: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Full name or alias is required")
+        .max(100, "Full name or alias must be at most 100 characters"),
+    ),
+  contactEmail: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .email("Enter a valid email")
+        .max(254, "Email must be at most 254 characters"),
+    ),
+  geographicRegion: regionIdOptional,
+  poolId: poolIdOptional,
+  drepId: drepIdOptional,
+  xUsername: handleOptional,
+  linkedinUsername: handleOptional,
+  website: websiteOptional,
+  otherLinks: z.array(individualLinkItemSchema).default([]),
+});
+
 /**
- * @param {{ existingProposal?: { status?: string, metaData?: Record<string, unknown> } }} [context]
+ * @param {{
+ *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
+ *   voteDepositOptions?: { treasuryDonation?: number | null },
+ * }} [context]
  */
 function liveProposalBodySchemaForContext(context = {}) {
   return z
@@ -30,29 +167,183 @@ function liveProposalBodySchemaForContext(context = {}) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["metaData", "track"],
-          message: "Select a proposal track (Individual, Organisation, or Consortium)",
+          message:
+            "Select a proposal track (Individual, Organisation, or Consortium)",
         });
         return;
       }
+      const track = trackResult.data;
       const existing = context?.existingProposal;
+      const storedMeta = existing?.metaData ?? {};
+      const isLiveResubmit = existing?.status === "live";
+      const treasuryRequired =
+        context?.voteDepositOptions?.treasuryDonation != null;
+
       if (existing?.status === "live") {
-        const storedTrack = existing.metaData?.track;
+        const storedTrack = storedMeta.track;
         const storedParsed = trackEnum.safeParse(storedTrack);
         if (storedParsed.success) {
-          if (trackResult.data !== storedParsed.data) {
+          if (track !== storedParsed.data) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ["metaData", "track"],
               message: "Proposal track cannot be changed after submission.",
             });
           }
-        } else if (String(storedTrack ?? "") !== String(trackResult.data)) {
+        } else if (String(storedTrack ?? "") !== String(track)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["metaData", "track"],
             message: "Proposal track cannot be changed after submission.",
           });
         }
+      }
+
+      if (track === "individual") {
+        const normalized = normalizeIndividualInput(md.individual);
+        const indResult = individualIdentityLiveSchema.safeParse(normalized);
+        if (!indResult.success) {
+          for (const issue of indResult.error.issues) {
+            ctx.addIssue({
+              code: issue.code ?? z.ZodIssueCode.custom,
+              message: issue.message,
+              path: ["metaData", "individual", ...issue.path],
+            });
+          }
+        }
+      }
+
+      const coldHash = trimStr(md.coldCredentialHash);
+      const coldTypeRaw = md.coldCredentialType;
+      if (isLiveResubmit) {
+        const storedCold = trimStr(storedMeta.coldCredentialHash);
+        const storedType = storedMeta.coldCredentialType;
+        if (storedCold) {
+          if (coldHash !== storedCold) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["metaData", "coldCredentialHash"],
+              message:
+                "Cold credential hash cannot be changed after submission.",
+            });
+          }
+        } else if (!coldHash) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: "Cold credential hash is required",
+          });
+        } else if (coldHash.length > COLD_HASH_MAX) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: `Cold credential hash must be at most ${COLD_HASH_MAX} characters`,
+          });
+        }
+        if (coldCredentialTypeEnum.safeParse(storedType).success) {
+          if (coldTypeRaw !== storedType) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["metaData", "coldCredentialType"],
+              message:
+                "Credential type cannot be changed after submission.",
+            });
+          }
+        } else {
+          const parsed = coldCredentialTypeEnum.safeParse(coldTypeRaw);
+          if (!parsed.success) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["metaData", "coldCredentialType"],
+              message: "Select Key credential or Script credential",
+            });
+          }
+        }
+      } else {
+        if (!coldHash) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: "Cold credential hash is required",
+          });
+        } else if (coldHash.length > COLD_HASH_MAX) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: `Cold credential hash must be at most ${COLD_HASH_MAX} characters`,
+          });
+        }
+        const ctParsed = coldCredentialTypeEnum.safeParse(coldTypeRaw);
+        if (!ctParsed.success) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialType"],
+            message: "Select Key credential or Script credential",
+          });
+        }
+      }
+
+      if (treasuryRequired) {
+        if (md.treasuryDonationConfirmed !== true) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "treasuryDonationConfirmed"],
+            message: "You must confirm the treasury donation to submit",
+          });
+        }
+        const bodyTx = normalizeTxHash(md.treasuryDonationTxHash);
+        const storedTx = normalizeTxHash(storedMeta.treasuryDonationTxHash);
+        if (isLiveResubmit && storedTx) {
+          if (bodyTx !== storedTx) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ["metaData", "treasuryDonationTxHash"],
+              message:
+                "Treasury donation verification hash cannot be changed after submission.",
+            });
+          }
+        } else if (!bodyTx) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "treasuryDonationTxHash"],
+            message:
+              "Treasury donation verification hash is required to submit",
+          });
+        }
+      }
+
+      const da = md.declarationAgreement;
+      if (da?.accuracyPublicVisibilityConsent !== true) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [
+            "metaData",
+            "declarationAgreement",
+            "accuracyPublicVisibilityConsent",
+          ],
+          message:
+            "You must confirm accuracy and consent to public visibility to submit",
+        });
+      }
+      if (da?.termsAndConditionsAgreement !== true) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [
+            "metaData",
+            "declarationAgreement",
+            "termsAndConditionsAgreement",
+          ],
+          message:
+            "You must agree to the Intersect CC Election Terms and Conditions to submit",
+        });
+      }
+      if (track === "consortium" && da?.memberIdentityVouching !== true) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["metaData", "declarationAgreement", "memberIdentityVouching"],
+          message:
+            "You must confirm you are authorised to vouch for all consortium members to submit",
+        });
       }
     });
 }
@@ -67,7 +358,10 @@ const draftProposalBodySchema = z.object({
 
 /**
  * @param {unknown} body - Raw request body
- * @param {{ existingProposal?: { status?: string, metaData?: Record<string, unknown> } }} [context] - On PUT, include stored proposal snapshot so live→live updates can lock metaData.track
+ * @param {{
+ *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
+ *   voteDepositOptions?: { treasuryDonation?: number | null },
+ * }} [context] - On PUT, include stored proposal snapshot. Pass `voteDepositOptions` from the vote so treasury rules match the API.
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */
 export function validate(body, context = {}) {
