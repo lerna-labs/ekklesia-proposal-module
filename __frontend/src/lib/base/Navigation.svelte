@@ -124,9 +124,7 @@
       onanimationend={onAsideAnimationEnd}
     >
       <!-- Same wrapper as Header (container, max-w-4xl, px-4) for alignment with the logo -->
-      <div
-        class="px-4 w-full max-md:w-max md:container md:mx-auto md:max-w-4xl"
-      >
+      <div class="px-4 w-full max-md:w-max md:container md:mx-auto md:max-w-4xl">
         <nav class="flex w-full flex-col gap-8 max-md:w-max md:w-full md:flex-row md:gap-0" aria-label="Site sections">
           <section class="min-w-0 w-full max-md:flex-none md:flex-1" aria-labelledby="nav-heading-budget">
             <h2 id="nav-heading-budget" class="mb-3 text-sm font-semibold text-white/90">Budget Process</h2>
@@ -169,7 +167,9 @@
             <ul class="flex flex-col gap-2">
               <li>
                 <a
-                  href="/votes"
+                  href="https://intersect.ekklesia.vote/ballots"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
