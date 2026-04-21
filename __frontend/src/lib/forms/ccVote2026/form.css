@@ -18,6 +18,14 @@ form .section-title svg {
   color: black;
 }
 
+/*
+ * Suppress accordion open enter animation on first paint (avoids CLS when every section
+ * defaults open). Closing still uses animate-accordion-up. Does not modify ui components.
+ */
+form [data-slot="accordion-content"][data-state="open"] {
+  animation: none !important;
+}
+
 [id$="-declaration-agreement"] .section-title h2 {
   @apply text-2xl! font-medium! leading-tight! text-foreground;
 }

@@ -143,7 +143,7 @@
     return n === 1 ? "1 Error" : `${n} Errors`;
   }
 
-  /** First accordion section (Project Definition) open by default. */
+  /** All accordion sections open by default. */
   let accordionValue = $state([
     "section-1",
     "section-2",

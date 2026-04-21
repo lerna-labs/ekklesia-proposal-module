@@ -1,7 +1,9 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
   import { toast } from "svelte-sonner";
+  import DelayedFormLoader from "$lib/components/DelayedFormLoader.svelte";
   import { api } from "$stores/sessionManager.js";
+  import { fade } from "svelte/transition";
 
   const FORM_CHUNKS = {
     budget2026: () => import("$lib/forms/budget2026/Form.svelte"),
@@ -84,16 +86,16 @@
 </script>
 
 {#if formLoading}
-  <div class="container mx-auto max-w-4xl py-8 px-4 flex items-center justify-center min-h-[200px]">
-    <p class="text-muted-foreground">Loading form…</p>
-  </div>
+  <DelayedFormLoader active={formLoading} />
 {:else if FormComponent}
-  <FormComponent
-    {vote}
-    {proposal}
-    {onSave}
-    bind:formRef
-    bind:validationErrors
-    onCancel={() => goto("/dashboard")}
-  />
+  <div class="w-full" in:fade={{ duration: 350 }}>
+    <FormComponent
+      {vote}
+      {proposal}
+      {onSave}
+      bind:formRef
+      bind:validationErrors
+      onCancel={() => goto("/dashboard")}
+    />
+  </div>
 {/if}
