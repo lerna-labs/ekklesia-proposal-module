@@ -54,10 +54,12 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     return { ok: false, error: "Vote has no treasury donation configured" };
   }
 
-  // Uniqueness: same hash not allowed on another proposal (case-insensitive). Allow same proposal + its versions.
+  // Uniqueness: same hash not allowed on another non-draft proposal (case-insensitive).
+  // Allow same proposal + its versions, and allow hash reuse while all matches are still drafts.
   const regex = new RegExp(`^${escapeRegex(normalizedHash)}$`, "i");
   const existing = await Proposal.findOne({
     "metaData.treasuryDonationTxHash": regex,
+    status: { $ne: "draft" },
     _id: { $nin: excludeProposalIds },
   })
     .lean()
