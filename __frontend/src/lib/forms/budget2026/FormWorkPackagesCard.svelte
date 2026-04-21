@@ -165,13 +165,13 @@
 
 <Card.Root class="py-2 {expanded ? 'pb-0' : 'pb-2'} bg-slate-50 {cardRingClass}">
   <Card.Header class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm">
-    <span
-      class="min-w-0 flex-1 font-medium truncate text-left text-lg flex items-center gap-2"
+    <h3
+      class="work-package-card-title min-w-0 flex-1 m-0 p-0 font-[inherit] font-medium truncate text-left text-lg leading-6 flex items-center gap-2"
       title={displayName}
     >
       <BoxIcon class="size-5 shrink-0" />
-      {displayName}
-    </span>
+      <span class="min-w-0 truncate">{displayName}</span>
+    </h3>
     <Button
       type="button"
       variant="outline"
