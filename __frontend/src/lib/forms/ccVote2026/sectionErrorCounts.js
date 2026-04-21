@@ -79,12 +79,33 @@ export const CC_VOTE_SECTION_PATHS = {
     "section-6": [["metaData", "declarationAgreement"]],
   },
   organisation: {
-    "section-1": [["metaData", "track"], ["metaData", "organisation"]],
-    "section-2": [
-      ["metaData", "individual", "professionalBackground"],
-      ["metaData", "individual", "governanceExperience"],
+    "section-1": [
+      ["metaData", "track"],
+      ["metaData", "organisation", "organisationName"],
+      ["metaData", "organisation", "organisationDescription"],
+      ["metaData", "organisation", "geographicRegion"],
+      ["metaData", "organisation", "contactPerson"],
+      ["metaData", "organisation", "contactEmail"],
+      ["metaData", "organisation", "poolId"],
+      ["metaData", "organisation", "drepId"],
+      ["metaData", "organisation", "xUsername"],
+      ["metaData", "organisation", "linkedinUsername"],
+      ["metaData", "organisation", "website"],
+      ["metaData", "organisation", "otherLinks"],
     ],
-    "section-3": [],
+    "section-2": [
+      ["metaData", "organisation", "organisationalAreasOfExpertise"],
+      ["metaData", "organisation", "governanceExperience"],
+    ],
+    "section-3": [
+      ["metaData", "organisation", "conflictOfInterestStatement"],
+      ["metaData", "organisation", "contributionsToCardano"],
+      ["metaData", "organisation", "motivation"],
+      ["metaData", "organisation", "decentralisedGovernanceImportance"],
+      ["metaData", "organisation", "constitutionalInterpretation"],
+      ["metaData", "organisation", "perspectiveYouWouldBring"],
+      ["metaData", "organisation", "transparencyApproach"],
+    ],
     "section-4": [
       ["metaData", "coldCredentialHash"],
       ["metaData", "coldCredentialType"],

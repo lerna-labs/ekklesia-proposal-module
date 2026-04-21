@@ -116,6 +116,34 @@ function normalizeIndividualInput(raw) {
   };
 }
 
+/** @param {unknown} raw */
+function normalizeOrganisationInput(raw) {
+  const o = raw && typeof raw === "object" ? raw : {};
+  const links = Array.isArray(o.otherLinks) ? o.otherLinks : [];
+  return {
+    organisationName: o.organisationName ?? "",
+    organisationDescription: o.organisationDescription ?? "",
+    geographicRegion: o.geographicRegion ?? "",
+    contactPerson: o.contactPerson ?? "",
+    contactEmail: o.contactEmail ?? "",
+    poolId: o.poolId ?? "",
+    drepId: o.drepId ?? "",
+    xUsername: o.xUsername ?? "",
+    linkedinUsername: o.linkedinUsername ?? "",
+    website: o.website ?? "",
+    otherLinks: links,
+    organisationalAreasOfExpertise: o.organisationalAreasOfExpertise ?? "",
+    governanceExperience: o.governanceExperience ?? "",
+    conflictOfInterestStatement: o.conflictOfInterestStatement ?? "",
+    contributionsToCardano: o.contributionsToCardano ?? "",
+    motivation: o.motivation ?? "",
+    decentralisedGovernanceImportance: o.decentralisedGovernanceImportance ?? "",
+    constitutionalInterpretation: o.constitutionalInterpretation ?? "",
+    perspectiveYouWouldBring: o.perspectiveYouWouldBring ?? "",
+    transparencyApproach: o.transparencyApproach ?? "",
+  };
+}
+
 const coldCredentialTypeEnum = z.enum(["keyCredential", "scriptCredential"]);
 
 const COLD_HASH_MAX = 256;
@@ -277,6 +305,162 @@ const individualIdentityLiveSchema = z.object({
     ),
 });
 
+const organisationLiveSchema = z.object({
+  organisationName: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Organisation name is required")
+        .max(100, "Organisation name must be at most 100 characters"),
+    ),
+  organisationDescription: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Organisational description is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Organisational description must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  geographicRegion: regionIdOptional,
+  contactPerson: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Contact person is required")
+        .max(100, "Contact person must be at most 100 characters"),
+    ),
+  contactEmail: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .email("Enter a valid email")
+        .max(254, "Email must be at most 254 characters"),
+    ),
+  poolId: poolIdOptional,
+  drepId: drepIdOptional,
+  xUsername: handleOptional,
+  linkedinUsername: handleOptional,
+  website: websiteOptional,
+  otherLinks: z.array(individualLinkItemSchema).default([]),
+  organisationalAreasOfExpertise: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Organisational areas of expertise is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Organisational areas of expertise must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  governanceExperience: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Governance experience is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Governance experience must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  conflictOfInterestStatement: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Conflict of interest statement must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  contributionsToCardano: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Contributions to Cardano is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Contributions to Cardano must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  motivation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Motivation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Motivation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  decentralisedGovernanceImportance: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Why decentralised governance is important is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `This field must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  constitutionalInterpretation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Constitutional familiarity and interpretation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Constitutional familiarity and interpretation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  perspectiveYouWouldBring: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Perspective you would bring is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Perspective you would bring must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  transparencyApproach: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Transparency approach is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Transparency approach must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+});
+
 /**
  * @param {{
  *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
@@ -340,6 +524,20 @@ function liveProposalBodySchemaForContext(context = {}) {
               code: issue.code ?? z.ZodIssueCode.custom,
               message: issue.message,
               path: ["metaData", "individual", ...issue.path],
+            });
+          }
+        }
+      }
+
+      if (track === "organisation") {
+        const normalized = normalizeOrganisationInput(md.organisation);
+        const orgResult = organisationLiveSchema.safeParse(normalized);
+        if (!orgResult.success) {
+          for (const issue of orgResult.error.issues) {
+            ctx.addIssue({
+              code: issue.code ?? z.ZodIssueCode.custom,
+              message: issue.message,
+              path: ["metaData", "organisation", ...issue.path],
             });
           }
         }

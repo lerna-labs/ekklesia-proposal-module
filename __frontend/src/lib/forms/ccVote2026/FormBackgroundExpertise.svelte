@@ -3,10 +3,15 @@
 
   const LONG_TEXT_MAX = 2000;
 
-  let { formData = $bindable(), validationErrors } = $props();
+  /** @type {"individual" | "organisation"} */
+  let { formData = $bindable(), validationErrors, track = "individual" } =
+    $props();
 
   const individualErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.individual,
+  );
+  const organisationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.organisation,
   );
 
   const professionalErrors = $derived({
@@ -15,41 +20,85 @@
         individualErrors?.properties?.professionalBackground,
     },
   });
-  const governanceErrors = $derived({
+  const individualGovernanceErrors = $derived({
     properties: {
       governanceExperience: individualErrors?.properties?.governanceExperience,
+    },
+  });
+
+  const organisationalAreasErrors = $derived({
+    properties: {
+      organisationalAreasOfExpertise:
+        organisationErrors?.properties?.organisationalAreasOfExpertise,
+    },
+  });
+  const organisationGovernanceErrors = $derived({
+    properties: {
+      governanceExperience: organisationErrors?.properties?.governanceExperience,
     },
   });
 </script>
 
 <div class="flex flex-col gap-6">
-  <section class="space-y-1.5">
-    <h3>What is your professional background?</h3>
-    <Textarea
-      id="professionalBackground"
-      bind:value={formData.metaData.individual.professionalBackground}
-      label="Professional Background"
-      description="Include relevant fields such as governance, law, technology, finance, or community leadership."
-      placeholder="Free-text description."
-      required
-      maxLength={LONG_TEXT_MAX}
-      validationErrors={professionalErrors}
-      class="w-full"
-    />
-  </section>
+  {#if track === "organisation"}
+    <section class="space-y-1.5">
+      <h3>What are your organisation's areas of expertise?</h3>
+      <Textarea
+        id="organisationalAreasOfExpertise"
+        bind:value={formData.metaData.organisation.organisationalAreasOfExpertise}
+        label="Organisational Areas of Expertise"
+        description="For example: governance, law, research, development, finance."
+        placeholder="Free-text description."
+        required
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={organisationalAreasErrors}
+        class="w-full"
+      />
+    </section>
 
-  <section class="space-y-1.5">
-    <h3>What governance experience do you have?</h3>
-    <Textarea
-      id="governanceExperience"
-      bind:value={formData.metaData.individual.governanceExperience}
-      label="Governance Experience"
-      description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
-      placeholder="Free-text description."
-      required
-      maxLength={LONG_TEXT_MAX}
-      validationErrors={governanceErrors}
-      class="w-full"
-    />
-  </section>
+    <section class="space-y-1.5">
+      <h3>What governance experience does your organisation have?</h3>
+      <Textarea
+        id="governanceExperience"
+        bind:value={formData.metaData.organisation.governanceExperience}
+        label="Governance Experience"
+        description="Include DAO participation, Catalyst involvement, advisory roles, etc."
+        placeholder="Free-text description."
+        required
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={organisationGovernanceErrors}
+        class="w-full"
+      />
+    </section>
+  {:else}
+    <section class="space-y-1.5">
+      <h3>What is your professional background?</h3>
+      <Textarea
+        id="professionalBackground"
+        bind:value={formData.metaData.individual.professionalBackground}
+        label="Professional Background"
+        description="Include relevant fields such as governance, law, technology, finance, or community leadership."
+        placeholder="Free-text description."
+        required
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={professionalErrors}
+        class="w-full"
+      />
+    </section>
+
+    <section class="space-y-1.5">
+      <h3>What governance experience do you have?</h3>
+      <Textarea
+        id="governanceExperience"
+        bind:value={formData.metaData.individual.governanceExperience}
+        label="Governance Experience"
+        description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
+        placeholder="Free-text description."
+        required
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={individualGovernanceErrors}
+        class="w-full"
+      />
+    </section>
+  {/if}
 </div>

@@ -61,7 +61,11 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content class="pt-[3px] px-[3px] pb-8">
-        <FormBackgroundExpertise bind:formData {validationErrors} />
+        <FormBackgroundExpertise
+          bind:formData
+          {validationErrors}
+          track="individual"
+        />
       </Accordion.Content>
     </Accordion.Item>
 
