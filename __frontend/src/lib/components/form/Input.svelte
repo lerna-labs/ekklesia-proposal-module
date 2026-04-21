@@ -19,6 +19,7 @@
     min,
     max,
     step,
+    onblur,
     class: className,
   } = $props();
 
@@ -27,7 +28,14 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1 w-full">
+  <div
+    class="flex items-center gap-1 w-full"
+    class:hidden={!label &&
+      !descriptionProp &&
+      !notPublic &&
+      !required &&
+      !maxLength}
+  >
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
       {#if required}
@@ -57,6 +65,7 @@
     {min}
     {max}
     {step}
+    {onblur}
     aria-invalid={displayError ? true : false}
     class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
   />

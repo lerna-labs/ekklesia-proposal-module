@@ -117,7 +117,7 @@ async function main() {
       ...dates,
       validationScript: "cc-vote2026/validationScript.js",
       excludeScript: "cc-vote2026/excludeScript.js",
-      form: "default",
+      form: "ccVote2026",
       commentsEnabled: true,
       depositOptions: DEPOSIT_OPTIONS,
       sortOptions: SORT_OPTIONS,

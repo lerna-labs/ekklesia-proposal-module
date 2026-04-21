@@ -5,9 +5,9 @@ import { draftSubmissionOpen } from '$lib/voteWindowPolicy.js';
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
 	await parent();
-	const { budgetSlug } = params;
+	const { voteSlug } = params;
 
-	const votesRes = await api.fetch(fetch, `/votes?slug=${encodeURIComponent(budgetSlug)}&limit=1`);
+	const votesRes = await api.fetch(fetch, `/votes?slug=${encodeURIComponent(voteSlug)}&limit=1`);
 	const votesJson = await votesRes.json();
 	const votes = votesJson.data ?? [];
 

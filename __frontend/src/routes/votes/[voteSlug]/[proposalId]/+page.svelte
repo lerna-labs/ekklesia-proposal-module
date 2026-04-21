@@ -6,6 +6,7 @@
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import Budget2026ProposalPage from "$lib/votes/budget2026/ProposalPage.svelte";
+  import CcVote2026ProposalPage from "$lib/votes/ccVote2026/ProposalPage.svelte";
   import DefaultProposalPage from "$lib/votes/default/ProposalPage.svelte";
   import {
     readPreviewPayload,
@@ -192,16 +193,28 @@
       </div>
     </div>
   {/if}
-  <ProposalPageComponent
-    {proposal}
-    {vote}
-    {pillars}
-    {commentCount}
-    {backToVoteUrl}
-    {voteUrl}
-    {currentVersionHref}
-    {showComments}
-    {commentsHref}
-    {isWithdrawn}
-  />
+  {#if vote?.form === "ccVote2026"}
+    <CcVote2026ProposalPage
+      {proposal}
+      {vote}
+      {backToVoteUrl}
+      {voteUrl}
+      {currentVersionHref}
+      {showComments}
+      {isWithdrawn}
+    />
+  {:else}
+    <ProposalPageComponent
+      {proposal}
+      {vote}
+      {pillars}
+      {commentCount}
+      {backToVoteUrl}
+      {voteUrl}
+      {currentVersionHref}
+      {showComments}
+      {commentsHref}
+      {isWithdrawn}
+    />
+  {/if}
 </div>

@@ -1,4 +1,5 @@
 <script>
+  import { cn } from "$lib/utils.js";
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
   import * as Popover from "$lib/components/ui/popover";
@@ -28,8 +29,12 @@
     title,
     titleEyebrow,
     titleLeading,
+    /** Rendered after the expand/chevron control (e.g. delete) — matches trailing actions on work package cards. */
+    trailingExtra,
     popover,
     children,
+    /** Merged into expanded `Card.Content` (e.g. `pb-2` when the card is last above a footer action). */
+    contentClass = "",
     ...restProps
   } = $props();
 
@@ -43,7 +48,7 @@
 
   /** Same grid as title column alignment; minmax(0,1fr) for truncation. */
   const mainRowGridClass = $derived.by(() => {
-    const trailing = !!(popover || showButton);
+    const trailing = !!(popover || showButton || trailingExtra);
     if (titleLeading) {
       return trailing ? "grid-cols-[auto_minmax(0,1fr)_auto]" : "grid-cols-[auto_minmax(0,1fr)]";
     }
@@ -71,7 +76,7 @@
 
       {#if titleLeading}
         <span
-          class="col-start-1 flex shrink-0 items-center justify-center self-start pt-1.5 {titleRowClassStart}"
+          class="col-start-1 flex shrink-0 items-center justify-center self-start pt-1.5 text-lg font-medium {titleRowClassStart}"
           aria-hidden="true"
         >
           {@render titleLeading?.()}
@@ -119,7 +124,7 @@
         </button>
       {/if}
 
-      {#if popover || showButton}
+      {#if popover || showButton || trailingExtra}
         <div class="flex shrink-0 flex-row items-center gap-1 justify-self-end {trailingColClass} {titleRowClassStart}">
           {#if popover}
             <div class="flex shrink-0 items-center">
@@ -160,12 +165,15 @@
               {/if}
             </Button>
           {/if}
+          {#if trailingExtra}
+            {@render trailingExtra?.()}
+          {/if}
         </div>
       {/if}
     </div>
   </Card.Header>
   {#if expanded}
-    <Card.Content class="mt-2 pb-4 pl-4 pr-3 pt-0">
+    <Card.Content class={cn("mt-2 pb-4 pl-4 pr-3 pt-0", contentClass)}>
       {@render children?.()}
     </Card.Content>
   {/if}

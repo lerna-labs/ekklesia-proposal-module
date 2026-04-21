@@ -32,26 +32,51 @@
           mod && typeof mod === "object" && "budgetPhases" in mod
             ? /** @type {unknown[]} */ (mod.budgetPhases)
             : undefined;
-        return form && Array.isArray(phases) && phases.length > 0
-          ? [form, phases]
-          : null;
+        return form && Array.isArray(phases) && phases.length > 0 ? [form, phases] : null;
       })
       .filter((entry) => entry != null),
   );
 
+  /** When `vote.form` is missing or has no `timeline.js`, derive phases from Vote date fields (API always sends these). */
+  /** @param {Record<string, unknown> | null | undefined} v */
+  function timelinePhasesFromVoteDates(v) {
+    if (!v) return null;
+    const keys = [
+      "submissionStartDate",
+      "submissionEndDate",
+      "reviewStartDate",
+      "reviewEndDate",
+      "votingStartDate",
+      "votingEndDate",
+    ];
+    for (const k of keys) {
+      if (v[k] == null || v[k] === "") return null;
+    }
+    const iso = (d) => new Date(/** @type {string | number | Date} */ (d)).toISOString();
+    return [
+      {
+        title: "Submission & Feedback",
+        start: iso(v.submissionStartDate),
+        end: iso(v.submissionEndDate),
+      },
+      { title: "Review", start: iso(v.reviewStartDate), end: iso(v.reviewEndDate) },
+      { title: "Voting", start: iso(v.votingStartDate), end: iso(v.votingEndDate) },
+    ];
+  }
+
   let { data } = $props();
   let vote = $derived(data.vote);
-  const listTimelinePhases = $derived(
-    (vote?.form && timelinePhasesByVoteForm[vote.form]) || null,
-  );
+  const listTimelinePhases = $derived.by(() => {
+    const fromForm = vote?.form ? timelinePhasesByVoteForm[vote.form] : null;
+    if (Array.isArray(fromForm) && fromForm.length > 0) return fromForm;
+    return timelinePhasesFromVoteDates(vote);
+  });
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let pillars = $derived(data.pillars ?? []);
   const DEFAULT_SORT = "submittedAt";
   const sortFromData = $derived(data.listState?.sort ?? DEFAULT_SORT);
-  const ascendingFromData = $derived(
-    (data.listState?.direction ?? "desc") !== "desc",
-  );
+  const ascendingFromData = $derived((data.listState?.direction ?? "desc") !== "desc");
   let sort = $state("submittedAt");
   let ascending = $state(false);
   $effect(() => {
@@ -61,15 +86,7 @@
 
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
-  const LIST_PARAM_KEYS = [
-    "search",
-    "sort",
-    "direction",
-    "limit",
-    "status",
-    "category",
-    "proposer",
-  ];
+  const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
   function hasListParams(searchParams) {
     return LIST_PARAM_KEYS.some((k) => searchParams.get(k));
   }
@@ -138,13 +155,10 @@
 
   /** Capture scroll position so it can be restored when navigating back (e.g. from proposal page). */
   export const snapshot = {
-    capture: () =>
-      typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 },
+    capture: () => (typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 }),
     restore: (value) => {
       if (typeof window !== "undefined" && value?.y != null) {
-        requestAnimationFrame(() =>
-          window.scrollTo({ top: value.y, behavior: "instant" }),
-        );
+        requestAnimationFrame(() => window.scrollTo({ top: value.y, behavior: "instant" }));
       }
     },
   };
@@ -162,18 +176,18 @@
     {/if} -->
 
     {#if listTimelinePhases}
-      <div
-        class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"
-      >
+      <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch">
         <div class="flex h-full min-w-0 flex-col">
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
         <div class="flex h-full min-w-0 flex-col *:mt-0">
-          <VoteCTA {voteSlug} vote={vote} />
+          <VoteCTA {voteSlug} {vote} />
         </div>
       </div>
     {:else}
-      <VoteCTA {voteSlug} vote={vote} />
+      <div class="mt-4">
+        <VoteCTA {voteSlug} {vote} />
+      </div>
     {/if}
 
     <div class="mt-4 space-y-2">
@@ -185,9 +199,7 @@
       {/if}
       {#if vote.totalAmount !== undefined}
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">
-            Total Amount:
-          </span>
+          <span class="text-sm font-medium text-muted-foreground">Total Amount:</span>
           <span class="text-sm font-semibold">
             ${vote.totalAmount?.toLocaleString() || "0"}
           </span>
@@ -204,9 +216,7 @@
 
   <!-- Proposals Section -->
   <div class="space-y-6">
-    <div
-      class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    >
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="flex flex-wrap items-center gap-2">
         {#if shortProposerId}
           Proposals from {shortProposerId}
@@ -230,21 +240,9 @@
         {/if}
       </h2>
       <div class="flex items-center gap-1">
-        <Search
-          placeholder="Search proposals..."
-          class="w-full sm:w-64"
-          onBeforeClear={clearSearchFromStorage}
-        />
-        <SearchFilter
-          filterOptions={vote.filterOptions ?? []}
-          {vote}
-          voteId={vote._id}
-        />
-        <SearchSort
-          sortOptions={vote?.sortOptions ?? []}
-          bind:sort
-          bind:ascending
-        />
+        <Search placeholder="Search proposals..." class="w-full sm:w-64" onBeforeClear={clearSearchFromStorage} />
+        <SearchFilter filterOptions={vote.filterOptions ?? []} {vote} voteId={vote._id} />
+        <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>
     </div>
 
@@ -282,10 +280,7 @@
                   </Pagination.Item>
                 {:else}
                   <Pagination.Item>
-                    <Pagination.Link
-                      {page}
-                      isActive={currentPage === page.value}
-                    >
+                    <Pagination.Link {page} isActive={currentPage === page.value}>
                       {page.value}
                     </Pagination.Link>
                   </Pagination.Item>

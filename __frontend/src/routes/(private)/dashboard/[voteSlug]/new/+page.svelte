@@ -5,6 +5,7 @@
 
   const FORM_CHUNKS = {
     budget2026: () => import("$lib/forms/budget2026/Form.svelte"),
+    ccVote2026: () => import("$lib/forms/ccVote2026/Form.svelte"),
     default: () => import("$lib/forms/default/Form.svelte"),
   };
 

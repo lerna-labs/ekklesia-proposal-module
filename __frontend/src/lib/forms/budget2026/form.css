@@ -32,6 +32,11 @@ form h3 {
   @apply mb-2;
 }
 
+/* Work package card title: inline in header row; no margin below */
+form h3.work-package-card-title {
+  @apply mb-0;
+}
+
 form h4 {
   @apply mb-2;
 }
