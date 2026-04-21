@@ -8,9 +8,7 @@
   let { formData = $bindable(), validationErrors } = $props();
 
   let coldErrors = $derived(validationErrors?.properties?.metaData);
-  let coldTypeError = $derived(
-    coldErrors?.properties?.coldCredentialType?.errors?.[0],
-  );
+  let coldTypeError = $derived(coldErrors?.properties?.coldCredentialType?.errors?.[0]);
 
   const liveLocked = $derived(formData.status === "live");
 
@@ -31,7 +29,9 @@
 
 <div class="flex flex-col gap-6">
   <div>
-    <p class="text-sm text-muted-foreground mb-4">
+    <p
+      class="rounded-lg bg-[#ECEBFA] px-4 py-3 text-sm text-foreground dark:bg-violet-950/40 dark:text-violet-50 mb-6!"
+    >
       CC members must generate cold keys before taking office. Review the
       <a
         class="link font-medium"
@@ -43,6 +43,7 @@
       </a>
       before submitting.
     </p>
+
     <h3>What is your cold credential hash?</h3>
     <Input
       id="coldCredentialHash"
@@ -64,10 +65,7 @@
       <span class="text-(--mbo-electric-blue)">*</span>
     </div>
     <div
-      class={cn(
-        "flex flex-col gap-3 rounded-md",
-        coldTypeError ? "ring-[3px] ring-destructive/20" : "",
-      )}
+      class={cn("flex flex-col gap-2 rounded-md", coldTypeError ? "ring-[3px] ring-destructive/20" : "")}
       role="radiogroup"
       aria-label="Credential type"
       aria-invalid={coldTypeError ? true : undefined}

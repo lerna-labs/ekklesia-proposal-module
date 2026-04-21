@@ -6,20 +6,12 @@
   import FormTrackOrganisation from "./FormTrackOrganisation.svelte";
   import FormTrackConsortium from "./FormTrackConsortium.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
+  import { getDefaultConsortiumMember, normalizeConsortiumMember } from "./consortiumMemberUtils.js";
 
-  let {
-    vote,
-    proposal,
-    onSave,
-    validationErrors = $bindable(null),
-    formRef = $bindable(),
-    onCancel,
-  } = $props();
+  let { vote, proposal, onSave, validationErrors = $bindable(null), formRef = $bindable(), onCancel } = $props();
 
-  const formTitle = $derived(proposal?._id ? "Edit proposal" : "New proposal");
-  const showDisclaimerModal = $derived(
-    vote?.form === "ccVote2026" && !proposal?._id,
-  );
+  const formTitle = $derived(proposal?._id ? "Edit Candidate Application" : "New Candidate Application");
+  const showDisclaimerModal = $derived(vote?.form === "ccVote2026" && !proposal?._id);
   let disclaimerAcknowledged = $state(false);
   let openDisclaimerModal = $state(false);
 
@@ -84,7 +76,24 @@
         perspectiveYouWouldBring: "",
         transparencyApproach: "",
       },
-      consortium: {},
+      consortium: {
+        consortiumName: "",
+        contactPerson: "",
+        contactEmail: "",
+        xUsername: "",
+        linkedinUsername: "",
+        website: "",
+        otherLinks: [],
+        conflictOfInterestStatement: "",
+        contributionsToCardano: "",
+        motivation: "",
+        decentralisedGovernanceImportance: "",
+        constitutionalInterpretation: "",
+        perspectiveYouWouldBring: "",
+        transparencyApproach: "",
+        internalDecisionMakingProcess: "",
+        members: [getDefaultConsortiumMember()],
+      },
     };
   }
 
@@ -120,7 +129,19 @@
         ...createDefaultMetaData().organisation,
         ...(md.organisation ?? {}),
       },
-      consortium: { ...createDefaultMetaData().consortium, ...(md.consortium ?? {}) },
+      consortium: (() => {
+        const def = createDefaultMetaData().consortium;
+        const c = md.consortium && typeof md.consortium === "object" ? md.consortium : {};
+        const rawMembers = Array.isArray(c.members) ? c.members : [];
+        return {
+          ...def,
+          ...c,
+          members:
+            rawMembers.length > 0
+              ? rawMembers.map((m) => normalizeConsortiumMember(m))
+              : [getDefaultConsortiumMember()],
+        };
+      })(),
     };
     if (typeof md.treasuryDonationTxHash === "string") {
       formData.metaData.treasuryDonationTxHash = md.treasuryDonationTxHash;
@@ -134,10 +155,8 @@
     };
     formData.metaData.declarationAgreement.accuracyPublicVisibilityConsent =
       daIn?.accuracyPublicVisibilityConsent === true;
-    formData.metaData.declarationAgreement.termsAndConditionsAgreement =
-      daIn?.termsAndConditionsAgreement === true;
-    formData.metaData.declarationAgreement.memberIdentityVouching =
-      daIn?.memberIdentityVouching === true;
+    formData.metaData.declarationAgreement.termsAndConditionsAgreement = daIn?.termsAndConditionsAgreement === true;
+    formData.metaData.declarationAgreement.memberIdentityVouching = daIn?.memberIdentityVouching === true;
     queueMicrotask(() => formControlsRef?.resetDirtyBaseline?.());
   });
 
@@ -169,9 +188,7 @@
     if (typeof v === "string") return v.trim().length > 0;
     if (Array.isArray(v)) return v.some((item) => metaSubtreeHasMeaningfulValues(item));
     if (typeof v === "object") {
-      return Object.values(/** @type {Record<string, unknown>} */ (v)).some((x) =>
-        metaSubtreeHasMeaningfulValues(x),
-      );
+      return Object.values(/** @type {Record<string, unknown>} */ (v)).some((x) => metaSubtreeHasMeaningfulValues(x));
     }
     return false;
   }
@@ -234,14 +251,7 @@
     </div>
 
     {#if formData.metaData.track}
-      <FormControls
-        bind:this={formControlsRef}
-        {formData}
-        {getPayload}
-        {onSave}
-        {proposal}
-        {vote}
-      />
+      <FormControls bind:this={formControlsRef} {formData} {getPayload} {onSave} {proposal} {vote} />
     {/if}
   </form>
 {/if}

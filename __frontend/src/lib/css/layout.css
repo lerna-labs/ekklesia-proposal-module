@@ -144,6 +144,10 @@
   color: var(--mbo-white) !important;
   border-color: var(--mbo-electric-blue) !important;
 }
+/** Overrides `.add-item-btn` fit-content when a full-width bar is needed (e.g. Add Member). */
+.add-item-btn.add-item-btn-full-width {
+  width: 100% !important;
+}
 .add-item-btn:hover {
   background: var(--mbo-cardano-blue) !important;
   color: var(--mbo-white) !important;

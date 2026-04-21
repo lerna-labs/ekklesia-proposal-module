@@ -1,6 +1,6 @@
 /**
- * CC Vote 2026 proposal validation. Track required for live; individual Identity & Contact
- * validated when track is individual.
+ * CC Vote 2026 proposal validation. Track required for live; track-specific metaData
+ * (individual identity, organisation, consortium details + members) validated per track.
  * Used when validationScript is "cc-vote2026/validationScript.js".
  */
 import { z } from "zod";
@@ -141,6 +141,56 @@ function normalizeOrganisationInput(raw) {
     constitutionalInterpretation: o.constitutionalInterpretation ?? "",
     perspectiveYouWouldBring: o.perspectiveYouWouldBring ?? "",
     transparencyApproach: o.transparencyApproach ?? "",
+  };
+}
+
+/** @param {unknown} raw */
+function normalizeConsortiumMemberInput(raw) {
+  const m = raw && typeof raw === "object" ? raw : {};
+  const links = Array.isArray(m.otherLinks) ? m.otherLinks : [];
+  return {
+    fullNameOrAlias: m.fullNameOrAlias ?? "",
+    geographicRegion: m.geographicRegion ?? "",
+    briefBiography: m.briefBiography ?? "",
+    professionalBackground: m.professionalBackground ?? "",
+    governanceExperience: m.governanceExperience ?? "",
+    poolId: m.poolId ?? "",
+    drepId: m.drepId ?? "",
+    xUsername: m.xUsername ?? "",
+    linkedinUsername: m.linkedinUsername ?? "",
+    website: m.website ?? "",
+    otherLinks: links,
+    conflictOfInterestStatement: m.conflictOfInterestStatement ?? "",
+  };
+}
+
+/** @param {unknown} raw */
+function normalizeConsortiumMembersArray(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => normalizeConsortiumMemberInput(item));
+}
+
+/** @param {unknown} raw */
+function normalizeConsortiumInput(raw) {
+  const o = raw && typeof raw === "object" ? raw : {};
+  const links = Array.isArray(o.otherLinks) ? o.otherLinks : [];
+  return {
+    consortiumName: o.consortiumName ?? "",
+    contactPerson: o.contactPerson ?? "",
+    contactEmail: o.contactEmail ?? "",
+    xUsername: o.xUsername ?? "",
+    linkedinUsername: o.linkedinUsername ?? "",
+    website: o.website ?? "",
+    otherLinks: links,
+    conflictOfInterestStatement: o.conflictOfInterestStatement ?? "",
+    contributionsToCardano: o.contributionsToCardano ?? "",
+    motivation: o.motivation ?? "",
+    decentralisedGovernanceImportance: o.decentralisedGovernanceImportance ?? "",
+    constitutionalInterpretation: o.constitutionalInterpretation ?? "",
+    perspectiveYouWouldBring: o.perspectiveYouWouldBring ?? "",
+    transparencyApproach: o.transparencyApproach ?? "",
+    internalDecisionMakingProcess: o.internalDecisionMakingProcess ?? "",
+    members: normalizeConsortiumMembersArray(o.members),
   };
 }
 
@@ -461,6 +511,208 @@ const organisationLiveSchema = z.object({
     ),
 });
 
+/** Consortium identity and contact (section 1); extend when more consortium fields exist. */
+const consortiumDetailsLiveSchema = z.object({
+  consortiumName: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Consortium name is required")
+        .max(100, "Consortium name must be at most 100 characters"),
+    ),
+  contactPerson: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Contact person is required")
+        .max(100, "Contact person must be at most 100 characters"),
+    ),
+  contactEmail: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .email("Enter a valid email")
+        .max(254, "Email must be at most 254 characters"),
+    ),
+  xUsername: handleOptional,
+  linkedinUsername: handleOptional,
+  website: websiteOptional,
+  otherLinks: z.array(individualLinkItemSchema).default([]),
+});
+
+/** Consortium governance statement (section 2); overlaps organisation governance fields plus internal process. */
+const consortiumGovernanceLiveSchema = z.object({
+  conflictOfInterestStatement: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Conflict of interest statement must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  contributionsToCardano: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Contributions to Cardano is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Contributions to Cardano must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  motivation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Motivation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Motivation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  decentralisedGovernanceImportance: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Why decentralised governance is important is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `This field must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  constitutionalInterpretation: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Constitutional familiarity and interpretation is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Constitutional familiarity and interpretation must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  perspectiveYouWouldBring: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Perspective you would bring is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Perspective you would bring must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  transparencyApproach: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Transparency approach is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Transparency approach must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  internalDecisionMakingProcess: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Internal decision-making process is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Internal decision-making process must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+});
+
+const consortiumMemberLiveSchema = z.object({
+  fullNameOrAlias: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Name or alias is required")
+        .max(100, "Name or alias must be at most 100 characters"),
+    ),
+  geographicRegion: regionIdOptional,
+  briefBiography: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .min(1, "Brief biography is required")
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Brief biography must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  professionalBackground: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Professional background must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  governanceExperience: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Governance experience must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+  poolId: poolIdOptional,
+  drepId: drepIdOptional,
+  xUsername: handleOptional,
+  linkedinUsername: handleOptional,
+  website: websiteOptional,
+  otherLinks: z.array(individualLinkItemSchema).default([]),
+  conflictOfInterestStatement: z
+    .string()
+    .transform((s) => (typeof s === "string" ? s.trim() : ""))
+    .pipe(
+      z
+        .string()
+        .max(
+          INDIVIDUAL_LONG_TEXT_MAX,
+          `Conflict of interest statement must be at most ${INDIVIDUAL_LONG_TEXT_MAX} characters`,
+        ),
+    ),
+});
+
+const consortiumMembersArraySchema = z
+  .array(consortiumMemberLiveSchema)
+  .min(1, "At least one consortium member is required");
+
 /**
  * @param {{
  *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
@@ -538,6 +790,42 @@ function liveProposalBodySchemaForContext(context = {}) {
               code: issue.code ?? z.ZodIssueCode.custom,
               message: issue.message,
               path: ["metaData", "organisation", ...issue.path],
+            });
+          }
+        }
+      }
+
+      if (track === "consortium") {
+        const normalized = normalizeConsortiumInput(md.consortium);
+        const consDetailsResult = consortiumDetailsLiveSchema.safeParse(normalized);
+        if (!consDetailsResult.success) {
+          for (const issue of consDetailsResult.error.issues) {
+            ctx.addIssue({
+              code: issue.code ?? z.ZodIssueCode.custom,
+              message: issue.message,
+              path: ["metaData", "consortium", ...issue.path],
+            });
+          }
+        }
+        const consGovResult = consortiumGovernanceLiveSchema.safeParse(normalized);
+        if (!consGovResult.success) {
+          for (const issue of consGovResult.error.issues) {
+            ctx.addIssue({
+              code: issue.code ?? z.ZodIssueCode.custom,
+              message: issue.message,
+              path: ["metaData", "consortium", ...issue.path],
+            });
+          }
+        }
+        const membersResult = consortiumMembersArraySchema.safeParse(
+          normalized.members,
+        );
+        if (!membersResult.success) {
+          for (const issue of membersResult.error.issues) {
+            ctx.addIssue({
+              code: issue.code ?? z.ZodIssueCode.custom,
+              message: issue.message,
+              path: ["metaData", "consortium", "members", ...issue.path],
             });
           }
         }

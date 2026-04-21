@@ -7,11 +7,11 @@
 </script>
 
 <div class="pr-2">
-  <p class="text-sm text-muted-foreground mb-4">
+  <p class="text-sm text-muted-foreground mb-3">
     Confirm the declarations below before submitting your proposal. These must be confirmed on every submit or
     re-submit.
   </p>
-  <div class="space-y-6">
+  <div class="space-y-3">
     <section>
       <h3>Accuracy &amp; Public Visibility Consent</h3>
       <Checkbox

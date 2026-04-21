@@ -11,7 +11,10 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
     return proposal;
   }
 
-  const paths = ["metaData.individual.contactEmail"];
+  const paths = [
+    "metaData.individual.contactEmail",
+    "metaData.consortium.conflictOfInterestStatement",
+  ];
 
   const result = JSON.parse(JSON.stringify(proposal));
 
