@@ -1,0 +1,96 @@
+{
+  "scenario": "Stress test: ~20 events across 5 votes with varied proposals and event types. Exercises layout density, long scroll, CTA repetition, and divider rules at scale.",
+  "candidate": { "displayName": "Ada Lovelace" },
+  "period": "24h",
+  "periodVerbose": "24 hours",
+  "votes": [
+    {
+      "name": "Q2 2026 Budget Elections",
+      "url": "https://ekklesia.example/vote/q2-2026-budget",
+      "proposals": [
+        {
+          "title": "Community Treasury WG",
+          "url": "https://ekklesia.example/vote/q2-2026-budget/proposal/community-treasury",
+          "events": [
+            { "type": "submission_confirmed", "timestamp": "2026-04-20 02:14 UTC" },
+            { "type": "verified_badge_applied", "timestamp": "2026-04-20 05:30 UTC" },
+            { "type": "new_comment", "timestamp": "2026-04-20 09:12 UTC", "commenter": "Alice Chen", "preview": "Great breakdown of the multi-year reserve plan." },
+            { "type": "new_comment", "timestamp": "2026-04-20 14:44 UTC", "commenter": "Bob Martinez" }
+          ]
+        },
+        {
+          "title": "Developer Tooling Grant",
+          "url": "https://ekklesia.example/vote/q2-2026-budget/proposal/dev-tooling",
+          "events": [
+            { "type": "submission_confirmed", "timestamp": "2026-04-20 10:05 UTC" },
+            { "type": "new_comment", "timestamp": "2026-04-20 17:18 UTC", "commenter": "Charlie Nakamura" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Constitutional Committee 2026",
+      "url": "https://ekklesia.example/vote/cc-2026",
+      "proposals": [
+        {
+          "title": "Northern Technical Advisory",
+          "url": "https://ekklesia.example/vote/cc-2026/proposal/northern-technical",
+          "events": [
+            { "type": "verified_badge_applied", "timestamp": "2026-04-20 08:00 UTC" },
+            { "type": "new_comment", "timestamp": "2026-04-20 12:40 UTC", "commenter": "Dana Park" },
+            { "type": "voting_opened", "timestamp": "2026-04-21 00:00 UTC" }
+          ]
+        },
+        {
+          "title": "Southern Economic Advisory",
+          "url": "https://ekklesia.example/vote/cc-2026/proposal/southern-economic",
+          "events": [
+            { "type": "submission_confirmed", "timestamp": "2026-04-20 03:22 UTC" },
+            { "type": "new_comment", "timestamp": "2026-04-20 11:09 UTC", "commenter": "Erin O'Shea", "preview": "Strong case for staking-parameter conservatism." }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Parameter Delegate Nominations",
+      "url": "https://ekklesia.example/vote/parameter-delegate",
+      "proposals": [
+        {
+          "title": "Eastern-region rep for CC voting",
+          "url": "https://ekklesia.example/vote/parameter-delegate/proposal/eastern-rep",
+          "events": [
+            { "type": "verified_badge_applied", "timestamp": "2026-04-20 06:15 UTC" },
+            { "type": "new_comment", "timestamp": "2026-04-20 13:27 UTC", "commenter": "Fatima Al-Rashid" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DRep Ratification — April 2026",
+      "url": "https://ekklesia.example/vote/drep-ratification-april",
+      "proposals": [
+        {
+          "title": "DRep: Cardano Research Cooperative",
+          "url": "https://ekklesia.example/vote/drep-ratification-april/proposal/cardano-research-coop",
+          "events": [
+            { "type": "submission_confirmed", "timestamp": "2026-04-20 01:48 UTC" },
+            { "type": "verified_badge_applied", "timestamp": "2026-04-20 07:03 UTC" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Treasury Withdrawal Round 12",
+      "url": "https://ekklesia.example/vote/treasury-round-12",
+      "proposals": [
+        {
+          "title": "Ledger performance audit",
+          "url": "https://ekklesia.example/vote/treasury-round-12/proposal/ledger-performance-audit",
+          "events": [
+            { "type": "results_published", "timestamp": "2026-04-20 23:59 UTC" }
+          ]
+        }
+      ]
+    }
+  ]
+}
