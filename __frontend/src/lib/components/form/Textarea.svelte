@@ -28,24 +28,8 @@
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   let displayError = $derived(schemaError);
 
-  /** Strip markdown syntax to get visible character count (for limit display). */
-  function stripMarkdownForCount(text) {
-    if (typeof text !== "string") return "";
-    return text
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-      .replace(/(\*\*|__)(.*?)\1/g, "$2")
-      .replace(/(\*|_)(.*?)\1/g, "$2")
-      .replace(/`([^`]+)`/g, "$1")
-      .replace(/^#{1,6}\s+/gm, "")
-      .replace(/^>\s*/gm, "")
-      .replace(/^[-*+]\s+/gm, "")
-      .replace(/^\d+\.\s+/gm, "")
-      .replace(/```[\s\S]*?```/g, "")
-      .trim();
-  }
-
-  let visibleLength = $derived(stripMarkdownForCount(value).length);
+  // Count raw stored characters to match backend validation behavior.
+  let visibleLength = $derived(String(value ?? "").length);
 
   /** Stable id for the visible label when pairing with the Lexical root via aria-labelledby. */
   let labelElementId = $derived(
