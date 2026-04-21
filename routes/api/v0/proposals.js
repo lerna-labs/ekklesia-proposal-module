@@ -135,7 +135,9 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
-    const validation = script.validate(req.body);
+    const validation = script.validate(req.body, {
+      voteDepositOptions: voteDoc.depositOptions ?? {},
+    });
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
@@ -481,11 +483,26 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
+
+    let voteDepositOptionsForValidation = voteDoc.depositOptions ?? {};
+    const rawBodyVoteId = req.body?.voteId;
+    if (
+      rawBodyVoteId &&
+      mongoose.Types.ObjectId.isValid(rawBodyVoteId) &&
+      String(rawBodyVoteId).length === 24
+    ) {
+      const voteForBody = await Vote.findById(rawBodyVoteId).lean();
+      if (voteForBody) {
+        voteDepositOptionsForValidation = voteForBody.depositOptions ?? {};
+      }
+    }
+
     validation = script.validate(req.body, {
       existingProposal: {
         status: proposal.status,
         metaData: proposal.metaData ?? {},
       },
+      voteDepositOptions: voteDepositOptionsForValidation,
     });
 
     if (!validation.success) {
