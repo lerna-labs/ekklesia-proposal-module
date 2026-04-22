@@ -939,45 +939,66 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
       }
     }
 
-    // Add filters for options that have optionsPath (e.g. category from vote.metaData.strategyFramework.pillars)
+    // Add generic non-status filters defined on the vote.
     for (const option of resolvedFilterOptions) {
-      if (!option.optionsPath || option.param === "status" || option.param === "proposer") continue;
+      if (option.param === "status" || option.param === "proposer") continue;
       const paramValue = req.query[option.param];
       if (!paramValue || typeof paramValue !== "string") continue;
 
-      const ids = paramValue
+      const values = paramValue
         .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
 
-      if (ids.length === 0) {
+      if (values.length === 0) {
         return res.status(400).json({
           status: "error",
           message: `Invalid ${option.param} parameter. Must provide at least one value.`,
         });
       }
 
-      const optionList = getByPath(voteDoc, option.optionsPath);
-      if (!Array.isArray(optionList) || optionList.length === 0) {
+      if (!option.multiple && values.length > 1) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+          message: `Invalid ${option.param} parameter. Multiple values are not allowed.`,
         });
       }
 
-      const valueKey = option.optionValueKey ?? "_id";
-      const validIds = new Set(
-        optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
-      );
-      const missingIds = ids.filter((id) => !validIds.has(id));
-      if (missingIds.length > 0) {
+      let validValues = new Set();
+      if (option.optionsPath) {
+        const optionList = getByPath(voteDoc, option.optionsPath);
+        if (!Array.isArray(optionList) || optionList.length === 0) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+          });
+        }
+
+        const valueKey = option.optionValueKey ?? "_id";
+        validValues = new Set(
+          optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
+        );
+      } else if (Array.isArray(option.allowedValues) && option.allowedValues.length > 0) {
+        validValues = new Set(option.allowedValues.map((value) => String(value)));
+      } else {
+        // No optionsPath and no allowedValues means this filter is misconfigured.
         return res.status(400).json({
           status: "error",
-          message: `Invalid ${option.param} parameter. The following values were not found for this vote: ${missingIds.join(", ")}.`,
+          message: `Invalid ${option.param} filter configuration. Expected optionsPath or allowedValues.`,
         });
       }
 
-      const condition = { [option.field]: option.multiple ? { $in: ids } : ids[0] };
+      const invalidValues = values.filter((value) => !validValues.has(value));
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${option.param} parameter. Allowed values: ${Array.from(validValues).join(", ")}.`,
+        });
+      }
+
+      const condition = {
+        [option.field]: option.multiple ? { $in: values } : values[0],
+      };
       if (query.$or) {
         const existingOr = query.$or;
         delete query.$or;
