@@ -4,7 +4,7 @@
   import { Button } from "$lib/components/ui/button";
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
-  import MessageSquareIcon from "@lucide/svelte/icons/message-square";
+  import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import UserIcon from "@lucide/svelte/icons/user";
   import HomeIcon from "@lucide/svelte/icons/home";
@@ -202,38 +202,20 @@
     <Card.Footer class="flex flex-col items-start gap-3 pt-0 px-4 sm:px-6">
       {#if commentsHref || (showLink && proposalHref)}
         <div class="flex items-center gap-2 flex-wrap justify-between w-full">
-          <Button
-            variant="ghost"
-            class="inline-flex items-center gap-2 min-w-0"
-            href={commentsHref}
-            aria-label="View comments"
-            title="View comments"
-          >
-            <span class="shrink-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="lucide lucide-message-circle-more-icon lucide-message-circle-more"
-                ><path
-                  d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"
-                /><path d="M8 12h.01" /><path d="M12 12h.01" /><path
-                  d="M16 12h.01"
-                /></svg
-              >
-            </span>
-            <span
-              class="font-semibold text-xs tabular-nums leading-none relative -top-2 -left-2"
+          {#if commentsHref}
+            <Button
+              href={commentsHref}
+              variant="outline"
+              size="sm"
+              class="text-xs shrink-0"
+              aria-label={commentCount != null
+                ? `Comments (${commentCount})`
+                : "View comments"}
             >
-              {proposal.commentCount}
-            </span>
-          </Button>
+              <MessageSquareMoreIcon class="size-4 mr-1" />
+              Comments ({commentCount != null ? commentCount : "-"})
+            </Button>
+          {/if}
 
           {#if showLink && proposalHref}
             <Button
