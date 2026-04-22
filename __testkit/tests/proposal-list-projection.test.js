@@ -7,7 +7,13 @@ describe("proposal list projection scripts", () => {
       _id: "p1",
       title: "Budget proposal",
       status: "live",
+      updatedAt: "2026-01-15T10:00:00.000Z",
+      submittedAt: "2026-01-10T10:00:00.000Z",
       proposerId: "stake_test1abc",
+      withdrawalDetails: {
+        category: "Other",
+        comment: "withdrawn note",
+      },
       versions: [{ _id: "v1", createdAt: new Date("2026-01-01T00:00:00.000Z") }],
       commentCount: 7,
       metaData: {
@@ -42,6 +48,13 @@ describe("proposal list projection scripts", () => {
     });
     expect(projected.commentCount).toBe(7);
     expect(projected.versions).toEqual(proposal.versions);
+    expect(projected._id).toBe("p1");
+    expect(projected.title).toBe("Budget proposal");
+    expect(projected.status).toBe("live");
+    expect(projected.updatedAt).toBe("2026-01-15T10:00:00.000Z");
+    expect(projected.submittedAt).toBe("2026-01-10T10:00:00.000Z");
+    expect(projected.proposerId).toBe("stake_test1abc");
+    expect(projected.withdrawalDetails).toEqual(proposal.withdrawalDetails);
   });
 
   it("ccVote2026 projection keeps track and motivation fields only", () => {
@@ -49,6 +62,8 @@ describe("proposal list projection scripts", () => {
       _id: "p2",
       title: "CC candidate",
       status: "live",
+      updatedAt: "2026-02-15T10:00:00.000Z",
+      submittedAt: "2026-02-10T10:00:00.000Z",
       proposerId: "stake_test1xyz",
       commentCount: 3,
       versions: [],
@@ -74,5 +89,11 @@ describe("proposal list projection scripts", () => {
       consortium: undefined,
     });
     expect(projected.commentCount).toBe(3);
+    expect(projected._id).toBe("p2");
+    expect(projected.title).toBe("CC candidate");
+    expect(projected.status).toBe("live");
+    expect(projected.updatedAt).toBe("2026-02-15T10:00:00.000Z");
+    expect(projected.submittedAt).toBe("2026-02-10T10:00:00.000Z");
+    expect(projected.proposerId).toBe("stake_test1xyz");
   });
 });
