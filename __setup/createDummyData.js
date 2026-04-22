@@ -446,6 +446,7 @@ async function createDummyData() {
             votingEndDate: votingEnd,
             validationScript: "budget2026/validationScript.js",
             excludeScript: "budget2026/excludeScript.js",
+            listProjectionScript: "budget2026/listProjection.js",
             form: "budget2026",
             depositOptions: {
                 treasuryDonation: 1_000_000_000, // 1000 ADA in lovelace

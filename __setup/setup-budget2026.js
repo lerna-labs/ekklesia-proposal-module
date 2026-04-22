@@ -223,6 +223,7 @@ async function main() {
       ...dates,
       validationScript: "budget2026/validationScript.js",
       excludeScript: "budget2026/excludeScript.js",
+      listProjectionScript: "budget2026/listProjection.js",
       form: "budget2026",
       commentsEnabled: true,
       depositOptions: DEPOSIT_OPTIONS,
