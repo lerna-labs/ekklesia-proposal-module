@@ -37,8 +37,8 @@ const DEPOSIT_OPTIONS = {
 };
 
 const SORT_OPTIONS = [
+  { value: "title", label: "Applicant Name", field: "title" },
   { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
-  { value: "title", label: "Proposal Title", field: "title" },
   { value: "commentCount", label: "Comment Count", field: "commentCount" },
   { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
 ];
@@ -49,6 +49,13 @@ const FILTER_OPTIONS = [
     label: "Status",
     field: "status",
     allowedValues: ["live", "withdrawn", "draft"],
+    multiple: true,
+  },
+  {
+    param: "track",
+    label: "Applicant Type",
+    field: "metaData.track",
+    allowedValues: ["individual", "organisation", "consortium"],
     multiple: true,
   },
 ];
