@@ -45,40 +45,56 @@
     filterOptions.find((o) => o.param === "status"),
   );
 
-  /** Options with optionsPath: resolve option list from vote and build { value, label }[] */
-  const optionsFromVoteByParam = $derived.by(() => {
+  const nonStatusFilterOptions = $derived(
+    filterOptions.filter((opt) => opt.param !== "status"),
+  );
+
+  function formatAllowedValueLabel(value) {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    if (!normalized) return "";
+    return normalized
+      .split(/[\s_-]+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  /** Resolve option lists for each filter param from optionsPath or allowedValues. */
+  const optionsByParam = $derived.by(() => {
     const out =
       /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
     for (const opt of filterOptions) {
-      if (!opt.optionsPath || !vote) continue;
-      const list = getByPath(vote, opt.optionsPath);
-      if (!Array.isArray(list)) continue;
-      const valueKey = opt.optionValueKey ?? "_id";
-      const labelKey = opt.optionLabelKey ?? "title";
-      out[opt.param] = list
-        .map((item) => ({
-          value: String(item[valueKey] ?? ""),
-          label: String(item[labelKey] ?? item[valueKey] ?? ""),
-        }))
-        .filter((o) => o.value);
+      if (opt.optionsPath && vote) {
+        const list = getByPath(vote, opt.optionsPath);
+        if (!Array.isArray(list)) continue;
+        const valueKey = opt.optionValueKey ?? "_id";
+        const labelKey = opt.optionLabelKey ?? "title";
+        out[opt.param] = list
+          .map((item) => ({
+            value: String(item[valueKey] ?? ""),
+            label: String(item[labelKey] ?? item[valueKey] ?? ""),
+          }))
+          .filter((o) => o.value);
+        continue;
+      }
+
+      if (Array.isArray(opt.allowedValues) && opt.allowedValues.length > 0) {
+        out[opt.param] = opt.allowedValues
+          .map((value) => ({
+            value: String(value ?? ""),
+            label: formatAllowedValueLabel(value),
+          }))
+          .filter((o) => o.value);
+      }
     }
     return out;
   });
 
-  const categoryOption = $derived(
-    filterOptions.find((o) => o.param === "category"),
-  );
-  const categoryOptionsList = $derived(
-    optionsFromVoteByParam["category"] ?? [],
-  );
-
-  const ALL_CATEGORIES_VALUE = "__all_categories__";
   let open = $state(false);
   let pendingLive = $state(true);
   let pendingWithdrawn = $state(false);
   let pendingDraft = $state(false);
-  /** @type {string[]} */
-  let pendingCategories = $state([]);
+  /** @type {Record<string, string[]>} */
+  let pendingSelectionsByParam = $state({});
 
   /** True when any filter param from filterOptions is present in the URL */
   const hasActiveFilters = $derived.by(() => {
@@ -89,15 +105,20 @@
     return false;
   });
 
-  const categoryTriggerLabel = $derived(
-    pendingCategories.length === 0
-      ? "All Pillars"
-      : pendingCategories.length === 1
-        ? (categoryOptionsList.find(
-            (c) => String(c.value) === pendingCategories[0],
-          )?.label ?? pendingCategories[0])
-        : `${pendingCategories.length} Pillars`,
-  );
+  function getTriggerLabel(option, selectedValues, optionsList) {
+    const allLabel = option?.label ? `All ${option.label}` : "All";
+    if (!Array.isArray(selectedValues) || selectedValues.length === 0) {
+      return allLabel;
+    }
+    if (selectedValues.length === 1) {
+      const selectedValue = selectedValues[0];
+      return (
+        optionsList.find((opt) => String(opt.value) === selectedValue)?.label ??
+        selectedValue
+      );
+    }
+    return `${selectedValues.length} selected`;
+  }
 
   $effect(() => {
     if (!open) return;
@@ -108,21 +129,19 @@
       pendingWithdrawn = terms.includes("withdrawn");
       pendingDraft = terms.includes("draft");
     }
-    if (categoryOption) {
-      const catParam = page.url.searchParams.get("category") ?? "";
-      pendingCategories = catParam
-        ? catParam
+
+    /** @type {Record<string, string[]>} */
+    const nextPendingSelections = {};
+    for (const opt of nonStatusFilterOptions) {
+      const paramValue = page.url.searchParams.get(opt.param) ?? "";
+      nextPendingSelections[opt.param] = paramValue
+        ? paramValue
             .split(",")
-            .map((id) => id.trim())
+            .map((v) => v.trim())
             .filter(Boolean)
         : [];
     }
-  });
-
-  $effect(() => {
-    if (pendingCategories.includes(ALL_CATEGORIES_VALUE)) {
-      pendingCategories = [];
-    }
+    pendingSelectionsByParam = nextPendingSelections;
   });
 
   function apply() {
@@ -139,14 +158,12 @@
       searchParams.set("status", statusValue);
     }
 
-    if (categoryOption) {
-      const categoryIds = pendingCategories.filter(
-        (id) => id !== ALL_CATEGORIES_VALUE,
-      );
-      if (categoryIds.length > 0) {
-        searchParams.set("category", categoryIds.join(","));
+    for (const opt of nonStatusFilterOptions) {
+      const selectedValues = pendingSelectionsByParam[opt.param] ?? [];
+      if (selectedValues.length > 0) {
+        searchParams.set(opt.param, selectedValues.join(","));
       } else {
-        searchParams.delete("category");
+        searchParams.delete(opt.param);
       }
     }
 
@@ -252,38 +269,37 @@
               </div>
             </div>
           {/if}
-          {#if categoryOption && categoryOptionsList.length > 0}
-            <div class="space-y-2">
-              <Label class="text-xs text-muted-foreground"
-                >Cardano 2030 Pillars</Label
-              >
-              <Select.Root type="multiple" bind:value={pendingCategories}>
-                <Select.Trigger
-                  class="w-full min-w-0 text-foreground data-placeholder:text-foreground"
-                  aria-label={categoryOption.label}
+          {#each nonStatusFilterOptions as option (option.param)}
+            {@const optionList = optionsByParam[option.param] ?? []}
+            {@const selectedValues = pendingSelectionsByParam[option.param] ?? []}
+            {#if optionList.length > 0}
+              <div class="space-y-2">
+                <Label class="text-xs text-muted-foreground">{option.label}</Label>
+                <Select.Root
+                  type="multiple"
+                  bind:value={pendingSelectionsByParam[option.param]}
                 >
-                  <span class="truncate block min-w-0"
-                    >{categoryTriggerLabel}</span
+                  <Select.Trigger
+                    class="w-full min-w-0 text-foreground data-placeholder:text-foreground"
+                    aria-label={option.label}
                   >
-                </Select.Trigger>
-                <Select.Content>
-                  <Select.Group aria-label="Categories">
-                    <Select.Item
-                      value={ALL_CATEGORIES_VALUE}
-                      label="All Pillars"
-                    >
-                      All Pillars
-                    </Select.Item>
-                    {#each categoryOptionsList as opt (opt.value)}
-                      <Select.Item value={opt.value} label={opt.label}>
-                        {opt.label}
-                      </Select.Item>
-                    {/each}
-                  </Select.Group>
-                </Select.Content>
-              </Select.Root>
-            </div>
-          {/if}
+                    <span class="truncate block min-w-0">
+                      {getTriggerLabel(option, selectedValues, optionList)}
+                    </span>
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Group aria-label={option.label}>
+                      {#each optionList as opt (opt.value)}
+                        <Select.Item value={opt.value} label={opt.label}>
+                          {opt.label}
+                        </Select.Item>
+                      {/each}
+                    </Select.Group>
+                  </Select.Content>
+                </Select.Root>
+              </div>
+            {/if}
+          {/each}
           <div class="border-t pt-3 flex gap-1">
             {#if hasActiveFilters}
               <Button

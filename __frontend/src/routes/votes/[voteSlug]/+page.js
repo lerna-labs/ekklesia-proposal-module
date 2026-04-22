@@ -9,7 +9,6 @@ export async function load({ params, url, fetch }) {
 	const limit = validLimits.includes(Number(limitParam)) ? limitParam : '10';
 	const search = url.searchParams.get('search') || '';
 	const direction = url.searchParams.get('direction') || 'desc';
-	const category = url.searchParams.get('category') || '';
 	const status = url.searchParams.get('status') || 'live';
 	const proposer = url.searchParams.get('proposer') || '';
 
@@ -40,8 +39,15 @@ export async function load({ params, url, fetch }) {
 		sort,
 		direction,
 	});
+	const filterOptions = voteData.filterOptions ?? [];
+	for (const option of filterOptions) {
+		if (option?.param === 'status') continue;
+		const value = url.searchParams.get(option?.param ?? '');
+		if (option?.param && value) {
+			proposalsSearchParams.set(option.param, value);
+		}
+	}
 	if (search) proposalsSearchParams.set('search', search);
-	if (category) proposalsSearchParams.set('category', category);
 	if (status) proposalsSearchParams.set('status', status);
 	if (proposer) proposalsSearchParams.set('proposer', proposer);
 	const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
