@@ -97,6 +97,11 @@ const voteSchema = new Schema(
       type: String,
       required: false,
     },
+    /** Optional script to shape proposal list item payloads per vote form. */
+    listProjectionScript: {
+      type: String,
+      required: false,
+    },
     /** Optional. URL to the Ekklesia Voting Platform for this Vote **/
     votingUrl: {
       type: String,

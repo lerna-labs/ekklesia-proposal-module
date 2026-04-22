@@ -16,6 +16,7 @@ import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
+import { loadListProjectionScript } from "../../../validation/loadListProjectionScript.js";
 import { verifyDeposit } from "../../../helper/verifyDeposit.js";
 import {
   getDraftOnlySubmissionBlockMessage,
@@ -1169,18 +1170,54 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
       }
     }
 
+    let projectProposalListItem = null;
+    if (voteDoc.listProjectionScript) {
+      const projectionMod = await loadListProjectionScript(
+        voteDoc.listProjectionScript,
+      );
+      if (projectionMod?.projectProposalListItem) {
+        projectProposalListItem = projectionMod.projectProposalListItem;
+      }
+    }
+
+    const fallbackProjection = (proposal) => {
+      const {
+        metaData,
+        withdrawalReason,
+        signature,
+        userId,
+        commentCount,
+        versions,
+        ...rest
+      } = proposal ?? {};
+      return {
+        ...rest,
+        metaData: metaData ?? null,
+        versions,
+        commentCount: commentCount ?? 0,
+      };
+    };
+
     const formattedProposals = proposals.map((proposal) => {
-      const { metaData, withdrawalReason, versions, signature, userId, commentCount, ...rest } = proposal;
-      const shortenedMetaData = metaData
-        ? {
-          proposerDetails: metaData.proposerDetails ? { name: metaData.proposerDetails.name } : undefined,
-          contractingParty: metaData.contractingParty ? { legalEntityType: metaData.contractingParty.legalEntityType } : undefined,
-          strategyFramework: metaData.strategyFramework ? { pillars: metaData.strategyFramework.pillars } : undefined,
-          conversionRate: metaData.proposalDetails?.conversionRate ?? metaData.financialAndAdministrative?.conversionRate,
-          totalBudget: metaData.totalBudget,
-        }
-        : null;
-      return { ...rest, metaData: shortenedMetaData, versions, commentCount: commentCount ?? 0 };
+      const isProposer =
+        String(proposal?.proposerId ?? "").trim() === authenticatedUserId;
+      if (!projectProposalListItem) {
+        return fallbackProjection(proposal);
+      }
+      try {
+        return projectProposalListItem(proposal, {
+          vote: voteDoc,
+          isProposer,
+          isAdmin: isVoteAdmin,
+        });
+      } catch (err) {
+        console.warn(
+          "list projection failed for proposal",
+          proposal?._id,
+          err?.message ?? err,
+        );
+        return fallbackProjection(proposal);
+      }
     });
 
     // Calculate pagination metadata
