@@ -35,11 +35,11 @@
       CC members must generate cold keys before taking office. Review the
       <a
         class="link font-medium"
-        href="https://docs.hydra-voting.intersectmbo.org/"
+        href="https://developers.cardano.org/docs/get-started/infrastructure/cardano-cli/governance/constitutional%20committee/"
         target="_blank"
         rel="noopener noreferrer"
       >
-        Intersect Cold Credential Guide
+        Cold Credential Guide
       </a>
       before submitting.
     </p>
