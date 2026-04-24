@@ -5,12 +5,20 @@
 
   /** @typedef {'keyCredential' | 'scriptCredential'} ColdCredentialType */
 
-  let { formData = $bindable(), validationErrors } = $props();
+  /** @typedef {'individual' | 'organisation' | 'consortium'} TrackType */
+
+  /** @type {{ formData: any, validationErrors: any, track?: TrackType }} */
+  let { formData = $bindable(), validationErrors, track = "individual" } = $props();
 
   let coldErrors = $derived(validationErrors?.properties?.metaData);
   let coldTypeError = $derived(coldErrors?.properties?.coldCredentialType?.errors?.[0]);
 
   const liveLocked = $derived(formData.status === "live");
+  const coldHashPrompt = $derived.by(() => {
+    if (track === "organisation") return "What is your organisation’s cold credential hash?";
+    if (track === "consortium") return "What is your consortium’s combined cold credential hash?";
+    return "What is your cold credential hash?";
+  });
 
   /** @type {Array<{ id: ColdCredentialType; title: string; description: string }>} */
   const CREDENTIAL_TYPES = [
@@ -44,7 +52,7 @@
       before submitting.
     </p>
 
-    <h3>What is your cold credential hash?</h3>
+    <h3>{coldHashPrompt}</h3>
     <Input
       id="coldCredentialHash"
       bind:value={formData.metaData.coldCredentialHash}

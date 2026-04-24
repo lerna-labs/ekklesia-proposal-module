@@ -11,9 +11,7 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const organisationErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.organisation,
-  );
+  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
 
   const organisationNameErrors = $derived({
     properties: {
@@ -22,8 +20,7 @@
   });
   const organisationDescriptionErrors = $derived({
     properties: {
-      organisationDescription:
-        organisationErrors?.properties?.organisationDescription,
+      organisationDescription: organisationErrors?.properties?.organisationDescription,
     },
   });
   const regionErrors = $derived({
@@ -83,20 +80,19 @@
   }
 
   function onXBlur() {
-    formData.metaData.organisation.xUsername = normalizeXUsername(
-      formData.metaData.organisation.xUsername,
-    );
+    formData.metaData.organisation.xUsername = normalizeXUsername(formData.metaData.organisation.xUsername);
   }
 
   function onLinkedInBlur() {
-    formData.metaData.organisation.linkedinUsername =
-      normalizeLinkedinUsername(formData.metaData.organisation.linkedinUsername);
+    formData.metaData.organisation.linkedinUsername = normalizeLinkedinUsername(
+      formData.metaData.organisation.linkedinUsername,
+    );
   }
 </script>
 
 <div class="organisation-details-section flex flex-col gap-6">
   <section class="space-y-1.5">
-    <h3>What name should appear on your candidacy?</h3>
+    <h3>What is your organisation’s name?</h3>
     <Input
       id="organisationName"
       bind:value={formData.metaData.organisation.organisationName}
@@ -111,13 +107,13 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>Describe your organisation</h3>
+    <h3>How would you describe your organisation?</h3>
     <Textarea
       id="organisationDescription"
       bind:value={formData.metaData.organisation.organisationDescription}
       label="Organisational description"
       description="Summarise your organisation’s mission, focus, and relevance to Cardano."
-      placeholder="Describe your organisation"
+      placeholder="Brief overview of your mission, structure, and activities in the ecosystem"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={organisationDescriptionErrors}

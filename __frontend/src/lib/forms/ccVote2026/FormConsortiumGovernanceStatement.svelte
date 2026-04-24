@@ -5,20 +5,16 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const consortiumErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.consortium,
-  );
+  const consortiumErrors = $derived(validationErrors?.properties?.metaData?.properties?.consortium);
 
   const conflictErrors = $derived({
     properties: {
-      conflictOfInterestStatement:
-        consortiumErrors?.properties?.conflictOfInterestStatement,
+      conflictOfInterestStatement: consortiumErrors?.properties?.conflictOfInterestStatement,
     },
   });
   const contributionsErrors = $derived({
     properties: {
-      contributionsToCardano:
-        consortiumErrors?.properties?.contributionsToCardano,
+      contributionsToCardano: consortiumErrors?.properties?.contributionsToCardano,
     },
   });
   const motivationErrors = $derived({
@@ -28,32 +24,27 @@
   });
   const decentralisedErrors = $derived({
     properties: {
-      decentralisedGovernanceImportance:
-        consortiumErrors?.properties?.decentralisedGovernanceImportance,
+      decentralisedGovernanceImportance: consortiumErrors?.properties?.decentralisedGovernanceImportance,
     },
   });
   const constitutionalErrors = $derived({
     properties: {
-      constitutionalInterpretation:
-        consortiumErrors?.properties?.constitutionalInterpretation,
+      constitutionalInterpretation: consortiumErrors?.properties?.constitutionalInterpretation,
     },
   });
   const perspectiveErrors = $derived({
     properties: {
-      perspectiveYouWouldBring:
-        consortiumErrors?.properties?.perspectiveYouWouldBring,
+      perspectiveYouWouldBring: consortiumErrors?.properties?.perspectiveYouWouldBring,
     },
   });
   const transparencyErrors = $derived({
     properties: {
-      transparencyApproach:
-        consortiumErrors?.properties?.transparencyApproach,
+      transparencyApproach: consortiumErrors?.properties?.transparencyApproach,
     },
   });
   const internalDecisionErrors = $derived({
     properties: {
-      internalDecisionMakingProcess:
-        consortiumErrors?.properties?.internalDecisionMakingProcess,
+      internalDecisionMakingProcess: consortiumErrors?.properties?.internalDecisionMakingProcess,
     },
   });
 </script>
@@ -66,7 +57,7 @@
       bind:value={formData.metaData.consortium.conflictOfInterestStatement}
       label="Conflict of Interest Statement"
       description="Disclosure of financial interests, partnerships, or relationships that may present a conflict."
-      placeholder="Free-text description."
+      placeholder="List any consortium-level affiliations or financial interests"
       required={false}
       notPublic={true}
       maxLength={LONG_TEXT_MAX}
@@ -82,7 +73,7 @@
       bind:value={formData.metaData.consortium.contributionsToCardano}
       label="Contributions to Cardano"
       description="The consortium's collective contributions across all members. Reference specific projects, roles, and activities across the group."
-      placeholder="Free-text description."
+      placeholder="e.g. Member A: Catalyst proposals; Member B: core development; Member C: governance roles"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={contributionsErrors}
@@ -97,7 +88,7 @@
       bind:value={formData.metaData.consortium.motivation}
       label="Motivation"
       description="Why the consortium is running for the Constitutional Committee."
-      placeholder="Free-text description."
+      placeholder="Why your consortium is applying and what it aims to contribute"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={motivationErrors}
@@ -112,7 +103,7 @@
       bind:value={formData.metaData.consortium.decentralisedGovernanceImportance}
       label="Why is Decentralised Governance Important?"
       description="The consortium's shared values around decentralised governance."
-      placeholder="Free-text description."
+      placeholder="Shared perspective on decentralization and its importance in governance"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={decentralisedErrors}
@@ -121,16 +112,13 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>
-      What are your views on constitutional interpretation, and how would your consortium approach
-      this role?
-    </h3>
+    <h3>How will you approach constitutional interpretation?</h3>
     <Textarea
       id="constitutionalInterpretation"
       bind:value={formData.metaData.consortium.constitutionalInterpretation}
       label="Constitutional familiarity and interpretation"
       description="What are the consortium's views on constitutional interpretation? How would they approach this?"
-      placeholder="Free-text description."
+      placeholder="How your consortium will interpret and apply the constitution"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={constitutionalErrors}
@@ -145,7 +133,7 @@
       bind:value={formData.metaData.consortium.perspectiveYouWouldBring}
       label="Perspective You Would Bring"
       description="Unique skills, viewpoints, or contributions the consortium would offer in interpreting the Constitution if elected."
-      placeholder="Free-text description."
+      placeholder="Unique strengths and combined expertise your consortium brings"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={perspectiveErrors}
@@ -160,7 +148,7 @@
       bind:value={formData.metaData.consortium.transparencyApproach}
       label="Transparency Approach"
       description="How the consortium will communicate decisions and voting rationale to the community."
-      placeholder="Free-text description."
+      placeholder="How your consortium will communicate decisions, votes, and reasoning"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={transparencyErrors}
@@ -175,7 +163,7 @@
       bind:value={formData.metaData.consortium.internalDecisionMakingProcess}
       label="Internal Decision-Making Process"
       description="How the consortium reaches consensus before casting a governance vote — quorum process, deliberation method, and any community consultation steps."
-      placeholder="Free-text description."
+      placeholder="Describe how members reach decisions (e.g. voting, consensus, quorum rules)"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={internalDecisionErrors}

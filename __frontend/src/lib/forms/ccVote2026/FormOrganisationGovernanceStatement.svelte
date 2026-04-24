@@ -5,20 +5,16 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const organisationErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.organisation,
-  );
+  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
 
   const conflictErrors = $derived({
     properties: {
-      conflictOfInterestStatement:
-        organisationErrors?.properties?.conflictOfInterestStatement,
+      conflictOfInterestStatement: organisationErrors?.properties?.conflictOfInterestStatement,
     },
   });
   const contributionsErrors = $derived({
     properties: {
-      contributionsToCardano:
-        organisationErrors?.properties?.contributionsToCardano,
+      contributionsToCardano: organisationErrors?.properties?.contributionsToCardano,
     },
   });
   const motivationErrors = $derived({
@@ -28,26 +24,22 @@
   });
   const decentralisedErrors = $derived({
     properties: {
-      decentralisedGovernanceImportance:
-        organisationErrors?.properties?.decentralisedGovernanceImportance,
+      decentralisedGovernanceImportance: organisationErrors?.properties?.decentralisedGovernanceImportance,
     },
   });
   const constitutionalErrors = $derived({
     properties: {
-      constitutionalInterpretation:
-        organisationErrors?.properties?.constitutionalInterpretation,
+      constitutionalInterpretation: organisationErrors?.properties?.constitutionalInterpretation,
     },
   });
   const perspectiveErrors = $derived({
     properties: {
-      perspectiveYouWouldBring:
-        organisationErrors?.properties?.perspectiveYouWouldBring,
+      perspectiveYouWouldBring: organisationErrors?.properties?.perspectiveYouWouldBring,
     },
   });
   const transparencyErrors = $derived({
     properties: {
-      transparencyApproach:
-        organisationErrors?.properties?.transparencyApproach,
+      transparencyApproach: organisationErrors?.properties?.transparencyApproach,
     },
   });
 </script>
@@ -60,7 +52,7 @@
       bind:value={formData.metaData.organisation.conflictOfInterestStatement}
       label="Conflict of Interest Statement"
       description="Disclosure of financial interests, partnerships, or relationships that may present a conflict."
-      placeholder="Free-text description."
+      placeholder="List any affiliations or financial interests"
       required={false}
       maxLength={LONG_TEXT_MAX}
       validationErrors={conflictErrors}
@@ -75,7 +67,7 @@
       bind:value={formData.metaData.organisation.contributionsToCardano}
       label="Contributions to Cardano"
       description="Specific contributions to the Cardano blockchain, ecosystem, and community."
-      placeholder="Free-text description."
+      placeholder="e.g. Delivered XYZ project, contributed to ecosystem initiatives"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={contributionsErrors}
@@ -90,7 +82,7 @@
       bind:value={formData.metaData.organisation.motivation}
       label="Motivation"
       description="Why the organisation is running for the Constitutional Committee."
-      placeholder="Free-text description."
+      placeholder="Why your organization is applying and what it aims to contribute"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={motivationErrors}
@@ -105,7 +97,7 @@
       bind:value={formData.metaData.organisation.decentralisedGovernanceImportance}
       label="Why is Decentralised Governance Important?"
       description="The organisation's values around decentralised governance."
-      placeholder="Free-text description."
+      placeholder="Your organization’s perspective on decentralization and governance"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={decentralisedErrors}
@@ -114,16 +106,13 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>
-      What are your views on constitutional interpretation, and how would your organisation approach
-      this role?
-    </h3>
+    <h3>How will you approach constitutional interpretation?</h3>
     <Textarea
       id="constitutionalInterpretation"
       bind:value={formData.metaData.organisation.constitutionalInterpretation}
       label="Constitutional familiarity and interpretation"
       description="What are the organisation's views on constitutional interpretation? How would they approach this?"
-      placeholder="Free-text description."
+      placeholder="How your organization will interpret and apply the constitution"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={constitutionalErrors}
@@ -138,7 +127,7 @@
       bind:value={formData.metaData.organisation.perspectiveYouWouldBring}
       label="Perspective You Would Bring"
       description="Unique perspective the organisation would contribute if elected."
-      placeholder="Free-text description."
+      placeholder="Unique strengths, expertise, or viewpoints your organisation brings"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={perspectiveErrors}
@@ -153,7 +142,7 @@
       bind:value={formData.metaData.organisation.transparencyApproach}
       label="Transparency Approach"
       description="How decisions and voting rationale will be communicated to the community."
-      placeholder="Free-text description."
+      placeholder="How your organization will communicate decisions, votes, and reasoning"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={transparencyErrors}

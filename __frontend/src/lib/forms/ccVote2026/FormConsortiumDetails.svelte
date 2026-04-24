@@ -90,37 +90,39 @@
     />
   </section>
 
-  <section class="space-y-1.5">
-    <h3>Who is the primary contact person?</h3>
-    <Input
-      id="contactPerson"
-      bind:value={formData.metaData.consortium.contactPerson}
-      label="Contact person"
-      description="This person represents the consortium and vouches for all members."
-      placeholder="Enter name"
-      required
-      maxLength={100}
-      validationErrors={contactPersonErrors}
-      class="w-full"
-    />
-  </section>
+  <div class="grid gap-6 md:grid-cols-2">
+    <section class="space-y-1.5">
+      <h3>Who is the primary contact person?</h3>
+      <Input
+        id="contactPerson"
+        bind:value={formData.metaData.consortium.contactPerson}
+        label="Contact person"
+        description="This person represents the consortium and vouches for all members."
+        placeholder="Enter name"
+        required
+        maxLength={100}
+        validationErrors={contactPersonErrors}
+        class="w-full"
+      />
+    </section>
 
-  <section class="space-y-1.5">
-    <h3>What is the contact email?</h3>
-    <Input
-      id="contactEmail"
-      bind:value={formData.metaData.consortium.contactEmail}
-      label="Contact email"
-      description="This will be used for official communication and will not be visible to voters."
-      placeholder="Enter email"
-      required
-      maxLength={254}
-      type="email"
-      notPublic
-      validationErrors={emailErrors}
-      class="w-full"
-    />
-  </section>
+    <section class="space-y-1.5">
+      <h3>What is the contact email?</h3>
+      <Input
+        id="contactEmail"
+        bind:value={formData.metaData.consortium.contactEmail}
+        label="Contact email"
+        description="This will be used for official communication and will not be visible to voters."
+        placeholder="Enter email"
+        required
+        maxLength={254}
+        type="email"
+        notPublic
+        validationErrors={emailErrors}
+        class="w-full"
+      />
+    </section>
+  </div>
 
   <section class="flex flex-col gap-3">
     <h3>Add consortium social or public links</h3>

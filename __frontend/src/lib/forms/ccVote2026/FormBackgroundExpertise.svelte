@@ -41,7 +41,7 @@
         bind:value={formData.metaData.organisation.organisationalAreasOfExpertise}
         label="Organisational Areas of Expertise"
         description="For example: governance, law, research, development, finance."
-        placeholder="Free-text description."
+        placeholder="e.g. governance, legal advisory, blockchain development, research"
         required
         maxLength={LONG_TEXT_MAX}
         validationErrors={organisationalAreasErrors}
@@ -56,7 +56,7 @@
         bind:value={formData.metaData.organisation.governanceExperience}
         label="Governance Experience"
         description="Include DAO participation, Catalyst involvement, advisory roles, etc."
-        placeholder="Free-text description."
+        placeholder="e.g. DAO participation, Catalyst proposals, advisory or committee roles"
         required
         maxLength={LONG_TEXT_MAX}
         validationErrors={organisationGovernanceErrors}

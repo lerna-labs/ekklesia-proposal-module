@@ -75,7 +75,7 @@
         </span>
       </Accordion.Trigger>
       <Accordion.Content class="pt-[3px] px-[3px] pb-8">
-        <FormColdCredentials bind:formData {validationErrors} />
+        <FormColdCredentials bind:formData {validationErrors} track="consortium" />
       </Accordion.Content>
     </Accordion.Item>
 

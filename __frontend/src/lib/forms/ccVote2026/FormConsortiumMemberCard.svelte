@@ -153,7 +153,7 @@
         bind:value={member.briefBiography}
         label="Brief biography"
         description="Background and involvement in the ecosystem."
-        placeholder="Background, experience, and involvement in Cardano..."
+        placeholder="Short summary of background and ecosystem involvement"
         required
         maxLength={LONG_TEXT_MAX}
         validationErrors={validationErrorsForField("briefBiography")}
@@ -168,7 +168,7 @@
         bind:value={member.professionalBackground}
         label="Professional background (optional)"
         description="Include relevant fields such as governance, law, technology, finance, or community leadership."
-        placeholder="Law, technology, governance, finance, community management..."
+        placeholder="e.g. legal expert, blockchain developer, governance advisor"
         required={false}
         maxLength={LONG_TEXT_MAX}
         validationErrors={validationErrorsForField("professionalBackground")}
@@ -183,7 +183,7 @@
         bind:value={member.governanceExperience}
         label="Governance experience (optional)"
         description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
-        placeholder="On-chain voting, DAOs, Catalyst, public office..."
+        placeholder="e.g. DAO contributor, Catalyst participant, committee member"
         required={false}
         maxLength={LONG_TEXT_MAX}
         validationErrors={validationErrorsForField("governanceExperience")}
@@ -267,13 +267,13 @@
     </section>
 
     <section class="space-y-1.5 mb-6">
-      <h4>Conflict of interest statement</h4>
+      <h4>Do you have any conflicts of interest to disclose?</h4>
       <Textarea
         id="member-{index}-conflictOfInterestStatement"
         bind:value={member.conflictOfInterestStatement}
         label="Conflict of interest statement"
         description="Include financial interests, affiliations, or roles that could influence decisions."
-        placeholder="Disclose any potential conflicts of interest here..."
+        placeholder="List any affiliations or financial interests"
         required={false}
         maxLength={LONG_TEXT_MAX}
         validationErrors={validationErrorsForField("conflictOfInterestStatement")}
