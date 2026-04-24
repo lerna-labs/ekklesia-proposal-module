@@ -201,6 +201,8 @@
       {voteUrl}
       {currentVersionHref}
       {showComments}
+      {commentCount}
+      {commentsHref}
       {isWithdrawn}
     />
   {:else}

@@ -2,9 +2,10 @@
   import { goto } from "$app/navigation";
   import { Button } from "$lib/components/ui/button";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
-  import { Badge } from "$lib/components/ui/badge";
   import Markdown from "$lib/base/Markdown.svelte";
-  import Comments from "$lib/comments/Comments.svelte";
+  import ProposalPageTitle from "$lib/votes/budget2026/ProposalPageTitle.svelte";
+  import ProposalPageComments from "$lib/votes/budget2026/ProposalPageComments.svelte";
+  import ProposalPageKeyDetails from "./ProposalPageKeyDetails.svelte";
 
   let {
     proposal,
@@ -13,6 +14,8 @@
     voteUrl = "",
     currentVersionHref = null,
     showComments = false,
+    commentCount = null,
+    commentsHref = "",
     isWithdrawn = false,
   } = $props();
 
@@ -24,18 +27,6 @@
     }
   }
 
-  const TRACK_LABELS = {
-    individual: "Individual",
-    organisation: "Organisation",
-    consortium: "Consortium",
-  };
-
-  const trackLabel = $derived.by(() => {
-    const t = proposal?.metaData?.track;
-    return t && TRACK_LABELS[/** @type {keyof typeof TRACK_LABELS} */ (t)]
-      ? TRACK_LABELS[/** @type {keyof typeof TRACK_LABELS} */ (t)]
-      : null;
-  });
 </script>
 
 <div class="bg-white box-shadow-lg shadow-lg">
@@ -55,14 +46,11 @@
       </div>
     {/if}
 
-    <header class="space-y-2">
-      {#if trackLabel}
-        <Badge variant="secondary" class="font-normal">{trackLabel}</Badge>
-      {/if}
-      <h1 class="text-3xl font-semibold tracking-tight">
-        {proposal?.title ?? "Proposal"}
-      </h1>
-    </header>
+    <ProposalPageTitle {proposal} {vote} {commentCount} {commentsHref} {showComments} />
+
+    {#if proposal}
+      <ProposalPageKeyDetails {proposal} {vote} />
+    {/if}
 
     {#if proposal?.summary}
       <section class="prose prose-neutral dark:prose-invert max-w-none">
@@ -73,10 +61,4 @@
   </div>
 </div>
 
-{#if showComments && proposal}
-  <div id="comments" class="w-full bg-slate-100">
-    <div class="container mx-auto max-w-4xl py-8 pb-5 px-4">
-      <Comments proposalId={proposal._id} {proposal} {vote} readOnly={isWithdrawn} />
-    </div>
-  </div>
-{/if}
+<ProposalPageComments {proposal} {vote} {showComments} readOnly={isWithdrawn} />
