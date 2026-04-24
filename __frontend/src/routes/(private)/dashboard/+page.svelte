@@ -32,14 +32,11 @@
   /** Single instant for all policy checks (UTC timeline via Date). */
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
-  const closedSubmissionTitle =
-    "The submission period for this vote has ended (submission end date in UTC).";
+  const closedSubmissionTitle = "The submission period for this vote has ended (submission end date in UTC).";
   const closedReviewTitle =
     "The review period for this vote has ended; editing is not available (review end date in UTC).";
-  const closedWithdrawTitle =
-    "Proposer withdrawal is not allowed after the vote review period has ended.";
-  const missingVoteSlugTitle =
-    "Cannot create a new proposal: this vote has no URL slug (contact an administrator).";
+  const closedWithdrawTitle = "Proposer withdrawal is not allowed after the vote review period has ended.";
+  const missingVoteSlugTitle = "Cannot create a new proposal: this vote has no URL slug (contact an administrator).";
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
@@ -120,10 +117,9 @@
 
     {#if showMyProposals}
       {#each voteSections as { vote: sectionVote, proposals } (sectionVote._id)}
+        {@const createActionLabel = sectionVote.form === "ccVote2026" ? "New Application" : "New Proposal"}
         <Card.Root>
-          <Card.Header
-            class="flex flex-row flex-wrap items-center justify-between gap-3"
-          >
+          <Card.Header class="flex flex-row flex-wrap items-center justify-between gap-3">
             <Card.Title>
               {sectionVote.title ?? sectionVote.name ?? sectionVote._id}
               <span class="text-muted-foreground font-normal">
@@ -135,35 +131,35 @@
                 variant="outline"
                 class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
                 href="/dashboard/{sectionVote.slug}/new"
-                aria-label="New proposal"
+                aria-label={createActionLabel}
                 size="sm"
               >
                 <PlusIcon class="size-4" />
-                New proposal
+                {createActionLabel}
               </Button>
             {:else if !sectionVote.slug}
               <Button
                 variant="outline"
                 class="add-item-btn w-fit gap-1 text-xs opacity-60"
                 disabled
-                aria-label="New proposal unavailable — vote has no slug"
+                aria-label={`${createActionLabel} unavailable — vote has no slug`}
                 title={missingVoteSlugTitle}
                 size="sm"
               >
                 <PlusIcon class="size-4" />
-                New proposal
+                {createActionLabel}
               </Button>
             {:else}
               <Button
                 variant="outline"
                 class="add-item-btn w-fit gap-1 text-xs opacity-60"
                 disabled
-                aria-label="New proposal unavailable — submission period ended"
+                aria-label={`${createActionLabel} unavailable — submission period ended`}
                 title={closedSubmissionTitle}
                 size="sm"
               >
                 <PlusIcon class="size-4" />
-                New proposal
+                {createActionLabel}
               </Button>
             {/if}
           </Card.Header>
@@ -177,17 +173,11 @@
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="border-b border-border">
-                      <th class="text-left font-medium py-3 pl-0 pr-4 align-middle min-w-0">
-                        Title
-                      </th>
-                      <th
-                        class="text-left font-medium py-3 px-4 w-[1%] whitespace-nowrap align-middle"
-                      >
+                      <th class="text-left font-medium py-3 pl-0 pr-4 align-middle min-w-0">Title</th>
+                      <th class="text-left font-medium py-3 px-4 w-[1%] whitespace-nowrap align-middle">
                         Last updated
                       </th>
-                      <th
-                        class="text-right font-medium py-3 pr-0 pl-4 w-[1%] whitespace-nowrap align-middle"
-                      >
+                      <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%] whitespace-nowrap align-middle">
                         Actions
                       </th>
                     </tr>
@@ -195,13 +185,10 @@
                   <tbody>
                     {#each proposals as proposal, i (proposal._id)}
                       {@const slug = sectionVote.slug}
-                      {@const editHref = slug
-                        ? `/dashboard/${slug}/${proposal._id}`
-                        : null}
+                      {@const editHref = slug ? `/dashboard/${slug}/${proposal._id}` : null}
                       {@const rowVote = voteForProposalRow(proposal, [sectionVote])}
                       {@const isWithdrawn =
-                        proposal.status === "withdrawnByProposer" ||
-                        proposal.status === "withdrawnByAdmin"}
+                        proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
                       {@const canEdit =
                         !isWithdrawn &&
                         editHref &&
@@ -212,20 +199,11 @@
                             ? liveResubmitOpen(rowVote, policyNow)
                             : false)}
                       {@const canWithdrawLive =
-                        proposal.status === "live" &&
-                        rowVote &&
-                        proposerWithdrawOpen(rowVote, policyNow)}
-                      {@const editLockedTitle =
-                        proposal.status === "draft"
-                          ? closedSubmissionTitle
-                          : closedReviewTitle}
+                        proposal.status === "live" && rowVote && proposerWithdrawOpen(rowVote, policyNow)}
+                      {@const editLockedTitle = proposal.status === "draft" ? closedSubmissionTitle : closedReviewTitle}
                       {@const viewUrl = viewHref(proposal, sectionVote)}
                       {@const isLastRow = i === proposals.length - 1}
-                      <tr
-                        class="border-b hover:bg-muted/50 {isLastRow
-                          ? 'border-border'
-                          : 'border-border/50'}"
-                      >
+                      <tr class="border-b hover:bg-muted/50 {isLastRow ? 'border-border' : 'border-border/50'}">
                         <td class="py-3 pl-0 pr-4 text-left align-middle min-w-0">
                           <div class="flex flex-wrap items-center gap-2">
                             {#if isWithdrawn}
@@ -233,17 +211,11 @@
                                 {displayTitle(proposal)}
                               </span>
                             {:else if canEdit && editHref}
-                              <a
-                                href={editHref}
-                                class="text-primary hover:underline font-medium"
-                              >
+                              <a href={editHref} class="text-primary hover:underline font-medium">
                                 {displayTitle(proposal)}
                               </a>
                             {:else if editHref}
-                              <span
-                                class="font-medium text-muted-foreground"
-                                title={editLockedTitle}
-                              >
+                              <span class="font-medium text-muted-foreground" title={editLockedTitle}>
                                 {displayTitle(proposal)}
                               </span>
                             {:else}
@@ -256,16 +228,14 @@
                                 type="button"
                                 class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-destructive text-white cursor-pointer hover:bg-destructive/90"
                                 aria-label="View withdrawal details"
-                                onclick={() =>
-                                  openWithdrawalDetailsDialog(proposal)}
+                                onclick={() => openWithdrawalDetailsDialog(proposal)}
                               >
-                                {proposal.status === "withdrawnByAdmin"
-                                  ? "Withdrawn by Admin"
-                                  : "Withdrawn"}
+                                {proposal.status === "withdrawnByAdmin" ? "Withdrawn by Admin" : "Withdrawn"}
                               </button>
                             {:else}
                               <span
-                                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium text-white {proposal.status === 'live'
+                                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium text-white {proposal.status ===
+                                'live'
                                   ? 'bg-green-600'
                                   : 'bg-black'}"
                               >
@@ -274,14 +244,10 @@
                             {/if}
                           </div>
                         </td>
-                        <td
-                          class="py-3 px-4 w-[1%] text-muted-foreground whitespace-nowrap align-middle"
-                        >
+                        <td class="py-3 px-4 w-[1%] text-muted-foreground whitespace-nowrap align-middle">
                           {formatUpdatedAt(proposal.updatedAt)}
                         </td>
-                        <td
-                          class="py-3 pr-0 pl-4 w-[1%] whitespace-nowrap text-right align-middle"
-                        >
+                        <td class="py-3 pr-0 pl-4 w-[1%] whitespace-nowrap text-right align-middle">
                           <div class="inline-flex items-center justify-end gap-1">
                             {#if isWithdrawn}
                               <Button
@@ -406,9 +372,7 @@
             <Card.Title>Votes</Card.Title>
           </Card.Header>
           <Card.Content>
-            <p class="text-center text-muted-foreground">
-              There are no votes to show yet.
-            </p>
+            <p class="text-center text-muted-foreground">There are no votes to show yet.</p>
           </Card.Content>
         </Card.Root>
       {/each}
@@ -433,10 +397,7 @@
                     </Pagination.Item>
                   {:else}
                     <Pagination.Item>
-                      <Pagination.Link
-                        page={p}
-                        isActive={currentPage === p.value}
-                      >
+                      <Pagination.Link page={p} isActive={currentPage === p.value}>
                         {p.value}
                       </Pagination.Link>
                     </Pagination.Item>
@@ -454,18 +415,7 @@
   </div>
 </div>
 
-<ProposalDelete
-  bind:open={deleteDialogOpen}
-  proposal={deleteProposal}
-  onSuccess={() => invalidateAll()}
-/>
-<ProposalWithdrawal
-  bind:open={withdrawDialogOpen}
-  proposal={withdrawProposal}
-  onSuccess={() => invalidateAll()}
-/>
+<ProposalDelete bind:open={deleteDialogOpen} proposal={deleteProposal} onSuccess={() => invalidateAll()} />
+<ProposalWithdrawal bind:open={withdrawDialogOpen} proposal={withdrawProposal} onSuccess={() => invalidateAll()} />
 
-<ProposalWithdrawn
-  bind:open={withdrawalDetailsDialogOpen}
-  proposal={withdrawalDetailsDialogProposal}
-/>
+<ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} proposal={withdrawalDetailsDialogProposal} />
