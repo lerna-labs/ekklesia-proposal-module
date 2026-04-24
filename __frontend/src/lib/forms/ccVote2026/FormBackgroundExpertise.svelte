@@ -4,20 +4,14 @@
   const LONG_TEXT_MAX = 2000;
 
   /** @type {"individual" | "organisation"} */
-  let { formData = $bindable(), validationErrors, track = "individual" } =
-    $props();
+  let { formData = $bindable(), validationErrors, track = "individual" } = $props();
 
-  const individualErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.individual,
-  );
-  const organisationErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.organisation,
-  );
+  const individualErrors = $derived(validationErrors?.properties?.metaData?.properties?.individual);
+  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
 
   const professionalErrors = $derived({
     properties: {
-      professionalBackground:
-        individualErrors?.properties?.professionalBackground,
+      professionalBackground: individualErrors?.properties?.professionalBackground,
     },
   });
   const individualGovernanceErrors = $derived({
@@ -28,8 +22,7 @@
 
   const organisationalAreasErrors = $derived({
     properties: {
-      organisationalAreasOfExpertise:
-        organisationErrors?.properties?.organisationalAreasOfExpertise,
+      organisationalAreasOfExpertise: organisationErrors?.properties?.organisationalAreasOfExpertise,
     },
   });
   const organisationGovernanceErrors = $derived({
@@ -78,7 +71,7 @@
         bind:value={formData.metaData.individual.professionalBackground}
         label="Professional Background"
         description="Include relevant fields such as governance, law, technology, finance, or community leadership."
-        placeholder="Free-text description."
+        placeholder="e.g. 10+ years in fintech, governance advisory, and blockchain delivery"
         required
         maxLength={LONG_TEXT_MAX}
         validationErrors={professionalErrors}
@@ -93,7 +86,7 @@
         bind:value={formData.metaData.individual.governanceExperience}
         label="Governance Experience"
         description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
-        placeholder="Free-text description."
+        placeholder="e.g. Catalyst participant, DAO contributor, committee member"
         required
         maxLength={LONG_TEXT_MAX}
         validationErrors={individualGovernanceErrors}

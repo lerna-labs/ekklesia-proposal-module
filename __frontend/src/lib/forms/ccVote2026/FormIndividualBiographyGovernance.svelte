@@ -5,9 +5,7 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const individualErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.individual,
-  );
+  const individualErrors = $derived(validationErrors?.properties?.metaData?.properties?.individual);
 
   const briefBiographyErrors = $derived({
     properties: {
@@ -16,14 +14,12 @@
   });
   const conflictErrors = $derived({
     properties: {
-      conflictOfInterestStatement:
-        individualErrors?.properties?.conflictOfInterestStatement,
+      conflictOfInterestStatement: individualErrors?.properties?.conflictOfInterestStatement,
     },
   });
   const contributionsErrors = $derived({
     properties: {
-      contributionsToCardano:
-        individualErrors?.properties?.contributionsToCardano,
+      contributionsToCardano: individualErrors?.properties?.contributionsToCardano,
     },
   });
   const motivationErrors = $derived({
@@ -33,26 +29,22 @@
   });
   const decentralisedErrors = $derived({
     properties: {
-      decentralisedGovernanceImportance:
-        individualErrors?.properties?.decentralisedGovernanceImportance,
+      decentralisedGovernanceImportance: individualErrors?.properties?.decentralisedGovernanceImportance,
     },
   });
   const constitutionalErrors = $derived({
     properties: {
-      constitutionalInterpretation:
-        individualErrors?.properties?.constitutionalInterpretation,
+      constitutionalInterpretation: individualErrors?.properties?.constitutionalInterpretation,
     },
   });
   const perspectiveErrors = $derived({
     properties: {
-      perspectiveYouWouldBring:
-        individualErrors?.properties?.perspectiveYouWouldBring,
+      perspectiveYouWouldBring: individualErrors?.properties?.perspectiveYouWouldBring,
     },
   });
   const transparencyErrors = $derived({
     properties: {
-      transparencyApproach:
-        individualErrors?.properties?.transparencyApproach,
+      transparencyApproach: individualErrors?.properties?.transparencyApproach,
     },
   });
 </script>
@@ -65,7 +57,7 @@
       bind:value={formData.metaData.individual.briefBiography}
       label="Brief Biography"
       description="General background, expertise, and Cardano ecosystem history."
-      placeholder="Free-text description."
+      placeholder="Short summary of your background, expertise, and ecosystem involvement"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={briefBiographyErrors}
@@ -80,7 +72,7 @@
       bind:value={formData.metaData.individual.conflictOfInterestStatement}
       label="Conflict of Interest Statement"
       description="Disclosure of financial interests, organisational roles, or relationships that may present a conflict."
-      placeholder="Free-text description."
+      placeholder="List any affiliations, roles, or financial interests"
       required={false}
       maxLength={LONG_TEXT_MAX}
       validationErrors={conflictErrors}
@@ -95,7 +87,7 @@
       bind:value={formData.metaData.individual.contributionsToCardano}
       label="Contributions to Cardano"
       description="Specific projects, roles, initiatives, or community activities to date."
-      placeholder="Free-text description."
+      placeholder="e.g. Led XYZ project, active DRep, contributed to open-source tools"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={contributionsErrors}
@@ -110,7 +102,7 @@
       bind:value={formData.metaData.individual.motivation}
       label="Motivation"
       description="Why the candidate is running for the Constitutional Committee."
-      placeholder="Free-text description."
+      placeholder="Why you are running and what you aim to contribute"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={motivationErrors}
@@ -125,7 +117,7 @@
       bind:value={formData.metaData.individual.decentralisedGovernanceImportance}
       label="Why is Decentralised Governance Important?"
       description="Beliefs and values around decentralised governance."
-      placeholder="Free-text description."
+      placeholder="Your views on decentralization and its importance in governance"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={decentralisedErrors}
@@ -134,16 +126,13 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>
-      What are your views on constitutional interpretation, and how would you approach
-      this role?
-    </h3>
+    <h3>What are your views on constitutional interpretation, and how would you approach this role?</h3>
     <Textarea
       id="constitutionalInterpretation"
       bind:value={formData.metaData.individual.constitutionalInterpretation}
       label="Constitutional familiarity and interpretation"
       description="What are the candidate’s views on constitutional interpretation? How would they approach this?"
-      placeholder="Free-text description."
+      placeholder="How you read, interpret, and apply the constitution in decisions"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={constitutionalErrors}
@@ -158,7 +147,7 @@
       bind:value={formData.metaData.individual.perspectiveYouWouldBring}
       label="Perspective You Would Bring"
       description="Unique skills, viewpoints, or contributions the candidate would offer in interpreting the Constitution if elected."
-      placeholder="Free-text description."
+      placeholder="Unique skills, experience, or viewpoints you bring to the committee"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={perspectiveErrors}
@@ -173,7 +162,7 @@
       bind:value={formData.metaData.individual.transparencyApproach}
       label="Transparency Approach"
       description="How the candidate will communicate decisions and voting rationale to the community."
-      placeholder="Free-text description."
+      placeholder="How you will communicate decisions, votes, and reasoning to the community"
       required
       maxLength={LONG_TEXT_MAX}
       validationErrors={transparencyErrors}

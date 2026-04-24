@@ -129,31 +129,33 @@
     />
   </section>
 
-  <section class="space-y-1.5">
-    <h3>What is your Pool ID? (if applicable)</h3>
-    <Input
-      id="poolId"
-      bind:value={formData.metaData.individual.poolId}
-      label="Pool ID"
-      description="Enter your stake pool ID if you operate or represent one. On-chain identifier (starts with pool1)."
-      placeholder="pool1…"
-      validationErrors={poolErrors}
-      class="w-full"
-    />
-  </section>
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <section class="space-y-1.5">
+      <h3>What is your Pool ID? (if applicable)</h3>
+      <Input
+        id="poolId"
+        bind:value={formData.metaData.individual.poolId}
+        label="Pool ID"
+        description="Enter your stake pool ID if you operate or represent one. On-chain identifier (starts with pool1)."
+        placeholder="pool1…"
+        validationErrors={poolErrors}
+        class="w-full"
+      />
+    </section>
 
-  <section class="space-y-1.5">
-    <h3>What is your DRep ID? (if applicable)</h3>
-    <Input
-      id="drepId"
-      bind:value={formData.metaData.individual.drepId}
-      label="DRep ID"
-      description="Enter your DRep ID or script hash if you are a registered delegate. Identifier typically starts with drep1."
-      placeholder="drep1…"
-      validationErrors={drepErrors}
-      class="w-full"
-    />
-  </section>
+    <section class="space-y-1.5">
+      <h3>What is your DRep ID? (if applicable)</h3>
+      <Input
+        id="drepId"
+        bind:value={formData.metaData.individual.drepId}
+        label="DRep ID"
+        description="Enter your DRep ID or script hash if you are a registered delegate. Identifier typically starts with drep1."
+        placeholder="drep1…"
+        validationErrors={drepErrors}
+        class="w-full"
+      />
+    </section>
+  </div>
 
   <section class="flex flex-col gap-3">
     <h3>Add your social or professional links</h3>
