@@ -126,7 +126,7 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>What are your views on constitutional interpretation, and how would you approach this role?</h3>
+    <h3>How will you approach constitutional interpretation?</h3>
     <Textarea
       id="constitutionalInterpretation"
       bind:value={formData.metaData.individual.constitutionalInterpretation}
