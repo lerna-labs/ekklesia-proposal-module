@@ -203,11 +203,6 @@ function trimStr(val) {
   return typeof val === "string" ? val.trim() : "";
 }
 
-/** @param {unknown} val */
-function normalizeTxHash(val) {
-  return String(val ?? "").trim().toLowerCase();
-}
-
 const individualIdentityLiveSchema = z.object({
   fullNameOrAlias: z
     .string()
@@ -716,7 +711,6 @@ const consortiumMembersArraySchema = z
 /**
  * @param {{
  *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
- *   voteDepositOptions?: { treasuryDonation?: number | null },
  * }} [context]
  */
 function liveProposalBodySchemaForContext(context = {}) {
@@ -750,9 +744,6 @@ function liveProposalBodySchemaForContext(context = {}) {
       const existing = context?.existingProposal;
       const storedMeta = existing?.metaData ?? {};
       const isLiveResubmit = existing?.status === "live";
-      const treasuryRequired =
-        context?.voteDepositOptions?.treasuryDonation != null;
-
       if (existing?.status === "live") {
         const storedTrack = storedMeta.track;
         const storedParsed = trackEnum.safeParse(storedTrack);
@@ -925,35 +916,6 @@ function liveProposalBodySchemaForContext(context = {}) {
         }
       }
 
-      if (treasuryRequired) {
-        if (md.treasuryDonationConfirmed !== true) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["metaData", "treasuryDonationConfirmed"],
-            message: "You must confirm the treasury donation to submit",
-          });
-        }
-        const bodyTx = normalizeTxHash(md.treasuryDonationTxHash);
-        const storedTx = normalizeTxHash(storedMeta.treasuryDonationTxHash);
-        if (isLiveResubmit && storedTx) {
-          if (bodyTx !== storedTx) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              path: ["metaData", "treasuryDonationTxHash"],
-              message:
-                "Treasury donation verification hash cannot be changed after submission.",
-            });
-          }
-        } else if (!bodyTx) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            path: ["metaData", "treasuryDonationTxHash"],
-            message:
-              "Treasury donation verification hash is required to submit",
-          });
-        }
-      }
-
       const da = md.declarationAgreement;
       if (da?.accuracyPublicVisibilityConsent !== true) {
         ctx.addIssue({
@@ -1002,8 +964,7 @@ const draftProposalBodySchema = z.object({
  * @param {unknown} body - Raw request body
  * @param {{
  *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
- *   voteDepositOptions?: { treasuryDonation?: number | null },
- * }} [context] - On PUT, include stored proposal snapshot. Pass `voteDepositOptions` from the vote so treasury rules match the API.
+ * }} [context] - On PUT, include stored proposal snapshot.
  * @returns {{ success: true, data } | { success: false, error: z.ZodError }}
  */
 export function validate(body, context = {}) {

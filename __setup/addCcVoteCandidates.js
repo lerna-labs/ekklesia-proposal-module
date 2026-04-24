@@ -48,8 +48,6 @@ function buildDeclarationAgreement(track) {
 function buildCommonMetaData(track, index) {
   return {
     track,
-    treasuryDonationTxHash: `txhash-${String(index + 1).padStart(2, "0")}-ccvote2026`,
-    treasuryDonationConfirmed: true,
     coldCredentialHash: `cold-credential-hash-${String(index + 1).padStart(2, "0")}`,
     coldCredentialType: index % 2 === 0 ? "keyCredential" : "scriptCredential",
     declarationAgreement: buildDeclarationAgreement(track),

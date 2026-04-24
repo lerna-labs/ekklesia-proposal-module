@@ -31,7 +31,6 @@ const DAYS_REVIEW = 14;
 const DAYS_VOTING = 30;
 
 const DEPOSIT_OPTIONS = {
-  treasuryDonation: 10_000_000,
   depositAddress: "",
   depositAmount: 0,
 };

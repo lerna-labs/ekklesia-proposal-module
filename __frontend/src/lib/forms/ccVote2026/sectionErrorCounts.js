@@ -74,11 +74,7 @@ export const CC_VOTE_SECTION_PATHS = {
       ["metaData", "coldCredentialHash"],
       ["metaData", "coldCredentialType"],
     ],
-    "section-5": [
-      ["metaData", "treasuryDonationTxHash"],
-      ["metaData", "treasuryDonationConfirmed"],
-    ],
-    "section-6": [["metaData", "declarationAgreement"]],
+    "section-5": [["metaData", "declarationAgreement"]],
   },
   organisation: {
     "section-1": [
@@ -112,11 +108,7 @@ export const CC_VOTE_SECTION_PATHS = {
       ["metaData", "coldCredentialHash"],
       ["metaData", "coldCredentialType"],
     ],
-    "section-5": [
-      ["metaData", "treasuryDonationTxHash"],
-      ["metaData", "treasuryDonationConfirmed"],
-    ],
-    "section-6": [["metaData", "declarationAgreement"]],
+    "section-5": [["metaData", "declarationAgreement"]],
   },
   consortium: {
     "section-1": [
@@ -144,11 +136,7 @@ export const CC_VOTE_SECTION_PATHS = {
       ["metaData", "coldCredentialType"],
     ],
     "section-4": [["metaData", "consortium", "members"]],
-    "section-5": [
-      ["metaData", "treasuryDonationTxHash"],
-      ["metaData", "treasuryDonationConfirmed"],
-    ],
-    "section-6": [["metaData", "declarationAgreement"]],
+    "section-5": [["metaData", "declarationAgreement"]],
   },
 };
 

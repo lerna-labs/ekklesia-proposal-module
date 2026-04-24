@@ -24,8 +24,6 @@
   function createDefaultMetaData() {
     return {
       track: "",
-      treasuryDonationTxHash: "",
-      treasuryDonationConfirmed: false,
       coldCredentialHash: "",
       coldCredentialType: "",
       declarationAgreement: {
@@ -159,10 +157,6 @@
         };
       })(),
     };
-    if (typeof md.treasuryDonationTxHash === "string") {
-      formData.metaData.treasuryDonationTxHash = md.treasuryDonationTxHash;
-    }
-    formData.metaData.treasuryDonationConfirmed = md.treasuryDonationConfirmed === true;
     const daIn = md.declarationAgreement;
     const daDefault = createDefaultMetaData().declarationAgreement;
     formData.metaData.declarationAgreement = {
@@ -185,8 +179,6 @@
     if (formData.title?.trim()) return true;
     if (formData.summary?.trim()) return true;
     const md = formData.metaData ?? {};
-    if (typeof md.treasuryDonationTxHash === "string" && md.treasuryDonationTxHash.trim()) return true;
-    if (md.treasuryDonationConfirmed === true) return true;
     if (typeof md.coldCredentialHash === "string" && md.coldCredentialHash.trim()) return true;
     if (typeof md.coldCredentialType === "string" && md.coldCredentialType.trim()) return true;
     const da = md.declarationAgreement;
@@ -235,7 +227,6 @@
 {#if showDisclaimerModal && !disclaimerAcknowledged}
   <CcVoteLegalDisclaimerModal
     bind:open={openDisclaimerModal}
-    treasuryDonationLovelace={vote?.depositOptions?.treasuryDonation ?? 0}
     onContinue={() => {
       disclaimerAcknowledged = true;
       openDisclaimerModal = false;
@@ -259,11 +250,11 @@
       </div>
 
       {#if formData.metaData.track === "individual"}
-        <FormTrackIndividual bind:formData {proposal} {validationErrors} />
+        <FormTrackIndividual bind:formData {validationErrors} />
       {:else if formData.metaData.track === "organisation"}
-        <FormTrackOrganisation bind:formData {proposal} {validationErrors} />
+        <FormTrackOrganisation bind:formData {validationErrors} />
       {:else if formData.metaData.track === "consortium"}
-        <FormTrackConsortium bind:formData {proposal} {validationErrors} />
+        <FormTrackConsortium bind:formData {validationErrors} />
       {/if}
     </div>
 

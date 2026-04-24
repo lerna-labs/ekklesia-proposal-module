@@ -5,14 +5,13 @@
   import FormBackgroundExpertise from "./FormBackgroundExpertise.svelte";
   import FormOrganisationGovernanceStatement from "./FormOrganisationGovernanceStatement.svelte";
   import FormColdCredentials from "./FormColdCredentials.svelte";
-  import FormTreasuryDonation from "./FormTreasuryDonation.svelte";
   import FormDeclarationAgreement from "./FormDeclarationAgreement.svelte";
   import {
     computeCcVoteSectionErrorCounts,
     errorCountLabel,
   } from "./sectionErrorCounts.js";
 
-  let { formData = $bindable(), proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const sectionErrorCounts = $derived.by(() =>
     computeCcVoteSectionErrorCounts(validationErrors, "organisation"),
@@ -23,7 +22,6 @@
     "section-2",
     "section-3",
     "section-4",
-    "section-5",
   ]);
 </script>
 
@@ -101,21 +99,6 @@
       </Accordion.Content>
     </Accordion.Item>
 
-    <Accordion.Item value="section-5" id="organisation-treasury-donation" class="last:border-b">
-      <Accordion.Trigger level={2} class="section-title">
-        <span class="flex items-center gap-2 mb-0">
-          5. Treasury Donation Verification
-          {#if sectionErrorCounts["section-5"] > 0}
-            <Badge variant="destructive">
-              {errorCountLabel(sectionErrorCounts["section-5"])}
-            </Badge>
-          {/if}
-        </span>
-      </Accordion.Trigger>
-      <Accordion.Content class="pt-[3px] px-[3px] pb-8">
-        <FormTreasuryDonation bind:formData {proposal} {validationErrors} />
-      </Accordion.Content>
-    </Accordion.Item>
   </Accordion.Root>
 
   <div
@@ -124,10 +107,10 @@
   >
     <div class="section-title pb-2">
       <h2 class="flex items-center gap-2 mb-0">
-        6. Declaration &amp; Agreement
-        {#if sectionErrorCounts["section-6"] > 0}
+        5. Declaration &amp; Agreement
+        {#if sectionErrorCounts["section-5"] > 0}
           <Badge variant="destructive">
-            {errorCountLabel(sectionErrorCounts["section-6"])}
+            {errorCountLabel(sectionErrorCounts["section-5"])}
           </Badge>
         {/if}
       </h2>

@@ -4,13 +4,11 @@ import dotenv from "dotenv";
 import { readDrepId, login } from "../helpers/session.js";
 import {
   getTreasuryDonationKeysDir,
-  getTreasuryDonationUserAddress,
   getOtherStakeKeysDir,
 } from "../helpers/stakeKeys.js";
 import { sanitizeMetaDataForLiveSubmit } from "../helpers/sanitizeMetaDataForLiveSubmit.js";
 import { connect, disconnect } from "../helpers/testkitMongo.js";
 import { ensureTestkitVote } from "../helpers/testVote.js";
-import { resolveVoteAndLiveProposal } from "../helpers/testProposal.js";
 import { Proposal } from "../../schema/Proposal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -104,7 +102,7 @@ async function cleanupProposalLineage(createdIds) {
   });
 }
 
-describe("Proposal treasury donation hash validation", () => {
+describe("Budget vote treasury donation hash validation", () => {
   let voteId;
   let proposerId;
   let proposerSession;
@@ -113,8 +111,6 @@ describe("Proposal treasury donation hash validation", () => {
 
   beforeAll(async () => {
     requireTreasuryHash();
-
-    const resolved = await resolveVoteAndLiveProposal(API_BASE_URL);
     await connect();
     const normalizedHash = TREASURY_HASH.toLowerCase();
     const hashAlreadyUsed = await Proposal.findOne({
@@ -131,13 +127,22 @@ describe("Proposal treasury donation hash validation", () => {
       );
     }
 
-    liveTemplateProposal = await Proposal.findById(resolved.proposalId).lean();
-    if (!liveTemplateProposal) {
-      throw new Error("Could not resolve a live proposal template for treasury hash validation tests.");
-    }
-
     const { vote } = await ensureTestkitVote();
+    if (vote?.form !== "budget2026") {
+      throw new Error(
+        `Treasury hash validation test expects budget2026 vote form, got "${vote?.form ?? "unknown"}".`,
+      );
+    }
     voteId = vote._id;
+    liveTemplateProposal = await Proposal.findOne({
+      voteId: vote._id,
+      status: { $in: ["live", "draft"] },
+    }).lean();
+    if (!liveTemplateProposal) {
+      throw new Error(
+        "No template proposal found for testkit budget vote. Seed a proposal before running treasury hash validation tests.",
+      );
+    }
     proposerId = readDrepId(KEYS_TREASURY_USER);
     proposerSession = await login(API_BASE_URL, { keysDir: KEYS_TREASURY_USER });
     otherUserSession = await login(API_BASE_URL, { keysDir: KEYS_OTHER_STAKE });
