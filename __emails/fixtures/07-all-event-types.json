@@ -36,7 +36,7 @@
           "url": "https://ekklesia.example/vote/cc-2025-interim/proposal/northern-technical",
           "events": [
             { "type": "profile_withdrawn", "timestamp": "2026-04-20 18:22 UTC", "reason": "Candidate requested withdrawal; treasury deposit has been refunded." },
-            { "type": "results_published", "timestamp": "2026-04-20 23:30 UTC" }
+            { "type": "results_published", "timestamp": "2026-04-20 23:30 UTC", "resultsUrl": "https://ekklesia.example/vote/cc-2025-interim/results" }
           ]
         }
       ]

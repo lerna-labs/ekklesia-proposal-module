@@ -87,7 +87,7 @@
           "title": "Ledger performance audit",
           "url": "https://ekklesia.example/vote/treasury-round-12/proposal/ledger-performance-audit",
           "events": [
-            { "type": "results_published", "timestamp": "2026-04-20 23:59 UTC" }
+            { "type": "results_published", "timestamp": "2026-04-20 23:59 UTC", "resultsUrl": "https://ekklesia.example/vote/treasury-round-12/results" }
           ]
         }
       ]
