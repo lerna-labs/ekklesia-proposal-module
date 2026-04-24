@@ -11,7 +11,7 @@
     Confirm the declarations below before submitting your proposal. These must be confirmed on every submit or
     re-submit.
   </p>
-  <div class="space-y-3">
+  <div class="space-y-6">
     <section>
       <h3>Accuracy &amp; Public Visibility Consent</h3>
       <Checkbox
@@ -42,6 +42,26 @@
 
     <section>
       <h3>Terms &amp; Conditions Agreement</h3>
+      <p class="text-sm text-muted-foreground mb-2 mt-2">
+        The candidate agrees to the
+        <a
+          class="link font-medium"
+          href="https://docs.hydra-voting.intersectmbo.org/cc-elections/guidelines-for-participation"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Intersect CC Election Guidelines for Participation
+        </a>
+        and
+        <a
+          class="link font-medium"
+          href="https://docs.intersectmbo.org/intersect-knowledge-base/legal/policies-and-conditions/intersect-members-policies/code-of-conduct"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Code of Conduct
+        </a>
+      </p>
       <Checkbox
         id="termsAndConditionsAgreement"
         bind:value={formData.metaData.declarationAgreement.termsAndConditionsAgreement}
