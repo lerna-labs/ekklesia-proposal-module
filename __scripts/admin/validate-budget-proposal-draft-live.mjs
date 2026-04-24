@@ -3,21 +3,18 @@
  * Run budget2026 validation on a proposal JSON twice: as draft, then as live.
  * Accepts a Mongo export (Extended JSON) or a plain object with title/summary/metaData/voteId.
  *
- * Usage:
- *   node scripts/validate-budget-proposal-draft-live.mjs <path-to.json>
- *   node scripts/validate-budget-proposal-draft-live.mjs <proposalId>
+ * Usage (from repo root):
+ *   node __scripts/admin/validate-budget-proposal-draft-live.mjs <path-to.json>
+ *   node __scripts/admin/validate-budget-proposal-draft-live.mjs <proposalId>
  *       (reads ./<proposalId>.json from the current working directory, same as import-proposal.mjs)
  */
 
 import { existsSync, readFileSync } from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import { EJSON } from "bson";
 import { z } from "zod";
 
-import { validate } from "../validation/budget2026/validationScript.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { validate } from "../../validation/budget2026/validationScript.js";
 
 function parseArgs(argv) {
   const args = argv.slice(2);
@@ -34,7 +31,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/validate-budget-proposal-draft-live.mjs <json-path|proposalId>
+  console.log(`Usage: node __scripts/admin/validate-budget-proposal-draft-live.mjs <json-path|proposalId>
 
 Runs validation/budget2026 validate() with status "draft", then with status "live".
 

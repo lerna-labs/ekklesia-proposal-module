@@ -19,7 +19,7 @@ MongoDB / local dev helpers. Most load `.env.development` from the repo root (se
 
 ## `admin/`
 
-Run from repo root, e.g. `node __scripts/admin/export-proposal.mjs` (file headers may still say `scripts/`).
+Run from repo root, e.g. `node __scripts/admin/export-proposal.mjs <proposalId>`.
 
 | Script | Purpose |
 |--------|---------|

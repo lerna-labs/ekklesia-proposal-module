@@ -9,9 +9,9 @@
  *
  * Reads ./<proposalId>.json in the current working directory (same convention as export).
  *
- * Usage:
- *   node scripts/import-proposal.mjs <proposalId>
- *   node scripts/import-proposal.mjs <proposalId> --env production
+ * Usage (from repo root):
+ *   node __scripts/admin/import-proposal.mjs <proposalId>
+ *   node __scripts/admin/import-proposal.mjs <proposalId> --env production
  */
 
 import { existsSync, readFileSync } from "fs";
@@ -22,7 +22,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { EJSON } from "bson";
 
-import { Proposal } from "../schema/Proposal.js";
+import { Proposal } from "../../schema/Proposal.js";
 
 /**
  * Set the proposer id (stake or DRep Bech32) used for every import.
@@ -31,7 +31,7 @@ import { Proposal } from "../schema/Proposal.js";
 const IMPORT_PROPOSER_ID = "stake_test1uqwcrkr4chst8xnk5se4442fz5ku5ekql644zew5l5uwswgf643wf";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(__dirname, "../..");
 
 mongoose.set("strictQuery", true);
 
@@ -151,7 +151,7 @@ async function resolveEnvProfile(parsedEnv) {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/import-proposal.mjs <proposalId> [options]
+  console.log(`Usage: node __scripts/admin/import-proposal.mjs <proposalId> [options]
 
 Reads ./<proposalId>.json (current working directory), replaces proposerId with the
 hardcoded IMPORT_PROPOSER_ID in this script, then upserts the proposal in MongoDB.
@@ -178,7 +178,7 @@ function assertProposerConfigured() {
   const id = typeof IMPORT_PROPOSER_ID === "string" ? IMPORT_PROPOSER_ID.trim() : "";
   if (!id || id === "REPLACE_ME_WITH_YOUR_STAKE_ID") {
     console.error(
-      "Set IMPORT_PROPOSER_ID in scripts/import-proposal.mjs to your stake/dRep Bech32 id (replace the placeholder).",
+      "Set IMPORT_PROPOSER_ID in __scripts/admin/import-proposal.mjs to your stake/dRep Bech32 id (replace the placeholder).",
     );
     process.exit(1);
   }

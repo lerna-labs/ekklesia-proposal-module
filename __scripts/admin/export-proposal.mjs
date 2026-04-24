@@ -12,9 +12,9 @@
  *
  * Writes to <proposalId>.json in the current working directory.
  *
- * Usage:
- *   node scripts/export-proposal.mjs <proposalId>
- *   node scripts/export-proposal.mjs <proposalId> --env production
+ * Usage (from repo root):
+ *   node __scripts/admin/export-proposal.mjs <proposalId>
+ *   node __scripts/admin/export-proposal.mjs <proposalId> --env production
  */
 
 import { existsSync, writeFileSync } from "fs";
@@ -25,10 +25,10 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { EJSON } from "bson";
 
-import { Proposal } from "../schema/Proposal.js";
+import { Proposal } from "../../schema/Proposal.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, "..");
+const repoRoot = path.resolve(__dirname, "../..");
 
 mongoose.set("strictQuery", true);
 
@@ -148,7 +148,7 @@ async function resolveEnvProfile(parsedEnv) {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/export-proposal.mjs <proposalId> [options]
+  console.log(`Usage: node __scripts/admin/export-proposal.mjs <proposalId> [options]
 
 Reads the proposal document directly from MongoDB (full metaData and all stored fields).
 
