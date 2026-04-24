@@ -8,7 +8,7 @@
 ## Data
 
 - **Vote slug:** `ekklesia-testkit` (`helpers/testkitConstants.js`), shared with integration seed and `npm run seed:perf`.
-- **Proposals:** 20,000 docs from `__setup/proposal1.json` / `proposal2.json` (see `helpers/seedPerf.js`).
+- **Proposals:** 20,000 docs from `__scripts/proposal1.json` / `proposal2.json` (see `helpers/seedPerf.js`).
 
 ## What `tests/performance.test.js` does
 

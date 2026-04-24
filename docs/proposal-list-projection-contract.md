@@ -39,9 +39,9 @@ The route applies projection after `excludeScript`:
 ## Guardrails
 
 - Keep `listProjectionScript` configured in vote setup for active forms:
-  - `__setup/setup-budget2026.js`
-  - `__setup/setup-cc-vote2026.js`
-  - `__setup/createDummyData.js`
+  - `__scripts/setup-budget2026.js`
+  - `__scripts/setup-cc-vote2026.js`
+  - `__scripts/createDummyData.js`
 - Keep projection-shape regression tests updated:
   - `__testkit/tests/proposal-list-projection.test.js`
 - When adding a new vote form, add/assign:

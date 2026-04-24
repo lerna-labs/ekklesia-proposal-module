@@ -1,7 +1,7 @@
 /**
  * Create or update CC Vote 2026 (slug: cc-vote-2026). Phases start at the instant this script runs.
  *
- * Usage (repo root): node __setup/setup-cc-vote2026.js
+ * Usage (repo root): node __scripts/setup-cc-vote2026.js
  */
 
 import { fileURLToPath } from "url";
@@ -146,7 +146,7 @@ async function main() {
     console.log(`   review:     ${dates.reviewStartDate.toISOString()} → ${dates.reviewEndDate.toISOString()}`);
     console.log(`   voting:     ${dates.votingStartDate.toISOString()} → ${dates.votingEndDate.toISOString()}`);
     if (ADMINS.length === 1 && ADMINS[0] === "REPLACE_WITH_STAKE_ADDRESS") {
-      console.log("\n⚠️  Replace ADMINS in __setup/setup-cc-vote2026.js with a real stake address before production.");
+      console.log("\n⚠️  Replace ADMINS in __scripts/setup-cc-vote2026.js with a real stake address before production.");
     }
   } catch (e) {
     console.error(e);

@@ -1,10 +1,10 @@
 /**
- * Seed the regions collection from __setup/regions.json.
+ * Seed the regions collection from __scripts/regions.json.
  * File must be a JSON array of region name strings.
  *
  * Usage (from project root):
- *   node __setup/seedRegions.js
- * Or (from __setup):
+ *   node __scripts/seedRegions.js
+ * Or (from __scripts):
  *   node seedRegions.js
  */
 

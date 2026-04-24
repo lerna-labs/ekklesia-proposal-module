@@ -6,7 +6,7 @@
  * 4) cc-vote-2026 + candidates
  *
  * Usage (repo root):
- *   node __setup/setupVotesAndGeoSeed.js
+ *   node __scripts/setupVotesAndGeoSeed.js
  */
 
 import path from "path";
@@ -21,7 +21,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function runStep(scriptName, label) {
   const scriptPath = path.join(__dirname, scriptName);
   console.log(`\n▶ ${label}`);
-  console.log(`   Running: node __setup/${scriptName}`);
+  console.log(`   Running: node __scripts/${scriptName}`);
 
   const result = spawnSync(process.execPath, [scriptPath], {
     stdio: "inherit",

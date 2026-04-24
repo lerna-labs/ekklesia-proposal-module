@@ -3,8 +3,8 @@
  * Default comments (one per COMMENT_USERS + one withdrawn) are added only to "Comment test proposal".
  * Uses current schemas: Vote, Proposal, Comment, User.
  *
- * Usage (from project root): node __setup/createDummyData.js
- * From __setup: node createDummyData.js
+ * Usage (from project root): node __scripts/createDummyData.js
+ * From __scripts: node createDummyData.js
  */
 
 import { readFileSync } from "fs";

@@ -1,10 +1,10 @@
 /**
- * Seed the countries collection from __setup/countries.json.
+ * Seed the countries collection from __scripts/countries.json.
  * Each entry must have: name (English full name), code (ISO 3166-1 alpha-2, e.g. "US").
  *
  * Usage (from project root):
- *   node __setup/seedCountries.js
- * Or (from __setup):
+ *   node __scripts/seedCountries.js
+ * Or (from __scripts):
  *   node seedCountries.js
  */
 

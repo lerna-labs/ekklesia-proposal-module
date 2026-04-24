@@ -1,5 +1,5 @@
 /**
- * CC Vote 2026 public timeline (UTC). Phases match `__setup/setup-cc-vote2026.js`:
+ * CC Vote 2026 public timeline (UTC). Phases match `__scripts/setup-cc-vote2026.js`:
  * submission and feedback together, then review, then voting.
  *
  * Update these ISO ranges when production Vote dates are fixed so the list page

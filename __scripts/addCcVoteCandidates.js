@@ -2,7 +2,7 @@
  * Add 11 live candidate proposals to CC Vote 2026 with mixed tracks.
  *
  * Usage (repo root):
- *   node __setup/addCcVoteCandidates.js
+ *   node __scripts/addCcVoteCandidates.js
  */
 
 import { fileURLToPath } from "url";
@@ -210,7 +210,7 @@ async function main() {
     const vote = await Vote.findOne({ slug: CC_VOTE_SLUG }).lean();
     if (!vote) {
       throw new Error(
-        `Vote with slug "${CC_VOTE_SLUG}" was not found. Run __setup/setup-cc-vote2026.js first.`,
+        `Vote with slug "${CC_VOTE_SLUG}" was not found. Run __scripts/setup-cc-vote2026.js first.`,
       );
     }
 

@@ -3,8 +3,8 @@
  * plus one draft and one live proposal owned by a fixed test stake.
  *
  * Usage (repo root):
- *   node __setup/createVoteWindowFixtures.js --window=both-open
- *   node __setup/createVoteWindowFixtures.js --window=draft-closed-live-open
+ *   node __scripts/createVoteWindowFixtures.js --window=both-open
+ *   node __scripts/createVoteWindowFixtures.js --window=draft-closed-live-open
  *
  * Options:
  *   --window=<scenario>   Required. See SCENARIOS below.
@@ -302,7 +302,7 @@ function printHelp() {
 	console.log(`createVoteWindowFixtures.js — seed cardano-budget-2026 + 1 draft + 1 live (same proposer)
 
 Usage:
-  node __setup/createVoteWindowFixtures.js --window=<scenario> [--slug=...] [--proposer=...]
+  node __scripts/createVoteWindowFixtures.js --window=<scenario> [--slug=...] [--proposer=...]
 
 Scenarios:
 ${Object.entries(SCENARIOS)

@@ -2,8 +2,8 @@
  * Create dummy data: 3 users (same as ADMINS in createDummyData.js), 1 vote, and 3 proposals per user
  * (one draft, one live, one withdrawn). All proposal titles include the user name (e.g. "MAD – Draft").
  *
- * Usage (from project root): node __setup/createDummyDataThreeUsers.js
- * From __setup: node createDummyDataThreeUsers.js
+ * Usage (from project root): node __scripts/createDummyDataThreeUsers.js
+ * From __scripts: node createDummyDataThreeUsers.js
  */
 
 import { readFileSync } from "fs";

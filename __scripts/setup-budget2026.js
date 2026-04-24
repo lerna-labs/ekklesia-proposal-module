@@ -1,9 +1,8 @@
 /**
  * Create or update the Cardano Budget 2026 vote (slug: cardano-budget-2026) with
- * official 2026 UTC windows, deposit/options/metaData matching __setup/createDummyData.js.
+ * official 2026 UTC windows, deposit/options/metaData matching __scripts/createDummyData.js.
  *
- * Usage (repo root): npm run setup:budget2026
- *                    node __setup/setup-budget2026.js
+ * Usage (repo root): node __scripts/setup-budget2026.js
  */
 
 import { readFileSync } from "fs";
@@ -113,7 +112,7 @@ function parseCsvLine(line) {
 
 /**
  * Parse categories.csv and return pillars array { _id, title, description, sortOrder } (deduplicated by pillar title).
- * Mirrors __setup/createDummyData.js buildPillarsFromCsv.
+ * Mirrors __scripts/createDummyData.js buildPillarsFromCsv.
  */
 function buildPillarsFromCsv() {
   const raw = readFileSync(CSV_PATH, "utf8");
