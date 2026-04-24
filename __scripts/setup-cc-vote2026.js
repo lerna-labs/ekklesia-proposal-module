@@ -1,5 +1,5 @@
 /**
- * Create or update CC Vote 2026 (slug: cc-vote-2026). Phases start at the instant this script runs.
+ * Create or update Constitutional Committee Election 2026 (slug: cc-vote-2026). Phases start at the instant this script runs.
  *
  * Usage (repo root): node __scripts/setup-cc-vote2026.js
  */
@@ -18,9 +18,9 @@ import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.j
 import { Vote } from "../schema/Vote.js";
 
 const SLUG = "cc-vote-2026";
-const TITLE = "CC Vote 2026";
+const TITLE = "Constitutional Committee Election 2026";
 const DESCRIPTION =
-  "CC Vote 2026 proposal cycle. Submission and feedback run together, then review, then voting.";
+  "Constitutional Committee Election 2026. Submission and feedback run together, then review, then voting.";
 
 /** Replace with a real Bech32 stake address before running against production. */
 const ADMINS = ["REPLACE_WITH_STAKE_ADDRESS"];
@@ -30,7 +30,9 @@ const DAYS_SUBMISSION_FEEDBACK = 14;
 const DAYS_REVIEW = 14;
 const DAYS_VOTING = 30;
 
+/** CC vote: no treasury minimum and no wallet deposit (amounts in lovelace). */
 const DEPOSIT_OPTIONS = {
+  treasuryDonation: 0,
   depositAddress: "",
   depositAmount: 0,
 };
