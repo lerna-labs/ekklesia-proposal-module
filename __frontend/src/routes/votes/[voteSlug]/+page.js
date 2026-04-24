@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, url, fetch }) {
+	const policyNowMs = Date.now();
 	const { voteSlug } = params;
 	const pageNum = url.searchParams.get('page') || '1';
 	const limitParam = url.searchParams.get('limit') || '10';
@@ -76,5 +77,6 @@ export async function load({ params, url, fetch }) {
 		pillars,
 		/** Resolved list state from URL for initial UI (sort, direction). */
 		listState: { sort, direction },
+		policyNowMs,
 	};
 }

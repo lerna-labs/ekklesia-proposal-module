@@ -11,18 +11,40 @@
   import SearchSort from "$lib/SearchSort.svelte";
   import { queryStringWithLiteralCommas, shortenString } from "$lib/utils.js";
   import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
-  import VoteCTA from "$lib/votes/VoteCTA.svelte";
   import XIcon from "@lucide/svelte/icons/x";
 
   const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
     eager: true,
   });
 
+  const voteCtaModules = import.meta.glob("$lib/votes/*/CTA.svelte", { eager: true });
+
   /** @param {string} path */
   function voteFormFromTimelinePath(path) {
     const m = path.match(/\/votes\/([^/]+)\/timeline\.js$/);
     return m ? m[1] : null;
   }
+
+  /** @param {string} path */
+  function voteFormFromCtaPath(path) {
+    const m = path.match(/\/votes\/([^/]+)\/CTA\.svelte$/);
+    return m ? m[1] : null;
+  }
+
+  const ctaByForm = /** @type {Record<string, import("svelte").SvelteComponent>} */ (
+    Object.fromEntries(
+      Object.entries(voteCtaModules)
+        .map(([path, mod]) => {
+          const form = voteFormFromCtaPath(path);
+          const Comp =
+            mod && typeof mod === "object" && "default" in mod
+              ? /** @type {import("svelte").SvelteComponent} */ (mod.default)
+              : null;
+          return form && Comp ? [form, Comp] : null;
+        })
+        .filter((entry) => entry != null),
+    )
+  );
 
   const timelinePhasesByVoteForm = Object.fromEntries(
     Object.entries(voteTimelineModules)
@@ -66,6 +88,15 @@
 
   let { data } = $props();
   let vote = $derived(data.vote);
+  let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
+
+  /** CTA for `vote.form` from `$lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
+  const VoteListCta = $derived.by(() => {
+    const form = vote?.form;
+    const formStr = typeof form === "string" ? form : "";
+    if (formStr && ctaByForm[formStr]) return ctaByForm[formStr];
+    return ctaByForm["default"];
+  });
   const listTimelinePhases = $derived.by(() => {
     const fromForm = vote?.form ? timelinePhasesByVoteForm[vote.form] : null;
     if (Array.isArray(fromForm) && fromForm.length > 0) return fromForm;
@@ -181,12 +212,16 @@
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
         <div class="flex h-full min-w-0 flex-col *:mt-0">
-          <VoteCTA {voteSlug} {vote} />
+          {#key vote?.form ?? ""}
+            <VoteListCta {vote} policyNow={policyNow} />
+          {/key}
         </div>
       </div>
     {:else}
       <div class="mt-4">
-        <VoteCTA {voteSlug} {vote} />
+        {#key vote?.form ?? ""}
+          <VoteListCta {vote} policyNow={policyNow} />
+        {/key}
       </div>
     {/if}
 
