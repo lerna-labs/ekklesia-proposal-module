@@ -131,7 +131,7 @@
         />
       </section>
       <section class="space-y-1.5">
-        <h4>Which region does the member represent? (optional)</h4>
+        <h4>Which region does the member represent?</h4>
         <SelectRegions
           id="member-{index}-geographicRegion"
           bind:value={member.geographicRegion}
@@ -219,7 +219,7 @@
     </div>
 
     <section class="flex flex-col gap-3">
-      <h4>Social &amp; Profile links (optional)</h4>
+      <h4>Social &amp; Profile links</h4>
       <SocialMediaLinkField
         id="member-{index}-xUsername"
         bind:value={member.xUsername}
@@ -267,7 +267,7 @@
     </section>
 
     <section class="space-y-1.5 mb-6">
-      <h4>Conflict of interest statement (optional)</h4>
+      <h4>Conflict of interest statement</h4>
       <Textarea
         id="member-{index}-conflictOfInterestStatement"
         bind:value={member.conflictOfInterestStatement}

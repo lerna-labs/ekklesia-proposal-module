@@ -60,7 +60,7 @@
 
 <div class="flex flex-col gap-6">
   <section class="space-y-1.5">
-    <h3>Do you have any conflicts of interest to disclose? (optional)</h3>
+    <h3>Do you have any conflicts of interest to disclose?</h3>
     <Textarea
       id="conflictOfInterestStatement"
       bind:value={formData.metaData.consortium.conflictOfInterestStatement}

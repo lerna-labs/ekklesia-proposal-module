@@ -126,7 +126,7 @@
   </section>
 
   <section class="space-y-1.5">
-    <h3>Which geographic region do you represent? (optional)</h3>
+    <h3>Which geographic region do you represent?</h3>
     <SelectRegions
       id="geographicRegion"
       bind:value={formData.metaData.organisation.geographicRegion}
@@ -203,7 +203,7 @@
   </div>
 
   <section class="flex flex-col gap-3">
-    <h3>Add your social or professional links (optional)</h3>
+    <h3>Add your social or professional links</h3>
 
     <SocialMediaLinkField
       id="xUsername"

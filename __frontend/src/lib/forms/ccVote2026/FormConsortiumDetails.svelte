@@ -123,7 +123,7 @@
   </section>
 
   <section class="flex flex-col gap-3">
-    <h3>Add consortium social or public links (optional)</h3>
+    <h3>Add consortium social or public links</h3>
 
     <SocialMediaLinkField
       id="xUsername"
