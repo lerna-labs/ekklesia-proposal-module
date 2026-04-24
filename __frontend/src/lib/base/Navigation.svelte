@@ -127,7 +127,15 @@
       <div class="px-4 w-full max-md:w-max md:container md:mx-auto md:max-w-4xl">
         <nav class="flex w-full flex-col gap-8 max-md:w-max md:w-full md:flex-row md:gap-0" aria-label="Site sections">
           <section class="min-w-0 w-full max-md:flex-none md:flex-1" aria-labelledby="nav-heading-budget">
-            <h2 id="nav-heading-budget" class="mb-3 text-sm font-semibold text-white/90">Budget Process</h2>
+            <h2 id="nav-heading-budget" class="mb-3 text-sm font-semibold text-white/90">
+              <a
+                href="/budget-process"
+                class="text-inherit underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80"
+                onclick={closeMenu}
+              >
+                Budget Process
+              </a>
+            </h2>
             <ul class="flex flex-col gap-2">
               <li>
                 <a
@@ -145,7 +153,15 @@
             class="min-w-0 w-full max-md:flex-none border-t border-white/50 pt-8 md:flex-1 md:border-t-0 md:border-l md:border-white/50 md:pt-0 md:pl-10 lg:pl-12"
             aria-labelledby="nav-heading-cc"
           >
-            <h2 id="nav-heading-cc" class="mb-3 text-sm font-semibold text-white/90">CC Elections</h2>
+            <h2 id="nav-heading-cc" class="mb-3 text-sm font-semibold text-white/90">
+              <a
+                href="/cc-elections"
+                class="text-inherit underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80"
+                onclick={closeMenu}
+              >
+                CC Elections
+              </a>
+            </h2>
             <ul class="flex flex-col gap-2">
               <li>
                 <a
