@@ -58,9 +58,9 @@
       bind:value={formData.metaData.coldCredentialHash}
       label="Cold Credential Hash"
       description="This is the on-chain identifier for your credential (key or script)"
-      placeholder="Enter your cold credential hash"
+      placeholder="cc_cold1..."
       required
-      maxLength={256}
+      maxLength={64}
       disabled={liveLocked}
       validationErrors={coldErrors}
     />

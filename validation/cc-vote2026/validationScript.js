@@ -196,11 +196,29 @@ function normalizeConsortiumInput(raw) {
 
 const coldCredentialTypeEnum = z.enum(["keyCredential", "scriptCredential"]);
 
-const COLD_HASH_MAX = 256;
+const COLD_HASH_MAX = 64;
+const CIP129_CC_COLD_PREFIX = "cc_cold1";
+const BECH32_DATA_CHARS_RE = /^[023456789acdefghjklmnpqrstuvwxyz]+$/;
 
 /** @param {unknown} val */
 function trimStr(val) {
   return typeof val === "string" ? val.trim() : "";
+}
+
+/**
+ * CIP-0129 CC cold credential identifier check.
+ * - must start with `cc_cold1`
+ * - be lowercase bech32 charset
+ * - max total length 64 chars
+ * @param {string} value
+ */
+function isValidCcColdCredential(value) {
+  if (!value) return false;
+  if (value.length > COLD_HASH_MAX) return false;
+  if (!value.startsWith(CIP129_CC_COLD_PREFIX)) return false;
+  const payload = value.slice(CIP129_CC_COLD_PREFIX.length);
+  if (!payload) return false;
+  return BECH32_DATA_CHARS_RE.test(payload);
 }
 
 const individualIdentityLiveSchema = z.object({
@@ -711,6 +729,7 @@ const consortiumMembersArraySchema = z
 /**
  * @param {{
  *   existingProposal?: { status?: string, metaData?: Record<string, unknown> },
+ *   coldCredentialHashDuplicate?: boolean, // true when another live proposal on this vote already has this cold credential
  * }} [context]
  */
 function liveProposalBodySchemaForContext(context = {}) {
@@ -866,11 +885,19 @@ function liveProposalBodySchemaForContext(context = {}) {
             path: ["metaData", "coldCredentialHash"],
             message: "Cold credential hash is required",
           });
-        } else if (coldHash.length > COLD_HASH_MAX) {
+        } else if (!isValidCcColdCredential(coldHash)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["metaData", "coldCredentialHash"],
-            message: `Cold credential hash must be at most ${COLD_HASH_MAX} characters`,
+            message:
+              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 64 characters",
+          });
+        }
+        if (context?.coldCredentialHashDuplicate === true) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: "This cold credential hash is already used by another proposal",
           });
         }
         if (coldCredentialTypeEnum.safeParse(storedType).success) {
@@ -899,11 +926,19 @@ function liveProposalBodySchemaForContext(context = {}) {
             path: ["metaData", "coldCredentialHash"],
             message: "Cold credential hash is required",
           });
-        } else if (coldHash.length > COLD_HASH_MAX) {
+        } else if (!isValidCcColdCredential(coldHash)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["metaData", "coldCredentialHash"],
-            message: `Cold credential hash must be at most ${COLD_HASH_MAX} characters`,
+            message:
+              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 64 characters",
+          });
+        }
+        if (context?.coldCredentialHashDuplicate === true) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["metaData", "coldCredentialHash"],
+            message: "This cold credential hash is already used by another proposal",
           });
         }
         const ctParsed = coldCredentialTypeEnum.safeParse(coldTypeRaw);

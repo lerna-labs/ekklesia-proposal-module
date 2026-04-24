@@ -36,6 +36,19 @@ function treasuryTxHashErrorTree(message) {
   };
 }
 
+/** Build error tree for metaData.coldCredentialHash (matches Zod treeifyError shape for frontend). */
+function coldCredentialHashErrorTree(message) {
+  return {
+    properties: {
+      metaData: {
+        properties: {
+          coldCredentialHash: { errors: [message] },
+        },
+      },
+    },
+  };
+}
+
 /**
  * Validate treasury donation tx hash: normalize, check uniqueness across proposals, call verifyDeposit.
  * @param {string} txHash - Raw tx hash from metaData.treasuryDonationTxHash
@@ -76,6 +89,28 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     return { ok: false, error: result?.error ?? "Transaction verification failed" };
   }
   return { ok: true, normalizedHash };
+}
+
+/**
+ * Whether another proposal on this vote is already live with the same cold credential hash
+ * (case-insensitive). Draft / withdrawn / archived do not block.
+ * @param {string} coldCredentialHash
+ * @param {import("mongoose").Types.ObjectId | string} voteId
+ * @param {{ excludeProposalIds?: import("mongoose").Types.ObjectId[] }} [options]
+ */
+async function isDuplicateCcColdCredentialHash(coldCredentialHash, voteId, options = {}) {
+  const normalized = String(coldCredentialHash ?? "").trim();
+  if (!normalized) return false;
+  const excludeProposalIds = options.excludeProposalIds ?? [];
+  const existing = await Proposal.findOne({
+    voteId: new mongoose.Types.ObjectId(voteId),
+    "metaData.coldCredentialHash": new RegExp(`^${escapeRegex(normalized)}$`, "i"),
+    status: "live",
+    _id: { $nin: excludeProposalIds },
+  })
+    .lean()
+    .exec();
+  return Boolean(existing);
 }
 
 function getByPath(obj, path) {
@@ -138,8 +173,19 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
+    let coldCredentialHashDuplicate = false;
+    if (
+      req.body?.status === "live" &&
+      voteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      coldCredentialHashDuplicate = await isDuplicateCcColdCredentialHash(
+        req.body?.metaData?.coldCredentialHash,
+        rawVoteId,
+      );
+    }
     const validation = script.validate(req.body, {
       voteDepositOptions: voteDoc.depositOptions ?? {},
+      coldCredentialHashDuplicate,
     });
 
     if (!validation.success) {
@@ -202,6 +248,23 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         });
       }
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
+    }
+
+    if (status === "live" && voteDoc.validationScript === "cc-vote2026/validationScript.js") {
+      const dupCold = await isDuplicateCcColdCredentialHash(
+        metaData?.coldCredentialHash,
+        voteId,
+        {},
+      );
+      if (dupCold) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: coldCredentialHashErrorTree(
+            "This cold credential hash is already used by another proposal",
+          ),
+        });
+      }
     }
 
     const doc = {
@@ -500,12 +563,36 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       }
     }
 
+    // Draft → live (and other live submits): enforce at most one live proposal per cold credential on this vote.
+    let coldCredentialHashDuplicate = false;
+    if (
+      req.body?.status === "live" &&
+      voteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      const voteIdForCcColdDup =
+        rawBodyVoteId &&
+        mongoose.Types.ObjectId.isValid(rawBodyVoteId) &&
+        String(rawBodyVoteId).length === 24
+          ? String(rawBodyVoteId)
+          : String(proposal.voteId);
+      const excludeProposalIds = [
+        proposal._id,
+        ...(proposal.versions ?? []).map((v) => v._id),
+      ];
+      coldCredentialHashDuplicate = await isDuplicateCcColdCredentialHash(
+        req.body?.metaData?.coldCredentialHash,
+        voteIdForCcColdDup,
+        { excludeProposalIds },
+      );
+    }
+
     validation = script.validate(req.body, {
       existingProposal: {
         status: proposal.status,
         metaData: proposal.metaData ?? {},
       },
       voteDepositOptions: voteDepositOptionsForValidation,
+      coldCredentialHashDuplicate,
     });
 
     if (!validation.success) {
@@ -628,6 +715,30 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         });
       }
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
+    }
+
+    if (
+      status === "live" &&
+      targetVoteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      const excludeProposalIds = [
+        proposal._id,
+        ...(proposal.versions ?? []).map((v) => v._id),
+      ];
+      const hasDuplicateColdCredential = await isDuplicateCcColdCredentialHash(
+        metaData?.coldCredentialHash,
+        voteId,
+        { excludeProposalIds },
+      );
+      if (hasDuplicateColdCredential) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: coldCredentialHashErrorTree(
+            "This cold credential hash is already used by another proposal",
+          ),
+        });
+      }
     }
 
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
