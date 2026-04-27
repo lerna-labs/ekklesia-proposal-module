@@ -90,7 +90,7 @@
         perspectiveYouWouldBring: "",
         transparencyApproach: "",
         internalDecisionMakingProcess: "",
-        members: [getDefaultConsortiumMember()],
+        members: [getDefaultConsortiumMember(), getDefaultConsortiumMember()],
       },
     };
   }
@@ -147,13 +147,17 @@
         const def = createDefaultMetaData().consortium;
         const c = md.consortium && typeof md.consortium === "object" ? md.consortium : {};
         const rawMembers = Array.isArray(c.members) ? c.members : [];
+        let members =
+          rawMembers.length > 0
+            ? rawMembers.map((m) => normalizeConsortiumMember(m))
+            : [...def.members];
+        while (members.length < 2) {
+          members = [...members, getDefaultConsortiumMember()];
+        }
         return {
           ...def,
           ...c,
-          members:
-            rawMembers.length > 0
-              ? rawMembers.map((m) => normalizeConsortiumMember(m))
-              : [getDefaultConsortiumMember()],
+          members,
         };
       })(),
     };

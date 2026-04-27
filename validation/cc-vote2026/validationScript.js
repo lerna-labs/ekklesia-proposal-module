@@ -730,7 +730,7 @@ const consortiumMemberLiveSchema = z.object({
 
 const consortiumMembersArraySchema = z
   .array(consortiumMemberLiveSchema)
-  .min(1, "At least one consortium member is required");
+  .min(2, "At least two consortium members are required");
 
 /**
  * @param {{
