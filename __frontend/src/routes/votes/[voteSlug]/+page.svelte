@@ -12,6 +12,7 @@
   import { queryStringWithLiteralCommas, shortenString } from "$lib/utils.js";
   import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
   import XIcon from "@lucide/svelte/icons/x";
+  import { user } from "$stores/sessionManager.js";
 
   const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
     eager: true,
@@ -89,6 +90,9 @@
   let { data } = $props();
   let vote = $derived(data.vote);
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
+
+  /** Aligns with WalletSigner / API: DRep sessions use a CIP129 id starting with `drep`. */
+  let isDrepUser = $derived(Boolean($user?.userId?.startsWith?.("drep")));
 
   /** CTA for `vote.form` from `$lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
   const VoteListCta = $derived.by(() => {
@@ -207,22 +211,30 @@
     {/if} -->
 
     {#if listTimelinePhases}
-      <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch">
+      <div
+        class={isDrepUser
+          ? "mt-4 grid grid-cols-1 gap-6 sm:items-stretch"
+          : "mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"}
+      >
         <div class="flex h-full min-w-0 flex-col">
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
-        <div class="flex h-full min-w-0 flex-col *:mt-0">
+        {#if !isDrepUser}
+          <div class="flex h-full min-w-0 flex-col *:mt-0">
+            {#key vote?.form ?? ""}
+              <VoteListCta {vote} policyNow={policyNow} />
+            {/key}
+          </div>
+        {/if}
+      </div>
+    {:else}
+      {#if !isDrepUser}
+        <div class="mt-4">
           {#key vote?.form ?? ""}
             <VoteListCta {vote} policyNow={policyNow} />
           {/key}
         </div>
-      </div>
-    {:else}
-      <div class="mt-4">
-        {#key vote?.form ?? ""}
-          <VoteListCta {vote} policyNow={policyNow} />
-        {/key}
-      </div>
+      {/if}
     {/if}
 
     <div class="mt-4 space-y-2">
