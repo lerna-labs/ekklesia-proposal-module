@@ -49,6 +49,11 @@ function coldCredentialHashErrorTree(message) {
   };
 }
 
+/** Normalize CC cold credential hash for validation/lookup/storage. */
+function normalizeCcColdCredentialHash(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
 /**
  * Validate treasury donation tx hash: normalize, check uniqueness across proposals, call verifyDeposit.
  * @param {string} txHash - Raw tx hash from metaData.treasuryDonationTxHash
@@ -99,7 +104,7 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
  * @param {{ excludeProposalIds?: import("mongoose").Types.ObjectId[] }} [options]
  */
 async function isDuplicateCcColdCredentialHash(coldCredentialHash, voteId, options = {}) {
-  const normalized = String(coldCredentialHash ?? "").trim();
+  const normalized = normalizeCcColdCredentialHash(coldCredentialHash);
   if (!normalized) return false;
   const excludeProposalIds = options.excludeProposalIds ?? [];
   const existing = await Proposal.findOne({
@@ -224,6 +229,11 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
     const sanitizedMetaData = { ...rawMetaData };
+    if (typeof sanitizedMetaData.coldCredentialHash === "string") {
+      sanitizedMetaData.coldCredentialHash = normalizeCcColdCredentialHash(
+        sanitizedMetaData.coldCredentialHash,
+      );
+    }
 
     if (status === "live" && voteDoc.depositOptions?.treasuryDonation != null) {
       const txHash = metaData?.treasuryDonationTxHash;
@@ -680,6 +690,11 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
 
     const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
+    if (typeof sanitizedMetaData.coldCredentialHash === "string") {
+      sanitizedMetaData.coldCredentialHash = normalizeCcColdCredentialHash(
+        sanitizedMetaData.coldCredentialHash,
+      );
+    }
 
     if (proposal.status === "live") {
       sanitizedMetaData.treasuryDonationTxHash =

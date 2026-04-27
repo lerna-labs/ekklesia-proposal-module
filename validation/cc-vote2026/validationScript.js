@@ -205,6 +205,11 @@ function trimStr(val) {
   return typeof val === "string" ? val.trim() : "";
 }
 
+/** @param {unknown} val */
+function normalizeCcColdCredential(val) {
+  return trimStr(val).toLowerCase();
+}
+
 /**
  * CIP-0129 CC cold credential identifier check.
  * - must start with `cc_cold1`
@@ -213,10 +218,11 @@ function trimStr(val) {
  * @param {string} value
  */
 function isValidCcColdCredential(value) {
-  if (!value) return false;
-  if (value.length > COLD_HASH_MAX) return false;
-  if (!value.startsWith(CIP129_CC_COLD_PREFIX)) return false;
-  const payload = value.slice(CIP129_CC_COLD_PREFIX.length);
+  const normalized = normalizeCcColdCredential(value);
+  if (!normalized) return false;
+  if (normalized.length > COLD_HASH_MAX) return false;
+  if (!normalized.startsWith(CIP129_CC_COLD_PREFIX)) return false;
+  const payload = normalized.slice(CIP129_CC_COLD_PREFIX.length);
   if (!payload) return false;
   return BECH32_DATA_CHARS_RE.test(payload);
 }
@@ -865,10 +871,10 @@ function liveProposalBodySchemaForContext(context = {}) {
         }
       }
 
-      const coldHash = trimStr(md.coldCredentialHash);
+      const coldHash = normalizeCcColdCredential(md.coldCredentialHash);
       const coldTypeRaw = md.coldCredentialType;
       if (isLiveResubmit) {
-        const storedCold = trimStr(storedMeta.coldCredentialHash);
+        const storedCold = normalizeCcColdCredential(storedMeta.coldCredentialHash);
         const storedType = storedMeta.coldCredentialType;
         if (storedCold) {
           if (coldHash !== storedCold) {
