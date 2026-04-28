@@ -60,7 +60,7 @@
       description="This is the on-chain identifier for your credential (key or script)"
       placeholder="cc_cold1..."
       required
-      maxLength={64}
+      maxLength={61}
       disabled={liveLocked}
       validationErrors={coldErrors}
     />
