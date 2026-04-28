@@ -196,7 +196,7 @@ function normalizeConsortiumInput(raw) {
 
 const coldCredentialTypeEnum = z.enum(["keyCredential", "scriptCredential"]);
 
-const COLD_HASH_MAX = 64;
+const COLD_HASH_MAX = 61;
 const CIP129_CC_COLD_PREFIX = "cc_cold1";
 const BECH32_DATA_CHARS_RE = /^[023456789acdefghjklmnpqrstuvwxyz]+$/;
 
@@ -214,7 +214,7 @@ function normalizeCcColdCredential(val) {
  * CIP-0129 CC cold credential identifier check.
  * - must start with `cc_cold1`
  * - be lowercase bech32 charset
- * - max total length 64 chars
+ * - max total length 61 chars
  * @param {string} value
  */
 function isValidCcColdCredential(value) {
@@ -896,7 +896,7 @@ function liveProposalBodySchemaForContext(context = {}) {
             code: z.ZodIssueCode.custom,
             path: ["metaData", "coldCredentialHash"],
             message:
-              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 64 characters",
+              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 61 characters",
           });
         }
         if (context?.coldCredentialHashDuplicate === true) {
@@ -937,7 +937,7 @@ function liveProposalBodySchemaForContext(context = {}) {
             code: z.ZodIssueCode.custom,
             path: ["metaData", "coldCredentialHash"],
             message:
-              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 64 characters",
+              "Cold credential hash must be a valid CIP-0129 cc_cold identifier and at most 61 characters",
           });
         }
         if (context?.coldCredentialHashDuplicate === true) {

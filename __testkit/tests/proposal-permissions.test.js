@@ -60,6 +60,8 @@ function assertNonPublicFieldsExcluded(payload) {
   expect(payload?.metaData?.signatoryContact).toBeUndefined();
   expect(payload?.metaData?.kycInfo).toBeUndefined();
   expect(payload?.metaData?.legalDeclarations).toBeUndefined();
+  expect(payload?.metaData?.organisation?.contactPerson).toBeUndefined();
+  expect(payload?.metaData?.consortium?.contactPerson).toBeUndefined();
 
   // contractingParty should be reduced to a public-safe subset.
   expect(payload?.metaData?.contractingParty).toEqual(
