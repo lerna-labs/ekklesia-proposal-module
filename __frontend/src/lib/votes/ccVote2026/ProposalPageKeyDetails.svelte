@@ -4,12 +4,14 @@
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+  import MapPinIcon from "@lucide/svelte/icons/map-pin";
   import HashIcon from "@lucide/svelte/icons/hash";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import UserIcon from "@lucide/svelte/icons/user";
   import { toast } from "svelte-sonner";
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
+  import { shortenString } from "$lib/utils.js";
   import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
 
   let { proposal, vote } = $props();
@@ -34,6 +36,38 @@
   const track = $derived(
     typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "",
   );
+  const apiUrl =
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+      ? import.meta.env.VITE_API_URL
+      : "/api/v0";
+  let regionsById = $state({});
+
+  $effect(() => {
+    let cancelled = false;
+    fetch(`${apiUrl}/regions`)
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText || "Failed to load regions");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const raw = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        /** @type {Record<string, string>} */
+        const map = {};
+        for (const region of raw) {
+          const id = region?._id != null ? String(region._id) : "";
+          const name = region?.name != null ? String(region.name) : "";
+          if (id && name) map[id] = name;
+        }
+        regionsById = map;
+      })
+      .catch(() => {
+        if (!cancelled) regionsById = {};
+      });
+    return () => {
+      cancelled = true;
+    };
+  });
 
   const trackPayload = $derived.by(() => {
     const t = track;
@@ -70,6 +104,24 @@
   const socialRows = $derived.by(() => {
     return buildSocialRows(trackPayload);
   });
+  const geographicRegionLabel = $derived.by(() => {
+    const p = trackPayload;
+    if (!p || (track !== "individual" && track !== "organisation")) return "";
+    const regionId = toText(p.geographicRegion);
+    return regionId ? (regionsById[regionId] ?? "Unknown region") : "";
+  });
+
+  const applicantPoolId = $derived.by(() => {
+    if (track !== "individual" && track !== "organisation") return "";
+    return toText(trackPayload?.poolId);
+  });
+  const applicantDrepId = $derived.by(() => {
+    if (track !== "individual" && track !== "organisation") return "";
+    return toText(trackPayload?.drepId);
+  });
+  const hasApplicantCredentialIds = $derived(
+    applicantPoolId.length > 0 || applicantDrepId.length > 0,
+  );
 
   const firstSectionCards = $derived.by(() => {
     const p = trackPayload;
@@ -78,9 +130,6 @@
     if (track === "individual") {
       const rows = [
         { id: "individual-contact-email", label: "Contact email", value: p.contactEmail },
-        { id: "individual-region", label: "Geographic region", value: p.geographicRegion },
-        { id: "individual-pool-id", label: "Pool ID", value: p.poolId },
-        { id: "individual-drep-id", label: "DRep ID", value: p.drepId },
       ].filter((row) => hasText(row.value));
 
       return rows.length > 0 ? [{ id: "individual-identity-contact", title: "Identity & Contact", rows }] : [];
@@ -89,9 +138,6 @@
     if (track === "organisation") {
       const identityRows = [
         { id: "organisation-contact-email", label: "Contact email", value: p.contactEmail },
-        { id: "organisation-region", label: "Geographic region", value: p.geographicRegion },
-        { id: "organisation-pool-id", label: "Pool ID", value: p.poolId },
-        { id: "organisation-drep-id", label: "DRep ID", value: p.drepId },
       ].filter((row) => hasText(row.value));
 
       return identityRows.length > 0
@@ -155,6 +201,60 @@
           </div>
         </div>
       </div>
+      {#if hasApplicantCredentialIds}
+        <div
+          class="rounded-lg border bg-card text-card-foreground grid grid-cols-2 divide-x divide-border overflow-hidden"
+        >
+          <div class="p-4 min-w-0 flex gap-1.5">
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-muted-foreground mb-1">Pool ID</p>
+              <p class="font-medium wrap-break-word">
+                {#if applicantPoolId}
+                  <button
+                    type="button"
+                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+                    title="Copy Pool ID"
+                    onclick={() => {
+                      navigator.clipboard.writeText(applicantPoolId).then(
+                        () => toast.success("Pool ID copied to clipboard"),
+                        () => toast.error("Failed to copy"),
+                      );
+                    }}
+                  >
+                    {shortenString(applicantPoolId, 20, true)}
+                  </button>
+                {:else}
+                  <span class="text-muted-foreground">—</span>
+                {/if}
+              </p>
+            </div>
+          </div>
+          <div class="p-4 min-w-0 flex gap-1.5">
+            <div class="min-w-0">
+              <p class="text-xs font-medium text-muted-foreground mb-1">DRep ID</p>
+              <p class="font-medium wrap-break-word">
+                {#if applicantDrepId}
+                  <button
+                    type="button"
+                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+                    title="Copy DRep ID"
+                    onclick={() => {
+                      navigator.clipboard.writeText(applicantDrepId).then(
+                        () => toast.success("DRep ID copied to clipboard"),
+                        () => toast.error("Failed to copy"),
+                      );
+                    }}
+                  >
+                    {shortenString(applicantDrepId, 20, true)}
+                  </button>
+                {:else}
+                  <span class="text-muted-foreground">—</span>
+                {/if}
+              </p>
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <div
@@ -179,6 +279,18 @@
         </div>
       </div>
       <div class="px-4 pb-4 space-y-3 text-xs">
+        {#if geographicRegionLabel}
+          <div class="border-t pt-3">
+            <div class="flex items-center gap-1.5 mb-1">
+              <MapPinIcon
+                class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <p class="text-xs font-medium text-muted-foreground mb-1">Geographic region</p>
+            </div>
+            <p class="text-foreground ml-6 wrap-break-word">{geographicRegionLabel}</p>
+          </div>
+        {/if}
         <div class="border-t pt-3">
           <div class="flex items-center gap-1.5 mb-1">
             <ExternalLinkIcon

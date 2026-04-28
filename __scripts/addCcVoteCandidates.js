@@ -19,17 +19,12 @@ import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.j
 import { Vote } from "../schema/Vote.js";
 import { Proposal } from "../schema/Proposal.js";
 import { User } from "../schema/User.js";
+import { Region } from "../schema/Region.js";
 
 const CC_VOTE_SLUG = "cc-vote-2026";
 const CANDIDATE_COUNT = 11;
-const REGION_IDS = [
-  "507f1f77bcf86cd799439011",
-  "507f1f77bcf86cd799439012",
-  "507f1f77bcf86cd799439013",
-  "507f1f77bcf86cd799439014",
-  "507f1f77bcf86cd799439015",
-];
 const BECH32_PAYLOAD_CHARS = "023456789acdefghjklmnpqrstuvwxyz";
+const BECH32_ID_PAYLOAD_CHARS = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 const TRACK_SEQUENCE = [
   "individual",
@@ -62,16 +57,26 @@ function buildColdCredentialHash(index) {
   return `cc_cold1${payload}`;
 }
 
-function buildRegionId(index) {
-  return REGION_IDS[index % REGION_IDS.length];
+function buildRegionId(regionIds, index) {
+  if (!Array.isArray(regionIds) || regionIds.length === 0) return "";
+  return regionIds[index % regionIds.length];
 }
 
-function buildPoolId(prefix, index) {
-  return `pool1${prefix}${String(index + 1).padStart(4, "0")}xyz`;
+function buildBech32LikeId(prefix, index, payloadLength = 52) {
+  let payload = "";
+  for (let i = 0; i < payloadLength; i++) {
+    const charIndex = (index * 11 + i * 5) % BECH32_ID_PAYLOAD_CHARS.length;
+    payload += BECH32_ID_PAYLOAD_CHARS[charIndex];
+  }
+  return `${prefix}1${payload}`;
 }
 
-function buildDrepId(prefix, index) {
-  return `drep1${prefix}${String(index + 1).padStart(4, "0")}uvw`;
+function buildPoolId(index) {
+  return buildBech32LikeId("pool", index, 52);
+}
+
+function buildDrepId(index) {
+  return buildBech32LikeId("drep", index, 52);
 }
 
 function buildCommonMetaData(track, index) {
@@ -83,13 +88,13 @@ function buildCommonMetaData(track, index) {
   };
 }
 
-function buildIndividual(index) {
+function buildIndividual(regionIds, index) {
   return {
     fullNameOrAlias: `CC Candidate Individual ${index + 1}`,
     contactEmail: `cc-individual-${index + 1}@example.com`,
-    geographicRegion: buildRegionId(index),
-    poolId: buildPoolId("ind", index),
-    drepId: buildDrepId("ind", index),
+    geographicRegion: buildRegionId(regionIds, index),
+    poolId: buildPoolId(index),
+    drepId: buildDrepId(index),
     xUsername: `ccindividual${index + 1}`,
     linkedinUsername: `cc-individual-${index + 1}`,
     website: `https://individual-${index + 1}.example.com`,
@@ -126,16 +131,16 @@ function buildIndividual(index) {
   };
 }
 
-function buildOrganisation(index) {
+function buildOrganisation(regionIds, index) {
   return {
     organisationName: `CC Org Candidate ${index + 1}`,
     organisationDescription:
       "## Organisation description\n\nOur organisation supports governance operations, ecosystem enablement, and process improvement across community programs.",
-    geographicRegion: buildRegionId(index + 1),
+    geographicRegion: buildRegionId(regionIds, index + 1),
     contactPerson: `Organisation Contact ${index + 1}`,
     contactEmail: `cc-organisation-${index + 1}@example.com`,
-    poolId: buildPoolId("org", index),
-    drepId: buildDrepId("org", index),
+    poolId: buildPoolId(index + 100),
+    drepId: buildDrepId(index + 100),
     xUsername: `ccorg${index + 1}`,
     linkedinUsername: `cc-org-${index + 1}`,
     website: `https://organisation-${index + 1}.example.com`,
@@ -170,7 +175,7 @@ function buildOrganisation(index) {
   };
 }
 
-function buildConsortium(index) {
+function buildConsortium(regionIds, index) {
   return {
     consortiumName: `CC Consortium Candidate ${index + 1}`,
     contactPerson: `Consortium Contact ${index + 1}`,
@@ -207,15 +212,15 @@ function buildConsortium(index) {
     members: [
       {
         fullNameOrAlias: `Consortium Member A${index + 1}`,
-        geographicRegion: buildRegionId(index + 2),
+        geographicRegion: buildRegionId(regionIds, index + 2),
         briefBiography:
           "Governance contributor with policy and community coordination experience across ecosystem initiatives.",
         professionalBackground:
           "Background in public policy, distributed governance design, and operational program management.",
         governanceExperience:
           "Active in governance consultations, proposal assessment, and public reporting workflows.",
-        poolId: buildPoolId("cma", index),
-        drepId: buildDrepId("cma", index),
+        poolId: buildPoolId(index + 200),
+        drepId: buildDrepId(index + 200),
         xUsername: `consortiummembera${index + 1}`,
         linkedinUsername: `consortium-member-a-${index + 1}`,
         website: `https://members.example.com/a-${index + 1}`,
@@ -230,15 +235,15 @@ function buildConsortium(index) {
       },
       {
         fullNameOrAlias: `Consortium Member B${index + 1}`,
-        geographicRegion: buildRegionId(index + 3),
+        geographicRegion: buildRegionId(regionIds, index + 3),
         briefBiography:
           "Technical governance practitioner focused on constitutional interpretation and decision transparency.",
         professionalBackground:
           "Software architecture, governance tooling, and compliance-oriented process engineering.",
         governanceExperience:
           "Served on advisory groups and coordinated governance proposal review cycles.",
-        poolId: buildPoolId("cmb", index),
-        drepId: buildDrepId("cmb", index),
+        poolId: buildPoolId(index + 300),
+        drepId: buildDrepId(index + 300),
         xUsername: `consortiummemberb${index + 1}`,
         linkedinUsername: `consortium-member-b-${index + 1}`,
         website: `https://members.example.com/b-${index + 1}`,
@@ -255,14 +260,14 @@ function buildConsortium(index) {
   };
 }
 
-function buildCandidateMetaData(track, index) {
+function buildCandidateMetaData(regionIds, track, index) {
   const metaData = buildCommonMetaData(track, index);
   if (track === "individual") {
-    metaData.individual = buildIndividual(index);
+    metaData.individual = buildIndividual(regionIds, index);
   } else if (track === "organisation") {
-    metaData.organisation = buildOrganisation(index);
+    metaData.organisation = buildOrganisation(regionIds, index);
   } else {
-    metaData.consortium = buildConsortium(index);
+    metaData.consortium = buildConsortium(regionIds, index);
   }
   return metaData;
 }
@@ -304,6 +309,16 @@ async function main() {
     }
 
     console.log(`Target vote: ${vote.title} (${vote._id})`);
+    const regionDocs = await Region.find({})
+      .sort({ name: 1 })
+      .select("_id")
+      .lean();
+    const regionIds = regionDocs.map((region) => String(region._id)).filter(Boolean);
+    if (regionIds.length === 0) {
+      throw new Error(
+        'No regions found. Run "__scripts/seedRegions.js" (or setupVotesAndGeoSeed.js) before seeding CC candidates.',
+      );
+    }
 
     const inserted = [];
     const now = Date.now();
@@ -317,11 +332,9 @@ async function main() {
         proposerId,
         voteId: vote._id,
         title,
-        summary:
-          "## Candidate summary\n\nThis application provides complete profile information across all sections and fields for testing and review.",
         status: "live",
         submittedAt: new Date(now - (CANDIDATE_COUNT - i) * 60 * 1000),
-        metaData: buildCandidateMetaData(track, i),
+        metaData: buildCandidateMetaData(regionIds, track, i),
       });
 
       inserted.push({

@@ -4,9 +4,6 @@
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import ProposalPageTitle from "$lib/votes/budget2026/ProposalPageTitle.svelte";
   import ProposalPageComments from "$lib/votes/budget2026/ProposalPageComments.svelte";
-  import ItemContainer from "$lib/votes/budget2026/ItemContainer.svelte";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import ProposalPageKeyDetails from "./ProposalPageKeyDetails.svelte";
   import ProposalPageTrackIndividual from "./ProposalPageTrackIndividual.svelte";
   import ProposalPageTrackOrganisation from "./ProposalPageTrackOrganisation.svelte";
@@ -35,8 +32,6 @@
   const track = $derived(
     typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "",
   );
-
-  let expandedSummary = $state(true);
 </script>
 
 <div class="bg-white box-shadow-lg shadow-lg">
@@ -60,27 +55,6 @@
 
     {#if proposal}
       <ProposalPageKeyDetails {proposal} {vote} />
-    {/if}
-
-    {#if proposal?.summary}
-      <section id="proposal-summary" class="mt-8">
-        <h2 class="mb-4">Summary</h2>
-        <CollapsibleCard
-          expanded={expandedSummary}
-          onToggle={() => (expandedSummary = !expandedSummary)}
-          expandLabel="Expand summary"
-          collapseLabel="Collapse summary"
-          titleClass="text-lg font-medium leading-6"
-          titleHeadingLevel={3}
-        >
-          {#snippet title()}
-            Proposal summary
-          {/snippet}
-          <ItemContainer>
-            <Markdown content={proposal.summary} />
-          </ItemContainer>
-        </CollapsibleCard>
-      </section>
     {/if}
 
     {#if track === "individual"}

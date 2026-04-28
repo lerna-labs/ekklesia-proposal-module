@@ -2,6 +2,13 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import ItemContainer from "$lib/votes/budget2026/ItemContainer.svelte";
+  import { Badge } from "$lib/components/ui/badge";
+  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+  import CopyIcon from "@lucide/svelte/icons/copy";
+  import UsersRoundIcon from "@lucide/svelte/icons/users-round";
+  import { toast } from "svelte-sonner";
+  import { shortenString } from "$lib/utils.js";
   import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
 
   let { proposal } = $props();
@@ -11,6 +18,38 @@
       ? proposal.metaData.consortium
       : null,
   );
+  const apiUrl =
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+      ? import.meta.env.VITE_API_URL
+      : "/api/v0";
+  let regionsById = $state({});
+
+  $effect(() => {
+    let cancelled = false;
+    fetch(`${apiUrl}/regions`)
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText || "Failed to load regions");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const raw = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        /** @type {Record<string, string>} */
+        const map = {};
+        for (const region of raw) {
+          const id = region?._id != null ? String(region._id) : "";
+          const name = region?.name != null ? String(region.name) : "";
+          if (id && name) map[id] = name;
+        }
+        regionsById = map;
+      })
+      .catch(() => {
+        if (!cancelled) regionsById = {};
+      });
+    return () => {
+      cancelled = true;
+    };
+  });
 
   const governanceFields = $derived.by(() => {
     const data = consortium;
@@ -64,6 +103,12 @@
     return rawMembers
       .map((member, index) => {
         if (!member || typeof member !== "object") return null;
+        const regionId = toText(member.geographicRegion);
+        const poolId = toText(member.poolId);
+        const drepId = toText(member.drepId);
+        const geographicRegion = regionId
+          ? (regionsById[regionId] ?? "Unknown region")
+          : "";
         const fields = [
           {
             id: "member-brief-biography",
@@ -84,21 +129,6 @@
             markdown: true,
           },
           {
-            id: "member-geographic-region",
-            label: "Geographic region",
-            value: member.geographicRegion,
-          },
-          {
-            id: "member-pool-id",
-            label: "Pool ID",
-            value: member.poolId,
-          },
-          {
-            id: "member-drep-id",
-            label: "DRep ID",
-            value: member.drepId,
-          },
-          {
             id: "member-conflict-interest",
             label: "Conflict of interest statement",
             value: member.conflictOfInterestStatement,
@@ -107,23 +137,66 @@
         ].filter((field) => hasText(field.value));
 
         const links = buildSocialRows(member);
-        if (fields.length === 0 && links.length === 0) return null;
+        if (
+          fields.length === 0 &&
+          links.length === 0 &&
+          !hasText(geographicRegion) &&
+          !hasText(poolId) &&
+          !hasText(drepId)
+        ) {
+          return null;
+        }
 
         return {
           key: `member-${index}-${toText(member.fullNameOrAlias)}`,
           name: toText(member.fullNameOrAlias) || `Member ${index + 1}`,
           fields,
           links,
+          geographicRegion,
+          poolId,
+          drepId,
         };
       })
       .filter(Boolean);
   });
 
-  const hasContent = $derived(governanceFields.length > 0 || members.length > 0);
+  const coldCredentialFields = $derived.by(() => {
+    return [
+      {
+        id: "cold-credential-hash",
+        question: "Cold credential hash",
+        value: proposal?.metaData?.coldCredentialHash,
+      },
+      {
+        id: "cold-credential-type",
+        question: "Credential type",
+        value:
+          proposal?.metaData?.coldCredentialType === "keyCredential"
+            ? "Key Credential"
+            : proposal?.metaData?.coldCredentialType === "scriptCredential"
+              ? "Script Credential"
+              : "",
+      },
+    ].filter((field) => hasText(field.value));
+  });
+  const coldCredentialHashValue = $derived(toText(proposal?.metaData?.coldCredentialHash));
+  const coldCredentialTypeLabel = $derived.by(() =>
+    toText(
+      proposal?.metaData?.coldCredentialType === "keyCredential"
+        ? "Key Credential"
+        : proposal?.metaData?.coldCredentialType === "scriptCredential"
+          ? "Script Credential"
+          : "",
+    ),
+  );
+  const hasContent = $derived(
+    governanceFields.length > 0 || coldCredentialFields.length > 0 || members.length > 0,
+  );
 
   let expandedGovernance = $state({});
 
   let expandedMembers = $state({});
+  let linkWarningDialog;
 
   function isGovernanceExpanded(key) {
     return expandedGovernance[key] !== false;
@@ -145,6 +218,13 @@
       ...expandedMembers,
       [key]: !isMemberExpanded(key),
     };
+  }
+
+  function copyToClipboard(label, value) {
+    navigator.clipboard.writeText(value).then(
+      () => toast.success(`${label} copied to clipboard`),
+      () => toast.error("Failed to copy"),
+    );
   }
 </script>
 
@@ -175,6 +255,47 @@
       </section>
     {/if}
 
+    {#if coldCredentialFields.length > 0}
+      <section id="cold-credentials" class="space-y-3">
+        <h2>Cold Credentials</h2>
+        <CollapsibleCard
+          expanded={true}
+          onToggle={() => {}}
+          showButton={false}
+          titleClass="text-lg font-medium leading-6"
+          titleHeadingLevel={3}
+        >
+          {#snippet title()}
+            Cold credential hash
+          {/snippet}
+          {#if coldCredentialTypeLabel}
+            <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-3">
+              {coldCredentialTypeLabel}
+            </Badge>
+          {/if}
+          {#if coldCredentialHashValue}
+            <ItemContainer>
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm leading-5 wrap-break-word">
+                  {shortenString(coldCredentialHashValue, 20, true)}
+                </p>
+                <button
+                  type="button"
+                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                  title="Copy cold credential hash"
+                  aria-label="Copy cold credential hash"
+                  onclick={() =>
+                    copyToClipboard("Cold credential hash", coldCredentialHashValue)}
+                >
+                  <CopyIcon class="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            </ItemContainer>
+          {/if}
+        </CollapsibleCard>
+      </section>
+    {/if}
+
     {#if members.length > 0}
       <section id="consortium-members" class="space-y-3">
         <h2>Consortium Members</h2>
@@ -182,7 +303,6 @@
           {#each members as member (member.key)}
             <li>
               <CollapsibleCard
-                class="bg-white"
                 expanded={isMemberExpanded(member.key)}
                 onToggle={() => toggleMember(member.key)}
                 expandLabel={`Expand ${member.name}`}
@@ -190,10 +310,71 @@
                 titleClass="text-base font-medium leading-6"
                 titleHeadingLevel={3}
               >
+                {#snippet titleLeading()}
+                  <UsersRoundIcon class="size-5 shrink-0" />
+                {/snippet}
                 {#snippet title()}
                   {member.name}
                 {/snippet}
                 <div class="space-y-4 mt-2">
+                  {#if member.geographicRegion}
+                    <section>
+                      <h4 class="mb-1.5 text-sm">Geographic region</h4>
+                      <ItemContainer>
+                        <p class="text-sm leading-5">{member.geographicRegion}</p>
+                      </ItemContainer>
+                    </section>
+                  {/if}
+
+                  {#if member.poolId || member.drepId}
+                    <section>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {#if member.poolId}
+                          <div>
+                            <h4 class="mb-1.5 text-sm">Pool ID</h4>
+                            <ItemContainer>
+                              <div class="flex items-center justify-between gap-2">
+                                <p class="text-sm leading-5 wrap-break-word">
+                                  {shortenString(member.poolId, 20, true)}
+                                </p>
+                                <button
+                                  type="button"
+                                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                  title="Copy Pool ID"
+                                  aria-label="Copy Pool ID"
+                                  onclick={() => copyToClipboard("Pool ID", member.poolId)}
+                                >
+                                  <CopyIcon class="size-3.5" aria-hidden="true" />
+                                </button>
+                              </div>
+                            </ItemContainer>
+                          </div>
+                        {/if}
+                        {#if member.drepId}
+                          <div>
+                            <h4 class="mb-1.5 text-sm">DRep ID</h4>
+                            <ItemContainer>
+                              <div class="flex items-center justify-between gap-2">
+                                <p class="text-sm leading-5 wrap-break-word">
+                                  {shortenString(member.drepId, 20, true)}
+                                </p>
+                                <button
+                                  type="button"
+                                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                  title="Copy DRep ID"
+                                  aria-label="Copy DRep ID"
+                                  onclick={() => copyToClipboard("DRep ID", member.drepId)}
+                                >
+                                  <CopyIcon class="size-3.5" aria-hidden="true" />
+                                </button>
+                              </div>
+                            </ItemContainer>
+                          </div>
+                        {/if}
+                      </div>
+                    </section>
+                  {/if}
+
                   {#each member.fields as field (field.id)}
                     <section>
                       <h4 class="mb-1.5 text-sm">{field.label}</h4>
@@ -218,8 +399,13 @@
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="text-sm text-primary hover:underline"
+                                class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+                                onclick={(e) => {
+                                  e.preventDefault();
+                                  linkWarningDialog.show(link.url, link.label);
+                                }}
                               >
+                                <ExternalLinkIcon class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                                 {link.label}
                               </a>
                             </li>
@@ -237,3 +423,5 @@
     {/if}
   </div>
 {/if}
+
+<LinkWarningDialog bind:this={linkWarningDialog} />
