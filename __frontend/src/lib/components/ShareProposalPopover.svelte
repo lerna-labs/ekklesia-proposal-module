@@ -78,8 +78,8 @@
   });
 
   function copyLink() {
-    if (!resolvedShareUrl) return;
-    navigator.clipboard.writeText(resolvedShareUrl).then(
+    if (!socialShareUrl) return;
+    navigator.clipboard.writeText(socialShareUrl).then(
       () => toast.success("Link copied to clipboard"),
       () => toast.error("Failed to copy"),
     );
