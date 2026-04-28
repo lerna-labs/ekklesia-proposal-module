@@ -22,7 +22,23 @@
     return "";
   });
 
-  const encodedUrl = $derived(encodeURIComponent(resolvedShareUrl));
+  const socialShareUrl = $derived.by(() => {
+    if (!resolvedShareUrl) return resolvedShareUrl;
+
+    try {
+      const url = new URL(resolvedShareUrl);
+      const match = url.pathname.match(/^\/votes\/([^/]+)\/([^/?#]+)$/);
+      if (!match) return resolvedShareUrl;
+
+      const [, voteSlug, proposalId] = match;
+      url.pathname = `/share/votes/${voteSlug}/${proposalId}`;
+      return url.toString();
+    } catch {
+      return resolvedShareUrl;
+    }
+  });
+
+  const encodedUrl = $derived(encodeURIComponent(socialShareUrl));
   const encodedText = $derived(encodeURIComponent(defaultText));
   const encodedEmailSubject = $derived(
     encodeURIComponent(defaultText || "Check out this proposal"),
@@ -30,8 +46,8 @@
   const encodedEmailBody = $derived(
     encodeURIComponent(
       defaultText
-        ? `${defaultText}\n\n${resolvedShareUrl}`
-        : resolvedShareUrl,
+        ? `${defaultText}\n\n${socialShareUrl}`
+        : socialShareUrl,
     ),
   );
 
