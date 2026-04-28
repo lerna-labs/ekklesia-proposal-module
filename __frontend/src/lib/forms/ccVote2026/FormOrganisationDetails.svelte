@@ -143,10 +143,11 @@
         id="contactPerson"
         bind:value={formData.metaData.organisation.contactPerson}
         label="Contact person"
-        description="Name of the main point of contact for this proposal."
+        description="This will be used for official communication and will not be visible to voters/public."
         placeholder="Enter name"
         required
         maxLength={100}
+        notPublic
         validationErrors={contactPersonErrors}
         class="w-full"
       />

@@ -97,10 +97,11 @@
         id="contactPerson"
         bind:value={formData.metaData.consortium.contactPerson}
         label="Contact person"
-        description="This person represents the consortium and vouches for all members."
+        description="This will be used for official communication and will not be visible to voters/public."
         placeholder="Enter name"
         required
         maxLength={100}
+        notPublic
         validationErrors={contactPersonErrors}
         class="w-full"
       />

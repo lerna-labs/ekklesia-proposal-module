@@ -10,32 +10,9 @@
   import { toast } from "svelte-sonner";
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
+  import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
 
   let { proposal, vote } = $props();
-
-  /** @param {string} raw */
-  function normalizeXUsername(raw) {
-    let t = (raw ?? "").trim();
-    t = t.replace(/^@+/, "");
-    t = t.replace(/^https?:\/\/(www\.)?x\.com\//i, "");
-    t = t.replace(/^https?:\/\/(www\.)?twitter\.com\//i, "");
-    t = t.replace(/^\/+/, "");
-    const q = t.indexOf("?");
-    if (q >= 0) t = t.slice(0, q);
-    return t.trim();
-  }
-
-  /** @param {string} raw */
-  function normalizeLinkedinUsername(raw) {
-    let t = (raw ?? "").trim();
-    t = t.replace(/^@+/, "");
-    t = t.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, "");
-    t = t.replace(/^\/+/, "");
-    const q = t.indexOf("?");
-    if (q >= 0) t = t.slice(0, q);
-    t = t.replace(/\/+$/, "");
-    return t.trim();
-  }
 
   let linkWarningDialog;
 
@@ -91,50 +68,46 @@
   });
 
   const socialRows = $derived.by(() => {
+    return buildSocialRows(trackPayload);
+  });
+
+  const firstSectionCards = $derived.by(() => {
     const p = trackPayload;
-    if (!p) return /** @type {{ key: string, label: string, url: string }[]} */ ([]);
-    /** @type {{ key: string, label: string, url: string }[]} */
-    const rows = [];
+    if (!p) return [];
 
-    const x = normalizeXUsername(String(p.xUsername ?? ""));
-    if (x) {
-      rows.push({
-        key: `x:${x}`,
-        label: "X (Twitter)",
-        url: `https://x.com/${x}`,
-      });
+    if (track === "individual") {
+      const rows = [
+        { id: "individual-contact-email", label: "Contact email", value: p.contactEmail },
+        { id: "individual-region", label: "Geographic region", value: p.geographicRegion },
+        { id: "individual-pool-id", label: "Pool ID", value: p.poolId },
+        { id: "individual-drep-id", label: "DRep ID", value: p.drepId },
+      ].filter((row) => hasText(row.value));
+
+      return rows.length > 0 ? [{ id: "individual-identity-contact", title: "Identity & Contact", rows }] : [];
     }
 
-    const li = normalizeLinkedinUsername(String(p.linkedinUsername ?? ""));
-    if (li) {
-      rows.push({
-        key: `li:${li}`,
-        label: "LinkedIn",
-        url: `https://www.linkedin.com/in/${li}/`,
-      });
+    if (track === "organisation") {
+      const identityRows = [
+        { id: "organisation-contact-email", label: "Contact email", value: p.contactEmail },
+        { id: "organisation-region", label: "Geographic region", value: p.geographicRegion },
+        { id: "organisation-pool-id", label: "Pool ID", value: p.poolId },
+        { id: "organisation-drep-id", label: "DRep ID", value: p.drepId },
+      ].filter((row) => hasText(row.value));
+
+      return identityRows.length > 0
+        ? [{ id: "organisation-identity-contact", title: "Identity & Contact", rows: identityRows }]
+        : [];
     }
 
-    const web = String(p.website ?? "").trim();
-    if (web) {
-      const url = /^https?:\/\//i.test(web) ? web : `https://${web}`;
-      rows.push({ key: `web:${url}`, label: "Website", url });
+    if (track === "consortium") {
+      const rows = [
+        { id: "consortium-contact-email", label: "Contact email", value: p.contactEmail },
+      ].filter((row) => hasText(row.value));
+
+      return rows.length > 0 ? [{ id: "consortium-details", title: "Consortium contact", rows }] : [];
     }
 
-    const other = Array.isArray(p.otherLinks) ? p.otherLinks : [];
-    for (const item of other) {
-      if (!item || typeof item !== "object") continue;
-      const o = /** @type {Record<string, unknown>} */ (item);
-      const title = String(o.title ?? "").trim();
-      const url = String(o.url ?? "").trim();
-      if (!url) continue;
-      rows.push({
-        key: `other:${url}:${title}`,
-        label: title || url,
-        url,
-      });
-    }
-
-    return rows;
+    return [];
   });
 
   const proposerHref = $derived(
@@ -239,6 +212,30 @@
             <p class="text-muted-foreground ml-6">—</p>
           {/if}
         </div>
+        {#if firstSectionCards.length > 0}
+          {#each firstSectionCards as card (card.id)}
+            <div class="border-t pt-3">
+              <p class="text-xs font-medium text-muted-foreground mb-2">{card.title}</p>
+              {#if card.rows?.length > 0}
+                <dl class="space-y-2 ml-6">
+                  {#each card.rows as row (row.id)}
+                    <div>
+                      <dt class="text-xs text-muted-foreground">{row.label}</dt>
+                      <dd class="text-xs text-foreground wrap-break-word">{toText(row.value)}</dd>
+                    </div>
+                  {/each}
+                </dl>
+              {/if}
+              {#if card.markdownRows?.length > 0}
+                {#each card.markdownRows as row (row.id)}
+                  <div class="prose prose-neutral dark:prose-invert max-w-none text-xs">
+                    <Markdown content={toText(row.value)} />
+                  </div>
+                {/each}
+              {/if}
+            </div>
+          {/each}
+        {/if}
       </div>
     </div>
 
