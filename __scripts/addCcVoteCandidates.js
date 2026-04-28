@@ -22,6 +22,14 @@ import { User } from "../schema/User.js";
 
 const CC_VOTE_SLUG = "cc-vote-2026";
 const CANDIDATE_COUNT = 11;
+const REGION_IDS = [
+  "507f1f77bcf86cd799439011",
+  "507f1f77bcf86cd799439012",
+  "507f1f77bcf86cd799439013",
+  "507f1f77bcf86cd799439014",
+  "507f1f77bcf86cd799439015",
+];
+const BECH32_PAYLOAD_CHARS = "023456789acdefghjklmnpqrstuvwxyz";
 
 const TRACK_SEQUENCE = [
   "individual",
@@ -45,10 +53,31 @@ function buildDeclarationAgreement(track) {
   };
 }
 
+function buildColdCredentialHash(index) {
+  let payload = "";
+  for (let i = 0; i < 28; i++) {
+    const charIndex = (index * 7 + i * 3) % BECH32_PAYLOAD_CHARS.length;
+    payload += BECH32_PAYLOAD_CHARS[charIndex];
+  }
+  return `cc_cold1${payload}`;
+}
+
+function buildRegionId(index) {
+  return REGION_IDS[index % REGION_IDS.length];
+}
+
+function buildPoolId(prefix, index) {
+  return `pool1${prefix}${String(index + 1).padStart(4, "0")}xyz`;
+}
+
+function buildDrepId(prefix, index) {
+  return `drep1${prefix}${String(index + 1).padStart(4, "0")}uvw`;
+}
+
 function buildCommonMetaData(track, index) {
   return {
     track,
-    coldCredentialHash: `cold-credential-hash-${String(index + 1).padStart(2, "0")}`,
+    coldCredentialHash: buildColdCredentialHash(index),
     coldCredentialType: index % 2 === 0 ? "keyCredential" : "scriptCredential",
     declarationAgreement: buildDeclarationAgreement(track),
   };
@@ -58,32 +87,42 @@ function buildIndividual(index) {
   return {
     fullNameOrAlias: `CC Candidate Individual ${index + 1}`,
     contactEmail: `cc-individual-${index + 1}@example.com`,
-    geographicRegion: "",
-    poolId: "",
-    drepId: "",
+    geographicRegion: buildRegionId(index),
+    poolId: buildPoolId("ind", index),
+    drepId: buildDrepId("ind", index),
     xUsername: `ccindividual${index + 1}`,
-    linkedinUsername: "",
-    website: "https://example.com",
-    otherLinks: [],
+    linkedinUsername: `cc-individual-${index + 1}`,
+    website: `https://individual-${index + 1}.example.com`,
+    otherLinks: [
+      {
+        title: "Candidate profile",
+        url: `https://profiles.example.com/individual-${index + 1}`,
+      },
+      {
+        title: "Governance forum posts",
+        url: `https://forum.example.com/individual-${index + 1}`,
+      },
+    ],
     professionalBackground:
-      "Experienced governance contributor and ecosystem operator with a focus on transparent decision making.",
+      "### Professional background\n\nI have worked in governance operations and stakeholder facilitation for more than five years, with a focus on transparent decision frameworks.",
     governanceExperience:
-      "Contributed to governance discussions, review cycles, and public feedback over multiple proposal rounds.",
+      "I have participated in multiple governance review cycles, authored feedback on proposals, and facilitated public consultation sessions.",
     briefBiography:
-      "Long-term Cardano ecosystem contributor focused on practical governance outcomes and accountability.",
-    conflictOfInterestStatement: "No known conflicts beyond publicly disclosed ecosystem roles.",
+      "Cardano ecosystem contributor focused on practical governance outcomes, process clarity, and accountability for public decisions.",
+    conflictOfInterestStatement:
+      "I hold minor advisory roles that are publicly disclosed and will recuse from any decision with direct overlap.",
     contributionsToCardano:
-      "Supported community education initiatives, governance tooling feedback, and proposal review participation.",
+      "Contributed to community education sessions, tooling feedback rounds, and governance working groups.",
     motivation:
-      "I want to help improve governance quality through consistent evaluation criteria and transparent communication.",
+      "I am running to improve governance quality through consistent evaluation criteria, documented rationale, and clear communication.",
     decentralisedGovernanceImportance:
-      "Decentralised governance distributes responsibility and creates resilient decision making across the ecosystem.",
+      "Decentralised governance distributes responsibility and improves resilience by reducing single points of influence.",
     constitutionalInterpretation:
-      "Constitutional guidance should be applied with clarity, consistency, and explicit rationale for decisions.",
+      "Constitutional interpretation should be principle-driven, consistent across cases, and accompanied by written reasoning.",
     perspectiveYouWouldBring:
-      "Practical operator perspective with emphasis on measurable outcomes, process clarity, and inclusiveness.",
+      "I bring an operator perspective with emphasis on measurable outcomes, clear process gates, and broad participation.",
     transparencyApproach:
-      "Publish decisions, supporting reasoning, and trade-offs so stakeholders can understand and scrutinize outcomes.",
+      "I will publish decision rationales, alternatives considered, and follow-up actions for accountability.",
   };
 }
 
@@ -91,34 +130,43 @@ function buildOrganisation(index) {
   return {
     organisationName: `CC Org Candidate ${index + 1}`,
     organisationDescription:
-      "Organisation focused on governance operations, ecosystem support, and process improvement.",
-    geographicRegion: "",
+      "## Organisation description\n\nOur organisation supports governance operations, ecosystem enablement, and process improvement across community programs.",
+    geographicRegion: buildRegionId(index + 1),
     contactPerson: `Organisation Contact ${index + 1}`,
     contactEmail: `cc-organisation-${index + 1}@example.com`,
-    poolId: "",
-    drepId: "",
+    poolId: buildPoolId("org", index),
+    drepId: buildDrepId("org", index),
     xUsername: `ccorg${index + 1}`,
-    linkedinUsername: "",
-    website: "https://example.com",
-    otherLinks: [],
+    linkedinUsername: `cc-org-${index + 1}`,
+    website: `https://organisation-${index + 1}.example.com`,
+    otherLinks: [
+      {
+        title: "Organisation website",
+        url: `https://org.example.com/candidate-${index + 1}`,
+      },
+      {
+        title: "Public reports",
+        url: `https://reports.example.com/org-${index + 1}`,
+      },
+    ],
     organisationalAreasOfExpertise:
-      "Governance operations, stakeholder facilitation, and process design for distributed decision making.",
+      "Governance operations, stakeholder facilitation, policy analysis, and process design for distributed decision making.",
     governanceExperience:
-      "Facilitated governance consultations and drafted implementation recommendations for community initiatives.",
+      "Facilitated governance consultations, coordinated stakeholder workshops, and delivered implementation recommendations.",
     conflictOfInterestStatement:
-      "Potential overlaps are disclosed publicly; recusal is used when decisions involve direct organisational interests.",
+      "Potential overlaps are publicly disclosed, and we apply recusal policies whenever direct organisational interests are involved.",
     contributionsToCardano:
-      "Delivered workshops, documentation, and coordination support for governance participation programs.",
+      "Delivered workshops, public documentation, and operational coordination for governance participation programs.",
     motivation:
-      "Our organisation is motivated to support stronger governance quality through structured collaboration and accountability.",
+      "Our organisation is motivated to support stronger governance quality through structured collaboration and public accountability.",
     decentralisedGovernanceImportance:
-      "Decentralised governance enables broader participation and better long-term alignment across stakeholders.",
+      "Decentralised governance enables broader participation and long-term alignment across diverse stakeholder groups.",
     constitutionalInterpretation:
-      "Constitutional interpretation should prioritize transparency, proportionality, and predictable precedent.",
+      "Constitutional interpretation should prioritize transparency, proportionality, and a predictable body of precedent.",
     perspectiveYouWouldBring:
-      "We bring facilitation and policy experience to translate complex inputs into clear, actionable governance outcomes.",
+      "We bring facilitation and policy expertise to translate complex input into actionable governance outcomes.",
     transparencyApproach:
-      "We will publish rationale, alternatives considered, and implementation follow-up for each major decision.",
+      "We will publish rationale, alternatives considered, and implementation follow-up for major decisions.",
   };
 }
 
@@ -128,39 +176,80 @@ function buildConsortium(index) {
     contactPerson: `Consortium Contact ${index + 1}`,
     contactEmail: `cc-consortium-${index + 1}@example.com`,
     xUsername: `ccconsortium${index + 1}`,
-    linkedinUsername: "",
-    website: "https://example.com",
-    otherLinks: [],
+    linkedinUsername: `cc-consortium-${index + 1}`,
+    website: `https://consortium-${index + 1}.example.com`,
+    otherLinks: [
+      {
+        title: "Consortium profile",
+        url: `https://consortiums.example.com/${index + 1}`,
+      },
+      {
+        title: "Operational charter",
+        url: `https://docs.example.com/consortium-${index + 1}-charter`,
+      },
+    ],
     conflictOfInterestStatement:
-      "Consortium members disclose affiliations and apply recusal where direct conflicts exist.",
+      "Consortium members disclose affiliations and apply recusal whenever direct conflicts are identified.",
     contributionsToCardano:
-      "Consortium members have contributed to governance tooling, education, and operational support.",
+      "Consortium members have contributed to governance tooling, educational initiatives, and operational support.",
     motivation:
-      "Our consortium is motivated to represent diverse expertise while maintaining consistent and transparent governance standards.",
+      "Our consortium is motivated to represent diverse expertise while maintaining consistent, transparent governance standards.",
     decentralisedGovernanceImportance:
       "A decentralised approach allows expertise from multiple domains to shape robust and legitimate governance outcomes.",
     constitutionalInterpretation:
-      "Constitutional interpretation should be explicit, principle-based, and documented for future consistency.",
+      "Constitutional interpretation should be explicit, principle-based, and documented for consistency over time.",
     perspectiveYouWouldBring:
-      "Multi-disciplinary perspective combining technical, operational, and community governance experience.",
+      "A multidisciplinary perspective combining technical, operational, legal, and community governance experience.",
     transparencyApproach:
-      "We will maintain public records of member positions, rationale summaries, and any dissenting views.",
+      "We will maintain public records of member positions, rationale summaries, and dissenting views when present.",
     internalDecisionMakingProcess:
-      "Consensus-first process with documented voting fallback when consensus cannot be reached in time.",
+      "Consensus-first governance with documented voting fallback, role clarity, and published decision logs.",
     members: [
       {
         fullNameOrAlias: `Consortium Member A${index + 1}`,
-        geographicRegion: "",
-        briefBiography: "Governance contributor with policy and community coordination experience.",
-        professionalBackground: "Policy and governance operations.",
-        governanceExperience: "Active in governance discussions and proposal assessment.",
-        poolId: "",
-        drepId: "",
-        xUsername: "",
-        linkedinUsername: "",
-        website: "",
-        otherLinks: [],
-        conflictOfInterestStatement: "No undeclared conflicts.",
+        geographicRegion: buildRegionId(index + 2),
+        briefBiography:
+          "Governance contributor with policy and community coordination experience across ecosystem initiatives.",
+        professionalBackground:
+          "Background in public policy, distributed governance design, and operational program management.",
+        governanceExperience:
+          "Active in governance consultations, proposal assessment, and public reporting workflows.",
+        poolId: buildPoolId("cma", index),
+        drepId: buildDrepId("cma", index),
+        xUsername: `consortiummembera${index + 1}`,
+        linkedinUsername: `consortium-member-a-${index + 1}`,
+        website: `https://members.example.com/a-${index + 1}`,
+        otherLinks: [
+          {
+            title: "Member profile",
+            url: `https://profiles.example.com/consortium-a-${index + 1}`,
+          },
+        ],
+        conflictOfInterestStatement:
+          "No undeclared conflicts; advisory engagements are disclosed publicly.",
+      },
+      {
+        fullNameOrAlias: `Consortium Member B${index + 1}`,
+        geographicRegion: buildRegionId(index + 3),
+        briefBiography:
+          "Technical governance practitioner focused on constitutional interpretation and decision transparency.",
+        professionalBackground:
+          "Software architecture, governance tooling, and compliance-oriented process engineering.",
+        governanceExperience:
+          "Served on advisory groups and coordinated governance proposal review cycles.",
+        poolId: buildPoolId("cmb", index),
+        drepId: buildDrepId("cmb", index),
+        xUsername: `consortiummemberb${index + 1}`,
+        linkedinUsername: `consortium-member-b-${index + 1}`,
+        website: `https://members.example.com/b-${index + 1}`,
+        otherLinks: [
+          {
+            title: "Governance writing",
+            url: `https://writing.example.com/consortium-b-${index + 1}`,
+          },
+        ],
+        conflictOfInterestStatement:
+          "Potential overlaps are disclosed and recusals are applied when necessary.",
       },
     ],
   };
@@ -228,7 +317,8 @@ async function main() {
         proposerId,
         voteId: vote._id,
         title,
-        summary: "",
+        summary:
+          "## Candidate summary\n\nThis application provides complete profile information across all sections and fields for testing and review.",
         status: "live",
         submittedAt: new Date(now - (CANDIDATE_COUNT - i) * 60 * 1000),
         metaData: buildCandidateMetaData(track, i),
