@@ -25,6 +25,9 @@ const CC_VOTE_SLUG = "cc-vote-2026";
 const CANDIDATE_COUNT = 11;
 const BECH32_PAYLOAD_CHARS = "023456789acdefghjklmnpqrstuvwxyz";
 const BECH32_ID_PAYLOAD_CHARS = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+const CC_COLD_PREFIX = "cc_cold1";
+const CC_COLD_TOTAL_LENGTH = 61;
+const CC_COLD_PAYLOAD_LENGTH = CC_COLD_TOTAL_LENGTH - CC_COLD_PREFIX.length;
 
 const TRACK_SEQUENCE = [
   "individual",
@@ -50,11 +53,11 @@ function buildDeclarationAgreement(track) {
 
 function buildColdCredentialHash(index) {
   let payload = "";
-  for (let i = 0; i < 28; i++) {
+  for (let i = 0; i < CC_COLD_PAYLOAD_LENGTH; i++) {
     const charIndex = (index * 7 + i * 3) % BECH32_PAYLOAD_CHARS.length;
     payload += BECH32_PAYLOAD_CHARS[charIndex];
   }
-  return `cc_cold1${payload}`;
+  return `${CC_COLD_PREFIX}${payload}`;
 }
 
 function buildRegionId(regionIds, index) {

@@ -19,9 +19,7 @@
       : null,
   );
   const apiUrl =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
-      ? import.meta.env.VITE_API_URL
-      : "/api/v0";
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL ? import.meta.env.VITE_API_URL : "/api/v0";
   let regionsById = $state({});
 
   $effect(() => {
@@ -106,9 +104,7 @@
         const regionId = toText(member.geographicRegion);
         const poolId = toText(member.poolId);
         const drepId = toText(member.drepId);
-        const geographicRegion = regionId
-          ? (regionsById[regionId] ?? "Unknown region")
-          : "";
+        const geographicRegion = regionId ? (regionsById[regionId] ?? "Unknown region") : "";
         const fields = [
           {
             id: "member-brief-biography",
@@ -189,9 +185,7 @@
           : "",
     ),
   );
-  const hasContent = $derived(
-    governanceFields.length > 0 || coldCredentialFields.length > 0 || members.length > 0,
-  );
+  const hasContent = $derived(governanceFields.length > 0 || coldCredentialFields.length > 0 || members.length > 0);
 
   let expandedGovernance = $state({});
 
@@ -258,41 +252,42 @@
     {#if coldCredentialFields.length > 0}
       <section id="cold-credentials" class="space-y-3">
         <h2>Cold Credentials</h2>
-        <CollapsibleCard
-          expanded={true}
-          onToggle={() => {}}
-          showButton={false}
-          titleClass="text-lg font-medium leading-6"
-          titleHeadingLevel={3}
-        >
-          {#snippet title()}
-            Cold credential hash
-          {/snippet}
-          {#if coldCredentialTypeLabel}
-            <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-3">
-              {coldCredentialTypeLabel}
-            </Badge>
-          {/if}
-          {#if coldCredentialHashValue}
-            <ItemContainer>
-              <div class="flex items-center justify-between gap-2">
-                <p class="text-sm leading-5 wrap-break-word">
-                  {shortenString(coldCredentialHashValue, 20, true)}
-                </p>
-                <button
-                  type="button"
-                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                  title="Copy cold credential hash"
-                  aria-label="Copy cold credential hash"
-                  onclick={() =>
-                    copyToClipboard("Cold credential hash", coldCredentialHashValue)}
-                >
-                  <CopyIcon class="size-3.5" aria-hidden="true" />
-                </button>
+        <div class="rounded-md border bg-slate-50 p-4 pb-5">
+          <div class="space-y-3">
+            {#if coldCredentialHashValue}
+              <div>
+                <h4 class="mb-2">Cold credential hash</h4>
+                <ItemContainer>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <p
+                      class="text-sm leading-5 min-w-0 flex-1 truncate"
+                      title={coldCredentialHashValue}
+                    >
+                      {coldCredentialHashValue}
+                    </p>
+                    <button
+                      type="button"
+                      class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title="Copy cold credential hash"
+                      aria-label="Copy cold credential hash"
+                      onclick={() => copyToClipboard("Cold credential hash", coldCredentialHashValue)}
+                    >
+                      <CopyIcon class="size-3.5" aria-hidden="true" />
+                    </button>
+                  </div>
+                </ItemContainer>
               </div>
-            </ItemContainer>
-          {/if}
-        </CollapsibleCard>
+            {/if}
+            {#if coldCredentialTypeLabel}
+              <div>
+                <h4 class="mb-2">Credential type</h4>
+                <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0">
+                  {coldCredentialTypeLabel}
+                </Badge>
+              </div>
+            {/if}
+          </div>
+        </div>
       </section>
     {/if}
 
@@ -319,7 +314,7 @@
                 <div class="space-y-4 mt-2">
                   {#if member.geographicRegion}
                     <section>
-                      <h4 class="mb-1.5 text-sm">Geographic region</h4>
+                      <h4 class="mb-2">Geographic region</h4>
                       <ItemContainer>
                         <p class="text-sm leading-5">{member.geographicRegion}</p>
                       </ItemContainer>
@@ -331,7 +326,7 @@
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {#if member.poolId}
                           <div>
-                            <h4 class="mb-1.5 text-sm">Pool ID</h4>
+                            <h4 class="mb-2">Pool ID</h4>
                             <ItemContainer>
                               <div class="flex items-center justify-between gap-2">
                                 <p class="text-sm leading-5 wrap-break-word">
@@ -352,7 +347,7 @@
                         {/if}
                         {#if member.drepId}
                           <div>
-                            <h4 class="mb-1.5 text-sm">DRep ID</h4>
+                            <h4 class="mb-2">DRep ID</h4>
                             <ItemContainer>
                               <div class="flex items-center justify-between gap-2">
                                 <p class="text-sm leading-5 wrap-break-word">
@@ -377,7 +372,7 @@
 
                   {#each member.fields as field (field.id)}
                     <section>
-                      <h4 class="mb-1.5 text-sm">{field.label}</h4>
+                      <h4 class="mb-2">{field.label}</h4>
                       <ItemContainer>
                         {#if field.markdown}
                           <Markdown content={toText(field.value)} class="text-sm leading-5" />
@@ -390,7 +385,7 @@
 
                   {#if member.links.length > 0}
                     <section>
-                      <h4 class="mb-1.5 text-sm">Social & Profile links</h4>
+                      <h4 class="mb-2">Social & Profile links</h4>
                       <ItemContainer>
                         <ul class="space-y-1 list-none p-0 m-0">
                           {#each member.links as link (link.key)}
