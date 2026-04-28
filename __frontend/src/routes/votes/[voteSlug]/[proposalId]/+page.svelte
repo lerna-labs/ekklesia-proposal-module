@@ -5,13 +5,11 @@
   import { Badge } from "$lib/components/ui/badge";
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
+  import PageMetadata from "$lib/components/PageMetadata.svelte";
   import Budget2026ProposalPage from "$lib/votes/budget2026/ProposalPage.svelte";
   import CcVote2026ProposalPage from "$lib/votes/ccVote2026/ProposalPage.svelte";
   import DefaultProposalPage from "$lib/votes/default/ProposalPage.svelte";
-  import {
-    readPreviewPayload,
-    clearPreviewStorage,
-  } from "$lib/previewProposalStorage.js";
+  import { readPreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
 
   const PROPOSAL_PAGE_MAP = {
     budget2026: Budget2026ProposalPage,
@@ -31,10 +29,7 @@
     if (!preview || typeof window === "undefined") return;
     previewLoadAttempted = true;
     const parsed = readPreviewPayload();
-    if (
-      parsed != null &&
-      String(parsed.proposalId ?? "") === String(page.params.proposalId ?? "")
-    ) {
+    if (parsed != null && String(parsed.proposalId ?? "") === String(page.params.proposalId ?? "")) {
       previewProposal = parsed.proposal;
     }
   });
@@ -52,13 +47,8 @@
   beforeNavigate(({ to }) => {
     // Use window.location: from.url can omit search params (SvelteKit #10122)
     const currentHasPreview =
-      typeof window !== "undefined" &&
-      new URL(window.location.href).searchParams.has("preview");
-    if (
-      currentHasPreview &&
-      to?.url &&
-      !to.url.searchParams.has("preview")
-    ) {
+      typeof window !== "undefined" && new URL(window.location.href).searchParams.has("preview");
+    if (currentHasPreview && to?.url && !to.url.searchParams.has("preview")) {
       clearPreviewStorage();
     }
   });
@@ -66,29 +56,18 @@
   afterNavigate(({ from, to }) => {
     if (!listPath || !to?.url) return;
     const toPath = to.url.pathname;
-    if (
-      from?.url &&
-      from.url.pathname === listPath &&
-      toPath === page.url.pathname
-    ) {
+    if (from?.url && from.url.pathname === listPath && toPath === page.url.pathname) {
       backToVoteUrl = from.url.pathname + (from.url.search || "");
     }
   });
 
-  const voteUrl = $derived(
-    backToVoteUrl || (voteSlug ? `/votes/${voteSlug}` : "/votes"),
-  );
+  const voteUrl = $derived(backToVoteUrl || (voteSlug ? `/votes/${voteSlug}` : "/votes"));
   const isArchived = $derived(proposal?.status === "archived");
   const currentVersionHref = $derived(
-    isArchived && proposal?.currentProposalId && voteSlug
-      ? `/votes/${voteSlug}/${proposal.currentProposalId}`
-      : null,
+    isArchived && proposal?.currentProposalId && voteSlug ? `/votes/${voteSlug}/${proposal.currentProposalId}` : null,
   );
 
-  const isWithdrawn = $derived(
-    proposal?.status === "withdrawnByAdmin" ||
-      proposal?.status === "withdrawnByProposer",
-  );
+  const isWithdrawn = $derived(proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer");
   const withdrawalDetails = $derived(proposal?.withdrawalDetails ?? null);
   const withdrawalDate = $derived.by(() => {
     const d = withdrawalDetails?.date;
@@ -105,24 +84,58 @@
         ? "by the proposer"
         : "",
   );
-  const showComments = $derived(
-    proposal &&
-      proposal.status !== "draft" &&
-      proposal.status !== "archived",
-  );
+  const showComments = $derived(proposal && proposal.status !== "draft" && proposal.status !== "archived");
 
-  const ProposalPageComponent = $derived(
-    PROPOSAL_PAGE_MAP[vote?.form] ?? DefaultProposalPage,
-  );
+  const ProposalPageComponent = $derived(PROPOSAL_PAGE_MAP[vote?.form] ?? DefaultProposalPage);
 
   const commentsHref = $derived(`${page.url.pathname}#comments`);
 
-  const isUnpublishedDraft = $derived(
-    !preview && proposal != null && proposal.status === "draft",
-  );
+  const isUnpublishedDraft = $derived(!preview && proposal != null && proposal.status === "draft");
+
+  const pageMeta = $derived.by(() => {
+    if (preview || !proposal || !vote) return null;
+
+    const proposalTitle = String(proposal?.title ?? proposal?.name ?? "Untitled Proposal").trim();
+    const withPrefix = (prefix, value) => {
+      const clean = String(value ?? "").trim();
+      return clean ? `${prefix} - ${clean}` : prefix;
+    };
+
+    if (vote?.form === "ccVote2026") {
+      const track = String(proposal?.metaData?.track ?? "").trim();
+      const motivation = String(proposal?.metaData?.[track]?.motivation ?? "").trim();
+      const candidateName = String(proposal?.metaData?.[track]?.applicantName ?? proposalTitle).trim();
+      return {
+        title: withPrefix("CC Elections 2026", candidateName),
+        description: motivation,
+      };
+    }
+
+    if (vote?.form === "budget2026") {
+      const executiveSummary = String(proposal?.summary ?? "").trim();
+      return {
+        title: withPrefix("Budget Process 2026", proposalTitle),
+        description: executiveSummary,
+      };
+    }
+
+    return {
+      title: proposalTitle,
+      description: String(proposal?.summary ?? "").trim(),
+    };
+  });
 </script>
 
 <div class="overflow-x-clip">
+  {#if pageMeta}
+    <PageMetadata
+      title={pageMeta.title}
+      description={pageMeta.description}
+      url={page.url.href}
+      type="article"
+      image="https://hydra-voting.intersectmbo.org/images/social.png"
+    />
+  {/if}
   {#if preview}
     <div
       class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-white text-sm font-medium"
@@ -141,9 +154,7 @@
     </div>
   {/if}
   {#if preview && !previewLoadAttempted}
-    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">
-      Loading preview…
-    </div>
+    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">Loading preview…</div>
   {:else if preview && !proposal}
     <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">
       Preview data not found. Close this window and click Preview again from the form.
@@ -153,11 +164,8 @@
       href={currentVersionHref}
       class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center bg-(--mbo-orange) py-3 text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-(--mbo-orange)"
     >
-      <div
-        class="container mx-auto flex max-w-4xl items-center gap-1.5 px-4 font-medium"
-      >
-        You are looking at an outdated version of this proposal, click here to
-        see the current version
+      <div class="container mx-auto flex max-w-4xl items-center gap-1.5 px-4 font-medium">
+        You are looking at an outdated version of this proposal, click here to see the current version
         <ArrowRightIcon class="size-4 shrink-0" aria-hidden="true" />
       </div>
     </a>
@@ -167,9 +175,7 @@
       role="banner"
       aria-label="Proposal withdrawn"
     >
-      <div
-        class="container mx-auto flex max-w-4xl flex-col gap-1 px-4 font-medium text-white"
-      >
+      <div class="container mx-auto flex max-w-4xl flex-col gap-1 px-4 font-medium text-white">
         <span>
           This proposal has been withdrawn {withdrawnByLabel}
           {#if withdrawalDate}
@@ -180,13 +186,8 @@
           {/if}
         </span>
         {#if withdrawalDetails?.comment}
-          <div
-            class="text-xs border-b-2 border-white pb-0.5 inline w-fit mt-2 mb-2"
-            >Comment:
-          </div>
-          <div
-            class="text-sm opacity-90 max-w-3xl **:first:mt-0 **:last:mb-0 prose prose-sm prose-invert"
-          >
+          <div class="text-xs border-b-2 border-white pb-0.5 inline w-fit mt-2 mb-2">Comment:</div>
+          <div class="text-sm opacity-90 max-w-3xl **:first:mt-0 **:last:mb-0 prose prose-sm prose-invert">
             <Markdown content={withdrawalDetails.comment} />
           </div>
         {/if}

@@ -9,6 +9,7 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import UserIcon from "@lucide/svelte/icons/user";
   import { toast } from "svelte-sonner";
+  import ShareProposalPopover from "$lib/components/ShareProposalPopover.svelte";
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import { shortenString } from "$lib/utils.js";
@@ -170,10 +171,16 @@
   );
 </script>
 
-<Card.Root class="bg-slate-50" id="key-details">
-  <Card.Header class="py-0">
+<Card.Root class="bg-slate-50 gap-3" id="key-details">
+  <Card.Header class="py-0 pb-0">
     <h2 id="key-details-heading" class="sr-only">Key Details</h2>
-    <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
+    <div class="flex items-center justify-between gap-2">
+      <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
+      <ShareProposalPopover
+        buttonLabel="Share Application"
+        defaultText={`Check out this CC application: ${proposal?.title ?? ""}`.trim()}
+      />
+    </div>
   </Card.Header>
   <Card.Content
     class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
@@ -187,7 +194,7 @@
           />
           <div class="min-w-0">
             <p class="text-xs font-medium text-muted-foreground mb-1">Applicant name</p>
-            <p class="text-lg font-semibold text-foreground tracking-tight wrap-break-word">
+            <p class="text-lg font-medium text-foreground tracking-tight wrap-break-word">
               {#if applicantDisplayName.trim()}
                 {#if proposerHref}
                   <a href={proposerHref} class="hover:underline">{applicantDisplayName}</a>

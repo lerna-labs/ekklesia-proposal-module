@@ -19,6 +19,7 @@
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import * as Accordion from "$lib/components/ui/accordion/index.js";
+  import ShareProposalPopover from "$lib/components/ShareProposalPopover.svelte";
 
   let { proposal, vote, pillars = [] } = $props();
 
@@ -76,10 +77,16 @@
   const dateOptions = { dateStyle: "long", timeStyle: "short" };
 </script>
 
-<Card.Root class="bg-slate-50" id="key-details">
-  <Card.Header class="py-0">
+<Card.Root class="bg-slate-50 gap-3" id="key-details">
+  <Card.Header class="py-0 pb-0">
     <h2 id="key-details-heading" class="sr-only">Key Details</h2>
-    <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
+    <div class="flex items-center justify-between gap-2">
+      <Card.Title class="text-xl font-medium" aria-hidden="true">Key Details</Card.Title>
+      <ShareProposalPopover
+        buttonLabel="Share Proposal"
+        defaultText={`Check out this budget proposal: ${proposal?.title ?? ""}`.trim()}
+      />
+    </div>
   </Card.Header>
   <Card.Content
     class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
