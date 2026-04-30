@@ -87,6 +87,21 @@
   background-color: var(--accent) !important;
   border-color: var(--input);
 }
+/* Prevent package/default toolbar styles from rendering underline-like decorations
+   on icon buttons (especially the link tool). */
+.svelte-lexical .toolbar button.toolbar-item,
+.svelte-lexical .toolbar button.toolbar-item:hover,
+.svelte-lexical .toolbar button.toolbar-item:focus-visible,
+.svelte-lexical .toolbar button.toolbar-item.active {
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.svelte-lexical .toolbar button.toolbar-item i.format,
+.svelte-lexical .toolbar button.toolbar-item i.format.link {
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
 
 .svelte-lexical .toolbar > .divider {
   width: 1px;
