@@ -298,19 +298,6 @@
                     </section>
                   {/if}
 
-                  {#each member.fields as field (field.id)}
-                    <section>
-                      <h4 class="mb-2">{field.label}</h4>
-                      <ItemContainer>
-                        {#if field.markdown}
-                          <Markdown content={toText(field.value)} class="text-sm leading-5" />
-                        {:else}
-                          <p class="text-sm leading-5">{toText(field.value)}</p>
-                        {/if}
-                      </ItemContainer>
-                    </section>
-                  {/each}
-
                   {#if member.links.length > 0}
                     <section>
                       <h4 class="mb-2">Social & Profile links</h4>
@@ -337,6 +324,19 @@
                       </ItemContainer>
                     </section>
                   {/if}
+
+                  {#each member.fields as field (field.id)}
+                    <section>
+                      <h4 class="mb-2">{field.label}</h4>
+                      <ItemContainer>
+                        {#if field.markdown}
+                          <Markdown content={toText(field.value)} class="text-sm leading-5" />
+                        {:else}
+                          <p class="text-sm leading-5">{toText(field.value)}</p>
+                        {/if}
+                      </ItemContainer>
+                    </section>
+                  {/each}
                 </div>
               </CollapsibleCard>
             </li>

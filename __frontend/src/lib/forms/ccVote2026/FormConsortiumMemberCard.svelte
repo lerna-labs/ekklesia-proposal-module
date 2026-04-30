@@ -146,51 +146,6 @@
       </section>
     </div>
 
-    <section class="space-y-1.5">
-      <h4>What is their brief biography?</h4>
-      <Textarea
-        id="member-{index}-briefBiography"
-        bind:value={member.briefBiography}
-        label="Brief biography"
-        description="Background and involvement in the ecosystem."
-        placeholder="Short summary of background and ecosystem involvement"
-        required
-        maxLength={LONG_TEXT_MAX}
-        validationErrors={validationErrorsForField("briefBiography")}
-        class="w-full"
-      />
-    </section>
-
-    <section class="space-y-1.5">
-      <h4>What is their professional background?</h4>
-      <Textarea
-        id="member-{index}-professionalBackground"
-        bind:value={member.professionalBackground}
-        label="Professional background (optional)"
-        description="Include relevant fields such as governance, law, technology, finance, or community leadership."
-        placeholder="e.g. legal expert, blockchain developer, governance advisor"
-        required={false}
-        maxLength={LONG_TEXT_MAX}
-        validationErrors={validationErrorsForField("professionalBackground")}
-        class="w-full"
-      />
-    </section>
-
-    <section class="space-y-1.5">
-      <h4>What governance experience do they have?</h4>
-      <Textarea
-        id="member-{index}-governanceExperience"
-        bind:value={member.governanceExperience}
-        label="Governance experience (optional)"
-        description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
-        placeholder="e.g. DAO contributor, Catalyst participant, committee member"
-        required={false}
-        maxLength={LONG_TEXT_MAX}
-        validationErrors={validationErrorsForField("governanceExperience")}
-        class="w-full"
-      />
-    </section>
-
     <div class="md:grid md:grid-cols-2 gap-6">
       <section class="space-y-1.5">
         <h4>What is your Pool ID? (if applicable)</h4>
@@ -262,6 +217,51 @@
         description="Add other titled links (e.g. GitHub, forum). Each link has a title and URL."
         addButtonLabel="Add other link"
         validationErrors={otherLinksErrors}
+        class="w-full"
+      />
+    </section>
+
+    <section class="space-y-1.5">
+      <h4>What is their brief biography?</h4>
+      <Textarea
+        id="member-{index}-briefBiography"
+        bind:value={member.briefBiography}
+        label="Brief biography"
+        description="Background and involvement in the ecosystem."
+        placeholder="Short summary of background and ecosystem involvement"
+        required
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={validationErrorsForField("briefBiography")}
+        class="w-full"
+      />
+    </section>
+
+    <section class="space-y-1.5">
+      <h4>What is their professional background?</h4>
+      <Textarea
+        id="member-{index}-professionalBackground"
+        bind:value={member.professionalBackground}
+        label="Professional background (optional)"
+        description="Include relevant fields such as governance, law, technology, finance, or community leadership."
+        placeholder="e.g. legal expert, blockchain developer, governance advisor"
+        required={false}
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={validationErrorsForField("professionalBackground")}
+        class="w-full"
+      />
+    </section>
+
+    <section class="space-y-1.5">
+      <h4>What governance experience do they have?</h4>
+      <Textarea
+        id="member-{index}-governanceExperience"
+        bind:value={member.governanceExperience}
+        label="Governance experience (optional)"
+        description="For example: DAO participation, voting roles, Catalyst, public service, or committees."
+        placeholder="e.g. DAO contributor, Catalyst participant, committee member"
+        required={false}
+        maxLength={LONG_TEXT_MAX}
+        validationErrors={validationErrorsForField("governanceExperience")}
         class="w-full"
       />
     </section>
