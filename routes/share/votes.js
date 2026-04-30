@@ -111,8 +111,6 @@ function shareHtml({ title, description, canonicalUrl, redirectUrl }) {
   <meta http-equiv="refresh" content="0;url=${safeRedirect}" />
 </head>
 <body>
-  <p>Redirecting to proposal...</p>
-  <p><a href="${safeRedirect}">Continue</a></p>
   <script>window.location.replace(${JSON.stringify(redirectUrl)});</script>
 </body>
 </html>`;
