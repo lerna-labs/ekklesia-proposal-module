@@ -54,6 +54,11 @@ function normalizeCcColdCredentialHash(value) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+function requiresTreasuryDonationValidation(voteDoc) {
+  const amount = Number(voteDoc?.depositOptions?.treasuryDonation);
+  return Number.isFinite(amount) && amount > 0;
+}
+
 /**
  * Validate treasury donation tx hash: normalize, check uniqueness across proposals, call verifyDeposit.
  * @param {string} txHash - Raw tx hash from metaData.treasuryDonationTxHash
@@ -235,7 +240,7 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
       );
     }
 
-    if (status === "live" && voteDoc.depositOptions?.treasuryDonation != null) {
+    if (status === "live" && requiresTreasuryDonationValidation(voteDoc)) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
         return res.status(400).json({
@@ -701,7 +706,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         proposal.metaData?.treasuryDonationTxHash ?? sanitizedMetaData.treasuryDonationTxHash;
     } else if (
       status === "live" &&
-      targetVoteDoc.depositOptions?.treasuryDonation != null
+      requiresTreasuryDonationValidation(targetVoteDoc)
     ) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
