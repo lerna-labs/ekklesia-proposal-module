@@ -1,0 +1,30 @@
+{
+  "scenario": "Very long vote and proposal titles. Useful for eyeballing subject-line length (the harness does not truncate today — that belongs to the TRD subject generator) and for catching layout issues when cards wrap across many lines.",
+  "candidate": { "displayName": "Linus Torvalds" },
+  "period": "6h",
+  "periodVerbose": "6 hours",
+  "votes": [
+    {
+      "name": "Quarterly Multi-Stakeholder Constitutional Committee & Parameter Delegate Coordinated Ratification Event — Spring 2026",
+      "url": "https://ekklesia.example/vote/spring-2026-multi-stakeholder",
+      "proposals": [
+        {
+          "title": "Proposal for the Establishment of a Cross-Jurisdictional Working Group on Treasury Governance, Longitudinal Budget Forecasting, and Community-Driven Parameter Negotiation for the 2026–2028 Horizon",
+          "url": "https://ekklesia.example/vote/spring-2026-multi-stakeholder/proposal/cross-jurisdictional-working-group",
+          "events": [
+            {
+              "type": "new_comment",
+              "timestamp": "2026-04-21 07:19 UTC",
+              "commenter": "Ambassador Somebody With An Unusually Long Display Name",
+              "preview": "On balance I find the three-phase ratification cadence sound, though I'd appreciate more clarity around the sunset clause for the cross-jurisdictional subcommittees — particularly the voting thresholds required to dissolve them mid-cycle."
+            },
+            {
+              "type": "verified_badge_applied",
+              "timestamp": "2026-04-21 09:45 UTC"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

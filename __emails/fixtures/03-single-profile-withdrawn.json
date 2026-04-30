@@ -1,0 +1,25 @@
+{
+  "scenario": "Single profile_withdrawn event with a reason. Exercises the red-accent reason block and WITHDRAWN badge.",
+  "candidate": { "displayName": "Linus Torvalds" },
+  "period": "24h",
+  "periodVerbose": "24 hours",
+  "votes": [
+    {
+      "name": "Constitutional Committee 2026",
+      "url": "https://ekklesia.example/vote/cc-2026",
+      "proposals": [
+        {
+          "title": "Northern Technical Advisory",
+          "url": "https://ekklesia.example/vote/cc-2026/proposal/northern-technical",
+          "events": [
+            {
+              "type": "profile_withdrawn",
+              "timestamp": "2026-04-20 22:45 UTC",
+              "reason": "Submission did not include the required treasury donation receipt within the 72-hour grace window."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

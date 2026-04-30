@@ -1,0 +1,36 @@
+{
+  "platformName": "Ekklesia",
+  "logo": {
+    "url": "https://ekklesia.vote",
+    "alt": "Ekklesia",
+    "height": 24
+  },
+  "fontFamily": "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif",
+  "colors": {
+    "bodyBackground": "#f4f5f7",
+    "cardBackground": "#ffffff",
+    "headerBackground": "#0f1419",
+    "headerText": "#ffffff",
+    "headerMuted": "#9aa3ad",
+    "text": "#1a1d24",
+    "textSecondary": "#5a6270",
+    "textMuted": "#9aa3ad",
+    "labelText": "#7a8290",
+    "divider": "#e4e7eb",
+    "proposalBackground": "#f9fafb",
+    "proposalBorder": "#eef0f3",
+    "footerBackground": "#fafbfc",
+    "link": "#1e429f",
+    "linkHover": "#1a3582",
+    "ctaBackground": "#1a1d24",
+    "ctaHoverBackground": "#000000",
+    "ctaText": "#ffffff",
+    "accent": "#1e429f",
+    "accentBackground": "#e1effe",
+    "accentBorder": "#3f83f8"
+  },
+  "footer": {
+    "tagline": "Ekklesia Proposal Module · Built by Ekklesia Voting Tech",
+    "automatedNote": "Automated notification — replies to this address are not monitored."
+  }
+}

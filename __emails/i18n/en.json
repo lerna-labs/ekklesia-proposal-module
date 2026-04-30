@@ -1,0 +1,63 @@
+{
+  "subject.instant.profile_withdrawn":      "{platformName} — Profile withdrawn: {proposalTitle}",
+  "subject.instant.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
+  "subject.instant.voting_opened":          "{platformName} — Voting is open: {voteName}",
+  "subject.instant.results_published":      "{platformName} — Results published: {voteName}",
+
+  "subject.digest.single.submission_confirmed":   "{platformName} — Submission confirmed: {proposalTitle}",
+  "subject.digest.single.verified_badge_applied": "{platformName} — Verified: {proposalTitle}",
+  "subject.digest.single.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
+  "subject.digest.single.profile_withdrawn":      "{platformName} — Profile withdrawn: {proposalTitle}",
+  "subject.digest.single.new_comment":            "{platformName} — New comment on: {proposalTitle}",
+  "subject.digest.single.voting_opened":          "{platformName} — Voting is open: {voteName}",
+  "subject.digest.single.results_published":      "{platformName} — Results published: {voteName}",
+
+  "subject.digest.multi.single_vote": "{platformName} digest — {N, plural, one {# update} other {# updates}} on {voteName} ({period})",
+  "subject.digest.multi.many_votes":  "{platformName} digest — {N, plural, one {# update} other {# updates}} across {M, plural, one {# vote} other {# votes}} ({period})",
+
+  "subject.period.6h":  "6h",
+  "subject.period.24h": "24h",
+
+  "preheader.default": "{totalEvents, plural, one {# update} other {# updates}} across {totalVotes, plural, one {# vote} other {# votes}} from the last {periodVerbose}",
+
+  "body.periodVerbose.6h":  "6 hours",
+  "body.periodVerbose.24h": "24 hours",
+
+  "body.title":                 "{platformName} Notification",
+  "body.header.digest_label":   "{period} digest",
+
+  "body.summary":               "You have <strong class=\"summary-emphasis\">{totalEvents, plural, one {# update} other {# updates}}</strong> across <strong class=\"summary-emphasis\">{totalVotes, plural, one {# vote} other {# votes}}</strong> from the last {periodVerbose}.",
+
+  "body.label.vote":     "Vote",
+  "body.label.proposal": "Proposal",
+
+  "body.event.submission_confirmed.badge":     "CONFIRMED",
+  "body.event.submission_confirmed.headline":  "Treasury donation verified — your profile is live.",
+
+  "body.event.verified_badge_applied.badge":     "VERIFIED",
+  "body.event.verified_badge_applied.headline":  "An admin applied the Verified badge to your proposal.",
+
+  "body.event.verified_badge_removed.badge":     "UNVERIFIED",
+  "body.event.verified_badge_removed.headline":  "An admin removed the Verified badge from your proposal.",
+
+  "body.event.profile_withdrawn.badge":         "WITHDRAWN",
+  "body.event.profile_withdrawn.headline":      "Your profile was withdrawn by an admin.",
+  "body.event.profile_withdrawn.reason_label":  "Reason:",
+
+  "body.event.new_comment.badge":     "COMMENT",
+  "body.event.new_comment.headline":  "New comment from <strong>{commenter}</strong>.",
+
+  "body.event.voting_opened.badge":     "VOTING OPEN",
+  "body.event.voting_opened.headline":  "The voting phase has opened for this vote.",
+
+  "body.event.results_published.badge":     "RESULTS",
+  "body.event.results_published.headline":  "Results have been published for this vote.",
+
+  "body.cta.view_proposal": "View proposal →",
+  "body.cta.view_results":  "View results →",
+
+  "body.footer.receiving_note":     "You're receiving this because you opted in to <strong>{period}</strong> digest notifications for your {platformName} proposals.",
+  "body.footer.manage_preferences": "Manage notification preferences",
+  "body.footer.unsubscribe":        "Unsubscribe",
+  "body.footer.separator":          "·"
+}
