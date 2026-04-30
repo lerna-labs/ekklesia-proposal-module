@@ -106,7 +106,7 @@
   });
 
   function getTriggerLabel(option, selectedValues, optionsList) {
-    const allLabel = option?.label ? `All ${option.label}` : "All";
+    const allLabel = "All";
     if (!Array.isArray(selectedValues) || selectedValues.length === 0) {
       return allLabel;
     }
