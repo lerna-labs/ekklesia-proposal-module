@@ -25,6 +25,10 @@
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   let displayError = $derived(schemaError);
+  let currentLength = $derived(value?.length ?? 0);
+  let isOverMaxLength = $derived(
+    maxLength != null && maxLength > 0 && currentLength > maxLength,
+  );
 </script>
 
 <Field.Field class="gap-2 {className}">
@@ -50,8 +54,12 @@
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
     {#if maxLength}
-      <span class="text-xs text-muted-foreground shrink-0">
-        {value?.length ?? 0}/{maxLength}
+      <span
+        class="text-xs shrink-0"
+        class:text-destructive={isOverMaxLength}
+        class:text-muted-foreground={!isOverMaxLength}
+      >
+        {currentLength}/{maxLength}
       </span>
     {/if}
   </div>
