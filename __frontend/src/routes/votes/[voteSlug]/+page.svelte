@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "$app/navigation";
+  import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
   import { page } from "$app/state";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
@@ -122,6 +122,19 @@
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
   const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
+  const voteListPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
+  const voteProposalPathPattern = $derived(
+    voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null,
+  );
+  function isVoteListPath(pathname) {
+    return Boolean(voteListPath) && pathname === voteListPath;
+  }
+  function isVoteProposalPath(pathname) {
+    return Boolean(voteProposalPathPattern) && voteProposalPathPattern.test(pathname);
+  }
+  function isWithinVoteContext(pathname) {
+    return isVoteListPath(pathname) || isVoteProposalPath(pathname);
+  }
   function hasListParams(searchParams) {
     return LIST_PARAM_KEYS.some((k) => searchParams.get(k));
   }
@@ -134,6 +147,32 @@
     return q.toString();
   }
   let hasTriggeredRestore = false;
+  let allowStorageRestore = false;
+  beforeNavigate((navigation) => {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const fromPath = navigation.from?.url.pathname ?? page.url.pathname;
+    const toPath = navigation.to?.url.pathname;
+    const leavingVoteContext = isWithinVoteContext(fromPath) && (!toPath || !isWithinVoteContext(toPath));
+    if (leavingVoteContext) {
+      localStorage.removeItem(listStateKey);
+      allowStorageRestore = false;
+    }
+  });
+  afterNavigate((navigation) => {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const toPath = navigation.to?.url.pathname ?? page.url.pathname;
+    if (!isVoteListPath(toPath)) {
+      allowStorageRestore = false;
+      return;
+    }
+    const fromPath = navigation.from?.url.pathname;
+    const fromSameVoteProposal = Boolean(fromPath && isVoteProposalPath(fromPath));
+    const fromWithinVoteContext = Boolean(fromPath && isWithinVoteContext(fromPath));
+    allowStorageRestore = fromSameVoteProposal;
+    if (!fromWithinVoteContext) {
+      localStorage.removeItem(listStateKey);
+    }
+  });
   $effect(() => {
     if (typeof window === "undefined" || !listStateKey) return;
     const searchParams = page.url.searchParams;
@@ -141,16 +180,19 @@
       hasTriggeredRestore = false;
       const qs = getListQueryString(searchParams);
       if (qs) localStorage.setItem(listStateKey, qs);
-    } else {
+    } else if (allowStorageRestore) {
       const saved = localStorage.getItem(listStateKey);
       if (saved && !hasTriggeredRestore) {
         hasTriggeredRestore = true;
+        allowStorageRestore = false;
         const restored = new URLSearchParams(saved);
         restored.set("page", "1");
         const path = page.url.pathname;
         const qs = queryStringWithLiteralCommas(restored);
         goto(`${path}?${qs}`, { replaceState: true });
       }
+    } else {
+      hasTriggeredRestore = false;
     }
   });
 
