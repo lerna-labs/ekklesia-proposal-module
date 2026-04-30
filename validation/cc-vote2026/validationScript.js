@@ -4,6 +4,7 @@
  * Used when validationScript is "cc-vote2026/validationScript.js".
  */
 import { z } from "zod";
+import { validateAddress } from "../../helper/validateAddress.js";
 
 const objectIdString = z
   .string()
@@ -51,12 +52,15 @@ const poolIdOptional = z.preprocess(
   (v) => (typeof v === "string" ? v.trim() : ""),
   z.union([
     z.literal(""),
-    z
-      .string()
-      .regex(
-        /^pool1/,
-        "Pool ID must start with pool1 when provided",
-      ),
+    z.string().superRefine((value, ctx) => {
+      const result = validateAddress(value, "pool");
+      if (result && typeof result === "object" && result.error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Pool ID must be a valid bech32 pool identifier",
+        });
+      }
+    }),
   ]),
 );
 
@@ -64,12 +68,15 @@ const drepIdOptional = z.preprocess(
   (v) => (typeof v === "string" ? v.trim() : ""),
   z.union([
     z.literal(""),
-    z
-      .string()
-      .regex(
-        /^drep1/,
-        "DRep ID must start with drep1 when provided",
-      ),
+    z.string().superRefine((value, ctx) => {
+      const result = validateAddress(value, "drep");
+      if (result && typeof result === "object" && result.error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "DRep ID must be a valid bech32 drep identifier",
+        });
+      }
+    }),
   ]),
 );
 

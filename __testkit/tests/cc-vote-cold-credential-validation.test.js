@@ -73,3 +73,50 @@ describe("CC vote cold credential validation", () => {
     expect(issue?.message).toMatch(/already used by another proposal/i);
   });
 });
+
+describe("CC vote poolId/drepId validation", () => {
+  const validPoolId = "pool1p020rt3rq6q96a5dxugn0j9xnel68d2gdg7xqylzpaywqnwl6fv";
+  const validDrepId = "drep17p0h3g2m9kuet0h9xl8zaq3qcp5vt0jygghw6flp9xk8z7cz8zm";
+
+  it("accepts valid bech32 poolId and drepId", () => {
+    const body = buildValidCcLiveBody();
+    body.metaData.individual.poolId = validPoolId;
+    body.metaData.individual.drepId = validDrepId;
+
+    const result = validate(body, {});
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid poolId when prefix is correct but value is malformed", () => {
+    const body = buildValidCcLiveBody();
+    body.metaData.individual.poolId = `${validPoolId.slice(0, -1)}x`;
+
+    const result = validate(body, {});
+    expect(result.success).toBe(false);
+
+    const issue = issueForPath(result, ["metaData", "individual", "poolId"]);
+    expect(issue).toBeTruthy();
+    expect(issue?.message).toMatch(/valid bech32 pool identifier/i);
+  });
+
+  it("rejects invalid drepId when prefix is correct but value is malformed", () => {
+    const body = buildValidCcLiveBody();
+    body.metaData.individual.drepId = `${validDrepId.slice(0, -1)}x`;
+
+    const result = validate(body, {});
+    expect(result.success).toBe(false);
+
+    const issue = issueForPath(result, ["metaData", "individual", "drepId"]);
+    expect(issue).toBeTruthy();
+    expect(issue?.message).toMatch(/valid bech32 drep identifier/i);
+  });
+
+  it("still allows empty poolId and drepId", () => {
+    const body = buildValidCcLiveBody();
+    body.metaData.individual.poolId = "";
+    body.metaData.individual.drepId = "";
+
+    const result = validate(body, {});
+    expect(result.success).toBe(true);
+  });
+});
