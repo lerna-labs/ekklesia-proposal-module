@@ -120,3 +120,45 @@ describe("CC vote poolId/drepId validation", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("CC vote track immutability for live proposals", () => {
+  it("fails validation when track differs from stored live proposal track", () => {
+    const body = buildValidCcLiveBody();
+    body.metaData.track = "organisation";
+    body.title = "Alice Candidate";
+    body.metaData.organisation = {
+      organisationName: "Org Candidate",
+      organisationDescription: "Org description",
+      geographicRegion: "",
+      contactPerson: "Org Contact",
+      contactEmail: "org@example.com",
+      poolId: "",
+      drepId: "",
+      xUsername: "",
+      linkedinUsername: "",
+      website: "",
+      otherLinks: [],
+      organisationalAreasOfExpertise: "Expertise",
+      governanceExperience: "Governance",
+      conflictOfInterestStatement: "",
+      contributionsToCardano: "Contributions",
+      motivation: "Motivation",
+      decentralisedGovernanceImportance: "Importance",
+      constitutionalInterpretation: "Interpretation",
+      perspectiveYouWouldBring: "Perspective",
+      transparencyApproach: "Transparency",
+    };
+
+    const result = validate(body, {
+      existingProposal: {
+        status: "live",
+        metaData: { track: "individual" },
+      },
+    });
+    expect(result.success).toBe(false);
+
+    const issue = issueForPath(result, ["metaData", "track"]);
+    expect(issue).toBeTruthy();
+    expect(issue?.message).toMatch(/track cannot be changed after submission/i);
+  });
+});
