@@ -10,6 +10,7 @@
   import UserIcon from "@lucide/svelte/icons/user";
   import { toast } from "svelte-sonner";
   import ShareProposalPopover from "$lib/components/ShareProposalPopover.svelte";
+  import { Badge } from "$lib/components/ui/badge";
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import { shortenString } from "$lib/utils.js";
@@ -34,13 +35,9 @@
     consortium: "Consortium",
   };
 
-  const track = $derived(
-    typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "",
-  );
+  const track = $derived(typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "");
   const apiUrl =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
-      ? import.meta.env.VITE_API_URL
-      : "/api/v0";
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL ? import.meta.env.VITE_API_URL : "/api/v0";
   let regionsById = $state({});
 
   $effect(() => {
@@ -120,26 +117,35 @@
     if (track !== "individual" && track !== "organisation") return "";
     return toText(trackPayload?.drepId);
   });
-  const hasApplicantCredentialIds = $derived(
-    applicantPoolId.length > 0 || applicantDrepId.length > 0,
+  const hasApplicantCredentialIds = $derived(applicantPoolId.length > 0 || applicantDrepId.length > 0);
+  const coldCredentialHash = $derived(toText(proposal?.metaData?.coldCredentialHash));
+  const coldCredentialTypeLabel = $derived.by(() =>
+    toText(
+      proposal?.metaData?.coldCredentialType === "keyCredential"
+        ? "Key Credential"
+        : proposal?.metaData?.coldCredentialType === "scriptCredential"
+          ? "Script Credential"
+          : "",
+    ),
   );
+  const hasColdCredential = $derived(coldCredentialHash.length > 0 || coldCredentialTypeLabel.length > 0);
 
   const firstSectionCards = $derived.by(() => {
     const p = trackPayload;
     if (!p) return [];
 
     if (track === "individual") {
-      const rows = [
-        { id: "individual-contact-email", label: "Contact email", value: p.contactEmail },
-      ].filter((row) => hasText(row.value));
+      const rows = [{ id: "individual-contact-email", label: "Contact email", value: p.contactEmail }].filter((row) =>
+        hasText(row.value),
+      );
 
       return rows.length > 0 ? [{ id: "individual-identity-contact", title: "Identity & Contact", rows }] : [];
     }
 
     if (track === "organisation") {
-      const identityRows = [
-        { id: "organisation-contact-email", label: "Contact email", value: p.contactEmail },
-      ].filter((row) => hasText(row.value));
+      const identityRows = [{ id: "organisation-contact-email", label: "Contact email", value: p.contactEmail }].filter(
+        (row) => hasText(row.value),
+      );
 
       return identityRows.length > 0
         ? [{ id: "organisation-identity-contact", title: "Identity & Contact", rows: identityRows }]
@@ -147,9 +153,9 @@
     }
 
     if (track === "consortium") {
-      const rows = [
-        { id: "consortium-contact-email", label: "Contact email", value: p.contactEmail },
-      ].filter((row) => hasText(row.value));
+      const rows = [{ id: "consortium-contact-email", label: "Contact email", value: p.contactEmail }].filter((row) =>
+        hasText(row.value),
+      );
 
       return rows.length > 0 ? [{ id: "consortium-details", title: "Consortium contact", rows }] : [];
     }
@@ -165,9 +171,7 @@
 
   /** Application ID + dates: desktop row 2 under name; mobile below type card. */
   const hasMetadataBlock = $derived(
-    (proposal?._id ?? proposal?.id) != null ||
-      (showVersionBadge && updatedAt != null) ||
-      submittedAt != null,
+    (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null,
   );
 </script>
 
@@ -182,16 +186,11 @@
       />
     </div>
   </Card.Header>
-  <Card.Content
-    class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
-  >
+  <Card.Content class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]">
     <div class="space-y-2 text-xs md:row-start-1 md:col-start-1 md:self-start">
       <div class="rounded-lg border bg-card text-card-foreground overflow-hidden">
         <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-          <UserIcon
-            class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-            aria-hidden="true"
-          />
+          <UserIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
           <div class="min-w-0">
             <p class="text-xs font-medium text-muted-foreground mb-1">Applicant name</p>
             <p class="text-lg font-medium text-foreground tracking-tight wrap-break-word">
@@ -262,6 +261,41 @@
           </div>
         </div>
       {/if}
+      {#if hasColdCredential}
+        <div class="rounded-lg border bg-card text-card-foreground overflow-hidden">
+          <div class="p-4 min-w-0">
+            <div class="flex items-center gap-1.5 mb-2">
+              <p class="text-xs font-medium text-muted-foreground">Cold credential hash</p>
+              {#if coldCredentialTypeLabel}
+                <Badge
+                  class="shrink-0 font-normal text-[10px] leading-4 px-1.5 py-0 bg-(--mbo-cardano-blue) text-white border-0"
+                >
+                  {coldCredentialTypeLabel}
+                </Badge>
+              {/if}
+            </div>
+            <div class="space-y-3">
+              {#if coldCredentialHash}
+                <div>
+                  <button
+                    type="button"
+                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit min-w-0 max-w-full block truncate"
+                    title="Copy cold credential hash"
+                    onclick={() => {
+                      navigator.clipboard.writeText(coldCredentialHash).then(
+                        () => toast.success("Cold credential hash copied to clipboard"),
+                        () => toast.error("Failed to copy"),
+                      );
+                    }}
+                  >
+                    {coldCredentialHash}
+                  </button>
+                </div>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/if}
     </div>
 
     <div
@@ -270,10 +304,7 @@
         : ''}"
     >
       <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-        <FileTextIcon
-          class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-          aria-hidden="true"
-        />
+        <FileTextIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
         <div class="min-w-0">
           <p class="text-xs font-medium text-muted-foreground mb-1">Applicant type</p>
           <p class="font-medium text-foreground">
@@ -289,24 +320,18 @@
         {#if geographicRegionLabel}
           <div class="border-t pt-3">
             <div class="flex items-center gap-1.5 mb-1">
-              <MapPinIcon
-                class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
-                aria-hidden="true"
-              />
+              <MapPinIcon class="size-3.5 shrink-0 -mt-1 text-muted-foreground" aria-hidden="true" />
               <p class="text-xs font-medium text-muted-foreground mb-1">Geographic region</p>
             </div>
             <p class="text-foreground ml-6 wrap-break-word">{geographicRegionLabel}</p>
           </div>
         {/if}
-        <div class="border-t pt-3">
-          <div class="flex items-center gap-1.5 mb-1">
-            <ExternalLinkIcon
-              class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <p class="text-xs font-medium text-muted-foreground mb-1">Social Links</p>
-          </div>
-          {#if socialRows.length > 0}
+        {#if socialRows.length > 0}
+          <div class="border-t pt-3">
+            <div class="flex items-center gap-1.5 mb-1">
+              <ExternalLinkIcon class="size-3.5 shrink-0 -mt-1 text-muted-foreground" aria-hidden="true" />
+              <p class="text-xs font-medium text-muted-foreground mb-1">Social Links</p>
+            </div>
             <ul class="space-y-2 list-none p-0">
               {#each socialRows as row (row.key)}
                 <li>
@@ -327,10 +352,8 @@
                 </li>
               {/each}
             </ul>
-          {:else}
-            <p class="text-muted-foreground ml-6">—</p>
-          {/if}
-        </div>
+          </div>
+        {/if}
         {#if firstSectionCards.length > 0}
           {#each firstSectionCards as card (card.id)}
             <div class="border-t pt-3">
@@ -359,17 +382,12 @@
     </div>
 
     {#if hasMetadataBlock}
-      <div
-        class="hidden md:flex md:flex-col md:row-start-2 md:col-start-1 md:self-stretch min-h-0 text-xs md:mt-0"
-      >
+      <div class="hidden md:flex md:flex-col md:row-start-2 md:col-start-1 md:self-stretch min-h-0 text-xs md:mt-0">
         <div class="mt-auto space-y-2">
           {#if (proposal?._id ?? proposal?.id) != null}
             {@const applicationIdStr = String(proposal._id ?? proposal.id)}
             <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <HashIcon
-                class="size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
+              <HashIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <span class={labelClass}>Application ID:</span>
               <button
                 type="button"
@@ -388,10 +406,7 @@
           {/if}
           {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
             <div class="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-              <ClockIcon
-                class="size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
+              <ClockIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
               {#if showVersionBadge && updatedAt != null}
                 <span class={labelClass}>Last updated:</span>
                 <Popover.Root>
@@ -407,15 +422,11 @@
                     <div class="text-xs space-y-1">
                       {#if submittedAt != null}
                         <p>
-                          <span class="font-medium text-muted-foreground">
-                            Submitted:
-                          </span>
+                          <span class="font-medium text-muted-foreground">Submitted:</span>
                           {formatUtcInstant(submittedAt, dateOptions)}
                         </p>
                       {:else}
-                        <p class="text-muted-foreground">
-                          Submitted date not available
-                        </p>
+                        <p class="text-muted-foreground">Submitted date not available</p>
                       {/if}
                     </div>
                   </Popover.Content>
@@ -435,10 +446,7 @@
         {#if (proposal?._id ?? proposal?.id) != null}
           {@const applicationIdStrMobile = String(proposal._id ?? proposal.id)}
           <div class="flex items-center gap-1 text-muted-foreground">
-            <HashIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <HashIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <span class={labelClass}>Application ID:</span>
             <button
               type="button"
@@ -457,10 +465,7 @@
         {/if}
         {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
           <div class="flex items-center gap-1 text-muted-foreground flex-wrap">
-            <ClockIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <ClockIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             {#if showVersionBadge && updatedAt != null}
               <span class={labelClass}>Last updated:</span>
               <Popover.Root>
@@ -476,15 +481,11 @@
                   <div class="text-xs space-y-1">
                     {#if submittedAt != null}
                       <p>
-                        <span class="font-medium text-muted-foreground">
-                          Submitted:
-                        </span>
+                        <span class="font-medium text-muted-foreground">Submitted:</span>
                         {formatUtcInstant(submittedAt, dateOptions)}
                       </p>
                     {:else}
-                      <p class="text-muted-foreground">
-                        Submitted date not available
-                      </p>
+                      <p class="text-muted-foreground">Submitted date not available</p>
                     {/if}
                   </div>
                 </Popover.Content>

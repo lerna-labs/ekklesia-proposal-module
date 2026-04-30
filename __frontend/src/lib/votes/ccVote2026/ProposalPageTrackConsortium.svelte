@@ -2,7 +2,6 @@
   import Markdown from "$lib/base/Markdown.svelte";
   import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
   import ItemContainer from "$lib/votes/budget2026/ItemContainer.svelte";
-  import { Badge } from "$lib/components/ui/badge";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import CopyIcon from "@lucide/svelte/icons/copy";
@@ -156,36 +155,7 @@
       .filter(Boolean);
   });
 
-  const coldCredentialFields = $derived.by(() => {
-    return [
-      {
-        id: "cold-credential-hash",
-        question: "Cold credential hash",
-        value: proposal?.metaData?.coldCredentialHash,
-      },
-      {
-        id: "cold-credential-type",
-        question: "Credential type",
-        value:
-          proposal?.metaData?.coldCredentialType === "keyCredential"
-            ? "Key Credential"
-            : proposal?.metaData?.coldCredentialType === "scriptCredential"
-              ? "Script Credential"
-              : "",
-      },
-    ].filter((field) => hasText(field.value));
-  });
-  const coldCredentialHashValue = $derived(toText(proposal?.metaData?.coldCredentialHash));
-  const coldCredentialTypeLabel = $derived.by(() =>
-    toText(
-      proposal?.metaData?.coldCredentialType === "keyCredential"
-        ? "Key Credential"
-        : proposal?.metaData?.coldCredentialType === "scriptCredential"
-          ? "Script Credential"
-          : "",
-    ),
-  );
-  const hasContent = $derived(governanceFields.length > 0 || coldCredentialFields.length > 0 || members.length > 0);
+  const hasContent = $derived(governanceFields.length > 0 || members.length > 0);
 
   let expandedGovernance = $state({});
 
@@ -245,48 +215,6 @@
               </ItemContainer>
             </CollapsibleCard>
           {/each}
-        </div>
-      </section>
-    {/if}
-
-    {#if coldCredentialFields.length > 0}
-      <section id="cold-credentials" class="space-y-3">
-        <h2>Cold Credentials</h2>
-        <div class="rounded-md border bg-slate-50 p-4 pb-5">
-          <div class="space-y-3">
-            {#if coldCredentialHashValue}
-              <div>
-                <h4 class="mb-2">Cold credential hash</h4>
-                <ItemContainer>
-                  <div class="flex items-center gap-2 min-w-0">
-                    <p
-                      class="text-sm leading-5 min-w-0 flex-1 truncate"
-                      title={coldCredentialHashValue}
-                    >
-                      {coldCredentialHashValue}
-                    </p>
-                    <button
-                      type="button"
-                      class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                      title="Copy cold credential hash"
-                      aria-label="Copy cold credential hash"
-                      onclick={() => copyToClipboard("Cold credential hash", coldCredentialHashValue)}
-                    >
-                      <CopyIcon class="size-3.5" aria-hidden="true" />
-                    </button>
-                  </div>
-                </ItemContainer>
-              </div>
-            {/if}
-            {#if coldCredentialTypeLabel}
-              <div>
-                <h4 class="mb-2">Credential type</h4>
-                <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0">
-                  {coldCredentialTypeLabel}
-                </Badge>
-              </div>
-            {/if}
-          </div>
         </div>
       </section>
     {/if}
