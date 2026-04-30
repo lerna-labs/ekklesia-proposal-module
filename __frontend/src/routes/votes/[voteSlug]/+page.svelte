@@ -89,6 +89,7 @@
 
   let { data } = $props();
   let vote = $derived(data.vote);
+  let isCcVoteContext = $derived(vote?.form === "ccVote2026");
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
   /** Aligns with WalletSigner / API: DRep sessions use a CIP129 id starting with `drep`. */
@@ -123,9 +124,7 @@
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
   const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
   const voteListPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
-  const voteProposalPathPattern = $derived(
-    voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null,
-  );
+  const voteProposalPathPattern = $derived(voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null);
   function isVoteListPath(pathname) {
     return Boolean(voteListPath) && pathname === voteListPath;
   }
@@ -264,19 +263,17 @@
         {#if !isDrepUser}
           <div class="flex h-full min-w-0 flex-col *:mt-0">
             {#key vote?.form ?? ""}
-              <VoteListCta {vote} policyNow={policyNow} />
+              <VoteListCta {vote} {policyNow} />
             {/key}
           </div>
         {/if}
       </div>
-    {:else}
-      {#if !isDrepUser}
-        <div class="mt-4">
-          {#key vote?.form ?? ""}
-            <VoteListCta {vote} policyNow={policyNow} />
-          {/key}
-        </div>
-      {/if}
+    {:else if !isDrepUser}
+      <div class="mt-4">
+        {#key vote?.form ?? ""}
+          <VoteListCta {vote} {policyNow} />
+        {/key}
+      </div>
     {/if}
 
     <div class="mt-4 space-y-2">
@@ -308,9 +305,9 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="flex flex-wrap items-center gap-2">
         {#if shortProposerId}
-          Proposals from {shortProposerId}
+          {isCcVoteContext ? "Candidates" : "Proposals"} from {shortProposerId}
         {:else}
-          Proposals
+          {isCcVoteContext ? "Candidates" : "Proposals"}
         {/if}
         <span class="text-muted-foreground font-normal">
           ({proposalPagination.totalItems})
@@ -329,7 +326,7 @@
         {/if}
       </h2>
       <div class="flex items-center gap-1">
-        <Search placeholder="Search proposals..." class="w-full sm:w-64" onBeforeClear={clearSearchFromStorage} />
+        <Search placeholder="Search..." class="w-full sm:w-64" onBeforeClear={clearSearchFromStorage} />
         <SearchFilter filterOptions={vote.filterOptions ?? []} {vote} voteId={vote._id} />
         <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>

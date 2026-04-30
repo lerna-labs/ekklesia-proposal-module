@@ -13,9 +13,9 @@
 
 <Card.Root class="min-h-0 min-w-0 h-full gap-3">
   <Card.Header>
-    <Card.Title class="text-base">Submit your application</Card.Title>
+    <Card.Title class="text-base">Submit your candidacy</Card.Title>
     <Card.Description class="text-black mt-1.5">
-      Create and manage your Constitutional Committee election application.
+      Create and manage your candidacy for the Constitutional Committee Election
     </Card.Description>
   </Card.Header>
   <Card.Content class="flex flex-wrap gap-2 pt-0! h-full items-end">
@@ -28,7 +28,7 @@
         class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
       >
         <PlusIcon class="size-4 shrink-0" aria-hidden="true" />
-        Create New Application
+        Create New Candidacy
       </Button>
     {:else if !vote?.slug}
       <Button
