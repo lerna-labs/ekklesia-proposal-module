@@ -7,7 +7,6 @@
   import CopyIcon from "@lucide/svelte/icons/copy";
   import UsersRoundIcon from "@lucide/svelte/icons/users-round";
   import { toast } from "svelte-sonner";
-  import { shortenString } from "$lib/utils.js";
   import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
 
   let { proposal } = $props();
@@ -257,8 +256,8 @@
                             <h4 class="mb-2">Pool ID</h4>
                             <ItemContainer>
                               <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm leading-5 wrap-break-word">
-                                  {shortenString(member.poolId, 20, true)}
+                                <p class="min-w-0 flex-1 truncate text-sm leading-5">
+                                  {member.poolId}
                                 </p>
                                 <button
                                   type="button"
@@ -278,8 +277,8 @@
                             <h4 class="mb-2">DRep ID</h4>
                             <ItemContainer>
                               <div class="flex items-center justify-between gap-2">
-                                <p class="text-sm leading-5 wrap-break-word">
-                                  {shortenString(member.drepId, 20, true)}
+                                <p class="min-w-0 flex-1 truncate text-sm leading-5">
+                                  {member.drepId}
                                 </p>
                                 <button
                                   type="button"
