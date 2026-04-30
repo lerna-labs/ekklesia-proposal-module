@@ -131,35 +131,6 @@
   const hasColdCredential = $derived(coldCredentialHash.length > 0 || coldCredentialTypeLabel.length > 0);
 
   const firstSectionCards = $derived.by(() => {
-    const p = trackPayload;
-    if (!p) return [];
-
-    if (track === "individual") {
-      const rows = [{ id: "individual-contact-email", label: "Contact email", value: p.contactEmail }].filter((row) =>
-        hasText(row.value),
-      );
-
-      return rows.length > 0 ? [{ id: "individual-identity-contact", title: "Identity & Contact", rows }] : [];
-    }
-
-    if (track === "organisation") {
-      const identityRows = [{ id: "organisation-contact-email", label: "Contact email", value: p.contactEmail }].filter(
-        (row) => hasText(row.value),
-      );
-
-      return identityRows.length > 0
-        ? [{ id: "organisation-identity-contact", title: "Identity & Contact", rows: identityRows }]
-        : [];
-    }
-
-    if (track === "consortium") {
-      const rows = [{ id: "consortium-contact-email", label: "Contact email", value: p.contactEmail }].filter((row) =>
-        hasText(row.value),
-      );
-
-      return rows.length > 0 ? [{ id: "consortium-details", title: "Consortium contact", rows }] : [];
-    }
-
     return [];
   });
 
