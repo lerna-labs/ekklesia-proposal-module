@@ -12,12 +12,12 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
   }
 
   const paths = [
+    "metaData.declarationAgreement",
     "metaData.individual.contactEmail",
     "metaData.organisation.contactPerson",
     "metaData.organisation.contactEmail",
     "metaData.consortium.contactPerson",
     "metaData.consortium.contactEmail",
-    "metaData.consortium.conflictOfInterestStatement",
   ];
 
   const result = JSON.parse(JSON.stringify(proposal));

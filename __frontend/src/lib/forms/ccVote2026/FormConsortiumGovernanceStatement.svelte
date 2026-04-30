@@ -59,7 +59,7 @@
       description="Disclosure of financial interests, partnerships, or relationships that may present a conflict."
       placeholder="List any consortium-level affiliations or financial interests"
       required={false}
-      notPublic={true}
+      notPublic={false}
       maxLength={LONG_TEXT_MAX}
       validationErrors={conflictErrors}
       class="w-full"
