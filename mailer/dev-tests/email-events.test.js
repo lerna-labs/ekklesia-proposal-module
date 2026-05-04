@@ -3,10 +3,13 @@
  * submission_confirmed, proposal_withdrawn (instant); new_comment (digest/cron);
  * voting_opened, results_published (instant).
  *
- * Optionally sends a few samples to Mailtrap (one per section) to limit rate limits.
+ * Optionally sends samples to Mailtrap (cooldown between sends when multiple).
  *
  * Usage (repo root):
  *   node mailer/dev-tests/email-events.test.js
+ *   node mailer/dev-tests/email-events.test.js --list
+ *   node mailer/dev-tests/email-events.test.js --only submission_confirmed
+ *   node mailer/dev-tests/email-events.test.js --only comment
  *
  * Env:
  *   MAILTRAP_INBOX_ID, MAILTRAP_TOKEN — optional; if missing, sends are skipped (assertions still run).
@@ -67,8 +70,97 @@ const INSTANT_EVENT_TYPES = [
   "results_published",
 ];
 
+/** Aggregated new_comment digest (cron-shaped payload). */
+const DIGEST_COMMENT_ALIASES = new Set(["comment", "digest-comment", "new_comment"]);
+
+const INSTANT_IDS = new Set(INSTANT_EVENT_TYPES);
+
 function mailtrapConfigured() {
   return Boolean(process.env.MAILTRAP_INBOX_ID && process.env.MAILTRAP_TOKEN);
+}
+
+function printHelp() {
+  console.log(`Usage: node mailer/dev-tests/email-events.test.js [options]
+
+Options:
+  --help, -h       Show this help
+  --list           Print selectable --only ids and exit
+  --only <id>      Run a single variant (assertions + optional Mailtrap)
+
+Instant ids (--only):
+  submission_confirmed
+  proposal_withdrawn
+  voting_opened
+  results_published
+
+Digest ids (--only):
+  comment          Aggregated new_comment digest (aliases: digest-comment, new_comment)
+
+Default (no --only): run all instant types, then Mailtrap sample instant + comment digest.
+`);
+}
+
+function printList() {
+  console.log("Instant (--only <id>):");
+  for (const id of INSTANT_EVENT_TYPES) console.log(`  ${id}`);
+  console.log("Digest (--only <id>):");
+  console.log("  comment   (aliases: digest-comment, new_comment)");
+}
+
+/**
+ * @returns {{ mode: "all" } | { mode: "only"; target: string }}
+ */
+function parseCli(argv) {
+  const args = argv.slice(2);
+  let onlyValue = null;
+
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === "--help" || a === "-h") {
+      printHelp();
+      process.exit(0);
+    }
+    if (a === "--list") {
+      printList();
+      process.exit(0);
+    }
+    if (a === "--only") {
+      onlyValue = args[i + 1];
+      if (!onlyValue || onlyValue.startsWith("-")) {
+        console.error("email-events: --only requires an id (see --list).");
+        process.exit(1);
+      }
+      i += 1;
+      continue;
+    }
+    if (a.startsWith("--only=")) {
+      onlyValue = a.slice("--only=".length);
+      if (!onlyValue) {
+        console.error("email-events: --only= requires a value (see --list).");
+        process.exit(1);
+      }
+      continue;
+    }
+    console.error(`email-events: unknown argument: ${a}`);
+    printHelp();
+    process.exit(1);
+  }
+
+  if (onlyValue != null) {
+    const normalized = String(onlyValue).trim().toLowerCase();
+    if (DIGEST_COMMENT_ALIASES.has(normalized)) {
+      return { mode: "only", target: "comment" };
+    }
+    if (INSTANT_IDS.has(normalized)) {
+      return { mode: "only", target: normalized };
+    }
+    console.error(
+      `email-events: unknown --only id "${onlyValue}". Use --list.`,
+    );
+    process.exit(1);
+  }
+
+  return { mode: "all" };
 }
 
 async function maybeSendToMailtrap(category, subject, html) {
@@ -142,6 +234,7 @@ async function assertInstantEvent(type) {
     default:
       break;
   }
+  return result;
 }
 
 async function assertCommentDigest() {
@@ -157,7 +250,25 @@ async function assertCommentDigest() {
   return result;
 }
 
-async function main() {
+async function runOnly(target) {
+  if (target === "comment") {
+    const commentDigest = await assertCommentDigest();
+    await maybeSendToMailtrap(
+      "digest-new-comment",
+      commentDigest.subject,
+      commentDigest.html,
+    );
+    console.log("email-events.test.js: --only comment passed");
+    return;
+  }
+
+  const type = target;
+  const result = await assertInstantEvent(type);
+  await maybeSendToMailtrap(`instant-${type}`, result.subject, result.html);
+  console.log(`email-events.test.js: --only ${type} passed`);
+}
+
+async function runAll() {
   for (const type of INSTANT_EVENT_TYPES) {
     await assertInstantEvent(type);
   }
@@ -180,6 +291,15 @@ async function main() {
   );
 
   console.log("email-events.test.js: all checks passed");
+}
+
+async function main() {
+  const cli = parseCli(process.argv);
+  if (cli.mode === "only") {
+    await runOnly(cli.target);
+  } else {
+    await runAll();
+  }
 }
 
 main().catch((err) => {
