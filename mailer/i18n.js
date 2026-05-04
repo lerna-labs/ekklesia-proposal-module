@@ -6,12 +6,6 @@ import { IntlMessageFormat } from "intl-messageformat";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const I18N_DIR = path.join(__dirname, "i18n");
 const DEFAULT_LOCALE = "en";
-
-/**
- * Per-locale catalog cache — hydrating the same locale twice in one process
- * should not touch disk twice. An ENOENT result is cached as `null` so repeated
- * lookups for an unsupported locale don't re-trigger a stat.
- */
 const catalogCache = new Map();
 
 async function loadCatalog(locale) {
@@ -31,10 +25,6 @@ async function loadCatalog(locale) {
   }
 }
 
-/**
- * Build the locale-fallback chain per TRD §4.6 SL-051:
- *   requested tag → base language → DEFAULT_LOCALE.
- */
 function fallbackChain(locale) {
   const seen = new Set();
   const chain = [];
@@ -71,19 +61,6 @@ function escapeArgs(vars) {
   return out;
 }
 
-/**
- * Create a translator bound to a locale (with fallback to DEFAULT_LOCALE).
- * The returned function escapes string arguments before ICU substitution so
- * output is safe to drop into triple-brace Handlebars in an HTML context.
- * For plain-text output (subject lines, preheader) use `t.raw(key, vars)` —
- * that variant does not escape and should NOT be sent to HTML.
- *
- * Missing keys warn once and render as `[[missing.key]]` so they surface
- * loudly during development.
- *
- * @param {string|undefined} locale - BCP 47 tag; falls back per §4.6
- * @returns {Promise<Function>} `t(key, vars?)` with `t.raw`, `t.locale`, `t.requested`
- */
 export async function createTranslator(locale) {
   const requested = locale || DEFAULT_LOCALE;
   const chain = fallbackChain(requested);
@@ -114,11 +91,6 @@ export async function createTranslator(locale) {
     if (pattern === null) return `[[${key}]]`;
     try {
       const args = escape ? escapeArgs(vars) : vars ?? {};
-      // ignoreTag: true keeps <strong>...</strong> etc. as literal HTML
-      // in the pattern instead of being parsed as ICU rich-text components
-      // (which would require passing tag-function arguments). Catalog authors
-      // write real tags, `render.js` escapes user-supplied arg values, and
-      // the template renders the result via {{{triple-brace}}}.
       return new IntlMessageFormat(pattern, chosenLocale, undefined, {
         ignoreTag: true,
       }).format(args);
@@ -135,7 +107,6 @@ export async function createTranslator(locale) {
   return t;
 }
 
-/** Exposed for tests / diagnostics. */
 export function _fallbackChain(locale) {
   return fallbackChain(locale);
 }

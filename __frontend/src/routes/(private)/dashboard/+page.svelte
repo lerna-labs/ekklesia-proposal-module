@@ -3,6 +3,7 @@
   import { page } from "$app/state";
   import ProposalDelete from "$lib/ProposalDelete.svelte";
   import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import NotificationSettings from "$lib/notifications/NotificationSettings.svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
   import { formatUtcInstant } from "$lib/formatUtc.js";
@@ -26,6 +27,7 @@
 
   let { data } = $props();
   let user = $derived(data.user ?? null);
+  let notification = $derived(data.notification ?? null);
   let showMyProposals = $derived(isStakeUserId(user?.userId));
   let voteSections = $derived(data.voteSections ?? []);
   let votePagination = $derived(data.votePagination);
@@ -96,23 +98,27 @@
 
   <div class="space-y-6">
     {#if user}
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Account</Card.Title>
-        </Card.Header>
-        <Card.Content class="flex flex-col gap-2">
-          {#if user.name}
+      <div class="grid gap-6 lg:grid-cols-2">
+        <Card.Root>
+          <Card.Header>
+            <Card.Title>Account</Card.Title>
+          </Card.Header>
+          <Card.Content class="flex flex-col gap-2">
+            {#if user.name}
+              <p class="text-sm">
+                <span class="text-muted-foreground">Name/Handle:</span>
+                <span class="ml-2 font-medium">{user.name}</span>
+              </p>
+            {/if}
             <p class="text-sm">
-              <span class="text-muted-foreground">Name/Handle:</span>
-              <span class="ml-2 font-medium">{user.name}</span>
+              <span class="text-muted-foreground">User ID:</span>
+              <span class="ml-2 font-mono text-xs break-all">{user.userId}</span>
             </p>
-          {/if}
-          <p class="text-sm">
-            <span class="text-muted-foreground">User ID:</span>
-            <span class="ml-2 font-mono text-xs break-all">{user.userId}</span>
-          </p>
-        </Card.Content>
-      </Card.Root>
+          </Card.Content>
+        </Card.Root>
+
+        <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
+      </div>
     {/if}
 
     {#if showMyProposals}
