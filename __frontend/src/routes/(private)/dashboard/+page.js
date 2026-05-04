@@ -18,6 +18,15 @@ export async function load({ fetch, url, parent }) {
 	const parentData = await parent();
 	const user = parentData?.user;
 	const userId = user?.userId;
+	let notification = null;
+	if (userId) {
+		try {
+			const notificationRes = await api.fetch(fetch, "/notifications");
+			notification = await notificationRes.json();
+		} catch (_err) {
+			notification = null;
+		}
+	}
 	const policyNowMs = Date.now();
 	const now = new Date(policyNowMs);
 
@@ -27,6 +36,7 @@ export async function load({ fetch, url, parent }) {
 	if (!userId) {
 		return {
 			user,
+			notification,
 			voteSections: [],
 			votePagination: emptyVotePagination(1, voteLimit),
 			votes: [],
@@ -39,6 +49,7 @@ export async function load({ fetch, url, parent }) {
 	if (!String(userId).startsWith('stake')) {
 		return {
 			user,
+			notification,
 			voteSections: [],
 			votePagination: emptyVotePagination(1, voteLimit),
 			votes: [],
@@ -72,6 +83,7 @@ export async function load({ fetch, url, parent }) {
 	if (votes.length === 0) {
 		return {
 			user,
+			notification,
 			voteSections: [],
 			votePagination,
 			votes: [],
@@ -107,6 +119,7 @@ export async function load({ fetch, url, parent }) {
 
 	return {
 		user,
+		notification,
 		voteSections,
 		votePagination,
 		votes,
