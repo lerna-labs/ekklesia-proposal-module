@@ -196,3 +196,19 @@ export const notificationsVerifyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Rate limiter for public one-click unsubscribe endpoint.
+ * 20 requests per minute per IP.
+ */
+export const notificationsUnsubscribeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  skip: skipIfDisabled,
+  message: {
+    status: "error",
+    message: "Too many unsubscribe attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

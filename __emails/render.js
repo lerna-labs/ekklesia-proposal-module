@@ -87,14 +87,18 @@ function stripHtmlComments(html) {
  * same template block, which treats the fields as pre-localized strings.
  */
 function localizeEvent(t, event) {
-  const typeKey = `body.event.${event.type}`;
+  const normalizedType =
+    event.type === "profile_withdrawn" ? "proposal_withdrawn" : event.type;
+  const typeKey = `body.event.${normalizedType}`;
   const localized = {
     ...event,
+    type: normalizedType,
     badgeLabel: t(`${typeKey}.badge`),
     headline: t(`${typeKey}.headline`, event),
   };
-  if (event.type === "profile_withdrawn") {
+  if (normalizedType === "proposal_withdrawn") {
     localized.reasonLabel = t(`${typeKey}.reason_label`);
+    localized.commentLabel = t(`${typeKey}.comment_label`);
   }
   return localized;
 }
@@ -218,6 +222,71 @@ export async function renderDigest(fixturePath, options = {}) {
     platformName: options.platformName ?? brand.platformName,
     t,
   });
+  return {
+    html,
+    subject,
+    preheader: data.preheader,
+    data,
+    locale: t.locale,
+  };
+}
+
+export async function renderDigestFromPayload(fixture, options = {}) {
+  const templatePath = options.templatePath ?? DEFAULT_TEMPLATE;
+  const [templateFn, brand] = await Promise.all([
+    loadTemplate(templatePath),
+    resolveBrand(options.brand),
+  ]);
+  const locale = options.locale ?? fixture.locale ?? "en";
+  const t = await createTranslator(locale);
+
+  const data = hydrate(fixture, t);
+  data.brand = brand;
+  data.t = buildChrome(t, data, brand);
+
+  const html = stripHtmlComments(templateFn(data));
+  const subject = buildSubject(data, {
+    platformName: options.platformName ?? brand.platformName,
+    t,
+  });
+
+  return {
+    html,
+    subject,
+    preheader: data.preheader,
+    data,
+    locale: t.locale,
+  };
+}
+
+export async function renderInstantDigestFromPayload(fixture, options = {}) {
+  const templatePath = options.templatePath ?? DEFAULT_TEMPLATE;
+  const [templateFn, brand] = await Promise.all([
+    loadTemplate(templatePath),
+    resolveBrand(options.brand),
+  ]);
+  const locale = options.locale ?? fixture.locale ?? "en";
+  const t = await createTranslator(locale);
+
+  const data = hydrate(fixture, t);
+  data.brand = brand;
+  data.t = buildChrome(t, data, brand);
+
+  const firstVote = data.votes?.[0];
+  const firstProposal = firstVote?.proposals?.[0];
+  const firstEvent = firstProposal?.events?.[0];
+  if (!firstEvent?.type) {
+    throw new Error("renderInstantDigestFromPayload requires at least one event");
+  }
+
+  const eventType = String(firstEvent.type).trim();
+  const subject = t.raw(`subject.instant.${eventType}`, {
+    platformName: options.platformName ?? brand.platformName,
+    proposalTitle: firstProposal?.title ?? "",
+    voteName: firstVote?.name ?? "",
+  });
+  const html = stripHtmlComments(templateFn(data));
+
   return {
     html,
     subject,

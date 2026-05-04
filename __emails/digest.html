@@ -20,7 +20,7 @@
 
     - `data.t.*`        — chrome strings (summary, labels, CTAs, footer)
     - `event.badgeLabel`, `event.headline` — per-event, pre-resolved
-    - `event.reasonLabel` — only on `profile_withdrawn`
+    - `event.reasonLabel` / `event.commentLabel` — on `proposal_withdrawn`
 
     Values that CONTAIN trusted HTML (<strong> in the ICU pattern) are read
     with `{{{triple-brace}}}` so Handlebars does not double-escape the tags.
@@ -99,7 +99,7 @@
       submission_confirmed    — (none)
       verified_badge_applied  — (none)
       verified_badge_removed  — (none)
-      profile_withdrawn       — reason (string, required)
+      proposal_withdrawn      — reason (string, required), comment (string, optional)
       new_comment             — commenter (string), preview (string, optional)
       voting_opened           — (none)
       results_published       — resultsUrl (string, optional) — when present,
@@ -237,7 +237,7 @@
                                         <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
                                         {{/if}}
 
-                                        {{#if (eq type "profile_withdrawn")}}
+                                        {{#if (eq type "proposal_withdrawn")}}
                                         <div>
                                             <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#9b1c1c;background-color:#fde8e8;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
                                             <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
@@ -245,6 +245,11 @@
                                         <div style="margin-top:8px;padding:10px 12px;background-color:{{../../../brand.colors.cardBackground}};border-left:3px solid #f05252;border-radius:2px;font-size:13px;color:{{../../../brand.colors.textSecondary}};line-height:1.5;">
                                             <strong style="color:{{../../../brand.colors.text}};">{{reasonLabel}}</strong>
                                             {{reason}}
+                                            {{#if comment}}
+                                            <br>
+                                            <strong style="color:{{../../../brand.colors.text}};">{{commentLabel}}</strong>
+                                            {{comment}}
+                                            {{/if}}
                                         </div>
                                         {{/if}}
 

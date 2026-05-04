@@ -77,8 +77,8 @@ This creates a clean path for future provider drivers (`smtp`, `ses`, `postmark`
 
 Added transactional template and renderer:
 
-- `__emails/transactional.html`
-- `renderTransactional(...)` in `__emails/render.js`
+- `mailer/templates/transactional.html`
+- `renderTransactional(...)` in `mailer/render.js`
 
 Used for the magic-link email body with brand-aware styling via existing brand config.
 
@@ -89,7 +89,7 @@ Moved email rendering dependencies to runtime `dependencies` in `package.json`:
 - `handlebars`
 - `intl-messageformat`
 
-Reason: `__emails/render.js` is imported in server runtime routes and failed on environments that install production deps only.
+Reason: `mailer/render.js` (and related mailer modules) are imported in server runtime routes and failed on environments that install production deps only.
 
 ## Frontend Changes
 
@@ -167,7 +167,9 @@ These are expected in the production roadmap phase.
 
 - `routes/api/v0/notifications.js`
 - `mailer/transport.js`
-- `__emails/transactional.html`
+- `mailer/templates/digest.html`
+- `mailer/templates/instant.html`
+- `mailer/templates/transactional.html`
 - `__frontend/src/lib/notifications/NotificationSettings.svelte`
 - `__frontend/src/routes/notifications/verify/+page.js`
 - `__frontend/src/routes/notifications/verify/+page.svelte`
@@ -177,7 +179,7 @@ These are expected in the production roadmap phase.
 
 - `schema/User.js`
 - `helper/rateLimiters.js`
-- `__emails/render.js`
+- `mailer/render.js`
 - `__frontend/src/routes/(private)/dashboard/+page.js`
 - `__frontend/src/routes/(private)/dashboard/+page.svelte`
 - `.env.example`

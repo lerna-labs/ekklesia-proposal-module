@@ -1,0 +1,79 @@
+{
+  "preheader.transactional.default": "{platformName} sent you a transactional message.",
+  "preheader.transactional.verify_email": "Confirm your email to enable notification updates from {platformName}.",
+
+  "body.header.transactional_label": "Email",
+  "body.footer.transactional_receiving_note": "You're receiving this message because a verification was requested for notification emails at {platformName}.",
+
+  "subject.transactional.verify_email": "{platformName} — Confirm your email",
+  "subject.instant.submission_confirmed": "{platformName} — Submission confirmed: {proposalTitle}",
+  "subject.instant.verified_badge_applied": "{platformName} — Verified: {proposalTitle}",
+  "subject.instant.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
+  "subject.instant.new_comment": "{platformName} — New comment on: {proposalTitle}",
+  "subject.instant.proposal_withdrawn": "{platformName} — Proposal withdrawn: {proposalTitle}",
+  "subject.instant.voting_opened": "{platformName} — Voting is open: {voteName}",
+  "subject.instant.results_published": "{platformName} — Results published: {voteName}",
+
+  "subject.digest.single.submission_confirmed": "{platformName} — Submission confirmed: {proposalTitle}",
+  "subject.digest.single.verified_badge_applied": "{platformName} — Verified: {proposalTitle}",
+  "subject.digest.single.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
+  "subject.digest.single.proposal_withdrawn": "{platformName} — Proposal withdrawn: {proposalTitle}",
+  "subject.digest.single.new_comment": "{platformName} — New comment on: {proposalTitle}",
+  "subject.digest.single.voting_opened": "{platformName} — Voting is open: {voteName}",
+  "subject.digest.single.results_published": "{platformName} — Results published: {voteName}",
+
+  "subject.digest.multi.single_vote": "{platformName} digest — {N, plural, one {# update} other {# updates}} on {voteName} ({period})",
+  "subject.digest.multi.many_votes": "{platformName} digest — {N, plural, one {# update} other {# updates}} across {M, plural, one {# vote} other {# votes}} ({period})",
+
+  "subject.period.6h": "6h",
+  "subject.period.24h": "24h",
+
+  "preheader.default": "{totalEvents, plural, one {# update} other {# updates}} across {totalVotes, plural, one {# vote} other {# votes}} from the last {periodVerbose}",
+
+  "body.footer.instant_receiving_note": "You're receiving this because you enabled instant notifications for your {platformName} proposals and votes.",
+
+  "body.periodVerbose.6h": "6 hours",
+  "body.periodVerbose.24h": "24 hours",
+
+  "body.title": "{platformName} Notification",
+  "body.header.digest_label": "{period} digest",
+  "body.header.instant_label": "Update",
+
+  "body.summary": "You have <strong class=\"summary-emphasis\">{totalEvents, plural, one {# update} other {# updates}}</strong> across <strong class=\"summary-emphasis\">{totalVotes, plural, one {# vote} other {# votes}}</strong> from the last {periodVerbose}.",
+
+  "preheader.instant": "{platformName} — {contextTitle}",
+
+  "body.label.vote": "Vote",
+  "body.label.proposal": "Proposal",
+
+  "body.event.submission_confirmed.badge": "CONFIRMED",
+  "body.event.submission_confirmed.headline": "Your proposal is live.",
+
+  "body.event.verified_badge_applied.badge": "VERIFIED",
+  "body.event.verified_badge_applied.headline": "An admin applied the Verified badge to your proposal.",
+
+  "body.event.verified_badge_removed.badge": "UNVERIFIED",
+  "body.event.verified_badge_removed.headline": "An admin removed the Verified badge from your proposal.",
+
+  "body.event.proposal_withdrawn.badge": "WITHDRAWN",
+  "body.event.proposal_withdrawn.headline": "Your proposal was withdrawn by an admin.",
+  "body.event.proposal_withdrawn.reason_label": "Reason:",
+  "body.event.proposal_withdrawn.comment_label": "Comment:",
+
+  "body.event.new_comment.badge": "COMMENT",
+  "body.event.new_comment.headline": "New comment from <strong>{commenter}</strong>.",
+
+  "body.event.voting_opened.badge": "VOTING OPEN",
+  "body.event.voting_opened.headline": "The voting phase has opened for this vote.",
+
+  "body.event.results_published.badge": "RESULTS",
+  "body.event.results_published.headline": "Results have been published for this vote.",
+
+  "body.cta.view_proposal": "View proposal →",
+  "body.cta.view_results": "View results →",
+
+  "body.footer.receiving_note": "You're receiving this because you opted in to <strong>{period}</strong> digest notifications for your {platformName} proposals.",
+  "body.footer.manage_preferences": "Manage notification preferences",
+  "body.footer.unsubscribe": "Unsubscribe",
+  "body.footer.separator": "·"
+}

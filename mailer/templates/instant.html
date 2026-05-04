@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="{{t.locale}}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>{{{t.title}}}</title>
+    <style>
+        .brand-cta-a:hover,
+        .brand-cta-td:hover {
+            background-color: {{brand.colors.ctaHoverBackground}} !important;
+        }
+        .brand-link:hover {
+            color: {{brand.colors.linkHover}} !important;
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:{{brand.colors.bodyBackground}};font-family:{{brand.fontFamily}};color:{{brand.colors.text}};-webkit-font-smoothing:antialiased;">
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:{{brand.colors.bodyBackground}};opacity:0;">
+    {{preheader}}
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       border="0" style="background-color:{{brand.colors.bodyBackground}};">
+    <tr>
+        <td align="center" style="padding:32px 16px;">
+            <table role="presentation" width="100%" cellpadding="0"
+                   cellspacing="0" border="0"
+                   style="max-width:600px;background-color:{{brand.colors.cardBackground}};border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                <tr>
+                    <td style="padding:20px 32px;background-color:{{brand.colors.headerBackground}};">
+                        <div style="font-size:17px;font-weight:600;color:{{brand.colors.headerText}};letter-spacing:-0.01em;">
+                            {{#if brand.logo.url}}
+                            <img src="{{brand.logo.url}}" alt="{{brand.logo.alt}}" height="{{brand.logo.height}}" style="display:block;height:{{brand.logo.height}}px;width:auto;border:0;">
+                            {{else}}
+                            {{brand.platformName}}
+                            {{/if}}
+                        </div>
+                    </td>
+                </tr>
+
+                {{#each votes}}
+                <tr>
+                    <td style="padding:24px 32px 0 32px;">
+                        <table role="presentation" width="100%" cellpadding="0"
+                               cellspacing="0" border="0"
+                               style="border-top:1px solid {{../brand.colors.divider}};padding-top:20px;">
+                            <tr>
+                                <td>
+                                    <div style="font-size:10px;font-weight:700;color:{{../brand.colors.labelText}};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">
+                                        {{{../t.labelVote}}}
+                                    </div>
+                                    <div style="font-size:16px;font-weight:600;color:{{../brand.colors.text}};margin-bottom:12px;line-height:1.3;">
+                                        <a href="{{url}}" style="color:{{../brand.colors.text}};text-decoration:none;">{{name}}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        {{#each proposals}}
+                        <table role="presentation" width="100%" cellpadding="0"
+                               cellspacing="0" border="0"
+                               style="background-color:{{../../brand.colors.proposalBackground}};border:1px solid {{../../brand.colors.proposalBorder}};border-radius:6px;margin-bottom:12px;">
+                            <tr>
+                                <td style="padding:16px 20px;">
+                                    <div style="font-size:10px;font-weight:700;color:{{../../brand.colors.labelText}};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;">
+                                        {{{../../t.labelProposal}}}
+                                    </div>
+                                    <div style="font-size:15px;font-weight:600;color:{{../../brand.colors.text}};margin-bottom:14px;line-height:1.35;">
+                                        <a href="{{url}}" style="color:{{../../brand.colors.text}};text-decoration:none;">{{title}}</a>
+                                    </div>
+
+                                    {{#each events}}
+                                    <div style="padding:10px 0;{{#unless @last}}border-bottom:1px solid {{../../../brand.colors.proposalBorder}};{{/unless}}">
+                                        {{#if (eq type "submission_confirmed")}}
+                                        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#046c4e;background-color:#def7ec;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                        <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        {{/if}}
+
+                                        {{#if (eq type "verified_badge_applied")}}
+                                        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#046c4e;background-color:#def7ec;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                        <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        {{/if}}
+
+                                        {{#if (eq type "verified_badge_removed")}}
+                                        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#8a4b00;background-color:#fef3c7;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                        <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        {{/if}}
+
+                                        {{#if (eq type "proposal_withdrawn")}}
+                                        <div>
+                                            <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#9b1c1c;background-color:#fde8e8;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                            <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        </div>
+                                        <div style="margin-top:8px;padding:10px 12px;background-color:{{../../../brand.colors.cardBackground}};border-left:3px solid #f05252;border-radius:2px;font-size:13px;color:{{../../../brand.colors.textSecondary}};line-height:1.5;">
+                                            <strong style="color:{{../../../brand.colors.text}};">{{reasonLabel}}</strong>
+                                            {{reason}}
+                                            {{#if comment}}
+                                            <br>
+                                            <strong style="color:{{../../../brand.colors.text}};">{{commentLabel}}</strong>
+                                            {{comment}}
+                                            {{/if}}
+                                        </div>
+                                        {{/if}}
+
+                                        {{#if (eq type "new_comment")}}
+                                        <div>
+                                            <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:{{../../../brand.colors.accent}};background-color:{{../../../brand.colors.accentBackground}};border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                            <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        </div>
+                                        {{#if preview}}
+                                        <div style="margin-top:8px;padding:10px 12px;background-color:{{../../../brand.colors.cardBackground}};border-left:3px solid {{../../../brand.colors.accentBorder}};border-radius:2px;font-size:13px;color:{{../../../brand.colors.textSecondary}};line-height:1.5;font-style:italic;">
+                                            &ldquo;{{preview}}&rdquo;
+                                        </div>
+                                        {{/if}}
+                                        {{/if}}
+
+                                        {{#if (eq type "voting_opened")}}
+                                        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:{{../../../brand.colors.accent}};background-color:{{../../../brand.colors.accentBackground}};border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                        <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        {{/if}}
+
+                                        {{#if (eq type "results_published")}}
+                                        <span style="display:inline-block;padding:2px 8px;font-size:10px;font-weight:700;color:#5521b5;background-color:#edebfe;border-radius:3px;margin-right:8px;letter-spacing:0.05em;vertical-align:middle;">{{badgeLabel}}</span>
+                                        <span style="font-size:14px;color:{{../../../brand.colors.text}};vertical-align:middle;line-height:1.5;">{{{headline}}}</span>
+                                        {{#if resultsUrl}}
+                                        <a class="brand-link" href="{{resultsUrl}}" style="font-size:14px;color:{{../../../brand.colors.link}};text-decoration:underline;vertical-align:middle;margin-left:4px;">{{{../../../t.ctaViewResults}}}</a>
+                                        {{/if}}
+                                        {{/if}}
+
+                                        {{#if timestamp}}
+                                        <div style="margin-top:4px;font-size:12px;color:{{../../../brand.colors.textMuted}};">
+                                            {{timestamp}}
+                                        </div>
+                                        {{/if}}
+                                    </div>
+                                    {{/each}}
+
+                                    <table role="presentation" cellpadding="0"
+                                           cellspacing="0" border="0"
+                                           style="margin-top:14px;">
+                                        <tr>
+                                            <td class="brand-cta-td" style="background-color:{{../../brand.colors.ctaBackground}};border-radius:4px;">
+                                                <a class="brand-cta-a" href="{{url}}" style="display:inline-block;padding:8px 16px;font-size:13px;font-weight:500;color:{{../../brand.colors.ctaText}};text-decoration:none;background-color:{{../../brand.colors.ctaBackground}};border-radius:4px;">{{{../../t.ctaViewProposal}}}</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                </td>
+                            </tr>
+                        </table>
+                        {{/each}}
+                    </td>
+                </tr>
+                {{/each}}
+
+                <tr>
+                    <td style="padding:28px 32px;border-top:1px solid {{brand.colors.divider}};background-color:{{brand.colors.footerBackground}};">
+                        <p style="margin:0 0 12px 0;font-size:13px;color:{{brand.colors.textSecondary}};line-height:1.55;">
+                            {{{t.footer.receivingNote}}}
+                        </p>
+                        <p style="margin:0 0 16px 0;font-size:13px;line-height:1.55;">
+                            <a class="brand-link" href="{{preferencesUrl}}" style="color:{{brand.colors.link}};text-decoration:underline;">{{{t.footer.managePreferences}}}</a>
+                            &nbsp;{{{t.footer.separator}}}&nbsp;
+                            <a class="brand-link" href="{{unsubscribeUrl}}" style="color:{{brand.colors.link}};text-decoration:underline;">{{{t.footer.unsubscribe}}}</a>
+                        </p>
+                        <p style="margin:0;font-size:11px;color:{{brand.colors.textMuted}};line-height:1.55;">
+                            {{brand.footer.tagline}}<br>
+                            {{brand.footer.automatedNote}}
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "platformName": "Intersect Hydra Voting",
+  "logo": {
+    "url": "",
+    "alt": "Intersect Hydra Voting",
+    "height": 24
+  },
+  "colors": {
+    "headerBackground": "#0228aa",
+    "headerMuted": "#c8d5fd",
+    "proposalBackground": "#f8fafc",
+    "text": "#212a3d",
+    "textSecondary": "#506288",
+    "textMuted": "#a5a6a7",
+    "labelText": "#506288",
+    "link": "#2353ff",
+    "linkHover": "#002891",
+    "ctaBackground": "#2353ff",
+    "ctaHoverBackground": "#002891",
+    "accent": "#002891",
+    "accentBackground": "#ebf0ff",
+    "accentBorder": "#002891"
+  },
+  "footer": {
+    "tagline": "Intersect Hydra Voting · Operated by IntersectMBO",
+    "automatedNote": "Automated notification — please do not reply."
+  }
+}

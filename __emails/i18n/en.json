@@ -1,5 +1,6 @@
 {
-  "subject.instant.profile_withdrawn":      "{platformName} — Profile withdrawn: {proposalTitle}",
+  "subject.instant.submission_confirmed":   "{platformName} — Submission confirmed: {proposalTitle}",
+  "subject.instant.proposal_withdrawn":     "{platformName} — Proposal withdrawn: {proposalTitle}",
   "subject.instant.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
   "subject.instant.voting_opened":          "{platformName} — Voting is open: {voteName}",
   "subject.instant.results_published":      "{platformName} — Results published: {voteName}",
@@ -7,7 +8,7 @@
   "subject.digest.single.submission_confirmed":   "{platformName} — Submission confirmed: {proposalTitle}",
   "subject.digest.single.verified_badge_applied": "{platformName} — Verified: {proposalTitle}",
   "subject.digest.single.verified_badge_removed": "{platformName} — Verified badge removed: {proposalTitle}",
-  "subject.digest.single.profile_withdrawn":      "{platformName} — Profile withdrawn: {proposalTitle}",
+  "subject.digest.single.proposal_withdrawn":     "{platformName} — Proposal withdrawn: {proposalTitle}",
   "subject.digest.single.new_comment":            "{platformName} — New comment on: {proposalTitle}",
   "subject.digest.single.voting_opened":          "{platformName} — Voting is open: {voteName}",
   "subject.digest.single.results_published":      "{platformName} — Results published: {voteName}",
@@ -40,9 +41,10 @@
   "body.event.verified_badge_removed.badge":     "UNVERIFIED",
   "body.event.verified_badge_removed.headline":  "An admin removed the Verified badge from your proposal.",
 
-  "body.event.profile_withdrawn.badge":         "WITHDRAWN",
-  "body.event.profile_withdrawn.headline":      "Your profile was withdrawn by an admin.",
-  "body.event.profile_withdrawn.reason_label":  "Reason:",
+  "body.event.proposal_withdrawn.badge":          "WITHDRAWN",
+  "body.event.proposal_withdrawn.headline":       "Your proposal was withdrawn by an admin.",
+  "body.event.proposal_withdrawn.reason_label":   "Reason:",
+  "body.event.proposal_withdrawn.comment_label":  "Comment:",
 
   "body.event.new_comment.badge":     "COMMENT",
   "body.event.new_comment.headline":  "New comment from <strong>{commenter}</strong>.",

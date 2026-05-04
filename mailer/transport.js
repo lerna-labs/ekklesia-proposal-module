@@ -1,4 +1,4 @@
-import { sendToMailtrap } from "../__emails/mailtrap.js";
+import { sendToMailtrap } from "./mailtrap.js";
 
 function normalizeRecipient(to) {
   if (Array.isArray(to)) return to;
