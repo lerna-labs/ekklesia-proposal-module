@@ -40,7 +40,7 @@ const userSchema = new Schema(
             schedule: {
                 type: String,
                 enum: ["never", "6h", "daily"],
-                default: "never",
+                default: "daily",
             },
             verifiedAt: {
                 type: Date,
@@ -56,6 +56,10 @@ const userSchema = new Schema(
             },
             unsubscribeSecret: {
                 type: String,
+                default: null,
+            },
+            lastCommentDigestSentAt: {
+                type: Date,
                 default: null,
             },
         },

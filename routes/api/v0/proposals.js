@@ -22,6 +22,10 @@ import {
   getDraftOnlySubmissionBlockMessage,
   getLiveSubmissionWindowBlockMessage,
 } from "../../../helper/voteWindows.js";
+import {
+  sendProposalWithdrawnNotification,
+  sendSubmissionConfirmedNotification,
+} from "../../../mailer/notificationDispatch.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -296,6 +300,24 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     }
 
     const proposal = await Proposal.create(doc);
+    if (status === "live") {
+      try {
+        await sendSubmissionConfirmedNotification({
+          proposerId,
+          vote: {
+            slug: voteDoc.slug,
+            title: voteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          timestamp: proposal.submittedAt ?? new Date(),
+        });
+      } catch (error) {
+        console.error("Failed to send submission confirmed notification:", error);
+      }
+    }
     const created = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(201).json(created);
   } catch (error) {
@@ -441,6 +463,27 @@ router.put("/:proposalId/withdraw", isAuthenticated, authenticatedWriteLimiter, 
       date: now,
     };
     await proposal.save();
+
+    if (!isProposer) {
+      try {
+        await sendProposalWithdrawnNotification({
+          proposerId: proposerIdStr,
+          vote: {
+            slug: voteDoc.slug,
+            title: voteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          reason: category,
+          comment: commentStr,
+          timestamp: now,
+        });
+      } catch (error) {
+        console.error("Failed to send admin withdrawal notification:", error);
+      }
+    }
 
     const updated = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(200).json(updated);
@@ -776,6 +819,25 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       }
     }
     await proposal.save();
+
+    if (previousStatus === "draft" && status === "live") {
+      try {
+        await sendSubmissionConfirmedNotification({
+          proposerId: userId,
+          vote: {
+            slug: targetVoteDoc.slug,
+            title: targetVoteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          timestamp: proposal.submittedAt ?? new Date(),
+        });
+      } catch (error) {
+        console.error("Failed to send submission confirmed notification:", error);
+      }
+    }
 
     const updated = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(200).json(updated);

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import validator from "validator";
@@ -7,8 +8,10 @@ import {
   notificationsWriteLimiter,
   notificationsResendLimiter,
   notificationsVerifyLimiter,
+  notificationsUnsubscribeLimiter,
 } from "../../../helper/rateLimiters.js";
-import { renderTransactional } from "../../../__emails/render.js";
+import { renderTransactional } from "../../../mailer/render.js";
+import { createTranslator } from "../../../mailer/i18n.js";
 import { send as sendEmail } from "../../../mailer/transport.js";
 
 const router = Router();
@@ -25,7 +28,7 @@ function getNotificationState(userDoc) {
   return {
     email: notification.email ?? null,
     pendingEmail: notification.pendingEmail ?? null,
-    schedule: notification.schedule ?? "never",
+    schedule: notification.schedule ?? "daily",
     verifiedAt: notification.verifiedAt ?? null,
     locale: notification.locale ?? "en",
   };
@@ -51,15 +54,19 @@ function buildVerifyUrl(token) {
 }
 
 async function sendVerificationEmail({ toEmail, verifyUrl }) {
-  const platformName = process.env.MAIL_FROM_NAME || "Ekklesia";
-  const subject = `Confirm your email for ${platformName} notifications`;
-  const { html } = await renderTransactional({
+  const t = await createTranslator("en");
+  const { html, brand } = await renderTransactional({
     heading: "Confirm your email address",
     body: `Click the button below to verify ${toEmail} and enable notification emails.`,
     ctaLabel: "Verify email",
     ctaUrl: verifyUrl,
     note: "This link expires in 30 minutes.",
-    brand: process.env.EMAIL_BRAND || "default",
+    brand: process.env.EMAIL_BRAND || "intersect",
+    transactionalType: "verify_email",
+    showUnsubscribe: false,
+  });
+  const subject = t.raw("subject.transactional.verify_email", {
+    platformName: brand.platformName,
   });
 
   // Intentional: verification email is a transactional consent flow and bypasses suppressions.
@@ -139,6 +146,7 @@ router.put("/", isAuthenticated, notificationsWriteLimiter, async (req, res) => 
       const verificationIssuedAt = new Date();
       updates["notification.pendingEmail"] = normalizedEmail;
       updates["notification.verificationIssuedAt"] = verificationIssuedAt;
+      updates["notification.unsubscribeSecret"] = crypto.randomBytes(32).toString("hex");
 
       const token = buildVerifyToken({
         userId,
@@ -283,6 +291,7 @@ router.post("/verify", notificationsVerifyLimiter, async (req, res) => {
         $set: {
           "notification.email": pendingEmail,
           "notification.verifiedAt": new Date(),
+          "notification.schedule": userDoc?.notification?.schedule ?? "daily",
         },
         $unset: {
           "notification.pendingEmail": "",
@@ -300,6 +309,66 @@ router.post("/verify", notificationsVerifyLimiter, async (req, res) => {
     return res.status(500).json({
       status: "error",
       message: "Failed to verify email.",
+    });
+  }
+});
+
+router.post("/unsubscribe", notificationsUnsubscribeLimiter, async (req, res) => {
+  try {
+    const token = req.body?.token;
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({
+        status: "error",
+        message: "Missing unsubscribe token.",
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(400).json({
+        status: "error",
+        message: "Unsubscribe link is invalid or expired.",
+      });
+    }
+
+    if (
+      decoded?.purpose !== "notification-unsubscribe" ||
+      !decoded?.userId ||
+      !decoded?.v
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Unsubscribe link is invalid.",
+      });
+    }
+
+    const userDoc = await User.findById(decoded.userId)
+      .select("notification.unsubscribeSecret")
+      .lean();
+    if (!userDoc || userDoc?.notification?.unsubscribeSecret !== decoded.v) {
+      return res.status(400).json({
+        status: "error",
+        message: "This unsubscribe link is no longer valid. Use notification settings in your account.",
+      });
+    }
+
+    await User.updateOne(
+      { _id: decoded.userId },
+      { $set: { "notification.schedule": "never" } },
+    );
+
+    const updatedUser = await User.findById(decoded.userId).select("notification").lean();
+    return res.status(200).json({
+      status: "success",
+      notification: getNotificationState(updatedUser),
+    });
+  } catch (error) {
+    console.error("POST /api/v0/notifications/unsubscribe error:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to update notification settings.",
     });
   }
 });

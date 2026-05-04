@@ -13,6 +13,7 @@ import {
   commentWritePerMinuteLimiter,
 } from "../../../helper/rateLimiters.js";
 import { getFeedbackWindowBlockPhase } from "../../../helper/voteWindows.js";
+import { queueCommentNotificationEvent } from "../../../mailer/notificationDispatch.js";
 
 const router = Router();
 
@@ -386,7 +387,7 @@ router.post(
       return res.status(400).json({ status: "error", message: "Invalid proposalId. Must be a valid ObjectId." });
     }
 
-    const proposal = await Proposal.findById(proposalIdTrim).select("status voteId").lean();
+    const proposal = await Proposal.findById(proposalIdTrim).select("status voteId proposerId title").lean();
     if (!proposal) {
       return res.status(404).json({ status: "error", message: "Proposal not found" });
     }
@@ -457,6 +458,21 @@ router.post(
     }
 
     const comment = await Comment.create(doc);
+    if (String(proposal.proposerId ?? "") !== userId) {
+      try {
+        const commenter = await User.findById(userId).select("name").lean();
+        await queueCommentNotificationEvent({
+          recipientUserId: proposal.proposerId,
+          proposalId: proposal._id,
+          commentId: comment._id,
+          commenterId: userId,
+          commenterName: commenter?.name ?? null,
+          commentContent: comment.content,
+        });
+      } catch (error) {
+        console.error("Failed to queue comment notification event:", error);
+      }
+    }
     return res.status(201).json({
       _id: comment._id,
       proposalId: comment.proposalId,
