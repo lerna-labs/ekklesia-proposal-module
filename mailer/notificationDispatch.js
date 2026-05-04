@@ -10,6 +10,16 @@ import { send as sendEmail } from "./transport.js";
 const COMMENT_SCHEDULES = new Set(["6h", "daily"]);
 const ALL_NOTIFICATION_SCHEDULES = new Set(["6h", "daily"]);
 
+function getFanoutDelayMs() {
+  const v = Number.parseInt(process.env.EMAIL_FANOUT_DELAY_MS ?? "300", 10);
+  if (Number.isNaN(v) || v < 0) return 0;
+  return v;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function getFrontendBaseUrl() {
   return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 }
@@ -330,6 +340,7 @@ export async function runCommentDigestDispatch(now = new Date()) {
       brand: process.env.EMAIL_BRAND || "intersect",
     });
 
+    const fanoutMs = getFanoutDelayMs();
     try {
       await sendRenderedEmail({
         toEmail: userDoc.notification.email,
@@ -349,7 +360,9 @@ export async function runCommentDigestDispatch(now = new Date()) {
         ),
       ]);
       sentCount += 1;
+      if (fanoutMs > 0) await sleep(fanoutMs);
     } catch (error) {
+      if (fanoutMs > 0) await sleep(fanoutMs);
       console.error("Failed sending comment digest:", error);
     }
   }
@@ -388,6 +401,7 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
   }
 
   let sentAny = false;
+  const fanoutMs = getFanoutDelayMs();
   for (const userDoc of users) {
     const fixture = {
       period,
@@ -416,7 +430,9 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
         eventType === "voting_opened" ? "voting-opened" : "results-published"
       );
       sentAny = sentAny || sent;
+      if (sent && fanoutMs > 0) await sleep(fanoutMs);
     } catch (error) {
+      if (fanoutMs > 0) await sleep(fanoutMs);
       console.error(`Failed milestone send (${eventType}) for user ${userDoc._id}:`, error);
     }
   }

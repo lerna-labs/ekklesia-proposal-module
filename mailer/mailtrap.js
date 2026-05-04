@@ -59,7 +59,9 @@ export async function sendToMailtrap({
   if (!res.ok) {
     const detail =
       parsed?.errors?.join("; ") ?? parsed?.message ?? raw ?? "unknown error";
-    throw new Error(`Mailtrap send failed (${res.status}): ${detail}`);
+    const err = new Error(`Mailtrap send failed (${res.status}): ${detail}`);
+    err.statusCode = res.status;
+    throw err;
   }
   return parsed;
 }

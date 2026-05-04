@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | Notification System (Implementation)                                  |
-| **Version**        | 0.1.0                                                                  |
+| **Version**        | 0.2.1                                                                  |
 | **Created**        | May 4, 2026                                                            |
-| **Last Revised**   | May 4, 2026                                                            |
+| **Last Revised**   | May 4, 2026 (patch: doc sync with mailer)                             |
 | **Companion Doc**  | [System Architecture](system-architecture.md) · [User Schema](user-schema-description.md) · [Vote Schema](vote-schema-description.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -46,7 +46,8 @@ It complements high-level product notes and applies to the codebase under
 
 **In scope:** email-backed notifications (submission, withdrawal, comments,
 vote milestones), user notification preferences, verification email for the
-notification address, Mailtrap-based transport.
+notification address, and transport via **Mailtrap** (sandbox API) or **Google
+Workspace** (Gmail API + service account + domain-wide delegation).
 
 **Out of scope for this doc:** push or in-app notifications; per-event toggles
 beyond schedule and verified email; detailed frontend UX for the notifications
@@ -105,7 +106,7 @@ and intentionally bypass schedule suppression.
 | **Rendering** | [`mailer/render.js`](../mailer/render.js): `renderInstantDigestFromPayload` (single event, subject from `subject.instant.*`), `renderDigestFromPayload` (multi-event digest layout + [`buildSubject`](../mailer/subject.js)), `renderTransactional` (verification and similar). |
 | **i18n** | [`mailer/i18n/`](../mailer/i18n/en.json) — event copy and subjects. |
 | **Branding** | [`mailer/branding/`](../mailer/branding/) — merged with defaults; `EMAIL_BRAND` env selects pack (e.g. `intersect`). |
-| **Transport** | [`mailer/transport.js`](../mailer/transport.js) — `EMAIL_PROVIDER` (default **`mailtrap`**); requires `MAILTRAP_INBOX_ID` and `MAILTRAP_TOKEN` for sends. |
+| **Transport** | [`mailer/transport.js`](../mailer/transport.js) — `EMAIL_PROVIDER` default **`mailtrap`**: needs `MAILTRAP_INBOX_ID` + `MAILTRAP_TOKEN`. **`google`** (aliases `gmail`, `workspace`, …): [`mailer/googleWorkspaceSend.js`](../mailer/googleWorkspaceSend.js) reads service account JSON from `GOOGLE_APPLICATION_CREDENTIALS` / `GMAIL_SERVICE_ACCOUNT_KEY_PATH` or repo-root **`google_keys.json`**, builds JWT with **`client_email` + `private_key`** (not `keyFile`-only), impersonates `GMAIL_IMPERSONATE_USER` / `IMPERSONATE_USER` / `WORKSPACE_SENDER_EMAIL`, sends MIME via Gmail API. Retries: [`mailer/sendRetry.js`](../mailer/sendRetry.js). |
 | **Unsubscribe URL** | [`helper/notificationUnsubscribe.js`](../helper/notificationUnsubscribe.js) — signed URLs merged into rendered fixtures where applicable. |
 
 Mail failures in HTTP handlers are **logged**; API responses still succeed if the
@@ -165,9 +166,17 @@ unsubscribe (rate-limited). Verification emails use **`renderTransactional`** wi
 | `FRONTEND_URL` | Base for proposal/vote links and dashboard URLs in fixtures. |
 | `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` | From header. |
 | `EMAIL_BRAND` | Brand JSON name under `mailer/branding/`. |
-| `EMAIL_PROVIDER` | Mail backend (`mailtrap` default). |
-| `MAILTRAP_INBOX_ID`, `MAILTRAP_TOKEN` | Required for sending via Mailtrap API. |
+| `EMAIL_PROVIDER` | `mailtrap` (sandbox API, default) or `google` / `gmail` (Gmail API via service account + Workspace delegation). |
+| `MAILTRAP_INBOX_ID`, `MAILTRAP_TOKEN` | Required when using Mailtrap. |
+| `GOOGLE_APPLICATION_CREDENTIALS` or `GMAIL_SERVICE_ACCOUNT_KEY_PATH` | Optional path to service account JSON; if unset, defaults to **`google_keys.json`** at repository root (must not be committed). JSON must include **`client_email`** and **`private_key`** (standard service account key). |
+| `GMAIL_IMPERSONATE_USER`, `IMPERSONATE_USER`, or `WORKSPACE_SENDER_EMAIL` | For `EMAIL_PROVIDER=google`: Workspace user to impersonate (domain-wide delegation, `https://www.googleapis.com/auth/gmail.send`). First match wins in that order. |
+| `MAILTEST_TO_EMAIL` / `GOOGLE_DEV_TEST_EMAIL` | **Dev tests only:** required for optional sample sends in [`mailer/dev-tests/email-events.test.js`](../mailer/dev-tests/email-events.test.js) when using Google (real mail). |
+| `EMAIL_FANOUT_DELAY_MS` | After each successful or failed **per-recipient** send in milestone and comment-digest loops, wait this many ms before the next user (default **300**; **`0`** disables). Reduces API rate limits when many users are processed in one cron run. |
+| `EMAIL_SEND_MAX_ATTEMPTS` | Max attempts per message for transient transport errors (default **5**). |
+| `EMAIL_SEND_RETRY_BASE_MS` | Base delay for exponential backoff between retries (default **800** ms). |
 | `JWT_SECRET` | Required for notification verification tokens (`routes/api/v0/notifications.js`). |
+
+[`mailer/transport.js`](../mailer/transport.js) routes to Mailtrap or [`mailer/googleWorkspaceSend.js`](../mailer/googleWorkspaceSend.js) and applies shared retries via [`mailer/sendRetry.js`](../mailer/sendRetry.js).
 
 ---
 
@@ -175,11 +184,23 @@ unsubscribe (rate-limited). Verification emails use **`renderTransactional`** wi
 
 [`mailer/dev-tests/email-events.test.js`](../mailer/dev-tests/email-events.test.js)
 renders the supported **event** fixtures (instant path for proposal/vote
-milestones; digest path for aggregated comments) and optionally sends a few
-samples to Mailtrap, with **`MAILTRAP_SEND_COOLDOWN_MS`** (default 1100 ms)
-between API calls to reduce HTTP 429 responses.
+milestones; digest path for aggregated comments) and optionally sends sample
+messages through the **configured** transport (`EMAIL_PROVIDER=mailtrap` or
+`google`). Uses **`MAILTRAP_SEND_COOLDOWN_MS`** (default 1100 ms) between sample
+sends to reduce HTTP 429 responses. For **`EMAIL_PROVIDER=google`**, set
+**`MAILTEST_TO_EMAIL`** or **`GOOGLE_DEV_TEST_EMAIL`** so sample sends have an
+explicit recipient (real delivery).
 
-Run from repository root:
+**Fail-hard:** `MAILTRAP_SEND=1` or **`EMAIL_SEND_FAIL_HARD=1`** exits non-zero
+if credentials are missing or a sample send throws (any provider).
+
+Minimal Gmail-only smoke (no fixture rendering):
+
+```bash
+node mailer/dev-tests/google-send-smoke.js recipient@example.com
+```
+
+Run the full dev test from repository root:
 
 ```bash
 node mailer/dev-tests/email-events.test.js
@@ -189,6 +210,7 @@ node mailer/dev-tests/email-events.test.js
 
 ## Related Docs & Source Files
 
+- [`mailer/dev-tests/google-send-smoke.js`](../mailer/dev-tests/google-send-smoke.js) — minimal Gmail API send for Workspace debugging
 - [system-architecture.md](system-architecture.md)
 - [user-schema-description.md](user-schema-description.md) — extend with
   `notification` subdocument when documenting User fields in detail
@@ -211,3 +233,5 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 | Version | Date       | Description |
 |---------|------------|-------------|
 | 0.1.0   | 2026-05-04 | Initial implementation overview: eligibility, event catalog, mailer, cron, persistence, API surface, env, dev test script. |
+| 0.2.0   | 2026-05-04 | Google Workspace transport (`EMAIL_PROVIDER=google`), transport retries, bulk `EMAIL_FANOUT_DELAY_MS` in notification dispatch. |
+| 0.2.1   | 2026-05-04 | Doc sync: dual transport in scope; transport table + env (`IMPERSONATE_USER`, dev recipient vars, JWT JSON notes); dev verification (Google samples, `EMAIL_SEND_FAIL_HARD`, `google-send-smoke.js`). |

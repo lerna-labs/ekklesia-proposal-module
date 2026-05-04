@@ -3,7 +3,7 @@
  * submission_confirmed, proposal_withdrawn (instant); new_comment (digest/cron);
  * voting_opened, results_published (instant).
  *
- * Optionally sends samples to Mailtrap (cooldown between sends when multiple).
+ * Optionally sends samples through the configured transport (Mailtrap or Google; cooldown between sends when multiple).
  *
  * Usage (repo root):
  *   node mailer/dev-tests/email-events.test.js
@@ -12,15 +12,19 @@
  *   node mailer/dev-tests/email-events.test.js --only comment
  *
  * Env:
- *   MAILTRAP_INBOX_ID, MAILTRAP_TOKEN — optional; if missing, sends are skipped (assertions still run).
- *   MAILTRAP_SEND=1 — fail if Mailtrap credentials missing or send fails (including network errors).
+ *   EMAIL_PROVIDER — mailtrap (default) or google; must match the credentials you set below.
+ *   Mailtrap: MAILTRAP_INBOX_ID, MAILTRAP_TOKEN (optional; if missing, sample sends are skipped).
+ *   Google: GMAIL_IMPERSONATE_USER, service account JSON, and **MAILTEST_TO_EMAIL** or **GOOGLE_DEV_TEST_EMAIL**
+ *     (recipient for sample sends — required; Google delivers real mail).
+ *   MAILTRAP_SEND=1 or EMAIL_SEND_FAIL_HARD=1 — fail if provider not configured or send fails.
  *   MAIL_FROM_EMAIL, MAIL_FROM_NAME — from identity (defaults are safe fallbacks).
- *   MAILTEST_TO_EMAIL — recipient for sandbox API (defaults to MAIL_FROM_EMAIL).
- *   MAILTRAP_SEND_COOLDOWN_MS — wait this many ms between Mailtrap sends (default 1100) to avoid 429 rate limits.
+ *   MAILTEST_TO_EMAIL — optional for Mailtrap (defaults to sandbox recipient); required for Google sample sends (alias: GOOGLE_DEV_TEST_EMAIL).
+ *   MAILTRAP_SEND_COOLDOWN_MS — delay between sample sends, any provider (default 1100) to reduce 429s.
  *
  * Loads `.env` / `.env.development` from project root when present.
  */
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -28,7 +32,8 @@ import {
   renderDigestFromPayload,
   renderInstantDigestFromPayload,
 } from "../render.js";
-import { send as sendEmail } from "../transport.js";
+import { getEmailProvider, send as sendEmail } from "../transport.js";
+import { resolveServiceAccountKeyPath } from "../googleWorkspaceSend.js";
 import {
   instantEventFixture,
   commentDigestAggregatedFixture,
@@ -47,17 +52,60 @@ const MAILTRAP_COOLDOWN_MS = Math.max(
   Number.parseInt(process.env.MAILTRAP_SEND_COOLDOWN_MS ?? "1100", 10) || 0,
 );
 
-let lastMailtrapSendAt = 0;
+let lastOutboundSendAt = 0;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Spaces out Mailtrap API calls so sandbox tiers do not return 429. */
-async function throttleMailtrapBeforeSend() {
-  if (!mailtrapConfigured() || MAILTRAP_COOLDOWN_MS === 0) return;
-  if (lastMailtrapSendAt === 0) return;
-  const elapsed = Date.now() - lastMailtrapSendAt;
+/** Recipient for Google sample sends only (real inbox). */
+function googleSampleRecipientEmail() {
+  return (
+    process.env.MAILTEST_TO_EMAIL?.trim() ||
+    process.env.GOOGLE_DEV_TEST_EMAIL?.trim() ||
+    ""
+  );
+}
+
+function outboundSendConfigured() {
+  const p = getEmailProvider();
+  if (p === "mailtrap") {
+    return Boolean(process.env.MAILTRAP_INBOX_ID && process.env.MAILTRAP_TOKEN);
+  }
+  if (p === "google") {
+    const imp =
+      process.env.GMAIL_IMPERSONATE_USER?.trim() ||
+      process.env.WORKSPACE_SENDER_EMAIL?.trim();
+    if (!imp) return false;
+    if (!googleSampleRecipientEmail()) return false;
+    return fs.existsSync(resolveServiceAccountKeyPath());
+  }
+  return false;
+}
+
+function outboundSkipHint() {
+  const p = getEmailProvider();
+  if (p === "mailtrap") {
+    return "set MAILTRAP_INBOX_ID and MAILTRAP_TOKEN";
+  }
+  if (p === "google") {
+    return "set GMAIL_IMPERSONATE_USER, service account key file (GOOGLE_APPLICATION_CREDENTIALS or ./google_keys.json), and MAILTEST_TO_EMAIL or GOOGLE_DEV_TEST_EMAIL (sample recipient)";
+  }
+  return "set EMAIL_PROVIDER to mailtrap or google";
+}
+
+function sendFailHardEnabled() {
+  return (
+    process.env.MAILTRAP_SEND === "1" ||
+    process.env.EMAIL_SEND_FAIL_HARD === "1"
+  );
+}
+
+/** Spaces out outbound API calls so providers return fewer 429s. */
+async function throttleOutboundBeforeSend() {
+  if (!outboundSendConfigured() || MAILTRAP_COOLDOWN_MS === 0) return;
+  if (lastOutboundSendAt === 0) return;
+  const elapsed = Date.now() - lastOutboundSendAt;
   const waitMs = MAILTRAP_COOLDOWN_MS - elapsed;
   if (waitMs > 0) await sleep(waitMs);
 }
@@ -75,17 +123,13 @@ const DIGEST_COMMENT_ALIASES = new Set(["comment", "digest-comment", "new_commen
 
 const INSTANT_IDS = new Set(INSTANT_EVENT_TYPES);
 
-function mailtrapConfigured() {
-  return Boolean(process.env.MAILTRAP_INBOX_ID && process.env.MAILTRAP_TOKEN);
-}
-
 function printHelp() {
   console.log(`Usage: node mailer/dev-tests/email-events.test.js [options]
 
 Options:
   --help, -h       Show this help
   --list           Print selectable --only ids and exit
-  --only <id>      Run a single variant (assertions + optional Mailtrap)
+  --only <id>      Run a single variant (assertions + optional sample send)
 
 Instant ids (--only):
   submission_confirmed
@@ -96,7 +140,7 @@ Instant ids (--only):
 Digest ids (--only):
   comment          Aggregated new_comment digest (aliases: digest-comment, new_comment)
 
-Default (no --only): run all instant types, then Mailtrap sample instant + comment digest.
+Default (no --only): run all instant types, then sample instant + comment digest (uses EMAIL_PROVIDER).
 `);
 }
 
@@ -163,26 +207,29 @@ function parseCli(argv) {
   return { mode: "all" };
 }
 
-async function maybeSendToMailtrap(category, subject, html) {
-  const force = process.env.MAILTRAP_SEND === "1";
-  if (!mailtrapConfigured()) {
+async function maybeSendDevSample(category, subject, html) {
+  const provider = getEmailProvider();
+  const force = sendFailHardEnabled();
+  if (!outboundSendConfigured()) {
     if (force) {
       throw new Error(
-        "MAILTRAP_SEND=1 requires MAILTRAP_INBOX_ID and MAILTRAP_TOKEN",
+        `Sample send requires ${provider} credentials: ${outboundSkipHint()}`,
       );
     }
     console.warn(
-      `[email-events] Skip Mailtrap (${category}): set MAILTRAP_INBOX_ID + MAILTRAP_TOKEN`,
+      `[email-events] Skip send (${category}, provider=${provider}): ${outboundSkipHint()}`,
     );
     return;
   }
 
   const toEmail =
-    process.env.MAILTEST_TO_EMAIL ||
-    process.env.MAIL_FROM_EMAIL ||
-    "sandbox@mailtrap.io";
+    provider === "google"
+      ? googleSampleRecipientEmail()
+      : process.env.MAILTEST_TO_EMAIL?.trim() ||
+        process.env.MAIL_FROM_EMAIL?.trim() ||
+        "sandbox@mailtrap.io";
 
-  await throttleMailtrapBeforeSend();
+  await throttleOutboundBeforeSend();
 
   try {
     await sendEmail({
@@ -196,14 +243,14 @@ async function maybeSendToMailtrap(category, subject, html) {
       category,
     });
   } catch (err) {
-    if (process.env.MAILTRAP_SEND === "1") {
+    if (force) {
       throw err;
     }
     console.warn(
-      `[email-events] Mailtrap send failed (${category}); set MAILTRAP_SEND=1 to fail hard. ${err.message}`,
+      `[email-events] Send failed (${category}, provider=${provider}): ${err.message}. Set MAILTRAP_SEND=1 or EMAIL_SEND_FAIL_HARD=1 to fail hard.`,
     );
   } finally {
-    lastMailtrapSendAt = Date.now();
+    lastOutboundSendAt = Date.now();
   }
 }
 
@@ -253,7 +300,7 @@ async function assertCommentDigest() {
 async function runOnly(target) {
   if (target === "comment") {
     const commentDigest = await assertCommentDigest();
-    await maybeSendToMailtrap(
+    await maybeSendDevSample(
       "digest-new-comment",
       commentDigest.subject,
       commentDigest.html,
@@ -264,7 +311,7 @@ async function runOnly(target) {
 
   const type = target;
   const result = await assertInstantEvent(type);
-  await maybeSendToMailtrap(`instant-${type}`, result.subject, result.html);
+  await maybeSendDevSample(`instant-${type}`, result.subject, result.html);
   console.log(`email-events.test.js: --only ${type} passed`);
 }
 
@@ -277,14 +324,14 @@ async function runAll() {
     instantEventFixture("submission_confirmed"),
     { brand: BRAND },
   );
-  await maybeSendToMailtrap(
+  await maybeSendDevSample(
     "instant-sample",
     sampleInstant.subject,
     sampleInstant.html,
   );
 
   const commentDigest = await assertCommentDigest();
-  await maybeSendToMailtrap(
+  await maybeSendDevSample(
     "digest-new-comment",
     commentDigest.subject,
     commentDigest.html,
