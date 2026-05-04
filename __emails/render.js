@@ -7,6 +7,7 @@ import { createTranslator } from "./i18n.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_TEMPLATE = path.join(__dirname, "digest.html");
+const TRANSACTIONAL_TEMPLATE = path.join(__dirname, "transactional.html");
 const BRANDING_DIR = path.join(__dirname, "branding");
 const DEFAULT_BRAND_FILE = path.join(BRANDING_DIR, "default.json");
 
@@ -224,4 +225,42 @@ export async function renderDigest(fixturePath, options = {}) {
     data,
     locale: t.locale,
   };
+}
+
+/**
+ * Render a simple transactional email with brand-aware chrome.
+ * @param {object} options
+ * @param {string} options.heading
+ * @param {string} options.body
+ * @param {string} options.ctaLabel
+ * @param {string} options.ctaUrl
+ * @param {string} [options.note]
+ * @param {string|object} [options.brand]
+ * @returns {Promise<{html: string, brand: object}>}
+ */
+export async function renderTransactional(options = {}) {
+  const {
+    heading = "",
+    body = "",
+    ctaLabel = "",
+    ctaUrl = "",
+    note = "",
+    brand: brandOverride,
+  } = options;
+  const [templateFn, brand] = await Promise.all([
+    loadTemplate(TRANSACTIONAL_TEMPLATE),
+    resolveBrand(brandOverride),
+  ]);
+
+  const html = stripHtmlComments(
+    templateFn({
+      heading,
+      body,
+      ctaLabel,
+      ctaUrl,
+      note,
+      brand,
+    })
+  );
+  return { html, brand };
 }
