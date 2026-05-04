@@ -7,6 +7,7 @@
   import * as Field from "$lib/components/ui/field/index.js";
   import * as Input from "$lib/components/ui/input";
   import * as Select from "$lib/components/ui/select";
+  import ToolTip from "$lib/components/form/ToolTip.svelte";
 
   let {
     user = null,
@@ -20,9 +21,12 @@
     { value: "daily", label: "Daily" },
   ];
 
+  const SCHEDULE_HELP =
+    "This schedule applies only to comment notifications (batched digests). Other events—such as submission confirmed, proposal withdrawn by an admin, or voting milestones—are sent instantly when they occur. Select Never if you don’t want to receive notification emails at all.";
+
   let submitting = $state(false);
   let email = $state("");
-  let schedule = $state("never");
+  let schedule = $state("daily");
   let localNotification = $state(null);
   const EMAIL_ERROR_MESSAGE = "Please enter a valid email address.";
 
@@ -55,7 +59,7 @@
   $effect(() => {
     localNotification = notification ?? null;
     email = notification?.pendingEmail ?? notification?.email ?? "";
-    schedule = notification?.schedule ?? "never";
+    schedule = notification?.schedule ?? "daily";
   });
 
   async function saveSettings() {
@@ -77,7 +81,7 @@
       }
       localNotification = payload;
       email = payload?.pendingEmail ?? payload?.email ?? "";
-      schedule = payload?.schedule ?? "never";
+      schedule = payload?.schedule ?? "daily";
       toast.success("Notification settings saved.");
       if (payload?.emailSendFailed) {
         toast.warning("Saved, but verification email could not be sent.");
@@ -120,8 +124,13 @@
     <Card.Title>Notifications</Card.Title>
   </Card.Header>
   <Card.Content class="space-y-4">
-    <div class="space-y-2">
-      <label class="text-sm font-medium" for="notifications-email">Email</label>
+    <Field.Field class="gap-2">
+      <Field.Label
+        for="notifications-email"
+        class="flex flex-row items-center gap-1 mb-0 pb-0 text-sm font-medium shrink-0 w-fit"
+      >
+        Email
+      </Field.Label>
       <Input.Root
         id="notifications-email"
         type="email"
@@ -135,10 +144,16 @@
       {#if emailValidationError}
         <Field.Error class="text-xs">{emailValidationError}</Field.Error>
       {/if}
-    </div>
+    </Field.Field>
 
-    <div class="space-y-2">
-      <label class="text-sm font-medium" for="notifications-schedule">Schedule</label>
+    <Field.Field class="gap-2">
+      <Field.Label
+        for="notifications-schedule"
+        class="flex flex-row items-center gap-1 mb-0 pb-0 text-sm font-medium shrink-0 w-fit"
+      >
+        Schedule
+        <ToolTip content={SCHEDULE_HELP} fieldLabel="Schedule" />
+      </Field.Label>
       <Select.Root
         type="single"
         value={schedule}
@@ -153,7 +168,7 @@
           {/each}
         </Select.Content>
       </Select.Root>
-    </div>
+    </Field.Field>
 
     <div class="space-y-1 text-sm">
       <div class="flex items-center gap-2">
