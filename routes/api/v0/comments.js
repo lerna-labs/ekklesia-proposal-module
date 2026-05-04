@@ -75,6 +75,24 @@ function getCommentStatusCondition(statusParam, isAdmin, userId) {
   return { $or: [{ status: "live" }, { status: "withdrawnByAdmin", userId }] };
 }
 
+/**
+ * Visibility filter for *direct replies* to a comment, aligned with getCommentStatusCondition(null, …)
+ * and formatComment reply counting. Used in GET /comments aggregation so sort-by-replyCount matches displayed counts.
+ */
+function getVisibleReplyStatusMatch(isAdmin, viewerUserId) {
+  if (!viewerUserId) return { status: "live" };
+  if (isAdmin) return { $or: [{ status: "live" }, { status: "withdrawnByAdmin" }] };
+  return {
+    $or: [
+      { status: "live" },
+      {
+        status: "withdrawnByAdmin",
+        userId: new mongoose.Types.ObjectId(String(viewerUserId)),
+      },
+    ],
+  };
+}
+
 /** Build comment response shape: author with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches author or user is vote admin. */
 async function formatComment(
   comment,
@@ -208,6 +226,8 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
     const proposalProposerId = proposal?.proposerId ? String(proposal.proposerId) : "";
     const voteAdmins = vote?.admins && Array.isArray(vote.admins) ? vote.admins.map(String) : [];
 
+    const replyVisibilityMatch = getVisibleReplyStatusMatch(isAdmin, userId);
+
     const matchCondition = { proposalId: proposalObjectId, parentId: null, ...statusFilter };
 
     const userTypeExpr = {
@@ -241,7 +261,11 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
           from: "comments",
           let: { cid: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$parentId", "$$cid"] } } },
+            {
+              $match: {
+                $and: [{ $expr: { $eq: ["$parentId", "$$cid"] } }, replyVisibilityMatch],
+              },
+            },
             { $count: "count" },
           ],
           as: "replyCountArr",
