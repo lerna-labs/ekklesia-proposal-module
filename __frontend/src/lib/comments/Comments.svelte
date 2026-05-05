@@ -517,7 +517,7 @@
 
 <section id="comments">
   <CommentsHeader
-    total={commentsState.meta?.total ?? proposal?.commentCount}
+    total={commentsState.meta?.threadTotal ?? commentsState.meta?.total ?? proposal?.commentCount}
     bind:sortPopoverOpen
     bind:filterPopoverOpen
     bind:pendingSort

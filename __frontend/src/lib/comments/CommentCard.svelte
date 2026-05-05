@@ -26,6 +26,8 @@
     withdrawDisabledTitle = "",
     isVoteAdmin = false,
     repliesData = [],
+    /** When replies were fetched, API total (handles stale embedded replyCount). */
+    loadedReplyTotal = null,
     authorLabel = commentAuthorLabel,
     canEditComment = () => false,
     onToggleLike,
@@ -36,6 +38,16 @@
   } = $props();
 
   const isOwn = $derived(currentUserId && comment?.author?._id === currentUserId);
+
+  const displayReplyCount = $derived.by(() => {
+    const api = comment?.replyCount ?? 0;
+    const loaded =
+      loadedReplyTotal != null && typeof loadedReplyTotal === "number"
+        ? loadedReplyTotal
+        : null;
+    if (loaded != null) return Math.max(api, loaded);
+    return api;
+  });
 </script>
 
 <Card.Root class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-white opacity-50' : ''}">
@@ -113,10 +125,17 @@
           <span class="ml-1">{comment?.likeCount ?? 0}</span>
         </Button>
       {/if}
-      {#if showReplyCountButton && (comment?.replyCount ?? 0) > 0}
-        <Button variant="outline" size="sm" class="text-xs" onclick={() => onToggleReplies?.(comment)}>
+      {#if showReplyCountButton && displayReplyCount > 0}
+        <Button
+          variant="outline"
+          size="sm"
+          class="text-xs"
+          title="Total replies in this thread (including nested replies)."
+          aria-label="Toggle replies, {displayReplyCount}"
+          onclick={() => onToggleReplies?.(comment)}
+        >
           <MessagesSquare class="size-3.5" />
-          <span class="ml-1">{comment?.replyCount ?? 0}</span>
+          <span class="ml-1">{displayReplyCount}</span>
         </Button>
       {/if}
     </div>
