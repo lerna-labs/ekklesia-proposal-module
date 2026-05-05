@@ -130,8 +130,8 @@
           variant="outline"
           size="sm"
           class="text-xs"
-          title="Direct replies at the next level (not including deeper nested replies)."
-          aria-label="Toggle direct replies, {displayReplyCount}"
+          title="Total replies in this thread (including nested replies)."
+          aria-label="Toggle replies, {displayReplyCount}"
           onclick={() => onToggleReplies?.(comment)}
         >
           <MessagesSquare class="size-3.5" />
