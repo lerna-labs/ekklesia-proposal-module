@@ -23,6 +23,9 @@
   /** Set after first successful create (manual or auto-save) so the form can show Preview. */
   let createdProposal = $state(null);
 
+  /** Serialize saves so autosave / manual save / submit cannot overlap (ordering + correct method/path). */
+  let saveQueueTail = Promise.resolve();
+
   const formKey = $derived(vote?.form ?? "default");
 
   $effect(() => {
@@ -44,18 +47,18 @@
       });
   });
 
-  async function onSave(payload, options) {
+  async function runSave(payload, options) {
     if (!vote?._id) return;
     saving = true;
     validationErrors = null;
     try {
       const body = { ...payload, voteId: vote._id };
-      const isUpdate = createdProposal?._id && payload.status === "draft";
+      const hasPersistedId = Boolean(createdProposal?._id);
       const res = await api.fetch(
         fetch,
-        isUpdate ? `/proposals/${createdProposal._id}` : "/proposals",
+        hasPersistedId ? `/proposals/${createdProposal._id}` : "/proposals",
         {
-          method: isUpdate ? "PUT" : "POST",
+          method: hasPersistedId ? "PUT" : "POST",
           body: JSON.stringify(body),
         },
       );
@@ -65,7 +68,7 @@
         if (payload.status === "draft" && options?.fromAutoSave) {
           toast.success("Draft autosaved");
         } else {
-          toast.success(payload.status === "live" ? "Proposal created." : "Draft saved.");
+          toast.success(payload.status === "live" ? "Proposal submitted." : "Draft saved.");
         }
         await invalidateAll();
         if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
@@ -87,6 +90,27 @@
     } finally {
       saving = false;
     }
+  }
+
+  function onSave(payload, options) {
+    let resolveOuter;
+    let rejectOuter;
+    const outer = new Promise((resolve, reject) => {
+      resolveOuter = resolve;
+      rejectOuter = reject;
+    });
+
+    saveQueueTail = saveQueueTail.then(async () => {
+      try {
+        const result = await runSave(payload, options);
+        resolveOuter(result);
+      } catch (e) {
+        rejectOuter(e);
+      }
+    });
+    saveQueueTail = saveQueueTail.catch(() => {});
+
+    return outer;
   }
 </script>
 
