@@ -3,6 +3,7 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
   import EyeIcon from "@lucide/svelte/icons/eye";
+  import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import { writePreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
   import { formatUtcInstant } from "$lib/formatUtc.js";
 
@@ -58,6 +59,9 @@
   const AUTO_SAVE_INTERVAL_MINUTES = AUTO_SAVE_INTERVAL_MS / 60000;
 
   let lastSaveAt = $state(null);
+
+  /** Blocks double-submit and shows loading until live/re-submit onSave settles (local, synchronous on click). */
+  let submitInFlight = $state(false);
 
   /** Snapshot of current form data for dirty check (serialized payload). */
   let formDataSnapshot = $derived(getPayload ? JSON.stringify(getPayload(formData.status)) : "");
@@ -179,14 +183,18 @@
   }
 
   function submitLive() {
-    if (!getPayload || !onSave) return;
+    if (!getPayload || !onSave || submitInFlight) return;
     const payload = getPayload("live");
+    submitInFlight = true;
     Promise.resolve(onSave(payload))
       .then(() => {
         initialSnapshot = JSON.stringify(getPayload(formData.status));
         clearPreviewStorage();
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        submitInFlight = false;
+      });
   }
 
   /** Exposed for parent form onsubmit (e.g. Enter key). */
@@ -305,8 +313,19 @@
           <EyeIcon class="size-4 shrink-0" aria-hidden="true" />
           Preview Proposal
         </Button>
-        <Button type="button" class="w-full cursor-pointer sm:w-auto" onclick={submitLive}>
-          {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
+        <Button
+          type="button"
+          class="w-full cursor-pointer sm:w-auto inline-flex items-center justify-center gap-2"
+          disabled={submitInFlight}
+          aria-busy={submitInFlight}
+          onclick={submitLive}
+        >
+          {#if submitInFlight}
+            <LoaderCircleIcon class="size-4 shrink-0 animate-spin" aria-hidden="true" />
+            <span>Submitting…</span>
+          {:else}
+            {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
+          {/if}
         </Button>
       </div>
     </div>
