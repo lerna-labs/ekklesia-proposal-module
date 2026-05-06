@@ -49,6 +49,10 @@ function buildProposalUrl(voteSlug, proposalId) {
   return `${buildVoteUrl(voteSlug)}/${encodeURIComponent(String(proposalId))}`;
 }
 
+function nonEmptyStringQuery() {
+  return { $type: "string", $nin: ["", null] };
+}
+
 function notificationSchedule(userDoc) {
   const raw = String(userDoc?.notification?.schedule ?? "daily").trim().toLowerCase();
   return raw || "daily";
@@ -442,11 +446,13 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
 export async function runVoteMilestoneDispatch(now = new Date()) {
   const votingOpenVotes = await Vote.find({
     votingStartDate: { $lte: now },
+    votingUrl: nonEmptyStringQuery(),
     "notificationDispatch.votingOpenedSentAt": null,
   }).lean();
 
   const resultsVotes = await Vote.find({
     resultsPublishedAt: { $ne: null, $lte: now },
+    resultsUrl: nonEmptyStringQuery(),
     "notificationDispatch.resultsPublishedSentAt": null,
   }).lean();
 

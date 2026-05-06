@@ -43,6 +43,10 @@ function setPath(obj, path, value) {
   cursor[keys[keys.length - 1]] = value;
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim() !== "";
+}
+
 function createHarness() {
   const users = [];
   const votes = [];
@@ -109,6 +113,7 @@ function createHarness() {
         votes.filter(
           (v) =>
             new Date(v.votingStartDate).getTime() <= new Date(now).getTime() &&
+            (!query.votingUrl || isNonEmptyString(v.votingUrl)) &&
             v.notificationDispatch?.votingOpenedSentAt == null,
         ),
       );
@@ -120,6 +125,7 @@ function createHarness() {
           (v) =>
             v.resultsPublishedAt != null &&
             new Date(v.resultsPublishedAt).getTime() <= new Date(now).getTime() &&
+            (!query.resultsUrl || isNonEmptyString(v.resultsUrl)) &&
             v.notificationDispatch?.resultsPublishedSentAt == null,
         ),
       );
@@ -397,4 +403,68 @@ test("results_published milestone dispatches once and uses resultsUrl", async (t
   const event = harness.instantFixtures[0].votes[0].events[0];
   assert.equal(event.type, "results_published");
   assert.equal(event.ctaUrl, "https://results.example.test/vote-results");
+});
+
+test("voting_opened milestone skips votes without votingUrl", async (t) => {
+  const harness = createHarness();
+  t.after(() => harness.restore());
+
+  const now = new Date("2026-05-05T12:00:00.000Z");
+  harness.users.push({
+    _id: "stake_milestone_3",
+    notification: {
+      email: "mad@madorkestra.com",
+      schedule: "daily",
+      verifiedAt: new Date("2026-05-01T00:00:00.000Z"),
+    },
+  });
+  harness.votes.push({
+    _id: "507f1f77bcf86cd799439051",
+    title: "Vote Open Missing Url",
+    slug: "vote-open-missing-url",
+    votingUrl: "",
+    votingStartDate: new Date("2026-05-01T00:00:00.000Z"),
+    resultsPublishedAt: null,
+    notificationDispatch: { votingOpenedSentAt: null, resultsPublishedSentAt: null },
+  });
+
+  const run = await runVoteMilestoneDispatch(now);
+
+  assert.equal(run, 0);
+  assert.equal(harness.sentEmails.length, 0);
+  assert.equal(harness.votes[0].notificationDispatch.votingOpenedSentAt, null);
+});
+
+test("results_published milestone skips votes without resultsUrl", async (t) => {
+  const harness = createHarness();
+  t.after(() => harness.restore());
+
+  const now = new Date("2026-05-05T12:00:00.000Z");
+  harness.users.push({
+    _id: "stake_milestone_4",
+    notification: {
+      email: "mad@madorkestra.com",
+      schedule: "daily",
+      verifiedAt: new Date("2026-05-01T00:00:00.000Z"),
+    },
+  });
+  harness.votes.push({
+    _id: "507f1f77bcf86cd799439061",
+    title: "Vote Results Missing Url",
+    slug: "vote-results-missing-url",
+    votingUrl: "https://example.test/votes/vote-results-missing-url/voting",
+    votingStartDate: new Date("2026-01-01T00:00:00.000Z"),
+    resultsPublishedAt: new Date("2026-05-04T00:00:00.000Z"),
+    resultsUrl: "",
+    notificationDispatch: {
+      votingOpenedSentAt: new Date("2026-05-01T00:00:00.000Z"),
+      resultsPublishedSentAt: null,
+    },
+  });
+
+  const run = await runVoteMilestoneDispatch(now);
+
+  assert.equal(run, 0);
+  assert.equal(harness.sentEmails.length, 0);
+  assert.equal(harness.votes[0].notificationDispatch.resultsPublishedSentAt, null);
 });
