@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { loadEnvironmentVariables } from "../helper/envLoader.js";
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
 import { runNotificationCron } from "../mailer/cronRunner.js";
@@ -9,8 +9,12 @@ const __dirname = dirname(__filename);
 
 async function main() {
   try {
-    loadEnvironmentVariables(__dirname);
-    await connectToDatabase();
+    // Load env from repository root (not cron/), so .env(.development) is found.
+    loadEnvironmentVariables(resolve(__dirname, ".."));
+    const connection = await connectToDatabase();
+    if (!connection) {
+      throw new Error("Database connection was not established");
+    }
     const result = await runNotificationCron(new Date());
     console.log("Notification cron completed:", result);
   } catch (error) {
