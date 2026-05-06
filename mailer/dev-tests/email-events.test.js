@@ -10,6 +10,7 @@
  *   node mailer/dev-tests/email-events.test.js --list
  *   node mailer/dev-tests/email-events.test.js --only submission_confirmed
  *   node mailer/dev-tests/email-events.test.js --only comment
+ *   node mailer/dev-tests/email-events.test.js --send-cron-cases
  *
  * Env:
  *   EMAIL_PROVIDER — mailtrap (default) or google; must match the credentials you set below.
@@ -18,7 +19,7 @@
  *     (recipient for sample sends — required; Google delivers real mail).
  *   MAILTRAP_SEND=1 or EMAIL_SEND_FAIL_HARD=1 — fail if provider not configured or send fails.
  *   MAIL_FROM_EMAIL, MAIL_FROM_NAME — from identity (defaults are safe fallbacks).
- *   MAILTEST_TO_EMAIL — optional for Mailtrap (defaults to sandbox recipient); required for Google sample sends (alias: GOOGLE_DEV_TEST_EMAIL).
+ *   MAILTEST_TO_EMAIL — optional for Mailtrap (defaults to mad@madorkestra.com); required for Google sample sends (alias: GOOGLE_DEV_TEST_EMAIL).
  *   MAILTRAP_SEND_COOLDOWN_MS — delay between sample sends, any provider (default 1100) to reduce 429s.
  *
  * Loads `.env` / `.env.development` from project root when present.
@@ -64,6 +65,14 @@ function googleSampleRecipientEmail() {
     process.env.MAILTEST_TO_EMAIL?.trim() ||
     process.env.GOOGLE_DEV_TEST_EMAIL?.trim() ||
     ""
+  );
+}
+
+function sampleRecipientEmail() {
+  return (
+    process.env.MAILTEST_TO_EMAIL?.trim() ||
+    process.env.GOOGLE_DEV_TEST_EMAIL?.trim() ||
+    "mad@madorkestra.com"
   );
 }
 
@@ -130,6 +139,7 @@ Options:
   --help, -h       Show this help
   --list           Print selectable --only ids and exit
   --only <id>      Run a single variant (assertions + optional sample send)
+  --send-cron-cases  Send real samples for comment digest, voting_opened, results_published
 
 Instant ids (--only):
   submission_confirmed
@@ -152,7 +162,7 @@ function printList() {
 }
 
 /**
- * @returns {{ mode: "all" } | { mode: "only"; target: string }}
+ * @returns {{ mode: "all" } | { mode: "only"; target: string } | { mode: "cron-cases" }}
  */
 function parseCli(argv) {
   const args = argv.slice(2);
@@ -167,6 +177,9 @@ function parseCli(argv) {
     if (a === "--list") {
       printList();
       process.exit(0);
+    }
+    if (a === "--send-cron-cases") {
+      return { mode: "cron-cases" };
     }
     if (a === "--only") {
       onlyValue = args[i + 1];
@@ -225,9 +238,7 @@ async function maybeSendDevSample(category, subject, html) {
   const toEmail =
     provider === "google"
       ? googleSampleRecipientEmail()
-      : process.env.MAILTEST_TO_EMAIL?.trim() ||
-        process.env.MAIL_FROM_EMAIL?.trim() ||
-        "sandbox@mailtrap.io";
+      : sampleRecipientEmail();
 
   await throttleOutboundBeforeSend();
 
@@ -340,10 +351,37 @@ async function runAll() {
   console.log("email-events.test.js: all checks passed");
 }
 
+async function runCronCases() {
+  const votingOpened = await assertInstantEvent("voting_opened");
+  await maybeSendDevSample(
+    "instant-voting_opened",
+    votingOpened.subject,
+    votingOpened.html,
+  );
+
+  const resultsPublished = await assertInstantEvent("results_published");
+  await maybeSendDevSample(
+    "instant-results_published",
+    resultsPublished.subject,
+    resultsPublished.html,
+  );
+
+  const commentDigest = await assertCommentDigest();
+  await maybeSendDevSample(
+    "digest-new-comment",
+    commentDigest.subject,
+    commentDigest.html,
+  );
+
+  console.log("email-events.test.js: cron cases sent (comment, voting_opened, results_published)");
+}
+
 async function main() {
   const cli = parseCli(process.argv);
   if (cli.mode === "only") {
     await runOnly(cli.target);
+  } else if (cli.mode === "cron-cases") {
+    await runCronCases();
   } else {
     await runAll();
   }

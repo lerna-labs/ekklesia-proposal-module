@@ -9,6 +9,23 @@ import { send as sendEmail } from "./transport.js";
 
 const COMMENT_SCHEDULES = new Set(["6h", "daily"]);
 const ALL_NOTIFICATION_SCHEDULES = new Set(["6h", "daily"]);
+const notificationDispatchTestHooks = {
+  getUnsubscribeUrlForUser: null,
+  renderDigestFromPayload: null,
+  renderInstantDigestFromPayload: null,
+  sendEmail: null,
+};
+
+export function __setNotificationDispatchTestHooks(hooks = {}) {
+  Object.assign(notificationDispatchTestHooks, hooks);
+}
+
+export function __resetNotificationDispatchTestHooks() {
+  notificationDispatchTestHooks.getUnsubscribeUrlForUser = null;
+  notificationDispatchTestHooks.renderDigestFromPayload = null;
+  notificationDispatchTestHooks.renderInstantDigestFromPayload = null;
+  notificationDispatchTestHooks.sendEmail = null;
+}
 
 function getFanoutDelayMs() {
   const v = Number.parseInt(process.env.EMAIL_FANOUT_DELAY_MS ?? "300", 10);
@@ -101,7 +118,8 @@ function notificationFixture({ vote, proposal, events, period = "24h" }) {
 }
 
 async function sendRenderedEmail({ toEmail, renderResult, category }) {
-  return sendEmail({
+  const send = notificationDispatchTestHooks.sendEmail ?? sendEmail;
+  return send({
     from: getFromIdentity(),
     to: { email: toEmail },
     subject: renderResult.subject,
@@ -118,14 +136,18 @@ async function sendInstantToUser(userDoc, fixture, category, options = {}) {
     );
     return false;
   }
-  const unsubscribeUrl = await getUnsubscribeUrlForUser(String(userDoc._id));
+  const getUnsubscribeUrl =
+    notificationDispatchTestHooks.getUnsubscribeUrlForUser ?? getUnsubscribeUrlForUser;
+  const unsubscribeUrl = await getUnsubscribeUrl(String(userDoc._id));
   const mergedFixture = {
     ...fixture,
     unsubscribeUrl,
     preferencesUrl:
       fixture.preferencesUrl ?? `${getFrontendBaseUrl()}/dashboard`,
   };
-  const renderResult = await renderInstantDigestFromPayload(mergedFixture, {
+  const renderInstant =
+    notificationDispatchTestHooks.renderInstantDigestFromPayload ?? renderInstantDigestFromPayload;
+  const renderResult = await renderInstant(mergedFixture, {
     brand: process.env.EMAIL_BRAND || "intersect",
   });
   await sendRenderedEmail({
@@ -329,14 +351,18 @@ export async function runCommentDigestDispatch(now = new Date()) {
     const groupedVotes = groupCommentEvents(events, proposalMap, voteMap);
     if (groupedVotes.length === 0) continue;
 
-    const unsubscribeUrl = await getUnsubscribeUrlForUser(String(userDoc._id));
+    const getUnsubscribeUrl =
+      notificationDispatchTestHooks.getUnsubscribeUrlForUser ?? getUnsubscribeUrlForUser;
+    const unsubscribeUrl = await getUnsubscribeUrl(String(userDoc._id));
     const fixture = {
       period: schedule === "6h" ? "6h" : "24h",
       votes: groupedVotes,
       preferencesUrl: `${getFrontendBaseUrl()}/dashboard`,
       unsubscribeUrl,
     };
-    const renderResult = await renderDigestFromPayload(fixture, {
+    const renderDigest =
+      notificationDispatchTestHooks.renderDigestFromPayload ?? renderDigestFromPayload;
+    const renderResult = await renderDigest(fixture, {
       brand: process.env.EMAIL_BRAND || "intersect",
     });
 
