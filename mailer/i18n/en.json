@@ -70,6 +70,7 @@
   "body.event.results_published.headline": "Results have been published for this vote.",
 
   "body.cta.view_proposal": "View proposal →",
+  "body.cta.vote_now": "Vote now →",
   "body.cta.view_results": "View results →",
 
   "body.footer.receiving_note": "You're receiving this because you opted in to <strong>{period}</strong> digest notifications for your {platformName} proposals.",

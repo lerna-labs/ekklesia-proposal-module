@@ -396,17 +396,15 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
   const users = await listEligibleUsersForMilestones();
   const period = "24h";
   const voteUrl = buildVoteUrl(voteDoc.slug);
-  const proposalTitle = voteDoc.title;
-  let event = {
+  const ctaUrl =
+    eventType === "voting_opened"
+      ? voteDoc.votingUrl || voteUrl
+      : voteDoc.resultsUrl || voteDoc.votingUrl || voteUrl;
+  const event = {
     type: eventType,
     timestamp: toTimestamp(now),
+    ctaUrl,
   };
-  if (eventType === "results_published") {
-    event = {
-      ...event,
-      resultsUrl: voteDoc.resultsUrl || voteDoc.votingUrl || voteUrl,
-    };
-  }
 
   let sentAny = false;
   const fanoutMs = getFanoutDelayMs();
@@ -417,14 +415,7 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
         {
           name: voteDoc.title,
           url: voteUrl,
-          proposals: [
-            {
-              title: proposalTitle,
-              id: String(voteDoc._id),
-              url: voteUrl,
-              events: [event],
-            },
-          ],
+          events: [event],
         },
       ],
       preferencesUrl: `${getFrontendBaseUrl()}/dashboard`,

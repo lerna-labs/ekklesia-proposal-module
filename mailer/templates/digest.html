@@ -81,7 +81,7 @@
                         {{#each proposals}}
                         <table role="presentation" width="100%" cellpadding="0"
                                cellspacing="0" border="0"
-                               style="background-color:{{../../brand.colors.proposalBackground}};border:1px solid {{../../brand.colors.proposalBorder}};border-radius:6px;margin-bottom:12px;">
+                               style="background-color:{{../../brand.colors.proposalBackground}};border:1px solid {{../../brand.colors.proposalBorder}};border-radius:6px;{{#if @last}}margin-bottom:20px;{{else}}margin-bottom:12px;{{/if}}">
                             <tr>
                                 <td style="padding:16px 20px;">
                                     <div style="font-size:10px;font-weight:700;color:{{../../brand.colors.labelText}};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;">

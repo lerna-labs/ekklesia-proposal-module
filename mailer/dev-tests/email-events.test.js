@@ -283,10 +283,26 @@ async function assertInstantEvent(type) {
         `${type}: comment`,
       );
       break;
+    case "voting_opened":
+      assert.ok(result.html.includes("Vote now"), `${type}: vote now CTA label`);
+      assert.ok(
+        result.html.includes("https://example.test/votes/milestone/voting"),
+        `${type}: vote CTA href`,
+      );
+      assert.ok(
+        !result.html.includes("View proposal"),
+        `${type}: no proposal card CTA`,
+      );
+      break;
     case "results_published":
+      assert.ok(result.html.includes("View results"), `${type}: view results CTA label`);
       assert.ok(
         result.html.includes("https://example.test/results/milestone"),
-        `${type}: results link`,
+        `${type}: results CTA href`,
+      );
+      assert.ok(
+        !result.html.includes("View proposal"),
+        `${type}: no proposal card CTA`,
       );
       break;
     default:

@@ -69,27 +69,41 @@ export function instantEventFixture(type, extra = {}) {
         ],
       );
     case "voting_opened":
-      return fixtureSingleVoteSingleProposal(
-        "Milestone Vote",
-        "milestone",
-        "Milestone Vote",
-        "vote-1",
-        [{ type: "voting_opened", ...base }],
-      );
-    case "results_published":
-      return fixtureSingleVoteSingleProposal(
-        "Milestone Vote",
-        "milestone",
-        "Milestone Vote",
-        "vote-1",
-        [
+      return {
+        period: "24h",
+        ...BASE,
+        votes: [
           {
-            type: "results_published",
-            resultsUrl: "https://example.test/results/milestone",
-            ...base,
+            name: "Milestone Vote",
+            url: "https://example.test/votes/milestone",
+            events: [
+              {
+                type: "voting_opened",
+                ...base,
+                ctaUrl: "https://example.test/votes/milestone/voting",
+              },
+            ],
           },
         ],
-      );
+      };
+    case "results_published":
+      return {
+        period: "24h",
+        ...BASE,
+        votes: [
+          {
+            name: "Milestone Vote",
+            url: "https://example.test/votes/milestone",
+            events: [
+              {
+                type: "results_published",
+                ...base,
+                ctaUrl: "https://example.test/results/milestone",
+              },
+            ],
+          },
+        ],
+      };
     default:
       throw new Error(`Unknown instant event type: ${type}`);
   }

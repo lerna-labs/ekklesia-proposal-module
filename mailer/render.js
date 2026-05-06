@@ -137,6 +137,7 @@ function buildInstantChrome(t, brand) {
     labelVote: t("body.label.vote"),
     labelProposal: t("body.label.proposal"),
     ctaViewProposal: t("body.cta.view_proposal"),
+    ctaVoteNow: t("body.cta.vote_now"),
     ctaViewResults: t("body.cta.view_results"),
     footer: {
       receivingNote: t("body.footer.instant_receiving_note", { platformName }),
@@ -150,7 +151,7 @@ function buildInstantChrome(t, brand) {
 function buildInstantPreheader(data, brand, t) {
   const firstVote = data.votes?.[0];
   const firstProposal = firstVote?.proposals?.[0];
-  const firstEvent = firstProposal?.events?.[0];
+  const firstEvent = firstProposal?.events?.[0] ?? firstVote?.events?.[0];
   const contextTitle =
     firstEvent && VOTE_SUBJECT_EVENTS.has(firstEvent.type)
       ? (firstVote?.name ?? "").trim()
@@ -168,6 +169,7 @@ function getFrontendBaseUrl() {
 export function hydrate(fixture, t) {
   const votes = (fixture.votes ?? []).map((vote) => ({
     ...vote,
+    events: (vote.events ?? []).map((event) => localizeEvent(t, event)),
     proposals: (vote.proposals ?? []).map((proposal) => ({
       ...proposal,
       events: (proposal.events ?? []).map((event) => localizeEvent(t, event)),
@@ -178,6 +180,7 @@ export function hydrate(fixture, t) {
   const totalEvents = votes.reduce(
     (sum, vote) =>
       sum +
+      vote.events.length +
       vote.proposals.reduce(
         (innerSum, proposal) => innerSum + proposal.events.length,
         0,
@@ -289,7 +292,7 @@ export async function renderInstantDigestFromPayload(fixture, options = {}) {
 
   const firstVote = data.votes?.[0];
   const firstProposal = firstVote?.proposals?.[0];
-  const firstEvent = firstProposal?.events?.[0];
+  const firstEvent = firstProposal?.events?.[0] ?? firstVote?.events?.[0];
   if (!firstEvent?.type) {
     throw new Error("renderInstantDigestFromPayload requires at least one event");
   }

@@ -345,6 +345,7 @@ test("voting_opened milestone dispatches once and sets sent timestamp", async (t
     _id: voteId,
     title: "Vote Open",
     slug: "vote-open",
+    votingUrl: "https://example.test/votes/vote-open/voting",
     votingStartDate: new Date("2026-05-01T00:00:00.000Z"),
     resultsPublishedAt: null,
     notificationDispatch: { votingOpenedSentAt: null, resultsPublishedSentAt: null },
@@ -357,7 +358,9 @@ test("voting_opened milestone dispatches once and sets sent timestamp", async (t
   assert.equal(secondRun, 0);
   assert.deepEqual(harness.votes[0].notificationDispatch.votingOpenedSentAt, now);
   assert.equal(harness.instantFixtures.length, 1);
-  assert.equal(harness.instantFixtures[0].votes[0].proposals[0].events[0].type, "voting_opened");
+  const votingEv = harness.instantFixtures[0].votes[0].events[0];
+  assert.equal(votingEv.type, "voting_opened");
+  assert.equal(votingEv.ctaUrl, "https://example.test/votes/vote-open/voting");
 });
 
 test("results_published milestone dispatches once and uses resultsUrl", async (t) => {
@@ -391,7 +394,7 @@ test("results_published milestone dispatches once and uses resultsUrl", async (t
   assert.equal(secondRun, 0);
   assert.deepEqual(harness.votes[0].notificationDispatch.resultsPublishedSentAt, now);
   assert.equal(harness.instantFixtures.length, 1);
-  const event = harness.instantFixtures[0].votes[0].proposals[0].events[0];
+  const event = harness.instantFixtures[0].votes[0].events[0];
   assert.equal(event.type, "results_published");
-  assert.equal(event.resultsUrl, "https://results.example.test/vote-results");
+  assert.equal(event.ctaUrl, "https://results.example.test/vote-results");
 });

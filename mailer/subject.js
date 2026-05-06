@@ -11,15 +11,21 @@ export const VOTE_SUBJECT_EVENTS = new Set([
  * @returns {Array<object>}
  */
 function flattenEvents(data) {
-  return data.votes.flatMap((vote) =>
-    vote.proposals.flatMap((proposal) =>
+  return data.votes.flatMap((vote) => {
+    const voteLevel = (vote.events ?? []).map((event) => ({
+      ...event,
+      voteName: vote.name,
+      proposalTitle: vote.name,
+    }));
+    const proposalLevel = vote.proposals.flatMap((proposal) =>
       proposal.events.map((event) => ({
         ...event,
         voteName: vote.name,
         proposalTitle: proposal.title,
       })),
-    ),
-  );
+    );
+    return [...voteLevel, ...proposalLevel];
+  });
 }
 
 /**
