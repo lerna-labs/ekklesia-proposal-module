@@ -246,9 +246,6 @@ test("comment digest sends and marks events sent", async (t) => {
     recipientUserId: userId,
     proposalId,
     commentId: "507f1f77bcf86cd799439014",
-    commenterId: "stake_commenter1",
-    commenterName: "Reviewer",
-    preview: "Looks good",
     status: "pending",
     createdAt: new Date("2026-05-05T11:00:00.000Z"),
   });
@@ -261,7 +258,10 @@ test("comment digest sends and marks events sent", async (t) => {
   assert.deepEqual(harness.commentEvents[0].sentAt, now);
   assert.deepEqual(harness.users[0].notification.lastCommentDigestSentAt, now);
   assert.equal(harness.digestFixtures.length, 1);
-  assert.equal(harness.digestFixtures[0].votes[0].proposals[0].events[0].type, "new_comment");
+  const proposalNode = harness.digestFixtures[0].votes[0].proposals[0];
+  assert.equal(proposalNode.events[0].type, "new_comment");
+  assert.equal(proposalNode.events[0].count, 1);
+  assert.match(proposalNode.url, /#comments$/);
 });
 
 test("comment digest respects schedule window and excludes never", async (t) => {
@@ -306,8 +306,6 @@ test("comment digest respects schedule window and excludes never", async (t) => 
       recipientUserId: "stake_daily_recent",
       proposalId,
       commentId: "507f1f77bcf86cd799439024",
-      commenterId: "stake_commenter",
-      preview: "Ping 1",
       status: "pending",
       createdAt: new Date("2026-05-05T11:40:00.000Z"),
     },
@@ -316,8 +314,6 @@ test("comment digest respects schedule window and excludes never", async (t) => 
       recipientUserId: "stake_never",
       proposalId,
       commentId: "507f1f77bcf86cd799439026",
-      commenterId: "stake_commenter",
-      preview: "Ping 2",
       status: "pending",
       createdAt: new Date("2026-05-05T11:40:00.000Z"),
     },

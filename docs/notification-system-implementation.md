@@ -88,7 +88,7 @@ Notification preferences live on [`User.notification`](../schema/User.js):
 |-------|---------|--------|----------------------|----------------------|
 | **Submission confirmed** | Proposal created or updated **draft → live** | In-request, after save | Proposer | [`sendSubmissionConfirmedNotification`](../mailer/notificationDispatch.js): POST create with `status === "live"`; PUT when `previousStatus === "draft"` and `status === "live"`. |
 | **Proposal withdrawn (admin)** | `PUT /proposals/:id/withdraw` when actor is **vote admin** (not proposer) | In-request, after save | Proposer | [`sendProposalWithdrawnNotification`](../mailer/notificationDispatch.js): includes category (`reason`) and admin comment; **`bypassScheduleNever: true`**. |
-| **New comment** | `POST /comments` on a live proposal | **Not** sent inline; row queued then cron | Proposer | [`queueCommentNotificationEvent`](../mailer/notificationDispatch.js); skipped when commenter is proposer. |
+| **New comment** | `POST /comments` on a live proposal | **Not** sent inline; row queued then cron | Proposer | [`queueCommentNotificationEvent`](../mailer/notificationDispatch.js) queues recipient + proposal + comment IDs; skipped when commenter is proposer. |
 | **Voting opened** | Cron finds votes with `votingStartDate <= now` and no dispatch flag | Cron | All users passing eligibility in [`listEligibleUsersForMilestones`](../mailer/notificationDispatch.js) | Instant template, event type `voting_opened`. |
 | **Results published** | Cron finds votes with `resultsPublishedAt` set, `<= now`, and no dispatch flag | Cron | Same milestone fan-out | Event `results_published`; CTA URL prefers `Vote.resultsUrl`, then `votingUrl`, then vote page. |
 
@@ -128,8 +128,9 @@ which delegates to [`runNotificationDispatch`](../mailer/notificationDispatch.js
 2. **`runCommentDigestDispatch`** — for each eligible user, if the user’s
    `schedule` interval has passed since `lastCommentDigestSentAt`, loads pending
    [`CommentNotificationEvent`](../mailer/commentNotificationEvent.js) rows,
-   groups them into the digest tree, sends **one** digest email, marks events
-   `sent`, and updates `lastCommentDigestSentAt`.
+   aggregates them by proposal into one digest line per proposal ("Your proposal
+   has X new comment(s)"), sends **one** digest email, marks events `sent`, and
+   updates `lastCommentDigestSentAt`.
 
 Recommended cadence: run the cron every **1–5 minutes** (or as operational policy
 dictates). Heavy milestone fan-out should respect provider rate limits.

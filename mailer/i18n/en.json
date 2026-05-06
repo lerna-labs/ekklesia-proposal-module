@@ -61,7 +61,7 @@
   "body.event.proposal_withdrawn.comment_label": "Comment:",
 
   "body.event.new_comment.badge": "COMMENT",
-  "body.event.new_comment.headline": "New comment from <strong>{commenter}</strong>.",
+  "body.event.new_comment.headline": "Your proposal has {count, plural, one {# new comment} other {# new comments}}.",
 
   "body.event.voting_opened.badge": "VOTING OPEN",
   "body.event.voting_opened.headline": "The voting phase has opened for this vote.",

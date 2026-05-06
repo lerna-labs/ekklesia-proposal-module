@@ -7,9 +7,6 @@ const commentNotificationEventSchema = new Schema(
     recipientUserId: { type: String, required: true, index: true },
     proposalId: { type: Schema.Types.ObjectId, required: true, index: true },
     commentId: { type: Schema.Types.ObjectId, required: true, unique: true },
-    commenterId: { type: String, required: true },
-    commenterName: { type: String, default: null },
-    preview: { type: String, default: "" },
     status: {
       type: String,
       enum: ["pending", "sent"],

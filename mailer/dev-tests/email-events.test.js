@@ -303,8 +303,22 @@ async function assertCommentDigest() {
   assert.ok(result.html.includes("Single Vote Pack"), "comment digest: vote title");
   assert.ok(result.html.includes("Proposal One"), "comment digest: proposal 1");
   assert.ok(result.html.includes("Proposal Two"), "comment digest: proposal 2");
-  assert.ok(result.html.includes("Alice"), "comment digest: alice");
-  assert.ok(result.html.includes("Carol"), "comment digest: carol");
+  assert.ok(
+    result.html.includes("Your proposal has 2 new comments."),
+    "comment digest: proposal one count copy",
+  );
+  assert.ok(
+    result.html.includes("Your proposal has 1 new comment."),
+    "comment digest: proposal two count copy",
+  );
+  assert.ok(
+    result.html.includes("https://example.test/votes/single-pack/p1#comments"),
+    "comment digest: proposal one comments anchor link",
+  );
+  assert.ok(
+    result.html.includes("https://example.test/votes/single-pack/p2#comments"),
+    "comment digest: proposal two comments anchor link",
+  );
   return result;
 }
 

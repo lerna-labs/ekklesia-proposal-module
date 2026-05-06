@@ -109,31 +109,21 @@ export function commentDigestAggregatedFixture() {
         proposals: [
           {
             title: "Proposal One",
-            url: "https://example.test/votes/single-pack/p1",
+            url: "https://example.test/votes/single-pack/p1#comments",
             events: [
               {
                 type: "new_comment",
-                commenter: "Alice",
-                preview: "First thread starter.",
-                timestamp: STAMP,
-              },
-              {
-                type: "new_comment",
-                commenter: "Bob",
-                preview: "Second reply on same proposal.",
-                timestamp: STAMP,
+                count: 2,
               },
             ],
           },
           {
             title: "Proposal Two",
-            url: "https://example.test/votes/single-pack/p2",
+            url: "https://example.test/votes/single-pack/p2#comments",
             events: [
               {
                 type: "new_comment",
-                commenter: "Carol",
-                preview: "Comment on another proposal same vote.",
-                timestamp: STAMP,
+                count: 1,
               },
             ],
           },

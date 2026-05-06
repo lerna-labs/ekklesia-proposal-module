@@ -535,14 +535,10 @@ router.post(
     const comment = await Comment.create(doc);
     if (String(proposal.proposerId ?? "") !== userId) {
       try {
-        const commenter = await User.findById(userId).select("name").lean();
         await queueCommentNotificationEvent({
           recipientUserId: proposal.proposerId,
           proposalId: proposal._id,
           commentId: comment._id,
-          commenterId: userId,
-          commenterName: commenter?.name ?? null,
-          commentContent: comment.content,
         });
       } catch (error) {
         console.error("Failed to queue comment notification event:", error);

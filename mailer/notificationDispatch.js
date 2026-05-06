@@ -84,18 +84,6 @@ function toTimestamp(dt) {
   return new Date(dt ?? Date.now()).toISOString().replace("T", " ").replace(".000Z", " UTC");
 }
 
-function truncatePreview(text, max = 180) {
-  const s = String(text ?? "").trim().replace(/\s+/g, " ");
-  if (s.length <= max) return s;
-  return `${s.slice(0, max - 1)}…`;
-}
-
-function shortUserId(userId) {
-  const value = String(userId ?? "");
-  if (value.length <= 12) return value;
-  return `${value.slice(0, 6)}...${value.slice(-4)}`;
-}
-
 function notificationFixture({ vote, proposal, events, period = "24h" }) {
   const voteUrl = buildVoteUrl(vote.slug);
   return {
@@ -217,14 +205,7 @@ export async function queueCommentNotificationEvent({
   recipientUserId,
   proposalId,
   commentId,
-  commenterId,
-  commenterName,
-  commentContent,
 }) {
-  if (String(recipientUserId) === String(commenterId)) {
-    return false;
-  }
-
   await CommentNotificationEvent.updateOne(
     { commentId: new mongoose.Types.ObjectId(commentId) },
     {
@@ -232,9 +213,6 @@ export async function queueCommentNotificationEvent({
         recipientUserId: String(recipientUserId),
         proposalId: new mongoose.Types.ObjectId(proposalId),
         commentId: new mongoose.Types.ObjectId(commentId),
-        commenterId: String(commenterId),
-        commenterName: commenterName ? String(commenterName) : null,
-        preview: truncatePreview(commentContent),
         status: "pending",
       },
     },
@@ -270,18 +248,13 @@ function groupCommentEvents(events, proposalMap, voteMap) {
     if (!voteBucket.proposals.has(proposalKey)) {
       voteBucket.proposals.set(proposalKey, {
         title: proposal.title,
-        url: buildProposalUrl(vote.slug, proposal._id),
-        events: [],
+        url: `${buildProposalUrl(vote.slug, proposal._id)}#comments`,
+        commentCount: 0,
       });
     }
 
     const proposalBucket = voteBucket.proposals.get(proposalKey);
-    proposalBucket.events.push({
-      type: "new_comment",
-      commenter: event.commenterName || shortUserId(event.commenterId),
-      preview: event.preview || "",
-      timestamp: toTimestamp(event.createdAt),
-    });
+    proposalBucket.commentCount += 1;
   }
 
   const votes = [];
@@ -289,7 +262,16 @@ function groupCommentEvents(events, proposalMap, voteMap) {
     votes.push({
       name: voteBucket.name,
       url: voteBucket.url,
-      proposals: Array.from(voteBucket.proposals.values()),
+      proposals: Array.from(voteBucket.proposals.values()).map((proposalBucket) => ({
+        title: proposalBucket.title,
+        url: proposalBucket.url,
+        events: [
+          {
+            type: "new_comment",
+            count: proposalBucket.commentCount,
+          },
+        ],
+      })),
     });
   }
   return votes;
