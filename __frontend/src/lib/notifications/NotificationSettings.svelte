@@ -18,7 +18,7 @@
   const SCHEDULE_OPTIONS = [
     { value: "never", label: "Never" },
     { value: "6h", label: "Every 6 hours" },
-    { value: "daily", label: "Daily" },
+    { value: "daily", label: "Every 24 hours" },
   ];
 
   const SCHEDULE_HELP =
