@@ -255,12 +255,29 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
       },
     };
 
+    const replyUserTypeExpr = {
+      $cond: {
+        if: { $and: [{ $ne: [proposalProposerId, ""] }, { $eq: [{ $toString: "$$reply.userId" }, proposalProposerId] }] },
+        then: "proposer",
+        else: {
+          $cond: {
+            if: { $in: [{ $toString: "$$reply.userId" }, voteAdmins] },
+            then: "admin",
+            else: {
+              $cond: {
+                if: { $regexMatch: { input: { $toString: "$$reply.userId" }, regex: "^drep" } },
+                then: "drep",
+                else: "user",
+              },
+            },
+          },
+        },
+      },
+    };
+
     const pipeline = [
       { $match: matchCondition },
       { $addFields: { userType: userTypeExpr } },
-      ...(userTypeFilter && userTypeFilter.length > 0
-        ? [{ $match: { userType: { $in: userTypeFilter } } }]
-        : []),
       {
         $graphLookup: {
           from: "comments",
@@ -279,6 +296,32 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
           replyCount: { $size: "$threadReplies" },
         },
       },
+      ...(userTypeFilter && userTypeFilter.length > 0
+        ? [
+            {
+              $addFields: {
+                userTypeMatch: { $in: ["$userType", userTypeFilter] },
+                replyUserTypeMatchCount: {
+                  $size: {
+                    $filter: {
+                      input: "$threadReplies",
+                      as: "reply",
+                      cond: { $in: [replyUserTypeExpr, userTypeFilter] },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $match: {
+                $or: [
+                  { userTypeMatch: true },
+                  { replyUserTypeMatchCount: { $gt: 0 } },
+                ],
+              },
+            },
+          ]
+        : []),
       {
         $lookup: {
           from: "commentlikes",
@@ -343,6 +386,8 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
                 threadReplies: 0,
                 likeCountArr: 0,
                 userArr: 0,
+                userTypeMatch: 0,
+                replyUserTypeMatchCount: 0,
               },
             },
           ],

@@ -189,6 +189,46 @@
     if (proposalId) untrack(() => loadComments());
   });
 
+  $effect(() => {
+    if (
+      !hasActiveFilter ||
+      commentsState.loading ||
+      commentsState.error ||
+      commentsState.data.length === 0
+    ) {
+      return;
+    }
+
+    const toUncollapse = [];
+    const toLoad = [];
+
+    for (const comment of commentsState.data) {
+      if ((comment.replyCount ?? 0) <= 0) continue;
+
+      const threadState = repliesByParent[comment._id];
+      if (threadState) {
+        if (threadState.collapsed) toUncollapse.push(comment._id);
+      } else {
+        toLoad.push(comment._id);
+      }
+    }
+
+    if (toUncollapse.length > 0) {
+      const nextRepliesByParent = { ...repliesByParent };
+      for (const commentId of toUncollapse) {
+        nextRepliesByParent[commentId] = {
+          ...nextRepliesByParent[commentId],
+          collapsed: false,
+        };
+      }
+      repliesByParent = nextRepliesByParent;
+    }
+
+    for (const commentId of toLoad) {
+      loadReplies(commentId);
+    }
+  });
+
   function applySort() {
     sort = pendingSort;
     direction = pendingDescending ? "desc" : "asc";

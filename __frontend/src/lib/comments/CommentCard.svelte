@@ -76,7 +76,7 @@
       </span>
     </Card.Title>
   </Card.Header>
-  <Card.Content class="text-sm">
+  <Card.Content class="text-sm wrap-anywhere">
     {#if comment?.withdrawalDetails}
       <div class="space-y-2">
         <div class="text-black line-through">
