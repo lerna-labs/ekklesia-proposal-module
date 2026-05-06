@@ -637,6 +637,12 @@
           onEdit={openEdit}
           onWithdraw={openWithdraw}
         />
+      {:else}
+        <p class="text-sm text-muted-foreground">
+          {hasActiveFilter
+            ? "No comments found for your filter options."
+            : "No comments yet."}
+        </p>
       {/each}
     </div>
 
