@@ -58,7 +58,7 @@
   loadedReplyTotal={repliesByParent[comment._id]?.meta?.total ?? null}
 />
 
-{#if repliesByParent[comment._id]}
+{#if repliesByParent[comment._id] && !repliesByParent[comment._id].collapsed}
   {@const replyState = repliesByParent[comment._id]}
   {#if replyState.error}
     <div

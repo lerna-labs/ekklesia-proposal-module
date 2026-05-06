@@ -233,7 +233,13 @@
     if (!force && (existing?.data?.length || existing?.loading)) return;
     repliesByParent = {
       ...repliesByParent,
-      [commentId]: { loading: true, error: null, data: [], meta: null },
+      [commentId]: {
+        loading: true,
+        error: null,
+        data: [],
+        meta: existing?.meta ?? null,
+        collapsed: false,
+      },
     };
     try {
       const { ok, json } = await fetchJson(
@@ -243,7 +249,13 @@
         const msg = json?.message ?? "Failed to load replies";
         repliesByParent = {
           ...repliesByParent,
-          [commentId]: { loading: false, error: msg, data: [], meta: null },
+          [commentId]: {
+            loading: false,
+            error: msg,
+            data: [],
+            meta: existing?.meta ?? null,
+            collapsed: false,
+          },
         };
         toast.error(msg);
         return;
@@ -255,13 +267,20 @@
           error: null,
           data: json.data ?? [],
           meta: json.meta ?? {},
+          collapsed: false,
         },
       };
     } catch (err) {
       const msg = err?.message ?? "Failed to load replies";
       repliesByParent = {
         ...repliesByParent,
-        [commentId]: { loading: false, error: msg, data: [], meta: null },
+        [commentId]: {
+          loading: false,
+          error: msg,
+          data: [],
+          meta: existing?.meta ?? null,
+          collapsed: false,
+        },
       };
       toast.error(msg);
     }
@@ -270,13 +289,21 @@
   function toggleReplies(c) {
     const id = c._id;
     const state = repliesByParent[id];
-    if (state?.data?.length) {
-      const next = { ...repliesByParent };
-      delete next[id];
-      repliesByParent = next;
-    } else {
-      loadReplies(id);
+    if (state && !state.collapsed) {
+      repliesByParent = {
+        ...repliesByParent,
+        [id]: { ...state, collapsed: true },
+      };
+      return;
     }
+    if (state?.collapsed) {
+      repliesByParent = {
+        ...repliesByParent,
+        [id]: { ...state, collapsed: false },
+      };
+      return;
+    }
+    loadReplies(id);
   }
 
   function requestLoginModal() {
