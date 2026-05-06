@@ -1,24 +1,36 @@
 /**
- * CC Vote 2026 public timeline (UTC). Phases match `__scripts/setup-cc-vote2026.js`:
- * submission and feedback together, then review, then voting.
- *
- * Update these ISO ranges when production Vote dates are fixed so the list page
- * timeline matches the stored vote window.
+ * CC Vote public timeline (UTC). Date-only phases use 12:00 UTC at each boundary.
+ * Update these ISO ranges when production Vote dates are fixed so the vote detail
+ * timeline matches announcements.
  */
 export const budgetPhases = [
   {
-    title: "Submission & Feedback",
-    start: "2026-04-01T12:00:00.000Z",
-    end: "2026-04-15T12:00:00.000Z",
+    title: "Candidate registration",
+    start: "2026-05-08T21:45:00.000Z",
+    end: "2026-06-07T21:45:00.000Z",
   },
   {
-    title: "Review",
-    start: "2026-04-15T12:00:00.000Z",
-    end: "2026-04-29T12:00:00.000Z",
+    title: "Promotion and community engagement",
+    start: "2026-06-08T12:00:00.000Z",
+    end: "2026-06-13T12:00:00.000Z",
   },
   {
-    title: "Voting",
-    start: "2026-04-29T12:00:00.000Z",
-    end: "2026-05-29T12:00:00.000Z",
+    title: "Hydra voting period",
+    start: "2026-06-13T21:45:00.000Z",
+    end: "2026-07-13T21:45:00.000Z",
+    link: {
+      href: "https://intersect.ekklesia.vote/ballots/",
+      label: "Go to Voting",
+    },
+  },
+  {
+    title: "Audited results published",
+    start: "2026-07-16T12:00:00.000Z",
+    end: "2026-07-16T23:59:59.999Z",
+  },
+  {
+    title: "Update Committee governance action — Epoch 648",
+    start: "2026-07-28T21:45:00.000Z",
+
   },
 ];
