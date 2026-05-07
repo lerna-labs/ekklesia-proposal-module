@@ -33,37 +33,25 @@
   );
 
   const totalBudget = $derived(proposal?.metaData?.totalBudget ?? null);
-  const conversionRate = $derived(
-    proposal?.metaData?.proposalDetails?.conversionRate ?? 0,
-  );
+  const conversionRate = $derived(proposal?.metaData?.proposalDetails?.conversionRate ?? 0);
   const administrator = $derived(proposal?.metaData?.administrator ?? "");
-  const otherAdministrator = $derived(
-    proposal?.metaData?.otherAdministrator ?? "",
-  );
+  const otherAdministrator = $derived(proposal?.metaData?.otherAdministrator ?? "");
   const administratorLabel = $derived.by(() => {
     const adm = String(administrator).trim();
     if (adm === "Intersect" || adm === "Yes") return "Intersect";
     if (adm === "Other" || adm === "No") return "Other";
     return adm || null;
   });
-  const isOtherAdministrator = $derived(
-    administrator === "Other" || administrator === "No",
-  );
+  const isOtherAdministrator = $derived(administrator === "Other" || administrator === "No");
   const estimatedDuration = $derived(proposal?.metaData?.estimatedDuration);
   const submittedAt = $derived(proposal?.submittedAt);
   const updatedAt = $derived(proposal?.updatedAt);
 
-  const proposerName = $derived(
-    proposal?.metaData?.proposerDetails?.name ?? "",
-  );
-  const legalEntityType = $derived(
-    proposal?.metaData?.contractingParty?.legalEntityType ?? "",
-  );
+  const proposerName = $derived(proposal?.metaData?.proposerDetails?.name ?? "");
+  const legalEntityType = $derived(proposal?.metaData?.contractingParty?.legalEntityType ?? "");
   const links = $derived(
     Array.isArray(proposal?.metaData?.proposerDetails?.links)
-      ? proposal.metaData.proposerDetails.links.filter(
-          (l) => (l?.title ?? "").trim() || (l?.url ?? "").trim(),
-        )
+      ? proposal.metaData.proposerDetails.links.filter((l) => (l?.title ?? "").trim() || (l?.url ?? "").trim())
       : [],
   );
   const proposerHref = $derived(
@@ -71,9 +59,7 @@
       ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
       : null,
   );
-  const hasProposerContent = $derived(
-    proposerName.trim() || legalEntityType.trim() || links.length > 0,
-  );
+  const hasProposerContent = $derived(proposerName.trim() || legalEntityType.trim() || links.length > 0);
   const dateOptions = { dateStyle: "long", timeStyle: "short" };
 </script>
 
@@ -88,54 +74,38 @@
       />
     </div>
   </Card.Header>
-  <Card.Content
-    class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]"
-  >
+  <Card.Content class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]">
     <div class="space-y-2 text-xs md:row-start-1 md:col-start-1">
       {#if totalBudget != null}
-        <div
-          class="rounded-lg border bg-card text-card-foreground overflow-hidden"
-        >
+        <div class="rounded-lg border bg-card text-card-foreground overflow-hidden">
           <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-            <CoinsIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <CoinsIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
             <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Requested budget</p
-              >
-              <div
-                class="tabular-nums text-lg font-semibold text-(--mbo-electric-blue)"
-                >{formatAda(totalBudget)} ADA</div
-              >
+              <p class="text-xs font-medium text-muted-foreground mb-1">Requested budget</p>
+              <div class="tabular-nums text-lg font-semibold text-(--mbo-electric-blue)">
+                {formatAda(totalBudget)} ADA
+              </div>
               <div class="text-xs text-muted-foreground mt-1 mb-2">
                 USD equivalent ${formatUsd(totalBudget * conversionRate)} (ADA/USD
                 {conversionRate})*
               </div>
 
-              <div class="mb-4 inline-flex items-center gap-1"
-                >This conversion rate was specified by the proposer
+              <div class="mb-4 inline-flex items-center gap-1">
+                This conversion rate was specified by the proposer
 
                 <Popover.Root>
                   <Popover.Trigger class="cursor-pointer" aria-label="info">
                     <InfoIcon class="size-3 shrink-0" aria-hidden="true" />
                   </Popover.Trigger>
                   <Popover.Content class="p-3 text-xs" align="start">
-                    *If Intersect is selected as the administrator, this rate is
-                    indicative only and does not mean the contract will be set
-                    in that dollar value; the contract will be based in ADA, and
-                    vendors are responsible for managing market conditions.
+                    *If Intersect is selected as the administrator, this rate is indicative only and does not mean the
+                    contract will be set in that dollar value; the contract will be based in ADA, and vendors are
+                    responsible for managing market conditions.
                   </Popover.Content>
                 </Popover.Root>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                class="text-xs mb-2"
-                href="#budget-summary"
-              >
+              <Button variant="outline" size="sm" class="text-xs mb-2" href="#budget-summary">
                 View Budget Summary
               </Button>
             </div>
@@ -153,23 +123,13 @@
               aria-label="More information about estimated duration"
             >
               <div class="p-4 min-w-0 flex gap-1.5">
-                <ClockIcon
-                  class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-                  aria-hidden="true"
-                />
+                <ClockIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
                 <div class="min-w-0 text-left">
-                  <p class="text-xs font-medium text-muted-foreground mb-1">
-                    Estimated duration
-                  </p>
+                  <p class="text-xs font-medium text-muted-foreground mb-1">Estimated duration</p>
                   <span class="font-medium inline-flex items-center gap-1">
                     {#if estimatedDuration != null && estimatedDuration !== ""}
-                      {Number(estimatedDuration) === 1
-                        ? "1 month"
-                        : `${Number(estimatedDuration)} months`}
-                      <InfoIcon
-                        class="size-3 shrink-0 text-black"
-                        aria-hidden="true"
-                      />
+                      {Number(estimatedDuration) === 1 ? "1 month" : `${Number(estimatedDuration)} months`}
+                      <InfoIcon class="size-3 shrink-0 text-black" aria-hidden="true" />
                     {:else}
                       <span class="text-muted-foreground">—</span>
                     {/if}
@@ -179,27 +139,19 @@
             </Popover.Trigger>
             <Popover.Content class="p-3 text-sm" align="start">
               <div class="font-medium">
-                How long will your proposal need to be fully delivered? Or if
-                you are requesting funding for operations, how many months will
-                this budget cover?
+                How long will your proposal need to be fully delivered? Or if you are requesting funding for operations,
+                how many months will this budget cover?
               </div>
-              <p class="text-xs mt-2"
-                >Provide an estimated duration from the start of the work to
-                completion. Or if your proposal covers ongoing operations or
-                services, specify the number of months this budget is intended
-                to support.
+              <p class="text-xs mt-2">
+                Provide an estimated duration from the start of the work to completion. Or if your proposal covers
+                ongoing operations or services, specify the number of months this budget is intended to support.
               </p>
             </Popover.Content>
           </Popover.Root>
           <div class="p-4 min-w-0 flex gap-1.5">
-            <ShieldCheckIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <ShieldCheckIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
             <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1"
-                >Administrator</p
-              >
+              <p class="text-xs font-medium text-muted-foreground mb-1">Administrator</p>
               <p class="flex items-center gap-1 font-medium">
                 {#if administratorLabel}
                   {administratorLabel}
@@ -218,10 +170,7 @@
         {#if (proposal?._id ?? proposal?.id) != null}
           {@const proposalIdStr = String(proposal._id ?? proposal.id)}
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <HashIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <HashIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <span class={labelClass}>Proposal ID:</span>
             <button
               type="button"
@@ -240,10 +189,7 @@
         {/if}
         {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
           <div class="flex items-center gap-1 text-xs text-muted-foreground">
-            <ClockIcon
-              class="size-3.5 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <ClockIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             {#if showVersionBadge && updatedAt != null}
               <span class={labelClass}>Last updated:</span>
               <Popover.Root>
@@ -259,15 +205,11 @@
                   <div class="text-xs space-y-1">
                     {#if submittedAt != null}
                       <p>
-                        <span class="font-medium text-muted-foreground">
-                          Submitted:
-                        </span>
+                        <span class="font-medium text-muted-foreground">Submitted:</span>
                         {formatUtcInstant(submittedAt, dateOptions)}
                       </p>
                     {:else}
-                      <p class="text-muted-foreground">
-                        Submitted date not available
-                      </p>
+                      <p class="text-muted-foreground">Submitted date not available</p>
                     {/if}
                   </div>
                 </Popover.Content>
@@ -284,25 +226,15 @@
     {/if}
 
     {#if hasProposerContent}
-      <div
-        class="rounded-lg border bg-white text-card-foreground overflow-hidden"
-      >
+      <div class="rounded-lg border bg-white text-card-foreground overflow-hidden">
         <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
           {#if legalEntityType === "company"}
-            <HomeIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <HomeIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
           {:else}
-            <UserIcon
-              class="size-3.5 shrink-0 mt-0.5 text-muted-foreground"
-              aria-hidden="true"
-            />
+            <UserIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
           {/if}
           <div class="min-w-0">
-            <p class="text-xs font-medium text-muted-foreground mb-1"
-              >Proposer</p
-            >
+            <p class="text-xs font-medium text-muted-foreground mb-1">Proposer</p>
             <p class="font-medium text-foreground">
               {#if proposerHref}
                 <a href={proposerHref} class="hover:underline">
@@ -318,16 +250,11 @@
           {#if links.length > 0}
             <div class="border-t pt-3">
               <div class="flex items-center gap-1.5 mb-1">
-                <ExternalLinkIcon
-                  class="size-3.5 shrink-0 -mt-1 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <p class="text-xs font-medium text-muted-foreground mb-1">
-                  Social Links
-                </p>
+                <ExternalLinkIcon class="size-3.5 shrink-0 -mt-1 text-muted-foreground" aria-hidden="true" />
+                <p class="text-xs font-medium text-muted-foreground mb-1">Social Links</p>
               </div>
               <ul class="space-y-2 list-none p-0 border-b pb-3">
-                {#each links as link (link.url)}
+                {#each links as link, i (i)}
                   <li>
                     <a
                       href={link.url}
@@ -336,10 +263,7 @@
                       class="text-primary underline hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
                       onclick={(e) => {
                         e.preventDefault();
-                        linkWarningDialog.show(
-                          link.url,
-                          (link.title ?? "").trim() || link.url,
-                        );
+                        linkWarningDialog.show(link.url, (link.title ?? "").trim() || link.url);
                       }}
                     >
                       <span class="min-w-0 wrap-break-word ml-6 line-clamp-1">
@@ -353,13 +277,7 @@
           {/if}
           <div class="flex flex-wrap gap-2">
             {#if proposal?.metaData?.trackRecord}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="text-xs"
-                href="#track-record"
-              >
+              <Button type="button" variant="outline" size="sm" class="text-xs" href="#track-record">
                 Track Record
               </Button>
             {/if}
