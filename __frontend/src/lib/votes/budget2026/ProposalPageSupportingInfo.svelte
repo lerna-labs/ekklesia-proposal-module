@@ -18,7 +18,7 @@
   <section class="text-sm mb-8 mt-12" id="supporting-info">
     <h2 class="mb-4">Other Supporting Information</h2>
     <ul class="space-y-0.5 list-none p-0">
-      {#each links as link (link.url)}
+      {#each links as link, i (i)}
         <li>
           <a
             href={link.url}

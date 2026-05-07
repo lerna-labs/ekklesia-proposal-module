@@ -320,7 +320,7 @@
                 </p>
               </div>
               <ul class="space-y-2 list-none p-0 border-b pb-3">
-                {#each links as link (link.url)}
+                {#each links as link, i (i)}
                   <li>
                     <a
                       href={link.url}
