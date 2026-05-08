@@ -31,6 +31,16 @@
       if (!match) return resolvedShareUrl;
 
       const [, voteSlug, proposalId] = match;
+      const apiUrlRaw = String(import.meta.env?.VITE_API_URL ?? "").trim();
+      if (apiUrlRaw) {
+        try {
+          const apiUrl = new URL(apiUrlRaw, url.origin);
+          url.protocol = apiUrl.protocol;
+          url.host = apiUrl.host;
+        } catch {
+          // Ignore invalid API URL and keep current origin.
+        }
+      }
       url.pathname = `/share/votes/${voteSlug}/${proposalId}`;
       return url.toString();
     } catch {
