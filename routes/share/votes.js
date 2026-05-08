@@ -40,9 +40,12 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function absoluteUrl(req, path) {
-  const host = req.get("host");
-  return `${req.protocol}://${host}${path}`;
+function getFrontendBaseUrl() {
+  return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
+}
+
+function absoluteUrl(path) {
+  return `${getFrontendBaseUrl()}${path}`;
 }
 
 function pickCcDescription(proposal) {
@@ -139,7 +142,7 @@ router.get("/:voteSlug/:proposalId", async (req, res) => {
 
     const meta = buildMeta(vote, proposal);
     const proposalPath = `/votes/${encodeURIComponent(voteSlug)}/${proposalId}`;
-    const canonicalUrl = absoluteUrl(req, proposalPath);
+    const canonicalUrl = absoluteUrl(proposalPath);
     const redirectUrl = canonicalUrl;
 
     res.set("Cache-Control", "public, max-age=300, s-maxage=300");

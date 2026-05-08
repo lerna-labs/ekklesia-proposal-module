@@ -16,6 +16,7 @@
     "test:window:rules": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/window-rules.test.js --testTimeout=180000",
     "test:comment:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/comment-rate-limit.test.js --testTimeout=120000",
     "test:public:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/z-public-rate-limit.test.js --testTimeout=120000",
+    "test:share:host-poisoning": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/share-host-header-poisoning.test.js --testTimeout=120000",
     "test:perf:smoke": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance/timing.test.js --testTimeout=120000",
     "test:perf": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/performance.test.js tests/performance/timing.test.js --testTimeout=300000",
     "test:ratelimit": "node --no-webstorage --experimental-vm-modules node_modules/jest/bin/jest.js tests/z-public-rate-limit.test.js --testTimeout=120000",
