@@ -6,7 +6,7 @@ module.exports = {
       name: "preprod-proposal-module",
       script: path.resolve(__dirname, "server.js"),
       watch: true,
-      ignore_watch: ["node_modules", "logs", "backup", "scripts", "public", "preprod-logs", "mainnet-logs", ".git", ".DS_Store", "__frontend", "__setup", "__testkit"],
+      ignore_watch: ["node_modules", "logs", "backup", "scripts", "public", "preprod-logs", "mainnet-logs", ".git", ".DS_Store", "__frontend", "__scripts", "__testkit"],
       watch_options: {
         followSymlinks: false,
         usePolling: true,
@@ -26,6 +26,24 @@ module.exports = {
       time: true,
       max_logs: "30d",
       log_size: "50M",
+    },
+    {
+      name: "preprod-proposal-module-notifications-cron",
+      script: path.resolve(__dirname, "cron/notification-milestones.js"),
+      watch: false,
+      autorestart: false,
+      cron_restart: "*/5 * * * *",
+      env: {
+        NODE_ENV: "development",
+      },
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+      error_file: path.resolve(__dirname, "logs/preprod-proposal-module-notifications-cron-error.log"),
+      out_file: path.resolve(__dirname, "logs/preprod-proposal-module-notifications-cron-output.log"),
+      combine_logs: true,
+      merge_logs: true,
+      time: true,
+      max_logs: "30d",
+      log_size: "10M",
     },
     // Backup job - runs in both environments
     // {

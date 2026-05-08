@@ -1,23 +1,47 @@
-import { redirect } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
+import { draftSubmissionOpen } from '$lib/voteWindowPolicy.js';
 
-const VALID_DIRECTION = new Set(['asc', 'desc']);
-const DEFAULT_SORT = 'updatedAt';
+const PROPOSAL_FETCH_LIMIT = 100;
+
+/** @param {number} page @param {number} limit */
+function emptyVotePagination(page, limit) {
+	return {
+		currentPage: page,
+		totalPages: 1,
+		totalItems: 0,
+		itemsPerPage: limit,
+	};
+}
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, url, parent }) {
 	const parentData = await parent();
 	const user = parentData?.user;
 	const userId = user?.userId;
+	let notification = null;
+	if (userId) {
+		try {
+			const notificationRes = await api.fetch(fetch, "/notifications");
+			notification = await notificationRes.json();
+		} catch (_err) {
+			notification = null;
+		}
+	}
 	const policyNowMs = Date.now();
+	const now = new Date(policyNowMs);
+
+	const votePage = Math.max(1, parseInt(url.searchParams.get('votePage') || '1', 10) || 1);
+	const voteLimit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('voteLimit') || '50', 10) || 50));
 
 	if (!userId) {
 		return {
 			user,
-			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			notification,
+			voteSections: [],
+			votePagination: emptyVotePagination(1, voteLimit),
+			votes: [],
 			voteTitles: {},
 			voteSlugs: {},
-			votes: [],
 			policyNowMs,
 		};
 	}
@@ -25,68 +49,28 @@ export async function load({ fetch, url, parent }) {
 	if (!String(userId).startsWith('stake')) {
 		return {
 			user,
-			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
+			notification,
+			voteSections: [],
+			votePagination: emptyVotePagination(1, voteLimit),
+			votes: [],
 			voteTitles: {},
 			voteSlugs: {},
-			votes: [],
 			policyNowMs,
 		};
 	}
 
-	// Load votes first (required for vote-scoped proposals)
-	const votesRes = await api.fetch(fetch, '/votes?limit=50');
+	const votesRes = await api.fetch(fetch, `/votes?page=${votePage}&limit=${voteLimit}`);
 	const votesJson = await votesRes.json();
 	const votes = votesJson.data ?? [];
+	const meta = votesJson.meta ?? {};
 
-	if (votes.length === 0) {
-		return {
-			user,
-			proposals: { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } },
-			voteTitles: {},
-			voteSlugs: {},
-			votes: [],
-			policyNowMs,
-		};
-	}
-
-	// Use first vote as scope for "my proposals"
-	const selectedVote = votes[0];
-	const sortOptions = selectedVote.sortOptions ?? [];
-	const validSortValues = new Set(sortOptions.map((o) => o.value));
-	const urlSort = url.searchParams.get('sort');
-	const sort = urlSort && validSortValues.has(urlSort) ? urlSort : DEFAULT_SORT;
-
-	// URL params with defaults and validation
-	const pageNum = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
-	const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '10', 10) || 10));
-	const direction = VALID_DIRECTION.has(url.searchParams.get('direction') || '') ? url.searchParams.get('direction') : 'desc';
-
-	const proposalsUrl = `/proposals?vote=${encodeURIComponent(selectedVote._id)}&proposer=${encodeURIComponent(userId)}&status=live,withdrawn,draft&page=${pageNum}&limit=${limit}&sort=${sort}&direction=${direction}`;
-	const proposalsResponse = await api.fetch(fetch, proposalsUrl);
-	const json = await proposalsResponse.json();
-	const meta = json.meta ?? {};
-	const proposals = {
-		data: json.data ?? [],
-		pagination: {
-			currentPage: meta.page ?? 1,
-			totalPages: meta.totalPages ?? 1,
-			totalItems: meta.total ?? 0,
-			itemsPerPage: meta.limit ?? 10,
-		},
+	const votePagination = {
+		currentPage: meta.page ?? votePage,
+		totalPages: meta.totalPages ?? 1,
+		totalItems: meta.total ?? 0,
+		itemsPerPage: meta.limit ?? voteLimit,
 	};
-	// Defense-in-depth: only show proposals that belong to the current user
-	proposals.data = proposals.data.filter((p) => String(p.proposerId ?? '') === String(userId));
 
-	// If current page is empty but there are still proposals (e.g. after deletions), redirect to page 1
-	const totalItems = proposals.pagination.totalItems ?? 0;
-	const currentPage = proposals.pagination.currentPage ?? 1;
-	if (proposals.data.length === 0 && totalItems > 0 && currentPage > 1) {
-		const params = new URLSearchParams(url.searchParams);
-		params.set('page', '1');
-		throw redirect(302, `${url.pathname}?${params.toString()}`);
-	}
-
-	// Build vote titles and slugs from the votes we already have
 	const voteTitles = {};
 	const voteSlugs = {};
 	for (const v of votes) {
@@ -96,12 +80,51 @@ export async function load({ fetch, url, parent }) {
 		}
 	}
 
+	if (votes.length === 0) {
+		return {
+			user,
+			notification,
+			voteSections: [],
+			votePagination,
+			votes: [],
+			voteTitles,
+			voteSlugs,
+			policyNowMs,
+		};
+	}
+
+	const sectionResults = await Promise.all(
+		votes.map(async (vote, orderIndex) => {
+			const proposalsUrl =
+				`/proposals?vote=${encodeURIComponent(vote._id)}` +
+				`&proposer=${encodeURIComponent(userId)}` +
+				`&status=live,withdrawn,draft&page=1&limit=${PROPOSAL_FETCH_LIMIT}` +
+				`&sort=updatedAt&direction=desc`;
+			const proposalsResponse = await api.fetch(fetch, proposalsUrl);
+			const json = await proposalsResponse.json();
+			let proposals = json.data ?? [];
+			proposals = proposals.filter((p) => String(p.proposerId ?? '') === String(userId));
+			return { vote, proposals, orderIndex };
+		}),
+	);
+
+	sectionResults.sort((a, b) => {
+		const openA = draftSubmissionOpen(a.vote, now) ? 1 : 0;
+		const openB = draftSubmissionOpen(b.vote, now) ? 1 : 0;
+		if (openB !== openA) return openB - openA;
+		return a.orderIndex - b.orderIndex;
+	});
+
+	const voteSections = sectionResults.map(({ vote, proposals }) => ({ vote, proposals }));
+
 	return {
 		user,
-		proposals,
+		notification,
+		voteSections,
+		votePagination,
+		votes,
 		voteTitles,
 		voteSlugs,
-		votes,
 		policyNowMs,
 	};
 }

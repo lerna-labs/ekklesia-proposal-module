@@ -16,11 +16,16 @@ import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
+import { loadListProjectionScript } from "../../../validation/loadListProjectionScript.js";
 import { verifyDeposit } from "../../../helper/verifyDeposit.js";
 import {
   getDraftOnlySubmissionBlockMessage,
   getLiveSubmissionWindowBlockMessage,
 } from "../../../helper/voteWindows.js";
+import {
+  sendProposalWithdrawnNotification,
+  sendSubmissionConfirmedNotification,
+} from "../../../mailer/notificationDispatch.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -33,6 +38,29 @@ function treasuryTxHashErrorTree(message) {
       },
     },
   };
+}
+
+/** Build error tree for metaData.coldCredentialHash (matches Zod treeifyError shape for frontend). */
+function coldCredentialHashErrorTree(message) {
+  return {
+    properties: {
+      metaData: {
+        properties: {
+          coldCredentialHash: { errors: [message] },
+        },
+      },
+    },
+  };
+}
+
+/** Normalize CC cold credential hash for validation/lookup/storage. */
+function normalizeCcColdCredentialHash(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function requiresTreasuryDonationValidation(voteDoc) {
+  const amount = Number(voteDoc?.depositOptions?.treasuryDonation);
+  return Number.isFinite(amount) && amount > 0;
 }
 
 /**
@@ -54,10 +82,12 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     return { ok: false, error: "Vote has no treasury donation configured" };
   }
 
-  // Uniqueness: same hash not allowed on another proposal (case-insensitive). Allow same proposal + its versions.
+  // Uniqueness: same hash not allowed on another non-draft proposal (case-insensitive).
+  // Allow same proposal + its versions, and allow hash reuse while all matches are still drafts.
   const regex = new RegExp(`^${escapeRegex(normalizedHash)}$`, "i");
   const existing = await Proposal.findOne({
     "metaData.treasuryDonationTxHash": regex,
+    status: { $ne: "draft" },
     _id: { $nin: excludeProposalIds },
   })
     .lean()
@@ -73,6 +103,28 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     return { ok: false, error: result?.error ?? "Transaction verification failed" };
   }
   return { ok: true, normalizedHash };
+}
+
+/**
+ * Whether another proposal on this vote is already live with the same cold credential hash
+ * (case-insensitive). Draft / withdrawn / archived do not block.
+ * @param {string} coldCredentialHash
+ * @param {import("mongoose").Types.ObjectId | string} voteId
+ * @param {{ excludeProposalIds?: import("mongoose").Types.ObjectId[] }} [options]
+ */
+async function isDuplicateCcColdCredentialHash(coldCredentialHash, voteId, options = {}) {
+  const normalized = normalizeCcColdCredentialHash(coldCredentialHash);
+  if (!normalized) return false;
+  const excludeProposalIds = options.excludeProposalIds ?? [];
+  const existing = await Proposal.findOne({
+    voteId: new mongoose.Types.ObjectId(voteId),
+    "metaData.coldCredentialHash": new RegExp(`^${escapeRegex(normalized)}$`, "i"),
+    status: "live",
+    _id: { $nin: excludeProposalIds },
+  })
+    .lean()
+    .exec();
+  return Boolean(existing);
 }
 
 function getByPath(obj, path) {
@@ -135,7 +187,20 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
-    const validation = script.validate(req.body);
+    let coldCredentialHashDuplicate = false;
+    if (
+      req.body?.status === "live" &&
+      voteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      coldCredentialHashDuplicate = await isDuplicateCcColdCredentialHash(
+        req.body?.metaData?.coldCredentialHash,
+        rawVoteId,
+      );
+    }
+    const validation = script.validate(req.body, {
+      voteDepositOptions: voteDoc.depositOptions ?? {},
+      coldCredentialHashDuplicate,
+    });
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
@@ -173,8 +238,13 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
     const sanitizedMetaData = { ...rawMetaData };
+    if (typeof sanitizedMetaData.coldCredentialHash === "string") {
+      sanitizedMetaData.coldCredentialHash = normalizeCcColdCredentialHash(
+        sanitizedMetaData.coldCredentialHash,
+      );
+    }
 
-    if (status === "live" && voteDoc.depositOptions?.treasuryDonation != null) {
+    if (status === "live" && requiresTreasuryDonationValidation(voteDoc)) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
         return res.status(400).json({
@@ -199,6 +269,23 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
     }
 
+    if (status === "live" && voteDoc.validationScript === "cc-vote2026/validationScript.js") {
+      const dupCold = await isDuplicateCcColdCredentialHash(
+        metaData?.coldCredentialHash,
+        voteId,
+        {},
+      );
+      if (dupCold) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: coldCredentialHashErrorTree(
+            "This cold credential hash is already used by another proposal",
+          ),
+        });
+      }
+    }
+
     const doc = {
       proposerId,
       voteId: new mongoose.Types.ObjectId(voteId),
@@ -213,6 +300,24 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     }
 
     const proposal = await Proposal.create(doc);
+    if (status === "live") {
+      try {
+        await sendSubmissionConfirmedNotification({
+          proposerId,
+          vote: {
+            slug: voteDoc.slug,
+            title: voteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          timestamp: proposal.submittedAt ?? new Date(),
+        });
+      } catch (error) {
+        console.error("Failed to send submission confirmed notification:", error);
+      }
+    }
     const created = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(201).json(created);
   } catch (error) {
@@ -359,6 +464,27 @@ router.put("/:proposalId/withdraw", isAuthenticated, authenticatedWriteLimiter, 
     };
     await proposal.save();
 
+    if (!isProposer) {
+      try {
+        await sendProposalWithdrawnNotification({
+          proposerId: proposerIdStr,
+          vote: {
+            slug: voteDoc.slug,
+            title: voteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          reason: category,
+          comment: commentStr,
+          timestamp: now,
+        });
+      } catch (error) {
+        console.error("Failed to send admin withdrawal notification:", error);
+      }
+    }
+
     const updated = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(200).json(updated);
   } catch (error) {
@@ -481,7 +607,51 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         message: `Validation script "${voteDoc.validationScript}" could not be loaded.`,
       });
     }
-    validation = script.validate(req.body);
+
+    let voteDepositOptionsForValidation = voteDoc.depositOptions ?? {};
+    const rawBodyVoteId = req.body?.voteId;
+    if (
+      rawBodyVoteId &&
+      mongoose.Types.ObjectId.isValid(rawBodyVoteId) &&
+      String(rawBodyVoteId).length === 24
+    ) {
+      const voteForBody = await Vote.findById(rawBodyVoteId).lean();
+      if (voteForBody) {
+        voteDepositOptionsForValidation = voteForBody.depositOptions ?? {};
+      }
+    }
+
+    // Draft → live (and other live submits): enforce at most one live proposal per cold credential on this vote.
+    let coldCredentialHashDuplicate = false;
+    if (
+      req.body?.status === "live" &&
+      voteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      const voteIdForCcColdDup =
+        rawBodyVoteId &&
+        mongoose.Types.ObjectId.isValid(rawBodyVoteId) &&
+        String(rawBodyVoteId).length === 24
+          ? String(rawBodyVoteId)
+          : String(proposal.voteId);
+      const excludeProposalIds = [
+        proposal._id,
+        ...(proposal.versions ?? []).map((v) => v._id),
+      ];
+      coldCredentialHashDuplicate = await isDuplicateCcColdCredentialHash(
+        req.body?.metaData?.coldCredentialHash,
+        voteIdForCcColdDup,
+        { excludeProposalIds },
+      );
+    }
+
+    validation = script.validate(req.body, {
+      existingProposal: {
+        status: proposal.status,
+        metaData: proposal.metaData ?? {},
+      },
+      voteDepositOptions: voteDepositOptionsForValidation,
+      coldCredentialHashDuplicate,
+    });
 
     if (!validation.success) {
       const errorTree = z.treeifyError(validation.error);
@@ -568,13 +738,18 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
 
     const rawMetaData = metaData;
     const sanitizedMetaData = { ...rawMetaData };
+    if (typeof sanitizedMetaData.coldCredentialHash === "string") {
+      sanitizedMetaData.coldCredentialHash = normalizeCcColdCredentialHash(
+        sanitizedMetaData.coldCredentialHash,
+      );
+    }
 
     if (proposal.status === "live") {
       sanitizedMetaData.treasuryDonationTxHash =
         proposal.metaData?.treasuryDonationTxHash ?? sanitizedMetaData.treasuryDonationTxHash;
     } else if (
       status === "live" &&
-      targetVoteDoc.depositOptions?.treasuryDonation != null
+      requiresTreasuryDonationValidation(targetVoteDoc)
     ) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
@@ -605,6 +780,30 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
     }
 
+    if (
+      status === "live" &&
+      targetVoteDoc.validationScript === "cc-vote2026/validationScript.js"
+    ) {
+      const excludeProposalIds = [
+        proposal._id,
+        ...(proposal.versions ?? []).map((v) => v._id),
+      ];
+      const hasDuplicateColdCredential = await isDuplicateCcColdCredentialHash(
+        metaData?.coldCredentialHash,
+        voteId,
+        { excludeProposalIds },
+      );
+      if (hasDuplicateColdCredential) {
+        return res.status(400).json({
+          status: "error",
+          message: "Validation failed",
+          errors: coldCredentialHashErrorTree(
+            "This cold credential hash is already used by another proposal",
+          ),
+        });
+      }
+    }
+
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
     proposal.title = title;
     proposal.summary = summary ?? "";
@@ -620,6 +819,25 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       }
     }
     await proposal.save();
+
+    if (previousStatus === "draft" && status === "live") {
+      try {
+        await sendSubmissionConfirmedNotification({
+          proposerId: userId,
+          vote: {
+            slug: targetVoteDoc.slug,
+            title: targetVoteDoc.title,
+          },
+          proposal: {
+            id: proposal._id,
+            title: proposal.title,
+          },
+          timestamp: proposal.submittedAt ?? new Date(),
+        });
+      } catch (error) {
+        console.error("Failed to send submission confirmed notification:", error);
+      }
+    }
 
     const updated = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(200).json(updated);
@@ -914,45 +1132,66 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
       }
     }
 
-    // Add filters for options that have optionsPath (e.g. category from vote.metaData.strategyFramework.pillars)
+    // Add generic non-status filters defined on the vote.
     for (const option of resolvedFilterOptions) {
-      if (!option.optionsPath || option.param === "status" || option.param === "proposer") continue;
+      if (option.param === "status" || option.param === "proposer") continue;
       const paramValue = req.query[option.param];
       if (!paramValue || typeof paramValue !== "string") continue;
 
-      const ids = paramValue
+      const values = paramValue
         .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
 
-      if (ids.length === 0) {
+      if (values.length === 0) {
         return res.status(400).json({
           status: "error",
           message: `Invalid ${option.param} parameter. Must provide at least one value.`,
         });
       }
 
-      const optionList = getByPath(voteDoc, option.optionsPath);
-      if (!Array.isArray(optionList) || optionList.length === 0) {
+      if (!option.multiple && values.length > 1) {
         return res.status(400).json({
           status: "error",
-          message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+          message: `Invalid ${option.param} parameter. Multiple values are not allowed.`,
         });
       }
 
-      const valueKey = option.optionValueKey ?? "_id";
-      const validIds = new Set(
-        optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
-      );
-      const missingIds = ids.filter((id) => !validIds.has(id));
-      if (missingIds.length > 0) {
+      let validValues = new Set();
+      if (option.optionsPath) {
+        const optionList = getByPath(voteDoc, option.optionsPath);
+        if (!Array.isArray(optionList) || optionList.length === 0) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+          });
+        }
+
+        const valueKey = option.optionValueKey ?? "_id";
+        validValues = new Set(
+          optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
+        );
+      } else if (Array.isArray(option.allowedValues) && option.allowedValues.length > 0) {
+        validValues = new Set(option.allowedValues.map((value) => String(value)));
+      } else {
+        // No optionsPath and no allowedValues means this filter is misconfigured.
         return res.status(400).json({
           status: "error",
-          message: `Invalid ${option.param} parameter. The following values were not found for this vote: ${missingIds.join(", ")}.`,
+          message: `Invalid ${option.param} filter configuration. Expected optionsPath or allowedValues.`,
         });
       }
 
-      const condition = { [option.field]: option.multiple ? { $in: ids } : ids[0] };
+      const invalidValues = values.filter((value) => !validValues.has(value));
+      if (invalidValues.length > 0) {
+        return res.status(400).json({
+          status: "error",
+          message: `Invalid ${option.param} parameter. Allowed values: ${Array.from(validValues).join(", ")}.`,
+        });
+      }
+
+      const condition = {
+        [option.field]: option.multiple ? { $in: values } : values[0],
+      };
       if (query.$or) {
         const existingOr = query.$or;
         delete query.$or;
@@ -1145,18 +1384,54 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
       }
     }
 
+    let projectProposalListItem = null;
+    if (voteDoc.listProjectionScript) {
+      const projectionMod = await loadListProjectionScript(
+        voteDoc.listProjectionScript,
+      );
+      if (projectionMod?.projectProposalListItem) {
+        projectProposalListItem = projectionMod.projectProposalListItem;
+      }
+    }
+
+    const fallbackProjection = (proposal) => {
+      const {
+        metaData,
+        withdrawalReason,
+        signature,
+        userId,
+        commentCount,
+        versions,
+        ...rest
+      } = proposal ?? {};
+      return {
+        ...rest,
+        metaData: metaData ?? null,
+        versions,
+        commentCount: commentCount ?? 0,
+      };
+    };
+
     const formattedProposals = proposals.map((proposal) => {
-      const { metaData, withdrawalReason, versions, signature, userId, commentCount, ...rest } = proposal;
-      const shortenedMetaData = metaData
-        ? {
-          proposerDetails: metaData.proposerDetails ? { name: metaData.proposerDetails.name } : undefined,
-          contractingParty: metaData.contractingParty ? { legalEntityType: metaData.contractingParty.legalEntityType } : undefined,
-          strategyFramework: metaData.strategyFramework ? { pillars: metaData.strategyFramework.pillars } : undefined,
-          conversionRate: metaData.proposalDetails?.conversionRate ?? metaData.financialAndAdministrative?.conversionRate,
-          totalBudget: metaData.totalBudget,
-        }
-        : null;
-      return { ...rest, metaData: shortenedMetaData, versions, commentCount: commentCount ?? 0 };
+      const isProposer =
+        String(proposal?.proposerId ?? "").trim() === authenticatedUserId;
+      if (!projectProposalListItem) {
+        return fallbackProjection(proposal);
+      }
+      try {
+        return projectProposalListItem(proposal, {
+          vote: voteDoc,
+          isProposer,
+          isAdmin: isVoteAdmin,
+        });
+      } catch (err) {
+        console.warn(
+          "list projection failed for proposal",
+          proposal?._id,
+          err?.message ?? err,
+        );
+        return fallbackProjection(proposal);
+      }
     });
 
     // Calculate pagination metadata

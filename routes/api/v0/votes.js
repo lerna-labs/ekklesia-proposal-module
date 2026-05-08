@@ -110,10 +110,10 @@ router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async 
     // Calculate skip value for pagination
     const skip = (page - 1) * limit;
 
-    // Execute query with pagination (exclude validationScript from response)
+    // Execute query with pagination. Exclude internal/private vote fields.
     const [votesRaw, totalItems] = await Promise.all([
       Vote.find(query)
-        .select("-validationScript")
+        .select("-validationScript -excludeScript -listProjectionScript -admins")
         .sort({ createdAt: -1 }) // Sort by newest first
         .skip(skip)
         .limit(limit)

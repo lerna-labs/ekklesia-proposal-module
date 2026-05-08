@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { getJWT } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, url, fetch }) {
+	const policyNowMs = Date.now();
 	const { voteSlug } = params;
 	const pageNum = url.searchParams.get('page') || '1';
 	const limitParam = url.searchParams.get('limit') || '10';
@@ -10,7 +10,6 @@ export async function load({ params, url, fetch }) {
 	const limit = validLimits.includes(Number(limitParam)) ? limitParam : '10';
 	const search = url.searchParams.get('search') || '';
 	const direction = url.searchParams.get('direction') || 'desc';
-	const category = url.searchParams.get('category') || '';
 	const status = url.searchParams.get('status') || 'live';
 	const proposer = url.searchParams.get('proposer') || '';
 
@@ -41,15 +40,19 @@ export async function load({ params, url, fetch }) {
 		sort,
 		direction,
 	});
+	const filterOptions = voteData.filterOptions ?? [];
+	for (const option of filterOptions) {
+		if (option?.param === 'status') continue;
+		const value = url.searchParams.get(option?.param ?? '');
+		if (option?.param && value) {
+			proposalsSearchParams.set(option.param, value);
+		}
+	}
 	if (search) proposalsSearchParams.set('search', search);
-	if (category) proposalsSearchParams.set('category', category);
 	if (status) proposalsSearchParams.set('status', status);
 	if (proposer) proposalsSearchParams.set('proposer', proposer);
 	const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
-	const token = getJWT();
-	const proposalsOpts = { credentials: 'include' };
-	if (token) proposalsOpts.headers = { Authorization: `Bearer ${token}` };
-	const proposalsResponse = await fetch(proposalsUrl, proposalsOpts);
+	const proposalsResponse = await fetch(proposalsUrl, { credentials: 'include' });
 
 	let proposals = { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } };
 	if (proposalsResponse.ok) {
@@ -74,5 +77,6 @@ export async function load({ params, url, fetch }) {
 		pillars,
 		/** Resolved list state from URL for initial UI (sort, direction). */
 		listState: { sort, direction },
+		policyNowMs,
 	};
 }

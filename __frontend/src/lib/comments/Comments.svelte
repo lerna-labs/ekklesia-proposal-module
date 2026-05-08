@@ -12,10 +12,7 @@
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
-  import {
-    feedbackActionsOpen,
-    feedbackWindowActionsDisabledTitle,
-  } from "$lib/voteWindowPolicy.js";
+  import { feedbackActionsOpen, feedbackWindowActionsDisabledTitle } from "$lib/voteWindowPolicy.js";
 
   let { proposalId, proposal, vote, readOnly = false } = $props();
 
@@ -70,18 +67,12 @@
   const policyNow = $derived(new Date(policyNowMs));
 
   /** Show comment actions chrome (new / reply / like) for live, non-withdrawn proposal context. */
-  const showCommentActionChrome = $derived(
-    proposal?.status === "live" && !readOnly,
-  );
+  const showCommentActionChrome = $derived(proposal?.status === "live" && !readOnly);
 
-  const feedbackOpen = $derived(
-    showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow),
-  );
+  const feedbackOpen = $derived(showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow));
 
   const feedbackClosedTitle = $derived(
-    vote && showCommentActionChrome && !feedbackOpen
-      ? feedbackWindowActionsDisabledTitle(vote, policyNow)
-      : "",
+    vote && showCommentActionChrome && !feedbackOpen ? feedbackWindowActionsDisabledTitle(vote, policyNow) : "",
   );
 
   const canComment = $derived(currentUserId && feedbackOpen);
@@ -89,10 +80,7 @@
   const canLike = $derived(currentUserId && feedbackOpen);
 
   const isVoteAdmin = $derived(
-    currentUserId &&
-      vote?.admins &&
-      Array.isArray(vote.admins) &&
-      vote.admins.includes(currentUserId),
+    currentUserId && vote?.admins && Array.isArray(vote.admins) && vote.admins.includes(currentUserId),
   );
 
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
@@ -134,9 +122,7 @@
     pendingAddAfterLogin = false;
     pendingReplyTo = null;
     const isOwnComment =
-      replyToComment &&
-      replyToComment.author?._id != null &&
-      replyToComment.author._id === currentUserId;
+      replyToComment && replyToComment.author?._id != null && replyToComment.author._id === currentUserId;
     if (isOwnComment) {
       toast.info("You can't reply to your own comment.");
       return;
@@ -159,10 +145,7 @@
       error: null,
     };
     try {
-      const userTypeParam =
-        userTypeFilter.length > 0
-          ? `&userType=${userTypeFilter.join(",")}`
-          : "";
+      const userTypeParam = userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
       const { ok, status, json } = await fetchJson(
         `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}`,
       );
@@ -187,6 +170,41 @@
 
   $effect(() => {
     if (proposalId) untrack(() => loadComments());
+  });
+
+  $effect(() => {
+    if (!hasActiveFilter || commentsState.loading || commentsState.error || commentsState.data.length === 0) {
+      return;
+    }
+
+    const toUncollapse = [];
+    const toLoad = [];
+
+    for (const comment of commentsState.data) {
+      if ((comment.replyCount ?? 0) <= 0) continue;
+
+      const threadState = repliesByParent[comment._id];
+      if (threadState) {
+        if (threadState.collapsed) toUncollapse.push(comment._id);
+      } else {
+        toLoad.push(comment._id);
+      }
+    }
+
+    if (toUncollapse.length > 0) {
+      const nextRepliesByParent = { ...repliesByParent };
+      for (const commentId of toUncollapse) {
+        nextRepliesByParent[commentId] = {
+          ...nextRepliesByParent[commentId],
+          collapsed: false,
+        };
+      }
+      repliesByParent = nextRepliesByParent;
+    }
+
+    for (const commentId of toLoad) {
+      loadReplies(commentId);
+    }
   });
 
   function applySort() {
@@ -233,17 +251,27 @@
     if (!force && (existing?.data?.length || existing?.loading)) return;
     repliesByParent = {
       ...repliesByParent,
-      [commentId]: { loading: true, error: null, data: [], meta: null },
+      [commentId]: {
+        loading: true,
+        error: null,
+        data: [],
+        meta: existing?.meta ?? null,
+        collapsed: false,
+      },
     };
     try {
-      const { ok, json } = await fetchJson(
-        `/comments/${commentId}/replies?page=1&limit=20`,
-      );
+      const { ok, json } = await fetchJson(`/comments/${commentId}/replies?page=1&limit=20`);
       if (!ok) {
         const msg = json?.message ?? "Failed to load replies";
         repliesByParent = {
           ...repliesByParent,
-          [commentId]: { loading: false, error: msg, data: [], meta: null },
+          [commentId]: {
+            loading: false,
+            error: msg,
+            data: [],
+            meta: existing?.meta ?? null,
+            collapsed: false,
+          },
         };
         toast.error(msg);
         return;
@@ -255,13 +283,20 @@
           error: null,
           data: json.data ?? [],
           meta: json.meta ?? {},
+          collapsed: false,
         },
       };
     } catch (err) {
       const msg = err?.message ?? "Failed to load replies";
       repliesByParent = {
         ...repliesByParent,
-        [commentId]: { loading: false, error: msg, data: [], meta: null },
+        [commentId]: {
+          loading: false,
+          error: msg,
+          data: [],
+          meta: existing?.meta ?? null,
+          collapsed: false,
+        },
       };
       toast.error(msg);
     }
@@ -270,13 +305,21 @@
   function toggleReplies(c) {
     const id = c._id;
     const state = repliesByParent[id];
-    if (state?.data?.length) {
-      const next = { ...repliesByParent };
-      delete next[id];
-      repliesByParent = next;
-    } else {
-      loadReplies(id);
+    if (state && !state.collapsed) {
+      repliesByParent = {
+        ...repliesByParent,
+        [id]: { ...state, collapsed: true },
+      };
+      return;
     }
+    if (state?.collapsed) {
+      repliesByParent = {
+        ...repliesByParent,
+        [id]: { ...state, collapsed: false },
+      };
+      return;
+    }
+    loadReplies(id);
   }
 
   function requestLoginModal() {
@@ -287,10 +330,7 @@
   function feedbackActionBlockedMessage() {
     const now = new Date(policyNowMs);
     if (!vote) return "Vote is not loaded.";
-    return (
-      feedbackWindowActionsDisabledTitle(vote, now) ||
-      "Comments and replies are not available."
-    );
+    return feedbackWindowActionsDisabledTitle(vote, now) || "Comments and replies are not available.";
   }
 
   async function openAddDialog(replyingTo = null) {
@@ -483,16 +523,13 @@
       toast.error("Please select a category.");
       return;
     }
-    const { ok, json } = await fetchJson(
-      `/comments/${withdrawComment._id}/withdraw`,
-      {
-        method: "PUT",
-        body: JSON.stringify({
-          category: withdrawCategory,
-          comment: withdrawReason || undefined,
-        }),
-      },
-    );
+    const { ok, json } = await fetchJson(`/comments/${withdrawComment._id}/withdraw`, {
+      method: "PUT",
+      body: JSON.stringify({
+        category: withdrawCategory,
+        comment: withdrawReason || undefined,
+      }),
+    });
     if (!ok) {
       withdrawError = json?.message ?? "Failed to withdraw.";
       toast.error(json?.message ?? "Failed to withdraw comment");
@@ -517,7 +554,7 @@
 
 <section id="comments">
   <CommentsHeader
-    total={commentsState.meta?.total ?? proposal?.commentCount}
+    total={commentsState.meta?.threadTotal ?? commentsState.meta?.total ?? proposal?.commentCount}
     bind:sortPopoverOpen
     bind:filterPopoverOpen
     bind:pendingSort
@@ -570,6 +607,10 @@
           onEdit={openEdit}
           onWithdraw={openWithdraw}
         />
+      {:else}
+        <p class="text-sm text-muted-foreground mb-6">
+          {hasActiveFilter ? "No comments found for your filter options." : "No comments yet."}
+        </p>
       {/each}
     </div>
 

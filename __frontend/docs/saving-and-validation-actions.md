@@ -23,7 +23,7 @@ This document describes what happens on each save and validation action in the p
 
 ## 2. Page `onSave` behaviour (new and edit)
 
-Both **new** (`[budgetSlug]/new/+page.svelte`) and **edit** (`[budgetSlug]/[proposalId]/+page.svelte`) follow the same logic; only the API differs:
+Both **new** (`[voteSlug]/new/+page.svelte`) and **edit** (`[voteSlug]/[proposalId]/+page.svelte`) follow the same logic; only the API differs:
 
 - **New proposal:** `POST /proposals` with `{ ...payload, voteId: vote._id }`
 - **Edit proposal:** `PUT /proposals/:id` with `{ ...payload, voteId: proposal.voteId }`

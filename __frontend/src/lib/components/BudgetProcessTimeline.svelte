@@ -43,14 +43,25 @@
     return Math.min(100, Math.max(0, p));
   }
 
+  /** Whether phase has a usable end instant (omit "to" row in UI when false). */
+  function phaseHasEnd(phase) {
+    const e = toMs(phase?.end);
+    return Number.isFinite(e);
+  }
+
   /** Index of the phase that contains `effectiveNowMs`, or `null`. */
   let activePhaseIndex = $derived.by(() => {
     const now = effectiveNowMs;
     const list = phases;
     for (let i = 0; i < list.length; i++) {
-      const s = toMs(list[i].start);
-      const e = toMs(list[i].end);
-      if (Number.isNaN(s) || Number.isNaN(e)) continue;
+      const p = list[i];
+      const s = toMs(p.start);
+      const e = toMs(p.end);
+      if (Number.isNaN(s)) continue;
+      if (!Number.isFinite(e)) {
+        if (now >= s) return i;
+        continue;
+      }
       if (now >= s && now <= e) return i;
     }
     return null;
@@ -88,14 +99,19 @@
 {#snippet phaseTimelineRow(phase, i, phaseCount, titlePrefix)}
   {@const startMs = toMs(phase.start)}
   {@const endMs = toMs(phase.end)}
+  {@const hasEnd = phaseHasEnd(phase)}
   {@const timelineState =
-    Number.isNaN(startMs) || Number.isNaN(endMs)
+    Number.isNaN(startMs)
       ? "upcoming"
-      : effectiveNowMs > endMs
-        ? "finished"
-        : effectiveNowMs >= startMs
+      : !hasEnd
+        ? effectiveNowMs >= startMs
           ? "active"
-          : "upcoming"}
+          : "upcoming"
+        : effectiveNowMs > endMs
+          ? "finished"
+          : effectiveNowMs >= startMs
+            ? "active"
+            : "upcoming"}
   <div class="grid grid-cols-[auto_minmax(0,1fr)] items-stretch gap-x-3">
     <div class="flex min-h-0 flex-col items-center">
       {#if timelineState === "active"}
@@ -121,11 +137,9 @@
         ></div>
       {/if}
       {#if i < phaseCount - 1}
-        {@const railProgressPct = phaseElapsedPercent(
-          startMs,
-          endMs,
-          effectiveNowMs,
-        )}
+        {@const railProgressPct = hasEnd
+          ? phaseElapsedPercent(startMs, endMs, effectiveNowMs)
+          : 0}
         <div
           class="relative my-1 w-0.5 min-h-4 flex-1 shrink-0 overflow-hidden rounded-full pointer-events-none"
           aria-hidden="true"
@@ -156,16 +170,18 @@
           {formatUtcFullDateTime(phase.start)}
         </span>
       </p>
-      <p class="m-0 mt-0.5 text-xs leading-relaxed">
-        <span class="italic font-medium text-muted-foreground">to</span>
-        <span
-          class="font-medium {timelineState === 'upcoming'
-            ? 'text-muted-foreground'
-            : 'text-foreground'}"
-        >
-          {formatUtcFullDateTime(phase.end)}
-        </span>
-      </p>
+      {#if hasEnd}
+        <p class="m-0 mt-0.5 text-xs leading-relaxed">
+          <span class="italic font-medium text-muted-foreground">to</span>
+          <span
+            class="font-medium {timelineState === 'upcoming'
+              ? 'text-muted-foreground'
+              : 'text-foreground'}"
+          >
+            {formatUtcFullDateTime(phase.end)}
+          </span>
+        </p>
+      {/if}
       {#if phase.link && (timelineState === "active" || timelineState === "finished")}
         <div class="pt-2">
           <Button

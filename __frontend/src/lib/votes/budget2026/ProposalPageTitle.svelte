@@ -10,10 +10,15 @@
       (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
   );
   const resolvedCommentCount = $derived.by(() => {
-    const fromProp = Number(commentCount);
-    if (Number.isFinite(fromProp)) return fromProp;
-    const fromProposal = Number(proposal?.commentCount);
-    return Number.isFinite(fromProposal) ? fromProposal : null;
+    if (commentCount != null) {
+      const fromProp = Number(commentCount);
+      if (Number.isFinite(fromProp)) return fromProp;
+    }
+    if (proposal?.commentCount != null) {
+      const fromProposal = Number(proposal.commentCount);
+      if (Number.isFinite(fromProposal)) return fromProposal;
+    }
+    return null;
   });
 </script>
 

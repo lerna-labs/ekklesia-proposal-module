@@ -47,7 +47,7 @@ export async function load({ params, fetch, url }) {
 		const commentsRes = await api.fetch(fetch, `/comments?proposal=${proposalId}&page=1&limit=1`);
 		if (commentsRes.ok) {
 			const commentsJson = await commentsRes.json();
-			commentCount = commentsJson.meta?.total ?? 0;
+			commentCount = commentsJson.meta?.threadTotal ?? commentsJson.meta?.total ?? 0;
 		}
 	}
 

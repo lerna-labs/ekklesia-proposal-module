@@ -13,6 +13,7 @@ import {
   commentWritePerMinuteLimiter,
 } from "../../../helper/rateLimiters.js";
 import { getFeedbackWindowBlockPhase } from "../../../helper/voteWindows.js";
+import { queueCommentNotificationEvent } from "../../../mailer/notificationDispatch.js";
 
 const router = Router();
 
@@ -74,6 +75,24 @@ function getCommentStatusCondition(statusParam, isAdmin, userId) {
   return { $or: [{ status: "live" }, { status: "withdrawnByAdmin", userId }] };
 }
 
+/**
+ * Visibility filter for *direct replies* to a comment, aligned with getCommentStatusCondition(null, …)
+ * and formatComment reply counting. Used in GET /comments aggregation so sort-by-replyCount matches displayed counts.
+ */
+function getVisibleReplyStatusMatch(isAdmin, viewerUserId) {
+  if (!viewerUserId) return { status: "live" };
+  if (isAdmin) return { $or: [{ status: "live" }, { status: "withdrawnByAdmin" }] };
+  return {
+    $or: [
+      { status: "live" },
+      {
+        status: "withdrawnByAdmin",
+        userId: String(viewerUserId),
+      },
+    ],
+  };
+}
+
 /** Build comment response shape: author with type, replyCount, likeCount; exclude proposalId, status, parentId, userId. Include withdrawalDetails if authenticatedUserId matches author or user is vote admin. */
 async function formatComment(
   comment,
@@ -89,13 +108,17 @@ async function formatComment(
   if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
   else if (vote?.admins && Array.isArray(vote.admins) && userDoc?._id != null && vote.admins.includes(String(userDoc._id))) type = "admin";
   const isAdmin = isVoteAdmin(proposal, vote, authenticatedUserId);
-  // Reply count respects same visibility rules as top-level comments
+  // Prefer precomputed replyCount from aggregation when present (used by GET /comments).
+  const replyCountFromDoc =
+    typeof comment?.replyCount === "number" ? comment.replyCount : null;
+  // Fallback for endpoints that fetch single comments/replies without aggregation.
   const replyStatusCondition = getCommentStatusCondition(null, isAdmin, authenticatedUserId);
   const replyQuery =
     replyStatusCondition && !replyStatusCondition.error
       ? { parentId: comment._id, ...replyStatusCondition }
       : { parentId: comment._id, status: "live" };
-  const replyCount = await Comment.countDocuments(replyQuery);
+  const replyCount =
+    replyCountFromDoc != null ? replyCountFromDoc : await Comment.countDocuments(replyQuery);
   const likeCount = await CommentLike.countDocuments({ commentId: comment._id });
   const userLiked =
     authenticatedUserId &&
@@ -207,7 +230,10 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
     const proposalProposerId = proposal?.proposerId ? String(proposal.proposerId) : "";
     const voteAdmins = vote?.admins && Array.isArray(vote.admins) ? vote.admins.map(String) : [];
 
+    const replyVisibilityMatch = getVisibleReplyStatusMatch(isAdmin, userId);
+
     const matchCondition = { proposalId: proposalObjectId, parentId: null, ...statusFilter };
+    const threadMatchCondition = { proposalId: proposalObjectId, ...statusFilter };
 
     const userTypeExpr = {
       $cond: {
@@ -229,30 +255,73 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
       },
     };
 
+    const replyUserTypeExpr = {
+      $cond: {
+        if: { $and: [{ $ne: [proposalProposerId, ""] }, { $eq: [{ $toString: "$$reply.userId" }, proposalProposerId] }] },
+        then: "proposer",
+        else: {
+          $cond: {
+            if: { $in: [{ $toString: "$$reply.userId" }, voteAdmins] },
+            then: "admin",
+            else: {
+              $cond: {
+                if: { $regexMatch: { input: { $toString: "$$reply.userId" }, regex: "^drep" } },
+                then: "drep",
+                else: "user",
+              },
+            },
+          },
+        },
+      },
+    };
+
     const pipeline = [
       { $match: matchCondition },
       { $addFields: { userType: userTypeExpr } },
-      ...(userTypeFilter && userTypeFilter.length > 0
-        ? [{ $match: { userType: { $in: userTypeFilter } } }]
-        : []),
       {
-        $lookup: {
+        $graphLookup: {
           from: "comments",
-          let: { cid: "$_id" },
-          pipeline: [
-            { $match: { $expr: { $eq: ["$parentId", "$$cid"] } } },
-            { $count: "count" },
-          ],
-          as: "replyCountArr",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parentId",
+          as: "threadReplies",
+          restrictSearchWithMatch: {
+            proposalId: proposalObjectId,
+            ...replyVisibilityMatch,
+          },
         },
       },
       {
         $addFields: {
-          replyCount: {
-            $ifNull: [{ $arrayElemAt: ["$replyCountArr.count", 0] }, 0],
-          },
+          replyCount: { $size: "$threadReplies" },
         },
       },
+      ...(userTypeFilter && userTypeFilter.length > 0
+        ? [
+            {
+              $addFields: {
+                userTypeMatch: { $in: ["$userType", userTypeFilter] },
+                replyUserTypeMatchCount: {
+                  $size: {
+                    $filter: {
+                      input: "$threadReplies",
+                      as: "reply",
+                      cond: { $in: [replyUserTypeExpr, userTypeFilter] },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $match: {
+                $or: [
+                  { userTypeMatch: true },
+                  { replyUserTypeMatchCount: { $gt: 0 } },
+                ],
+              },
+            },
+          ]
+        : []),
       {
         $lookup: {
           from: "commentlikes",
@@ -314,9 +383,11 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
                 proposalId: 0,
                 status: 0,
                 parentId: 0,
-                replyCountArr: 0,
+                threadReplies: 0,
                 likeCountArr: 0,
                 userArr: 0,
+                userTypeMatch: 0,
+                replyUserTypeMatchCount: 0,
               },
             },
           ],
@@ -324,7 +395,11 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
       },
     ];
 
-    const [result] = await Comment.aggregate(pipeline);
+    const [aggregateResult, threadTotal] = await Promise.all([
+      Comment.aggregate(pipeline),
+      Comment.countDocuments(threadMatchCondition),
+    ]);
+    const result = aggregateResult?.[0] ?? null;
     const total = result?.total?.[0]?.n ?? 0;
     const items = result?.items ?? [];
     const data = await Promise.all(
@@ -338,6 +413,7 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
         page,
         limit,
         total,
+        threadTotal,
         totalPages,
         hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
@@ -386,7 +462,7 @@ router.post(
       return res.status(400).json({ status: "error", message: "Invalid proposalId. Must be a valid ObjectId." });
     }
 
-    const proposal = await Proposal.findById(proposalIdTrim).select("status voteId").lean();
+    const proposal = await Proposal.findById(proposalIdTrim).select("status voteId proposerId title").lean();
     if (!proposal) {
       return res.status(404).json({ status: "error", message: "Proposal not found" });
     }
@@ -457,6 +533,17 @@ router.post(
     }
 
     const comment = await Comment.create(doc);
+    if (String(proposal.proposerId ?? "") !== userId) {
+      try {
+        await queueCommentNotificationEvent({
+          recipientUserId: proposal.proposerId,
+          proposalId: proposal._id,
+          commentId: comment._id,
+        });
+      } catch (error) {
+        console.error("Failed to queue comment notification event:", error);
+      }
+    }
     return res.status(201).json({
       _id: comment._id,
       proposalId: comment.proposalId,
@@ -506,14 +593,39 @@ router.get("/:commentId/replies", rejectDuplicateParams("status"), parsePaginati
     const commentObjectId = new mongoose.Types.ObjectId(commentId);
     const replyQuery = { parentId: commentObjectId, ...statusFilter };
 
-    const [replies, total] = await Promise.all([
-      Comment.find(replyQuery)
-        .sort({ createdAt: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
+    const [aggregateResult, total] = await Promise.all([
+      Comment.aggregate([
+        { $match: replyQuery },
+        { $sort: { createdAt: 1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        {
+          $graphLookup: {
+            from: "comments",
+            startWith: "$_id",
+            connectFromField: "_id",
+            connectToField: "parentId",
+            as: "threadReplies",
+            restrictSearchWithMatch: {
+              proposalId: parentComment.proposalId,
+              ...statusFilter,
+            },
+          },
+        },
+        {
+          $addFields: {
+            replyCount: { $size: "$threadReplies" },
+          },
+        },
+        {
+          $project: {
+            threadReplies: 0,
+          },
+        },
+      ]),
       Comment.countDocuments(replyQuery),
     ]);
+    const replies = aggregateResult ?? [];
 
     const data = await Promise.all(
       replies.map((r) => formatComment(r, proposal, vote, userId))

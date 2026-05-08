@@ -97,10 +97,36 @@ const voteSchema = new Schema(
       type: String,
       required: false,
     },
+    /** Optional script to shape proposal list item payloads per vote form. */
+    listProjectionScript: {
+      type: String,
+      required: false,
+    },
     /** Optional. URL to the Ekklesia Voting Platform for this Vote **/
     votingUrl: {
       type: String,
       required: false,
+    },
+    /** Optional. External results page for the vote (used in results notifications). */
+    resultsUrl: {
+      type: String,
+      required: false,
+    },
+    /** Optional. Set manually when results are officially published. */
+    resultsPublishedAt: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    notificationDispatch: {
+      votingOpenedSentAt: {
+        type: Date,
+        default: null,
+      },
+      resultsPublishedSentAt: {
+        type: Date,
+        default: null,
+      },
     },
     /* donationOptions to track treasury donation and mandatory wallet deposits */
     depositOptions: {

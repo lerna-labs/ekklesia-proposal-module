@@ -1,0 +1,159 @@
+/**
+ * Error counts for ccVote2026 accordion titles — same tree shape as budget2026 Form.svelte
+ * (Zod `treeifyError` output: `errors`, `properties`, `items`).
+ */
+
+/** @param {unknown} node */
+export function countErrorsInTree(node) {
+  if (node == null) return 0;
+  let n = node.errors?.length ?? 0;
+  if (node.properties) {
+    for (const child of Object.values(node.properties)) {
+      n += countErrorsInTree(child);
+    }
+  }
+  if (node.items) {
+    for (const item of node.items) {
+      n += countErrorsInTree(item);
+    }
+  }
+  return n;
+}
+
+/**
+ * @param {unknown} tree - Root tree node (`validationErrors`)
+ * @param {string[]} pathSegments - Keys under `.properties` at each level
+ */
+export function getNodeAtPath(tree, pathSegments) {
+  if (tree == null || !pathSegments?.length) return tree;
+  const next = tree.properties?.[pathSegments[0]];
+  return getNodeAtPath(next, pathSegments.slice(1));
+}
+
+/** @param {number} n */
+export function errorCountLabel(n) {
+  return n === 1 ? "1 Error" : `${n} Errors`;
+}
+
+/**
+ * Section id → list of paths (each path counted separately; no overlap between sections).
+ * Paths are relative to the `validationErrors` root.
+ * Omit root `title` from section-1: it mirrors the track name field and would double-count
+ * when both fail (e.g. empty name + empty title on live submit).
+ * @type {Record<'individual' | 'organisation' | 'consortium', Record<string, string[][]>>}
+ */
+export const CC_VOTE_SECTION_PATHS = {
+  individual: {
+    "section-1": [
+      ["metaData", "track"],
+      ["metaData", "individual", "fullNameOrAlias"],
+      ["metaData", "individual", "contactEmail"],
+      ["metaData", "individual", "geographicRegion"],
+      ["metaData", "individual", "poolId"],
+      ["metaData", "individual", "drepId"],
+      ["metaData", "individual", "xUsername"],
+      ["metaData", "individual", "linkedinUsername"],
+      ["metaData", "individual", "website"],
+      ["metaData", "individual", "otherLinks"],
+    ],
+    "section-2": [
+      ["metaData", "individual", "professionalBackground"],
+      ["metaData", "individual", "governanceExperience"],
+    ],
+    "section-3": [
+      ["metaData", "individual", "briefBiography"],
+      ["metaData", "individual", "conflictOfInterestStatement"],
+      ["metaData", "individual", "contributionsToCardano"],
+      ["metaData", "individual", "motivation"],
+      ["metaData", "individual", "decentralisedGovernanceImportance"],
+      ["metaData", "individual", "constitutionalInterpretation"],
+      ["metaData", "individual", "perspectiveYouWouldBring"],
+      ["metaData", "individual", "transparencyApproach"],
+    ],
+    "section-4": [
+      ["metaData", "coldCredentialHash"],
+      ["metaData", "coldCredentialType"],
+    ],
+    "section-5": [["metaData", "declarationAgreement"]],
+  },
+  organisation: {
+    "section-1": [
+      ["metaData", "track"],
+      ["metaData", "organisation", "organisationName"],
+      ["metaData", "organisation", "organisationDescription"],
+      ["metaData", "organisation", "geographicRegion"],
+      ["metaData", "organisation", "contactPerson"],
+      ["metaData", "organisation", "contactEmail"],
+      ["metaData", "organisation", "poolId"],
+      ["metaData", "organisation", "drepId"],
+      ["metaData", "organisation", "xUsername"],
+      ["metaData", "organisation", "linkedinUsername"],
+      ["metaData", "organisation", "website"],
+      ["metaData", "organisation", "otherLinks"],
+    ],
+    "section-2": [
+      ["metaData", "organisation", "organisationalAreasOfExpertise"],
+      ["metaData", "organisation", "governanceExperience"],
+    ],
+    "section-3": [
+      ["metaData", "organisation", "conflictOfInterestStatement"],
+      ["metaData", "organisation", "contributionsToCardano"],
+      ["metaData", "organisation", "motivation"],
+      ["metaData", "organisation", "decentralisedGovernanceImportance"],
+      ["metaData", "organisation", "constitutionalInterpretation"],
+      ["metaData", "organisation", "perspectiveYouWouldBring"],
+      ["metaData", "organisation", "transparencyApproach"],
+    ],
+    "section-4": [
+      ["metaData", "coldCredentialHash"],
+      ["metaData", "coldCredentialType"],
+    ],
+    "section-5": [["metaData", "declarationAgreement"]],
+  },
+  consortium: {
+    "section-1": [
+      ["metaData", "track"],
+      ["metaData", "consortium", "consortiumName"],
+      ["metaData", "consortium", "contactPerson"],
+      ["metaData", "consortium", "contactEmail"],
+      ["metaData", "consortium", "xUsername"],
+      ["metaData", "consortium", "linkedinUsername"],
+      ["metaData", "consortium", "website"],
+      ["metaData", "consortium", "otherLinks"],
+    ],
+    "section-2": [
+      ["metaData", "consortium", "conflictOfInterestStatement"],
+      ["metaData", "consortium", "contributionsToCardano"],
+      ["metaData", "consortium", "motivation"],
+      ["metaData", "consortium", "decentralisedGovernanceImportance"],
+      ["metaData", "consortium", "constitutionalInterpretation"],
+      ["metaData", "consortium", "perspectiveYouWouldBring"],
+      ["metaData", "consortium", "transparencyApproach"],
+      ["metaData", "consortium", "internalDecisionMakingProcess"],
+    ],
+    "section-3": [
+      ["metaData", "coldCredentialHash"],
+      ["metaData", "coldCredentialType"],
+    ],
+    "section-4": [["metaData", "consortium", "members"]],
+    "section-5": [["metaData", "declarationAgreement"]],
+  },
+};
+
+/**
+ * @param {unknown} validationErrors
+ * @param {'individual' | 'organisation' | 'consortium'} track
+ */
+export function computeCcVoteSectionErrorCounts(validationErrors, track) {
+  const pathsBySection = CC_VOTE_SECTION_PATHS[track];
+  const root = validationErrors;
+  /** @type {Record<string, number>} */
+  const counts = {};
+  for (const [section, paths] of Object.entries(pathsBySection)) {
+    counts[section] = paths.reduce(
+      (sum, path) => sum + countErrorsInTree(getNodeAtPath(root, path)),
+      0,
+    );
+  }
+  return counts;
+}

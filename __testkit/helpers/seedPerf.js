@@ -1,6 +1,6 @@
 /**
  * Seed data for performance test: one Vote (slug TESTKIT_VOTE_SLUG) and 20,000 Proposals.
- * Uses __setup/proposal1.json and proposal2.json. Requires mongoose and MONGODB_* or MONGO_URI in env.
+ * Uses __scripts/proposal1.json and proposal2.json. Requires mongoose and MONGODB_* or MONGO_URI in env.
  *
  * Uses the repo root's mongoose so connect() is the same instance that Vote/Proposal models use.
  */
@@ -20,7 +20,7 @@ import { ensureTestkitVote } from "./testVote.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../..");
-const SETUP_DIR = path.join(REPO_ROOT, "__setup");
+const SETUP_DIR = path.join(REPO_ROOT, "__scripts");
 const PROPOSAL1_PATH = path.join(SETUP_DIR, "proposal1.json");
 const PROPOSAL2_PATH = path.join(SETUP_DIR, "proposal2.json");
 

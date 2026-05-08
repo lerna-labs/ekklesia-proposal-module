@@ -24,6 +24,45 @@ const userSchema = new Schema(
             type: Date,
             default: Date.now,
         },
+        notification: {
+            email: {
+                type: String,
+                default: null,
+                lowercase: true,
+                trim: true,
+            },
+            pendingEmail: {
+                type: String,
+                default: null,
+                lowercase: true,
+                trim: true,
+            },
+            schedule: {
+                type: String,
+                enum: ["never", "6h", "daily"],
+                default: "daily",
+            },
+            verifiedAt: {
+                type: Date,
+                default: null,
+            },
+            verificationIssuedAt: {
+                type: Date,
+                default: null,
+            },
+            locale: {
+                type: String,
+                default: "en",
+            },
+            unsubscribeSecret: {
+                type: String,
+                default: null,
+            },
+            lastCommentDigestSentAt: {
+                type: Date,
+                default: null,
+            },
+        },
     },
     {
         timestamps: true,

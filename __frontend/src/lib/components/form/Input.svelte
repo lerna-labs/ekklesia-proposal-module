@@ -19,15 +19,27 @@
     min,
     max,
     step,
+    onblur,
     class: className,
   } = $props();
 
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   let displayError = $derived(schemaError);
+  let currentLength = $derived(value?.length ?? 0);
+  let isOverMaxLength = $derived(
+    maxLength != null && maxLength > 0 && currentLength > maxLength,
+  );
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1 w-full">
+  <div
+    class="flex items-center gap-1 w-full"
+    class:hidden={!label &&
+      !descriptionProp &&
+      !notPublic &&
+      !required &&
+      !maxLength}
+  >
     <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
       {label}
       {#if required}
@@ -42,8 +54,12 @@
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
     {#if maxLength}
-      <span class="text-xs text-muted-foreground shrink-0">
-        {value?.length ?? 0}/{maxLength}
+      <span
+        class="text-xs shrink-0"
+        class:text-destructive={isOverMaxLength}
+        class:text-muted-foreground={!isOverMaxLength}
+      >
+        {currentLength}/{maxLength}
       </span>
     {/if}
   </div>
@@ -57,6 +73,7 @@
     {min}
     {max}
     {step}
+    {onblur}
     aria-invalid={displayError ? true : false}
     class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
   />

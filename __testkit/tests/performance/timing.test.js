@@ -9,6 +9,8 @@ import { login } from "../../helpers/session.js";
 import { getOtherStakeKeysDir } from "../../helpers/stakeKeys.js";
 import { expectHttpStatus } from "../../helpers/httpAssert.js";
 import { resolveVoteAndLiveProposal } from "../../helpers/testProposal.js";
+import { connect, disconnect } from "../../helpers/testkitMongo.js";
+import { Comment } from "../../../schema/Comment.js";
 
 const KEYS_OTHER_STAKE = getOtherStakeKeysDir();
 
@@ -22,13 +24,28 @@ function log(label, ms) {
 describe("Timing (comments)", () => {
   let cookieHeader;
   let proposalId;
+  const createdCommentIds = [];
 
   beforeAll(async () => {
+    await connect();
     const session = await login(API_BASE_URL, { keysDir: KEYS_OTHER_STAKE });
     cookieHeader = session.cookieHeader;
     const ids = await resolveVoteAndLiveProposal(API_BASE_URL);
     proposalId = ids.proposalId;
   }, 120000);
+
+  afterAll(async () => {
+    if (createdCommentIds.length > 0) {
+      await Comment.deleteMany({ _id: { $in: createdCommentIds } });
+    }
+    if (cookieHeader) {
+      await fetch(`${API_BASE_URL}/session`, {
+        method: "DELETE",
+        headers: { Cookie: cookieHeader },
+      });
+    }
+    await disconnect();
+  }, 60000);
 
   it("GET /comments?proposal= responds within reasonable time", async () => {
     const url = `${API_BASE_URL}/comments?proposal=${encodeURIComponent(proposalId)}`;
@@ -57,6 +74,8 @@ describe("Timing (comments)", () => {
     const ms = performance.now() - t0;
     const text = await res.text();
     expectHttpStatus(res.status, 201, text, "POST /comments");
+    const payload = JSON.parse(text);
+    if (payload?._id) createdCommentIds.push(payload._id);
     log("POST /comments", ms);
     expect(ms).toBeLessThan(120_000);
   });

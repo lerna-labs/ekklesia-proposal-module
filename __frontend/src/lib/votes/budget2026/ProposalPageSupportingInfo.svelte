@@ -7,9 +7,7 @@
 
   const links = $derived(
     Array.isArray(proposal?.metaData?.supportingInfoLinks)
-      ? proposal.metaData.supportingInfoLinks.filter(
-          (link) => link?.url && typeof link.url === "string",
-        )
+      ? proposal.metaData.supportingInfoLinks.filter((link) => link?.url && typeof link.url === "string")
       : [],
   );
 </script>
@@ -18,7 +16,7 @@
   <section class="text-sm mb-8 mt-12" id="supporting-info">
     <h2 class="mb-4">Other Supporting Information</h2>
     <ul class="space-y-0.5 list-none p-0">
-      {#each links as link (link.url)}
+      {#each links as link, i (i)}
         <li>
           <a
             href={link.url}
@@ -30,10 +28,7 @@
               linkWarningDialog.show(link.url, link.title?.trim() || link.url);
             }}
           >
-            <ExternalLinkIcon
-              class="size-3.5 shrink-0 mt-0.5"
-              aria-hidden="true"
-            />
+            <ExternalLinkIcon class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
             <span class="min-w-0 wrap-break-word">
               {link.title?.trim() || link.url}
             </span>

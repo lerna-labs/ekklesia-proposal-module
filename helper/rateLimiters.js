@@ -12,6 +12,14 @@ export function isRateLimitDisabled() {
 }
 
 const skipIfDisabled = () => isRateLimitDisabled();
+const verifyDispatchMaxRaw = Number.parseInt(
+  process.env.NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR ?? "",
+  10,
+);
+const NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR =
+  Number.isFinite(verifyDispatchMaxRaw) && verifyDispatchMaxRaw > 0
+    ? verifyDispatchMaxRaw
+    : 5;
 
 /**
  * Rate limiter for nonce requests (POST /session).
@@ -142,6 +150,89 @@ export const commentWritePerHourLimiter = rateLimit({
   message: {
     status: "error",
     message: "Too many comment requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for notification preference writes.
+ * 10 requests per minute per authenticated user.
+ */
+export const notificationsWriteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  skip: skipIfDisabled,
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many notification preference updates. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for verification email dispatch attempts from notification updates.
+ * Defaults to 5 requests per hour per authenticated user.
+ */
+export const notificationsVerifyDispatchLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR,
+  skip: skipIfDisabled,
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many verification dispatch attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for notification verification email resend.
+ * 3 requests per hour per authenticated user.
+ */
+export const notificationsResendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  skip: skipIfDisabled,
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many verification email requests. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for public magic-link verification endpoint.
+ * 20 requests per minute per IP.
+ */
+export const notificationsVerifyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  skip: skipIfDisabled,
+  message: {
+    status: "error",
+    message: "Too many verification attempts. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for public one-click unsubscribe endpoint.
+ * 20 requests per minute per IP.
+ */
+export const notificationsUnsubscribeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  skip: skipIfDisabled,
+  message: {
+    status: "error",
+    message: "Too many unsubscribe attempts. Please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,

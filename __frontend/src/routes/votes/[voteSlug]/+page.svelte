@@ -1,5 +1,5 @@
 <script>
-  import { goto } from "$app/navigation";
+  import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
   import { page } from "$app/state";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
@@ -11,18 +11,41 @@
   import SearchSort from "$lib/SearchSort.svelte";
   import { queryStringWithLiteralCommas, shortenString } from "$lib/utils.js";
   import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
-  import VoteCTA from "$lib/votes/VoteCTA.svelte";
   import XIcon from "@lucide/svelte/icons/x";
+  import { user } from "$stores/sessionManager.js";
 
   const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
     eager: true,
   });
+
+  const voteCtaModules = import.meta.glob("$lib/votes/*/CTA.svelte", { eager: true });
 
   /** @param {string} path */
   function voteFormFromTimelinePath(path) {
     const m = path.match(/\/votes\/([^/]+)\/timeline\.js$/);
     return m ? m[1] : null;
   }
+
+  /** @param {string} path */
+  function voteFormFromCtaPath(path) {
+    const m = path.match(/\/votes\/([^/]+)\/CTA\.svelte$/);
+    return m ? m[1] : null;
+  }
+
+  const ctaByForm = /** @type {Record<string, import("svelte").SvelteComponent>} */ (
+    Object.fromEntries(
+      Object.entries(voteCtaModules)
+        .map(([path, mod]) => {
+          const form = voteFormFromCtaPath(path);
+          const Comp =
+            mod && typeof mod === "object" && "default" in mod
+              ? /** @type {import("svelte").SvelteComponent} */ (mod.default)
+              : null;
+          return form && Comp ? [form, Comp] : null;
+        })
+        .filter((entry) => entry != null),
+    )
+  );
 
   const timelinePhasesByVoteForm = Object.fromEntries(
     Object.entries(voteTimelineModules)
@@ -32,26 +55,64 @@
           mod && typeof mod === "object" && "budgetPhases" in mod
             ? /** @type {unknown[]} */ (mod.budgetPhases)
             : undefined;
-        return form && Array.isArray(phases) && phases.length > 0
-          ? [form, phases]
-          : null;
+        return form && Array.isArray(phases) && phases.length > 0 ? [form, phases] : null;
       })
       .filter((entry) => entry != null),
   );
 
+  /** When `vote.form` is missing or has no `timeline.js`, derive phases from Vote date fields (API always sends these). */
+  /** @param {Record<string, unknown> | null | undefined} v */
+  function timelinePhasesFromVoteDates(v) {
+    if (!v) return null;
+    const keys = [
+      "submissionStartDate",
+      "submissionEndDate",
+      "reviewStartDate",
+      "reviewEndDate",
+      "votingStartDate",
+      "votingEndDate",
+    ];
+    for (const k of keys) {
+      if (v[k] == null || v[k] === "") return null;
+    }
+    const iso = (d) => new Date(/** @type {string | number | Date} */ (d)).toISOString();
+    return [
+      {
+        title: "Submission & Feedback",
+        start: iso(v.submissionStartDate),
+        end: iso(v.submissionEndDate),
+      },
+      { title: "Review", start: iso(v.reviewStartDate), end: iso(v.reviewEndDate) },
+      { title: "Voting", start: iso(v.votingStartDate), end: iso(v.votingEndDate) },
+    ];
+  }
+
   let { data } = $props();
   let vote = $derived(data.vote);
-  const listTimelinePhases = $derived(
-    (vote?.form && timelinePhasesByVoteForm[vote.form]) || null,
-  );
+  let isCcVoteContext = $derived(vote?.form === "ccVote2026");
+  let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
+
+  /** Aligns with WalletSigner / API: DRep sessions use a CIP129 id starting with `drep`. */
+  let isDrepUser = $derived(Boolean($user?.userId?.startsWith?.("drep")));
+
+  /** CTA for `vote.form` from `$lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
+  const VoteListCta = $derived.by(() => {
+    const form = vote?.form;
+    const formStr = typeof form === "string" ? form : "";
+    if (formStr && ctaByForm[formStr]) return ctaByForm[formStr];
+    return ctaByForm["default"];
+  });
+  const listTimelinePhases = $derived.by(() => {
+    const fromForm = vote?.form ? timelinePhasesByVoteForm[vote.form] : null;
+    if (Array.isArray(fromForm) && fromForm.length > 0) return fromForm;
+    return timelinePhasesFromVoteDates(vote);
+  });
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
   let pillars = $derived(data.pillars ?? []);
   const DEFAULT_SORT = "submittedAt";
   const sortFromData = $derived(data.listState?.sort ?? DEFAULT_SORT);
-  const ascendingFromData = $derived(
-    (data.listState?.direction ?? "desc") !== "desc",
-  );
+  const ascendingFromData = $derived((data.listState?.direction ?? "desc") !== "desc");
   let sort = $state("submittedAt");
   let ascending = $state(false);
   $effect(() => {
@@ -61,15 +122,18 @@
 
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
-  const LIST_PARAM_KEYS = [
-    "search",
-    "sort",
-    "direction",
-    "limit",
-    "status",
-    "category",
-    "proposer",
-  ];
+  const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
+  const voteListPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
+  const voteProposalPathPattern = $derived(voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null);
+  function isVoteListPath(pathname) {
+    return Boolean(voteListPath) && pathname === voteListPath;
+  }
+  function isVoteProposalPath(pathname) {
+    return Boolean(voteProposalPathPattern) && voteProposalPathPattern.test(pathname);
+  }
+  function isWithinVoteContext(pathname) {
+    return isVoteListPath(pathname) || isVoteProposalPath(pathname);
+  }
   function hasListParams(searchParams) {
     return LIST_PARAM_KEYS.some((k) => searchParams.get(k));
   }
@@ -82,6 +146,32 @@
     return q.toString();
   }
   let hasTriggeredRestore = false;
+  let allowStorageRestore = false;
+  beforeNavigate((navigation) => {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const fromPath = navigation.from?.url.pathname ?? page.url.pathname;
+    const toPath = navigation.to?.url.pathname;
+    const leavingVoteContext = isWithinVoteContext(fromPath) && (!toPath || !isWithinVoteContext(toPath));
+    if (leavingVoteContext) {
+      localStorage.removeItem(listStateKey);
+      allowStorageRestore = false;
+    }
+  });
+  afterNavigate((navigation) => {
+    if (typeof window === "undefined" || !listStateKey) return;
+    const toPath = navigation.to?.url.pathname ?? page.url.pathname;
+    if (!isVoteListPath(toPath)) {
+      allowStorageRestore = false;
+      return;
+    }
+    const fromPath = navigation.from?.url.pathname;
+    const fromSameVoteProposal = Boolean(fromPath && isVoteProposalPath(fromPath));
+    const fromWithinVoteContext = Boolean(fromPath && isWithinVoteContext(fromPath));
+    allowStorageRestore = fromSameVoteProposal;
+    if (!fromWithinVoteContext) {
+      localStorage.removeItem(listStateKey);
+    }
+  });
   $effect(() => {
     if (typeof window === "undefined" || !listStateKey) return;
     const searchParams = page.url.searchParams;
@@ -89,16 +179,19 @@
       hasTriggeredRestore = false;
       const qs = getListQueryString(searchParams);
       if (qs) localStorage.setItem(listStateKey, qs);
-    } else {
+    } else if (allowStorageRestore) {
       const saved = localStorage.getItem(listStateKey);
       if (saved && !hasTriggeredRestore) {
         hasTriggeredRestore = true;
+        allowStorageRestore = false;
         const restored = new URLSearchParams(saved);
         restored.set("page", "1");
         const path = page.url.pathname;
         const qs = queryStringWithLiteralCommas(restored);
         goto(`${path}?${qs}`, { replaceState: true });
       }
+    } else {
+      hasTriggeredRestore = false;
     }
   });
 
@@ -138,13 +231,10 @@
 
   /** Capture scroll position so it can be restored when navigating back (e.g. from proposal page). */
   export const snapshot = {
-    capture: () =>
-      typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 },
+    capture: () => (typeof window !== "undefined" ? { y: window.scrollY } : { y: 0 }),
     restore: (value) => {
       if (typeof window !== "undefined" && value?.y != null) {
-        requestAnimationFrame(() =>
-          window.scrollTo({ top: value.y, behavior: "instant" }),
-        );
+        requestAnimationFrame(() => window.scrollTo({ top: value.y, behavior: "instant" }));
       }
     },
   };
@@ -163,17 +253,27 @@
 
     {#if listTimelinePhases}
       <div
-        class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"
+        class={isDrepUser
+          ? "mt-4 grid grid-cols-1 gap-6 sm:items-stretch"
+          : "mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"}
       >
         <div class="flex h-full min-w-0 flex-col">
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
-        <div class="flex h-full min-w-0 flex-col *:mt-0">
-          <VoteCTA {voteSlug} vote={vote} />
-        </div>
+        {#if !isDrepUser}
+          <div class="flex h-full min-w-0 flex-col *:mt-0">
+            {#key vote?.form ?? ""}
+              <VoteListCta {vote} {policyNow} />
+            {/key}
+          </div>
+        {/if}
       </div>
-    {:else}
-      <VoteCTA {voteSlug} vote={vote} />
+    {:else if !isDrepUser}
+      <div class="mt-4">
+        {#key vote?.form ?? ""}
+          <VoteListCta {vote} {policyNow} />
+        {/key}
+      </div>
     {/if}
 
     <div class="mt-4 space-y-2">
@@ -185,9 +285,7 @@
       {/if}
       {#if vote.totalAmount !== undefined}
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">
-            Total Amount:
-          </span>
+          <span class="text-sm font-medium text-muted-foreground">Total Amount:</span>
           <span class="text-sm font-semibold">
             ${vote.totalAmount?.toLocaleString() || "0"}
           </span>
@@ -204,14 +302,12 @@
 
   <!-- Proposals Section -->
   <div class="space-y-6">
-    <div
-      class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-    >
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <h2 class="flex flex-wrap items-center gap-2">
         {#if shortProposerId}
-          Proposals from {shortProposerId}
+          {isCcVoteContext ? "Candidates" : "Proposals"} from {shortProposerId}
         {:else}
-          Proposals
+          {isCcVoteContext ? "Candidates" : "Proposals"}
         {/if}
         <span class="text-muted-foreground font-normal">
           ({proposalPagination.totalItems})
@@ -230,21 +326,9 @@
         {/if}
       </h2>
       <div class="flex items-center gap-1">
-        <Search
-          placeholder="Search proposals..."
-          class="w-full sm:w-64"
-          onBeforeClear={clearSearchFromStorage}
-        />
-        <SearchFilter
-          filterOptions={vote.filterOptions ?? []}
-          {vote}
-          voteId={vote._id}
-        />
-        <SearchSort
-          sortOptions={vote?.sortOptions ?? []}
-          bind:sort
-          bind:ascending
-        />
+        <Search placeholder="Search..." class="w-full sm:w-64" onBeforeClear={clearSearchFromStorage} />
+        <SearchFilter filterOptions={vote.filterOptions ?? []} {vote} voteId={vote._id} />
+        <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>
     </div>
 
@@ -282,10 +366,7 @@
                   </Pagination.Item>
                 {:else}
                   <Pagination.Item>
-                    <Pagination.Link
-                      {page}
-                      isActive={currentPage === page.value}
-                    >
+                    <Pagination.Link {page} isActive={currentPage === page.value}>
                       {page.value}
                     </Pagination.Link>
                   </Pagination.Item>

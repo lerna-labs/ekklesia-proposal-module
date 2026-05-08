@@ -3,14 +3,12 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
   import EyeIcon from "@lucide/svelte/icons/eye";
-  import {
-    writePreviewPayload,
-    clearPreviewStorage,
-  } from "$lib/previewProposalStorage.js";
+  import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
+  import { writePreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
   import { formatUtcInstant } from "$lib/formatUtc.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
-  const DEBUG_AUTOSAVE = true;
+  const DEBUG_AUTOSAVE = false;
 
   function autosaveLog(...args) {
     if (DEBUG_AUTOSAVE) {
@@ -30,11 +28,7 @@
     autoSavePaused = false,
   } = $props();
 
-  const previewHref = $derived(
-    proposal?._id && vote?.slug
-      ? `/votes/${vote.slug}/${proposal._id}?preview`
-      : null,
-  );
+  const previewHref = $derived(proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}?preview` : null);
 
   async function onPreviewClick() {
     if (!vote?.slug || !getPayload) return;
@@ -57,11 +51,7 @@
     if (!proposalId) return;
     writePreviewPayload(proposalId, payload);
     setTimeout(() => {
-      window.open(
-        `/votes/${vote.slug}/${proposalId}?preview`,
-        "_blank",
-        "noopener,noreferrer",
-      );
+      window.open(`/votes/${vote.slug}/${proposalId}?preview`, "_blank", "noopener,noreferrer");
     }, 0);
   }
 
@@ -70,10 +60,11 @@
 
   let lastSaveAt = $state(null);
 
+  /** Blocks double-submit and shows loading until live/re-submit onSave settles (local, synchronous on click). */
+  let submitInFlight = $state(false);
+
   /** Snapshot of current form data for dirty check (serialized payload). */
-  let formDataSnapshot = $derived(
-    getPayload ? JSON.stringify(getPayload(formData.status)) : "",
-  );
+  let formDataSnapshot = $derived(getPayload ? JSON.stringify(getPayload(formData.status)) : "");
 
   let initialSnapshot = $state(null);
 
@@ -82,9 +73,7 @@
     initialSnapshot = formDataSnapshot;
   });
 
-  let isDirty = $derived(
-    initialSnapshot !== null && formDataSnapshot !== initialSnapshot,
-  );
+  let isDirty = $derived(initialSnapshot !== null && formDataSnapshot !== initialSnapshot);
 
   const dirtyRef = { current: false };
   $effect(() => {
@@ -152,8 +141,7 @@
         initialSnapshot = JSON.stringify(getPayload(formData.status));
         dirtyRef.current = false;
         lastSaveAt = Date.now();
-        if (proposal?._id)
-          writePreviewPayload(proposal._id, getPayload(formData.status));
+        if (proposal?._id) writePreviewPayload(proposal._id, getPayload(formData.status));
         clearPreviewStorage();
         goto(url);
       })
@@ -173,9 +161,7 @@
       // we don't show "unsaved changes". If save fails we revert so the form is dirty again.
       initialSnapshot = JSON.stringify(payload);
     }
-    Promise.resolve(
-      onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }),
-    )
+    Promise.resolve(onSave(payload, { fromAutoSave: false, exitAfterSave: !!exitAfterSave }))
       .then(() => {
         initialSnapshot = JSON.stringify(getPayload(formData.status));
         lastSaveAt = Date.now();
@@ -197,14 +183,18 @@
   }
 
   function submitLive() {
-    if (!getPayload || !onSave) return;
+    if (!getPayload || !onSave || submitInFlight) return;
     const payload = getPayload("live");
+    submitInFlight = true;
     Promise.resolve(onSave(payload))
       .then(() => {
         initialSnapshot = JSON.stringify(getPayload(formData.status));
         clearPreviewStorage();
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        submitInFlight = false;
+      });
   }
 
   /** Exposed for parent form onsubmit (e.g. Enter key). */
@@ -222,12 +212,7 @@
 
   /** Auto-save draft at interval when draft, only when dirty. */
   $effect(() => {
-    if (
-      autoSavePaused ||
-      formData.status !== "draft" ||
-      !onSave ||
-      !getPayload
-    ) {
+    if (autoSavePaused || formData.status !== "draft" || !onSave || !getPayload) {
       autosaveLog("auto-save effect inactive", {
         autoSavePaused,
         status: formData?.status,
@@ -277,13 +262,7 @@
   /** Debounced write of current form payload to preview storage (so preview tab reload stays in sync). */
   const PREVIEW_DEBOUNCE_MS = 800;
   $effect(() => {
-    if (
-      typeof window === "undefined" ||
-      !proposal?._id ||
-      !vote?.slug ||
-      !getPayload
-    )
-      return;
+    if (typeof window === "undefined" || !proposal?._id || !vote?.slug || !getPayload) return;
     const proposalId = proposal._id;
     const payload = getPayload(formData.status);
     const payloadJson = JSON.stringify(payload);
@@ -301,14 +280,9 @@
   }
 </script>
 
-<section
-  class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6"
-  id="controls"
->
+<section class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6" id="controls">
   <div class="container mx-auto max-w-4xl flex flex-col gap-2 py-2 px-4 pb-0">
-    <div
-      class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
-    >
+    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
       {#if formData.status === "draft"}
         <div class="flex gap-2 w-full sm:w-auto">
           <Button
@@ -341,22 +315,29 @@
         </Button>
         <Button
           type="button"
-          class="w-full cursor-pointer sm:w-auto"
+          class="w-full cursor-pointer sm:w-auto inline-flex items-center justify-center gap-2"
+          disabled={submitInFlight}
+          aria-busy={submitInFlight}
           onclick={submitLive}
         >
-          {formData.status === "draft"
-            ? "Submit Proposal"
-            : "Re-Submit Proposal"}
+          {#if submitInFlight}
+            <LoaderCircleIcon class="size-4 shrink-0 animate-spin" aria-hidden="true" />
+            <span>Submitting…</span>
+          {:else}
+            {formData.status === "draft" ? "Submit Proposal" : "Re-Submit Proposal"}
+          {/if}
         </Button>
       </div>
     </div>
     {#if formData.status === "draft"}
       <p class="text-xs! text-left text-white mb-0!">
-        <strong>Auto-saved</strong> every 2 minutes
+        <strong>Auto-saved</strong>
+         every 2 minutes
       </p>
     {:else}
       <p class="text-xs! text-right text-white mb-0!">
-        <strong>Auto-save</strong> is disabled for live proposals.
+        <strong>Auto-save</strong>
+         is disabled for live proposals.
       </p>
     {/if}
   </div>
@@ -365,26 +346,16 @@
 <AlertDialog.Root bind:open={leaveConfirmOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title class="text-destructive"
-        >Are you sure you want to leave this form?</AlertDialog.Title
-      >
-      <AlertDialog.Description>
-        You have unsaved changes. Are you sure you want to leave?
-      </AlertDialog.Description>
+      <AlertDialog.Title class="text-destructive">Are you sure you want to leave this form?</AlertDialog.Title>
+      <AlertDialog.Description>You have unsaved changes. Are you sure you want to leave?</AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>
       {#if formData.status === "draft"}
-        <AlertDialog.Action
-          class={buttonVariants({ variant: "secondary" })}
-          onclick={saveAndLeave}
-        >
+        <AlertDialog.Action class={buttonVariants({ variant: "secondary" })} onclick={saveAndLeave}>
           Yes, save & exit
         </AlertDialog.Action>
       {/if}
-      <AlertDialog.Action
-        class={buttonVariants({ variant: "destructive" })}
-        onclick={confirmLeave}
-      >
+      <AlertDialog.Action class={buttonVariants({ variant: "destructive" })} onclick={confirmLeave}>
         Yes, discard unsaved changes
       </AlertDialog.Action>
       <AlertDialog.Cancel

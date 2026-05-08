@@ -60,6 +60,8 @@ function assertNonPublicFieldsExcluded(payload) {
   expect(payload?.metaData?.signatoryContact).toBeUndefined();
   expect(payload?.metaData?.kycInfo).toBeUndefined();
   expect(payload?.metaData?.legalDeclarations).toBeUndefined();
+  expect(payload?.metaData?.organisation?.contactPerson).toBeUndefined();
+  expect(payload?.metaData?.consortium?.contactPerson).toBeUndefined();
 
   // contractingParty should be reduced to a public-safe subset.
   expect(payload?.metaData?.contractingParty).toEqual(
@@ -282,7 +284,7 @@ describe("Proposal permissions", () => {
     expect(body.toLowerCase()).toMatch(/do not have permission|forbidden|permission/);
   });
 
-  it("rejects submitting two different proposals with the same treasury hash", async () => {
+  it("rejects second live submit when another non-draft proposal already uses the same treasury hash", async () => {
     if (!TREASURY_HASH) {
       throw new Error(
         "Missing TESTKIT_TREASURY_HASH (or TESTKIT_TREASURY_DONATION_TX_HASH) in __testkit/.env"
@@ -338,6 +340,9 @@ describe("Proposal permissions", () => {
           `First draft->live submit failed (${firstRes.status}): ${firstErrorBody}${hint}`
         );
       }
+      const firstBody = await firstRes.json();
+      expect(firstBody.status).toBe("live");
+
       const secondRes = await fetch(`${API_BASE_URL}/proposals/${secondDraft._id}`, {
         method: "PUT",
         headers: {
@@ -349,6 +354,91 @@ describe("Proposal permissions", () => {
       expect(secondRes.status).toBe(400);
       const bodyText = await secondRes.text();
       expect(bodyText.toLowerCase()).toMatch(/already used|already.*hash|transaction hash/);
+    } finally {
+      if (createdIds.length > 0) {
+        await Proposal.deleteMany({ _id: { $in: createdIds } });
+      }
+    }
+  }, 120000);
+
+  it("allows draft A revisit->live submit when only draft B shares the same treasury hash", async () => {
+    if (!TREASURY_HASH) {
+      throw new Error(
+        "Missing TESTKIT_TREASURY_HASH (or TESTKIT_TREASURY_DONATION_TX_HASH) in __testkit/.env"
+      );
+    }
+
+    const createdIds = [];
+    try {
+      const draftA = await Proposal.create({
+        proposerId,
+        voteId,
+        title: `Treasury hash revisit flow A ${Date.now()}`,
+        summary: liveTemplateProposal.summary ?? "",
+        status: "draft",
+        metaData: {
+          ...(liveTemplateProposal.metaData ?? {}),
+          treasuryDonationTxHash: TREASURY_HASH,
+        },
+      });
+      createdIds.push(draftA._id);
+
+      const draftB = await Proposal.create({
+        proposerId,
+        voteId,
+        title: `Treasury hash revisit flow B ${Date.now()}`,
+        summary: liveTemplateProposal.summary ?? "",
+        status: "draft",
+        metaData: {
+          ...(liveTemplateProposal.metaData ?? {}),
+          treasuryDonationTxHash: TREASURY_HASH,
+        },
+      });
+      createdIds.push(draftB._id);
+
+      // Simulate reopening/revisiting draft A before submitting it to live.
+      const revisitRes = await fetch(`${API_BASE_URL}/proposals/${draftA._id}`, {
+        method: "GET",
+        headers: { Cookie: proposerSession.cookieHeader },
+      });
+      expect(revisitRes.status).toBe(200);
+      const revisitedDraft = await revisitRes.json();
+      expect(String(revisitedDraft?._id)).toBe(String(draftA._id));
+
+      const metaData = sanitizeMetaDataForLiveSubmit(revisitedDraft.metaData);
+      // Send hash with case-only differences to verify normalization still treats
+      // this as the same proposal lineage rather than a duplicate proposal.
+      metaData.treasuryDonationTxHash = String(TREASURY_HASH).toUpperCase();
+      metaData.treasuryDonationConfirmed = true;
+
+      const liveRes = await fetch(`${API_BASE_URL}/proposals/${draftA._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: proposerSession.cookieHeader,
+        },
+        body: JSON.stringify({
+          voteId: String(voteId),
+          title: revisitedDraft.title,
+          summary: revisitedDraft.summary ?? "",
+          status: "live",
+          metaData,
+        }),
+      });
+
+      if (liveRes.status !== 200) {
+        const errorText = await liveRes.text();
+        throw new Error(
+          `Expected same-proposal draft->live submit to succeed, got ${liveRes.status}: ${errorText}`
+        );
+      }
+
+      const liveBody = await liveRes.json();
+      expect(liveBody.status).toBe("live");
+      expect(String(liveBody._id)).toBe(String(draftA._id));
+      expect(liveBody?.metaData?.treasuryDonationTxHash).toBe(
+        String(TREASURY_HASH).trim().toLowerCase()
+      );
     } finally {
       if (createdIds.length > 0) {
         await Proposal.deleteMany({ _id: { $in: createdIds } });

@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { jwt, getJWT } from "$stores/sessionManager.js";
+import { jwt } from "$stores/sessionManager.js";
 
 const API_BASE =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
@@ -13,7 +13,7 @@ const API_BASE =
  * @returns {Promise<{ ok: boolean; status: number; json: object }>}
  */
 export async function fetchJson(url, options = {}) {
-  const token = get(jwt) || getJWT();
+  const token = get(jwt);
   const headers = new Headers(options.headers || {});
   headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);

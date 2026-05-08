@@ -29,9 +29,7 @@
   let indexToDelete = $state(null);
 
   const packages = $derived(Array.isArray(value) ? value : []);
-  const schemaError = $derived(
-    validationErrors?.properties?.workPackages?.errors?.[0],
-  );
+  const schemaError = $derived(validationErrors?.properties?.workPackages?.errors?.[0]);
 
   function addWorkPackage() {
     value = [...packages, getDefaultDraft()];
@@ -51,15 +49,11 @@
   }
 
   function updatePackageMilestones(pkgIndex, newMilestones) {
-    value = packages.map((p, i) =>
-      i === pkgIndex ? { ...p, milestones: newMilestones ?? [] } : p,
-    );
+    value = packages.map((p, i) => (i === pkgIndex ? { ...p, milestones: newMilestones ?? [] } : p));
   }
 
   function updatePackageBudgetBreakdown(pkgIndex, newBudgetBreakdown) {
-    value = packages.map((p, i) =>
-      i === pkgIndex ? { ...p, budgetBreakdown: newBudgetBreakdown ?? [] } : p,
-    );
+    value = packages.map((p, i) => (i === pkgIndex ? { ...p, budgetBreakdown: newBudgetBreakdown ?? [] } : p));
   }
 
   function updatePackageMilestoneOption(pkgIndex, { noMilestonesBreakdown, milestoneAlternative }) {
@@ -76,20 +70,7 @@
   }
 </script>
 
-<div class="flex justify-start {packages.length > 0 ? 'mb-8' : 'mb-2'}">
-  <Button
-    type="button"
-    variant="outline"
-    size="sm"
-    class="add-item-btn text-xs w-fit cursor-pointer gap-1"
-    onclick={addWorkPackage}
-  >
-    <PlusIcon class="size-4" />
-    {addButtonLabel}
-  </Button>
-</div>
-
-<div class={[className, "gap-2", packages.length > 0 ? "mb-8" : ""].filter(Boolean).join(" ")}>
+<div class={[className, "gap-2", packages.length > 0 ? "mb-0" : ""].filter(Boolean).join(" ")}>
   <Field.Field class="gap-1">
     {#if packages.length > 0}
       <div class="flex flex-row items-center gap-1 pb-2">
@@ -109,16 +90,13 @@
               idPrefix={"wp-" + index}
               name={pkg.name}
               milestones={pkg.milestones ?? []}
-              onMilestonesChange={(milestones) =>
-                updatePackageMilestones(index, milestones)}
+              onMilestonesChange={(milestones) => updatePackageMilestones(index, milestones)}
               budgetBreakdown={pkg.budgetBreakdown ?? []}
-              onBudgetBreakdownChange={(budgetBreakdown) =>
-                updatePackageBudgetBreakdown(index, budgetBreakdown)}
-              conversionRate={conversionRate}
+              onBudgetBreakdownChange={(budgetBreakdown) => updatePackageBudgetBreakdown(index, budgetBreakdown)}
+              {conversionRate}
               noMilestonesBreakdown={pkg.noMilestonesBreakdown ?? false}
               milestoneAlternative={pkg.milestoneAlternative ?? ""}
-              onMilestoneOptionChange={(opts) =>
-                updatePackageMilestoneOption(index, opts)}
+              onMilestoneOptionChange={(opts) => updatePackageMilestoneOption(index, opts)}
               validationErrors={validationErrors?.properties?.workPackages?.items?.[index]}
               onDelete={() => requestDelete(index)}
             />
@@ -135,14 +113,26 @@
   </Field.Field>
 </div>
 
+<div class="flex justify-start mt-1 mb-8">
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+    onclick={addWorkPackage}
+  >
+    <PlusIcon class="size-4" />
+    {addButtonLabel}
+  </Button>
+</div>
+
 <!-- Delete confirmation -->
 <AlertDialog.Root bind:open={deleteDialogOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
       <AlertDialog.Title>Remove work package</AlertDialog.Title>
       <AlertDialog.Description>
-        Are you sure you want to remove this work package? This cannot be
-        undone.
+        Are you sure you want to remove this work package? This cannot be undone.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">

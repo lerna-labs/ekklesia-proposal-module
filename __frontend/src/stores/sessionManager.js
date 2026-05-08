@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
-import { writable, get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import Cookies from 'js-cookie';
 import { toast } from 'svelte-sonner';
 const API_URL = import.meta.env.VITE_API_URL;
@@ -17,6 +17,18 @@ export const user = writable(null);
 export const jwt = writable(null);
 export const sessionExpiresAt = writable(null);
 export const sessionExpiryBannerVisible = writable(false);
+
+export function safeRedirectPath(input, fallback = '/') {
+	if (typeof window === 'undefined') return fallback;
+
+	try {
+		const parsed = new URL(input ?? fallback, window.location.origin);
+		if (parsed.origin !== window.location.origin) return fallback;
+		return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+	} catch {
+		return fallback;
+	}
+}
 
 function getExpiryFromJwt(token) {
 	try {
@@ -90,7 +102,7 @@ export async function expireSession() {
 	if (typeof window !== 'undefined') {
 		targetAfterLogin =
 			window.location.pathname + window.location.search + window.location.hash;
-		redirectAfterLogin.set(targetAfterLogin);
+		redirectAfterLogin.set(safeRedirectPath(targetAfterLogin));
 	}
 	clearClientSessionState({ openLogin: true, notify: true });
 	if (
@@ -102,7 +114,7 @@ export async function expireSession() {
 	}
 }
 
-// Set JWT in cookie and localStorage (if cookies are not available)
+// Set JWT in cookie only
 export function setJWT(token, expiresIn) {
 	const expiresAt = getExpiryFromInput(expiresIn) ?? getExpiryFromJwt(token);
 
@@ -122,9 +134,6 @@ export function setJWT(token, expiresIn) {
 		};
 
 		Cookies.set('token', token, cookieOptions);
-
-		// Always store in localStorage as a fallback
-		localStorage.setItem('token', token);
 	}
 
 	// Update Svelte store
@@ -132,17 +141,15 @@ export function setJWT(token, expiresIn) {
 	sessionExpiresAt.set(expiresAt);
 }
 
-// Get JWT from cookie or localStorage
+// Get JWT from cookie
 export function getJWT() {
 	let token = null;
 
 	if (Cookies.get('token')) {
 		token = decodeURIComponent(Cookies.get('token'));
-	} else if (typeof window !== 'undefined' && localStorage.getItem('token')) {
-		token = localStorage.getItem('token');
 	}
 
-	// console.log('Token from cookie/localStorage:', token);
+	// console.log('Token from cookie:', token);
 	jwt.set(token);
 	sessionExpiresAt.set(getExpiryFromJwt(token));
 	return token;
@@ -152,17 +159,13 @@ export function getJWT() {
 export const api = {
 	fetch: async (fetch, url, options = {}) => {
 		try {
-			// Get the current JWT token
-			const token = get(jwt) || getJWT();
+			const hadAuth =
+				Boolean(typeof document !== 'undefined' && Cookies.get('token')) ||
+				Boolean(get(jwt));
 
 			// Set up headers
 			const headers = new Headers(options.headers || {});
 			headers.set('Content-Type', 'application/json');
-
-			// Add Authorization header if we have a token
-			if (token) {
-				headers.set('Authorization', `Bearer ${token}`);
-			}
 
 			const response = await fetch(API_URL + url, {
 				...options,
@@ -170,13 +173,16 @@ export const api = {
 				credentials: 'include'
 			});
 
-			// Check if the token has expired
+			// 401 with prior credentials = session expired; anonymous 401 = not logged in (no expireSession/goto/toast)
 			if (response.status === 401) {
-				// Token expired: clear client auth state and prompt login in-place.
-				await expireSession();
+				if (hadAuth) {
+					await expireSession();
+				}
 				throw error(401, {
-					message: 'Token expired, please log in again',
-					code: 'SESSION_EXPIRED'
+					message: hadAuth
+						? 'Token expired, please log in again'
+						: 'Unauthorized',
+					code: hadAuth ? 'SESSION_EXPIRED' : 'UNAUTHORIZED'
 				});
 			}
 
@@ -217,8 +223,7 @@ export const logout = async () => {
 		const response = await fetch(`${API_URL}/session`, {
 			method: 'DELETE',
 			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${get(jwt) || getJWT()}`
+				'Content-Type': 'application/json'
 			},
 			credentials: 'include'
 		});

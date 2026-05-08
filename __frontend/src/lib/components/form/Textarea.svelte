@@ -30,6 +30,9 @@
 
   // Count raw stored characters to match backend validation behavior.
   let visibleLength = $derived(String(value ?? "").length);
+  let isOverMaxLength = $derived(
+    maxLength != null && maxLength > 0 && visibleLength > maxLength,
+  );
 
   /** Stable id for the visible label when pairing with the Lexical root via aria-labelledby. */
   let labelElementId = $derived(
@@ -65,7 +68,11 @@
     {/if}
     <span class="flex-1 min-w-0" aria-hidden="true"></span>
     {#if maxLength}
-      <span class="text-xs text-muted-foreground shrink-0">
+      <span
+        class="text-xs shrink-0"
+        class:text-destructive={isOverMaxLength}
+        class:text-muted-foreground={!isOverMaxLength}
+      >
         {visibleLength}/{maxLength}
       </span>
     {/if}
