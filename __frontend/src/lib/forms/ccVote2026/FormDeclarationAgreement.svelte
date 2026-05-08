@@ -46,7 +46,7 @@
         The candidate agrees to the
         <a
           class="link font-medium"
-          href="https://docs.hydra-voting.intersectmbo.org/cc-elections/guidelines-for-participation"
+          href="https://docs.intersectmbo.org/intersect-knowledge-base/cardano-facilitation-services/cardano-governance/2026-constitutional-committee-elections/guidelines-for-participation"
           target="_blank"
           rel="noopener noreferrer"
         >
