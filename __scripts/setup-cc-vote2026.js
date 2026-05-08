@@ -23,7 +23,10 @@ const DESCRIPTION =
   "Constitutional Committee Election 2026. Submission and feedback run together, then review, then voting.";
 
 /** Replace with a real Bech32 stake address before running against production. */
-const ADMINS = ["REPLACE_WITH_STAKE_ADDRESS"];
+const ADMINS = ["stake1u8dluycewh6jfdpfrddk4lsdy6swlsky5uv5cnn9wq8t6ccu08kxv",
+  "stake1u8n0ufl3222z3f67mc7ve0ny2mheuknp55vsqhwmah385cskz2k9d",
+  "stake1u9vlhfcmx8p9ytsrlxtuse23ypgvz48ld9zspkdawqkt2vc0vesfq",
+  "stake1u887nvclsec08s7pfl0dexjtqz9fj3aactz2vnmtm48n5lcd5fx9q"];
 
 const MS_PER_DAY = 86400000;
 const DAYS_SUBMISSION_FEEDBACK = 14;
