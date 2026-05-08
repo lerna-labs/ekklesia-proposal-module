@@ -12,10 +12,7 @@
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
-  import {
-    feedbackActionsOpen,
-    feedbackWindowActionsDisabledTitle,
-  } from "$lib/voteWindowPolicy.js";
+  import { feedbackActionsOpen, feedbackWindowActionsDisabledTitle } from "$lib/voteWindowPolicy.js";
 
   let { proposalId, proposal, vote, readOnly = false } = $props();
 
@@ -70,18 +67,12 @@
   const policyNow = $derived(new Date(policyNowMs));
 
   /** Show comment actions chrome (new / reply / like) for live, non-withdrawn proposal context. */
-  const showCommentActionChrome = $derived(
-    proposal?.status === "live" && !readOnly,
-  );
+  const showCommentActionChrome = $derived(proposal?.status === "live" && !readOnly);
 
-  const feedbackOpen = $derived(
-    showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow),
-  );
+  const feedbackOpen = $derived(showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow));
 
   const feedbackClosedTitle = $derived(
-    vote && showCommentActionChrome && !feedbackOpen
-      ? feedbackWindowActionsDisabledTitle(vote, policyNow)
-      : "",
+    vote && showCommentActionChrome && !feedbackOpen ? feedbackWindowActionsDisabledTitle(vote, policyNow) : "",
   );
 
   const canComment = $derived(currentUserId && feedbackOpen);
@@ -89,10 +80,7 @@
   const canLike = $derived(currentUserId && feedbackOpen);
 
   const isVoteAdmin = $derived(
-    currentUserId &&
-      vote?.admins &&
-      Array.isArray(vote.admins) &&
-      vote.admins.includes(currentUserId),
+    currentUserId && vote?.admins && Array.isArray(vote.admins) && vote.admins.includes(currentUserId),
   );
 
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
@@ -134,9 +122,7 @@
     pendingAddAfterLogin = false;
     pendingReplyTo = null;
     const isOwnComment =
-      replyToComment &&
-      replyToComment.author?._id != null &&
-      replyToComment.author._id === currentUserId;
+      replyToComment && replyToComment.author?._id != null && replyToComment.author._id === currentUserId;
     if (isOwnComment) {
       toast.info("You can't reply to your own comment.");
       return;
@@ -159,10 +145,7 @@
       error: null,
     };
     try {
-      const userTypeParam =
-        userTypeFilter.length > 0
-          ? `&userType=${userTypeFilter.join(",")}`
-          : "";
+      const userTypeParam = userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
       const { ok, status, json } = await fetchJson(
         `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}`,
       );
@@ -190,12 +173,7 @@
   });
 
   $effect(() => {
-    if (
-      !hasActiveFilter ||
-      commentsState.loading ||
-      commentsState.error ||
-      commentsState.data.length === 0
-    ) {
+    if (!hasActiveFilter || commentsState.loading || commentsState.error || commentsState.data.length === 0) {
       return;
     }
 
@@ -282,9 +260,7 @@
       },
     };
     try {
-      const { ok, json } = await fetchJson(
-        `/comments/${commentId}/replies?page=1&limit=20`,
-      );
+      const { ok, json } = await fetchJson(`/comments/${commentId}/replies?page=1&limit=20`);
       if (!ok) {
         const msg = json?.message ?? "Failed to load replies";
         repliesByParent = {
@@ -354,10 +330,7 @@
   function feedbackActionBlockedMessage() {
     const now = new Date(policyNowMs);
     if (!vote) return "Vote is not loaded.";
-    return (
-      feedbackWindowActionsDisabledTitle(vote, now) ||
-      "Comments and replies are not available."
-    );
+    return feedbackWindowActionsDisabledTitle(vote, now) || "Comments and replies are not available.";
   }
 
   async function openAddDialog(replyingTo = null) {
@@ -550,16 +523,13 @@
       toast.error("Please select a category.");
       return;
     }
-    const { ok, json } = await fetchJson(
-      `/comments/${withdrawComment._id}/withdraw`,
-      {
-        method: "PUT",
-        body: JSON.stringify({
-          category: withdrawCategory,
-          comment: withdrawReason || undefined,
-        }),
-      },
-    );
+    const { ok, json } = await fetchJson(`/comments/${withdrawComment._id}/withdraw`, {
+      method: "PUT",
+      body: JSON.stringify({
+        category: withdrawCategory,
+        comment: withdrawReason || undefined,
+      }),
+    });
     if (!ok) {
       withdrawError = json?.message ?? "Failed to withdraw.";
       toast.error(json?.message ?? "Failed to withdraw comment");
@@ -638,10 +608,8 @@
           onWithdraw={openWithdraw}
         />
       {:else}
-        <p class="text-sm text-muted-foreground">
-          {hasActiveFilter
-            ? "No comments found for your filter options."
-            : "No comments yet."}
+        <p class="text-sm text-muted-foreground mb-6">
+          {hasActiveFilter ? "No comments found for your filter options." : "No comments yet."}
         </p>
       {/each}
     </div>
