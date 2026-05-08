@@ -98,12 +98,13 @@
 
   <div class="space-y-6">
     {#if user}
-      <div class="grid gap-6 lg:grid-cols-2">
+      <div class="space-y-6">
         <Card.Root>
           <Card.Header>
             <Card.Title>Account</Card.Title>
           </Card.Header>
-          <Card.Content class="flex flex-col gap-2">
+          <Card.Content class="space-y-6">
+            <div class="flex flex-col gap-2">
             {#if user.name}
               <p class="text-sm">
                 <span class="text-muted-foreground">Name/Handle:</span>
@@ -114,10 +115,12 @@
               <span class="text-muted-foreground">User ID:</span>
               <span class="ml-2 font-mono text-xs break-all">{user.userId}</span>
             </p>
+            </div>
+            <div class="border-t pt-6">
+              <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
+            </div>
           </Card.Content>
         </Card.Root>
-
-        <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
       </div>
     {/if}
 
