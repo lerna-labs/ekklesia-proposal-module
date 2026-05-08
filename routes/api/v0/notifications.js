@@ -166,7 +166,6 @@ router.put(
       const verificationIssuedAt = new Date();
       updates["notification.pendingEmail"] = normalizedEmail;
       updates["notification.verificationIssuedAt"] = verificationIssuedAt;
-      updates["notification.unsubscribeSecret"] = crypto.randomBytes(32).toString("hex");
 
       const token = buildVerifyToken({
         userId,
@@ -329,6 +328,7 @@ router.post("/verify", notificationsVerifyLimiter, async (req, res) => {
           "notification.email": pendingEmail,
           "notification.verifiedAt": new Date(),
           "notification.schedule": userDoc?.notification?.schedule ?? "daily",
+          "notification.unsubscribeSecret": crypto.randomBytes(32).toString("hex"),
         },
         $unset: {
           "notification.pendingEmail": "",
