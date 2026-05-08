@@ -75,7 +75,7 @@ export function verifyToken(req) {
 
   // Verify token
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
 
     // Make sure the token contains the required fields
     if (!decoded || !decoded.userId) {
