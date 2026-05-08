@@ -1,5 +1,5 @@
 /**
- * Create or update Constitutional Committee Election 2026 (slug: cc-vote-2026). Phases start at the instant this script runs.
+ * Create or update Constitutional Committee Election 2026 (slug: cc-vote-2026) with fixed UTC phase windows.
  *
  * Usage (repo root): node __scripts/setup-cc-vote2026.js
  */
@@ -20,18 +20,13 @@ import { Vote } from "../schema/Vote.js";
 const SLUG = "cc-vote-2026";
 const TITLE = "Constitutional Committee Election 2026";
 const DESCRIPTION =
-  "Constitutional Committee Election 2026. Submission and feedback run together, then review, then voting.";
+  "Constitutional Committee Election 2026.";
 
 /** Replace with a real Bech32 stake address before running against production. */
 const ADMINS = ["stake1u8dluycewh6jfdpfrddk4lsdy6swlsky5uv5cnn9wq8t6ccu08kxv",
   "stake1u8n0ufl3222z3f67mc7ve0ny2mheuknp55vsqhwmah385cskz2k9d",
   "stake1u9vlhfcmx8p9ytsrlxtuse23ypgvz48ld9zspkdawqkt2vc0vesfq",
   "stake1u887nvclsec08s7pfl0dexjtqz9fj3aactz2vnmtm48n5lcd5fx9q"];
-
-const MS_PER_DAY = 86400000;
-const DAYS_SUBMISSION_FEEDBACK = 14;
-const DAYS_REVIEW = 14;
-const DAYS_VOTING = 30;
 
 /** CC vote: no treasury minimum and no wallet deposit (amounts in lovelace). */
 const DEPOSIT_OPTIONS = {
@@ -71,20 +66,20 @@ const SEARCH_OPTIONS = [
 ];
 
 function ccVote2026Dates() {
-  const start = new Date();
-  const submissionEndFeedbackEnd = new Date(
-    start.getTime() + DAYS_SUBMISSION_FEEDBACK * MS_PER_DAY,
-  );
-  const reviewStartDate = submissionEndFeedbackEnd;
-  const reviewEndDate = new Date(reviewStartDate.getTime() + DAYS_REVIEW * MS_PER_DAY);
-  const votingStartDate = reviewEndDate;
-  const votingEndDate = new Date(votingStartDate.getTime() + DAYS_VOTING * MS_PER_DAY);
+  const submissionStartDate = new Date("2026-05-08T21:45:00.000Z");
+  const submissionEndDate = new Date("2026-06-07T21:45:00.000Z");
+  const feedbackStartDate = new Date("2026-05-08T21:45:00.000Z");
+  const feedbackEndDate = new Date("2026-06-13T21:45:00.000Z");
+  const reviewStartDate = new Date("2026-05-08T21:45:00.000Z");
+  const reviewEndDate = new Date("2026-06-07T21:45:00.000Z");
+  const votingStartDate = new Date("2026-06-13T21:45:00.000Z");
+  const votingEndDate = new Date("2026-07-13T21:45:00.000Z");
 
   return {
-    submissionStartDate: start,
-    submissionEndDate: submissionEndFeedbackEnd,
-    feedbackStartDate: start,
-    feedbackEndDate: submissionEndFeedbackEnd,
+    submissionStartDate,
+    submissionEndDate,
+    feedbackStartDate,
+    feedbackEndDate,
     reviewStartDate,
     reviewEndDate,
     votingStartDate,
