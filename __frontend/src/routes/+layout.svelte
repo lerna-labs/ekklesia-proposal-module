@@ -7,6 +7,7 @@
   import SessionExpiryTimer from "$lib/session/SessionExpiryTimer.svelte";
 
   let { children } = $props();
+  const maintenanceModeEnabled = import.meta.env.VITE_MAINTENANCE_MODE === "true";
 </script>
 
 <Toaster />
@@ -15,6 +16,11 @@
   <SessionExpiryTimer />
 </div>
 <div class="min-h-dvh flex flex-col">
+  {#if maintenanceModeEnabled}
+    <div class="bg-orange-500 px-4 py-2 text-center text-sm font-medium text-white">
+      Ongoing Maintenance until 20:00 UTC. You may experience intermittent issues. Please check back later.
+    </div>
+  {/if}
   <Header />
   <main class="flex-1 flex flex-col">
     {@render children()}
