@@ -3,9 +3,11 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import { User } from "../../../schema/User.js";
+import { EmailSendLedger } from "../../../schema/EmailSendLedger.js";
 import { isAuthenticated } from "../../../helper/middleWare.js";
 import {
   notificationsWriteLimiter,
+  notificationsVerifyDispatchLimiter,
   notificationsResendLimiter,
   notificationsVerifyLimiter,
   notificationsUnsubscribeLimiter,
@@ -17,6 +19,15 @@ import { send as sendEmail } from "../../../mailer/transport.js";
 const router = Router();
 const SCHEDULE_VALUES = new Set(["never", "6h", "daily"]);
 const MAGIC_LINK_TTL = "30m";
+const MAGIC_LINK_CATEGORY = "magic-link";
+const verifyRecipientCooldownRaw = Number.parseInt(
+  process.env.NOTIFICATION_VERIFY_RECIPIENT_COOLDOWN_MS ?? "",
+  10,
+);
+const NOTIFICATION_VERIFY_RECIPIENT_COOLDOWN_MS =
+  Number.isFinite(verifyRecipientCooldownRaw) && verifyRecipientCooldownRaw > 0
+    ? verifyRecipientCooldownRaw
+    : 24 * 60 * 60 * 1000;
 
 if (!process.env.JWT_SECRET) {
   console.error("JWT_SECRET is not defined in environment variables");
@@ -80,8 +91,12 @@ async function sendVerificationEmail({ toEmail, verifyUrl }) {
     },
     subject,
     html,
-    category: "magic-link",
+    category: MAGIC_LINK_CATEGORY,
   });
+}
+
+function hashRecipientEmail(email) {
+  return crypto.createHash("sha256").update(email).digest("hex");
 }
 
 router.get("/", isAuthenticated, async (req, res) => {
@@ -97,7 +112,12 @@ router.get("/", isAuthenticated, async (req, res) => {
   }
 });
 
-router.put("/", isAuthenticated, notificationsWriteLimiter, async (req, res) => {
+router.put(
+  "/",
+  isAuthenticated,
+  notificationsWriteLimiter,
+  notificationsVerifyDispatchLimiter,
+  async (req, res) => {
   try {
     const userId = String(req.userId);
     const scheduleRaw = req.body?.schedule;
@@ -162,7 +182,24 @@ router.put("/", isAuthenticated, notificationsWriteLimiter, async (req, res) => 
 
     if (verifyUrl && normalizedEmail) {
       try {
-        await sendVerificationEmail({ toEmail: normalizedEmail, verifyUrl });
+        const recipientHash = hashRecipientEmail(normalizedEmail);
+        const sentAfter = new Date(Date.now() - NOTIFICATION_VERIFY_RECIPIENT_COOLDOWN_MS);
+        const recentSend = await EmailSendLedger.findOne({
+          recipientHash,
+          category: MAGIC_LINK_CATEGORY,
+          sentAt: { $gte: sentAfter },
+        })
+          .select("_id")
+          .lean();
+
+        if (!recentSend) {
+          await sendVerificationEmail({ toEmail: normalizedEmail, verifyUrl });
+          await EmailSendLedger.create({
+            recipientHash,
+            category: MAGIC_LINK_CATEGORY,
+            sentAt: new Date(),
+          });
+        }
       } catch (error) {
         emailSendFailed = true;
         console.error("Failed to send notification verification email:", error);

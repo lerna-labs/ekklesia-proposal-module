@@ -12,6 +12,14 @@ export function isRateLimitDisabled() {
 }
 
 const skipIfDisabled = () => isRateLimitDisabled();
+const verifyDispatchMaxRaw = Number.parseInt(
+  process.env.NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR ?? "",
+  10,
+);
+const NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR =
+  Number.isFinite(verifyDispatchMaxRaw) && verifyDispatchMaxRaw > 0
+    ? verifyDispatchMaxRaw
+    : 5;
 
 /**
  * Rate limiter for nonce requests (POST /session).
@@ -159,6 +167,23 @@ export const notificationsWriteLimiter = rateLimit({
   message: {
     status: "error",
     message: "Too many notification preference updates. Please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
+ * Rate limiter for verification email dispatch attempts from notification updates.
+ * Defaults to 5 requests per hour per authenticated user.
+ */
+export const notificationsVerifyDispatchLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR,
+  skip: skipIfDisabled,
+  keyGenerator: (req) => req.userId?.toString() ?? ipKeyGenerator(req.ip),
+  message: {
+    status: "error",
+    message: "Too many verification dispatch attempts. Please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,
