@@ -1,5 +1,4 @@
 import { sendToMailtrap } from "./mailtrap.js";
-import { sendViaGoogleWorkspace } from "./googleWorkspaceSend.js";
 import { sendWithRetry } from "./sendRetry.js";
 
 function normalizeRecipient(to) {
@@ -57,6 +56,7 @@ export async function send({
   }
 
   if (provider === "google") {
+    const { sendViaGoogleWorkspace } = await import("./googleWorkspaceSend.js");
     return sendWithRetry(() =>
       sendViaGoogleWorkspace({
         from,

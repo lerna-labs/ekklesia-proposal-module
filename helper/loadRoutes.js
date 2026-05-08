@@ -11,12 +11,11 @@ import { pathToFileURL } from "url";
  * @returns {Promise<void>}
  */
 export async function loadRoutes(directory, app, baseRoute = "") {
-  try {
-    const entries = await fs.readdir(directory, { withFileTypes: true });
+  const entries = await fs.readdir(directory, { withFileTypes: true });
 
-    for (const entry of entries) {
-      const fullPath = join(directory, entry.name);
-
+  for (const entry of entries) {
+    const fullPath = join(directory, entry.name);
+    try {
       if (entry.isDirectory()) {
         // If it's a directory, recursively load routes from it
         const nextBaseRoute = join(baseRoute, entry.name).replace(/\\/g, "/");
@@ -35,9 +34,8 @@ export async function loadRoutes(directory, app, baseRoute = "") {
           app.use(routePath, router);
         }
       }
+    } catch (error) {
+      console.error(`Error loading route ${fullPath}: ${error.message}`);
     }
-  } catch (error) {
-    console.log(error);
-    console.error(`Error loading routes: ${error.message}`);
   }
 }
