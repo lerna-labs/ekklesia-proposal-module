@@ -43,7 +43,7 @@
       CC members must generate cold keys before taking office. Review the
       <a
         class="link font-medium"
-        href="https://developers.cardano.org/docs/get-started/infrastructure/cardano-cli/governance/constitutional%20committee/"
+        href="https://developers.cardano.org/docs/learn/cardano-cli/governance/constitutional-committee/"
         target="_blank"
         rel="noopener noreferrer"
       >
