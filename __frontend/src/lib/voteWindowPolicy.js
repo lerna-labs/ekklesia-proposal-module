@@ -79,3 +79,50 @@ export function voteForProposalRow(proposal, votes) {
 	const s = String(vid);
 	return votes.find((v) => v && String(v._id) === s) ?? null;
 }
+
+/**
+ * Whether `now` is inside [votingStartDate, votingEndDate] (inclusive, UTC instants).
+ * @param {{ votingStartDate?: string | Date, votingEndDate?: string | Date } | null | undefined} vote
+ * @param {Date} [now]
+ */
+export function votingWindowOpen(vote, now = new Date()) {
+	if (!vote?.votingStartDate || !vote?.votingEndDate) return false;
+	const t = now.getTime();
+	const start = new Date(vote.votingStartDate).getTime();
+	const end = new Date(vote.votingEndDate).getTime();
+	return t >= start && t <= end;
+}
+
+/**
+ * Show voting CTAs / Vote Now when the voting window is open and votingUrl is set.
+ * @param {{ votingStartDate?: string | Date, votingEndDate?: string | Date, votingUrl?: string } | null | undefined} vote
+ * @param {Date} [now]
+ */
+export function canShowVotingUi(vote, now = new Date()) {
+	if (!votingWindowOpen(vote, now)) return false;
+	const url = vote?.votingUrl;
+	return typeof url === "string" && url.trim().length > 0;
+}
+
+/**
+ * Ballot / vote list URL on the external voting platform (no proposal segment).
+ * @param {{ votingUrl?: string } | null | undefined} vote
+ * @returns {string | null}
+ */
+export function buildVoteVotingUrl(vote) {
+	const base = vote?.votingUrl?.trim();
+	return base || null;
+}
+
+/**
+ * Deep link to vote on a proposal on the external voting platform.
+ * @param {{ votingUrl?: string } | null | undefined} vote
+ * @param {string | number | null | undefined} proposalId
+ * @returns {string | null}
+ */
+export function buildProposalVotingUrl(vote, proposalId) {
+	const base = vote?.votingUrl?.trim();
+	if (!base || proposalId == null || proposalId === "") return null;
+	const id = String(proposalId);
+	return `${base.replace(/\/$/, "")}/proposals/${id}`;
+}

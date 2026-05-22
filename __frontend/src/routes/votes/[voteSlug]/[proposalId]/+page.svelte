@@ -85,6 +85,7 @@
         : "",
   );
   const showComments = $derived(proposal && proposal.status !== "draft" && proposal.status !== "archived");
+  let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
   const ProposalPageComponent = $derived(PROPOSAL_PAGE_MAP[vote?.form] ?? DefaultProposalPage);
 
@@ -205,6 +206,7 @@
       {commentCount}
       {commentsHref}
       {isWithdrawn}
+      {policyNow}
     />
   {:else}
     <ProposalPageComponent
@@ -218,6 +220,7 @@
       {showComments}
       {commentsHref}
       {isWithdrawn}
+      {policyNow}
     />
   {/if}
 </div>

@@ -6,6 +6,7 @@
   import { user } from "$stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
+  import VoteIcon from "@lucide/svelte/icons/vote";
   import HashIcon from "@lucide/svelte/icons/hash";
   import UserIcon from "@lucide/svelte/icons/user";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -14,12 +15,14 @@
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
   import { toast } from "svelte-sonner";
+  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
 
   let {
     proposal,
     vote,
     showLink = true,
     class: className,
+    policyNow = new Date(),
   } = $props();
 
   let revisionDrawerOpen = $state(false);
@@ -53,6 +56,12 @@
   const commentCount = $derived(
     proposal?.commentCount != null ? Number(proposal.commentCount) : null,
   );
+
+  const voteNowHref = $derived.by(() => {
+    if (proposal?.status !== "live") return null;
+    if (!canShowVotingUi(vote, policyNow)) return null;
+    return buildProposalVotingUrl(vote, proposal._id ?? proposal.id);
+  });
   const proposerHref = $derived(
     vote?.slug && proposal?.proposerId
       ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
@@ -228,9 +237,9 @@
       </Card.Root>
     {/if}
   </Card.Content>
-  {#if (showLink && proposalHref) || canWithdraw || commentsHref}
+  {#if (showLink && proposalHref) || canWithdraw || commentsHref || voteNowHref}
     <Card.Footer class="flex flex-col items-start gap-3 pt-4 px-4 sm:px-6">
-      {#if commentsHref || (showLink && proposalHref)}
+      {#if commentsHref || (showLink && proposalHref) || voteNowHref}
         <div class="flex items-center gap-2 flex-wrap">
           {#if showLink && proposalHref}
             <Button
@@ -241,6 +250,19 @@
             >
               <FileTextIcon class="size-4 mr-1" />
               Read Proposal
+            </Button>
+          {/if}
+          {#if voteNowHref}
+            <Button
+              href={voteNowHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="secondary"
+              size="sm"
+              class="text-xs shrink-0 animate-pulse bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+            >
+              <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+              Vote Now!
             </Button>
           {/if}
           {#if commentsHref}

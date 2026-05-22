@@ -143,7 +143,16 @@
                   class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
-                  Cardano Budget 2026
+                  Budget 2026 Proposals
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://preprod.ekklesia.vote"
+                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  onclick={closeMenu}
+                >
+                  Budget 2026 Voting
                 </a>
               </li>
             </ul>

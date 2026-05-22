@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
 
 export async function load({ params, fetch, url }) {
+	const policyNowMs = Date.now();
 	const { voteSlug, proposalId } = params;
 
 	const apiUrl = import.meta.env.VITE_API_URL || '/api/v0';
@@ -26,6 +27,7 @@ export async function load({ params, fetch, url }) {
 			pillars,
 			commentCount: 0,
 			preview: true,
+			policyNowMs,
 		};
 	}
 
@@ -56,5 +58,6 @@ export async function load({ params, fetch, url }) {
 		proposal: proposalData,
 		pillars,
 		commentCount: commentCount,
+		policyNowMs,
 	};
 }

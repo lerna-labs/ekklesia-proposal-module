@@ -8,7 +8,7 @@
     ccVote2026: CcVote2026ProposalCard,
   };
 
-  let { proposal, vote, showLink = true, class: className } = $props();
+  let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
 
   const ProposalCardComponent = $derived(
     PROPOSAL_CARD_MAP[vote?.form] ?? DefaultProposalCard,
@@ -19,5 +19,6 @@
   {proposal}
   {vote}
   {showLink}
+  {policyNow}
   class={className}
 />

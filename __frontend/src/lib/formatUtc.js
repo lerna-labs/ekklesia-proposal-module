@@ -19,7 +19,7 @@ export function formatUtcInstant(value, options = {}) {
 }
 
 /**
- * Full UTC wall time: long month + day + year, time to the second (24h), then ` UTC`. No weekday.
+ * Full UTC wall time: long month + day + year, time to the minute (24h), then ` UTC`. No weekday.
  * @param {Date | string | number | null | undefined} value
  * @returns {string}
  */
@@ -30,7 +30,6 @@ export function formatUtcFullDateTime(value) {
 		day: "numeric",
 		hour: "2-digit",
 		minute: "2-digit",
-		second: "2-digit",
 		hour12: false,
 	});
 }
