@@ -15,7 +15,7 @@ export const budgetPhases = [
     start: "2026-05-26T12:00:00.000Z",
     end: "2026-06-12T12:00:00.000Z",
     link: {
-      href: "https://intersect.ekklesia.vote/ballots/",
+      href: "https://intersect.ekklesia.vote/ballots/6a1512d782978c99456fe6de/proposals",
       label: "Go to Voting",
     },
   },
@@ -29,7 +29,7 @@ export const budgetPhases = [
     start: "2026-06-19T12:00:00.001Z",
     end: "2026-06-19T23:59:59.999Z",
     link: {
-      href: "https://intersect.ekklesia.vote/ballots/",
+      href: "https://intersect.ekklesia.vote/ballots/6a1512d782978c99456fe6de/proposals",
       label: "View Results",
     },
   },
