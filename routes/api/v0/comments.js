@@ -102,7 +102,7 @@ async function formatComment(
 ) {
   const userId = comment.userId;
   const userDoc = userId
-    ? await User.findById(userId).select("-lastLogin -createdAt -updatedAt").lean()
+    ? await User.findById(userId).select("_id name").lean()
     : null;
   let type = "user";
   if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
@@ -124,7 +124,7 @@ async function formatComment(
     authenticatedUserId &&
     (await CommentLike.exists({ commentId: comment._id, userId: authenticatedUserId }));
   const author = userDoc
-    ? { ...userDoc, type }
+    ? { _id: userDoc._id, name: userDoc.name ?? null, type }
     : userId
       ? { _id: userId, name: null, type }
       : null;
@@ -386,6 +386,7 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
                 threadReplies: 0,
                 likeCountArr: 0,
                 userArr: 0,
+                user: 0,
                 userTypeMatch: 0,
                 replyUserTypeMatchCount: 0,
               },

@@ -736,10 +736,12 @@ proposal's vote `admins` array) can use the `status` parameter to filter by
 `live`, `withdrawn`, or `withdrawnByAdmin`. Sort by `sort` (default `date`, i.e.
 `createdAt`), `replyCount`, or `likeCount`, with `direction` `asc` or `desc`;
 default is newest first (`direction=desc`). Each comment includes an `author`
-object (the comment author; `lastLogin`, `createdAt`, and `updatedAt` are
-excluded; a `type` field is added: `"proposer"` if the author is the proposal's
-proposer, `"admin"` if the author is in the vote's `admins`
-array, otherwise `"user"`), `replyCount`, and `likeCount`. `proposalId`,
+object containing **only** `_id`, `name`, and `type` (the comment author's
+public display fields; notification preferences, email addresses, unsubscribe
+secrets, and other internal user fields are never included). `type` is
+`"proposer"` if the author is the proposal's proposer, `"admin"` if the author
+is in the vote's `admins` array, otherwise `"user"`. Each comment also includes
+`replyCount` and `likeCount`. `proposalId`,
 `status`, `parentId`, and `userId` are excluded from each comment.**Comment
 authors** see `withdrawalDetails` (if present) for their own comments (e.g. when
 withdrawn by admin).
