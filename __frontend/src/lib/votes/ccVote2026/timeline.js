@@ -11,7 +11,7 @@ export const budgetPhases = [
   },
   {
     title: "Hydra voting period",
-    start: "2026-06-23T21:45:00.000Z",
+    start: "2026-06-28T21:45:00.000Z",
     end: "2026-07-23T21:45:00.000Z",
     link: {
       href: "https://intersect.ekklesia.vote/ballots/",
