@@ -74,7 +74,7 @@ async function startServer() {
       next();
     });
 
-    // Load all routes from the routes directory
+    // Load all routes from the routes directory (throws if any import fails)
     await loadRoutes(join(__dirname, "routes"), app);
 
     // Serve static files from the public directory (SvelteKit assets)
@@ -135,8 +135,8 @@ async function startServer() {
       }
     });
   } catch (error) {
-    console.error(`Server error: ${error.message}`);
-    // Don't exit the process - let the server continue running
+    console.error(`Server startup failed: ${error.message}`);
+    process.exit(1);
   }
 }
 
