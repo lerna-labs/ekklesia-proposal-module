@@ -16,6 +16,7 @@ MongoDB / local dev helpers. Most load `.env.development` from the repo root (se
 | `setup-cc-vote2026.js` | Creates or updates **CC Vote 2026** (`cc-vote-2026`); phases start at run time (edit `ADMINS` before production). |
 | `addCcVoteCandidates.js` | Adds 11 live CC candidate proposals (mixed tracks) for `cc-vote-2026`. |
 | `wipeDB.js` | Deletes all documents in Vote, Proposal, Comment, User, Country, Session, and CommentLike collections. |
+| `check-duplicate-vote-slugs.js` | Pre-release check: exits non-zero if any `Vote.slug` is duplicated; otherwise ensures the unique slug index exists. |
 
 ## `admin/`
 

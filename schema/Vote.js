@@ -202,5 +202,8 @@ const voteSchema = new Schema(
   }
 );
 
+/** Lookup key for GET /votes/:slug and frontend routes; must be unique. */
+voteSchema.index({ slug: 1 }, { unique: true });
+
 const Vote = mongoose.model("Vote", voteSchema);
 export { Vote };

@@ -19,6 +19,7 @@ import { loadEnvironmentVariables } from "../helper/envLoader.js";
 loadEnvironmentVariables();
 
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
+import { isDuplicateKeyError } from "../helper/mongoErrors.js";
 import { Vote } from "../schema/Vote.js";
 import { Proposal } from "../schema/Proposal.js";
 import { User } from "../schema/User.js";
@@ -437,6 +438,11 @@ async function createDummyDataThreeUsers() {
     console.log(`  Vote: ${vote._id} (slug: ${vote.slug})`);
     console.log(`  Proposals: 9 total (3 per user: draft, live, withdrawn)`);
   } catch (error) {
+    if (isDuplicateKeyError(error)) {
+      console.error(
+        "Duplicate Vote.slug (unique index). Wipe with wipeDB.js before re-running this seed."
+      );
+    }
     console.error("Error creating dummy data:", error);
     throw error;
   } finally {

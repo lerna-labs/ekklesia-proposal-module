@@ -20,6 +20,7 @@ import { loadEnvironmentVariables } from "../helper/envLoader.js";
 loadEnvironmentVariables();
 
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
+import { isDuplicateKeyError } from "../helper/mongoErrors.js";
 import { Vote } from "../schema/Vote.js";
 import { Proposal } from "../schema/Proposal.js";
 import { Comment } from "../schema/Comment.js";
@@ -925,6 +926,11 @@ async function createDummyData() {
         console.log(`  Restored from JSON: proposal1.json, proposal2.json`);
         console.log(`  Comments: ${createdComments.length} (on "${COMMENT_TEST_PROPOSAL_TITLE}" only)`);
     } catch (error) {
+        if (isDuplicateKeyError(error)) {
+            console.error(
+                "Duplicate Vote.slug (unique index). Wipe with wipeDB.js, or update via setup-budget2026.js."
+            );
+        }
         console.error("Error creating dummy data:", error);
         throw error;
     } finally {

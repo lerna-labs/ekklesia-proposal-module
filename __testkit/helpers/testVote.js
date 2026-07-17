@@ -9,6 +9,7 @@ const require = createRequire(new URL("../../package.json", import.meta.url));
 const mongoose = require("mongoose");
 
 import { Vote } from "../../schema/Vote.js";
+import { isDuplicateKeyError } from "../../helper/mongoErrors.js";
 
 /** @type {string | null} */
 let cachedVoteId = null;
@@ -47,51 +48,60 @@ export async function ensureTestkitVote() {
     description: "",
     sortOrder: i + 1,
   }));
-  vote = await Vote.create({
-    title: "Ekklesia testkit vote",
-    description: "Created by __testkit (integration + performance seed)",
-    slug: TESTKIT_VOTE_SLUG,
-    admins: ["stake_test1ur97k8x2dkedxscjls0z2leux34yuz30hngsg6nylyjs7fgkxjnv2"],
-    submissionStartDate: oneYearAgo,
-    submissionEndDate: oneYearAhead,
-    feedbackStartDate: oneYearAgo,
-    feedbackEndDate: oneYearAhead,
-    reviewStartDate: oneYearAgo,
-    reviewEndDate: oneYearAhead,
-    votingStartDate,
-    votingEndDate,
-    validationScript: "budget2026/validationScript.js",
-    excludeScript: "budget2026/excludeScript.js",
-    form: "budget2026",
-    depositOptions: {
-      treasuryDonation: 0,
-      depositAddress: "",
-      depositAmount: 0,
-    },
-    sortOptions: [
-      { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
-      { value: "title", label: "Proposal Title", field: "title" },
-      { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
-    ],
-    filterOptions: [
-      { param: "status", label: "Status", field: "status", allowedValues: ["live", "withdrawn", "draft"], multiple: true },
-      {
-        param: "category",
-        label: "Category",
-        field: "metaData.strategyFramework.pillars",
-        allowedValues: [],
-        multiple: true,
-        optionsPath: "metaData.strategyFramework.pillars",
+  try {
+    vote = await Vote.create({
+      title: "Ekklesia testkit vote",
+      description: "Created by __testkit (integration + performance seed)",
+      slug: TESTKIT_VOTE_SLUG,
+      admins: ["stake_test1ur97k8x2dkedxscjls0z2leux34yuz30hngsg6nylyjs7fgkxjnv2"],
+      submissionStartDate: oneYearAgo,
+      submissionEndDate: oneYearAhead,
+      feedbackStartDate: oneYearAgo,
+      feedbackEndDate: oneYearAhead,
+      reviewStartDate: oneYearAgo,
+      reviewEndDate: oneYearAhead,
+      votingStartDate,
+      votingEndDate,
+      validationScript: "budget2026/validationScript.js",
+      excludeScript: "budget2026/excludeScript.js",
+      form: "budget2026",
+      depositOptions: {
+        treasuryDonation: 0,
+        depositAddress: "",
+        depositAmount: 0,
       },
-    ],
-    searchOptions: [
-      { field: "title", matchType: "like", caseSensitive: false },
-      { field: "summary", matchType: "like", caseSensitive: false },
-      { field: "proposerId", matchType: "like", caseSensitive: false },
-      { field: "_id", matchType: "objectId" },
-    ],
-    metaData: { strategyFramework: { pillars } },
-  });
+      sortOptions: [
+        { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
+        { value: "title", label: "Proposal Title", field: "title" },
+        { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
+      ],
+      filterOptions: [
+        { param: "status", label: "Status", field: "status", allowedValues: ["live", "withdrawn", "draft"], multiple: true },
+        {
+          param: "category",
+          label: "Category",
+          field: "metaData.strategyFramework.pillars",
+          allowedValues: [],
+          multiple: true,
+          optionsPath: "metaData.strategyFramework.pillars",
+        },
+      ],
+      searchOptions: [
+        { field: "title", matchType: "like", caseSensitive: false },
+        { field: "summary", matchType: "like", caseSensitive: false },
+        { field: "proposerId", matchType: "like", caseSensitive: false },
+        { field: "_id", matchType: "objectId" },
+      ],
+      metaData: { strategyFramework: { pillars } },
+    });
+  } catch (err) {
+    // Concurrent ensureTestkitVote() callers can race; unique slug index yields E11000.
+    if (!isDuplicateKeyError(err)) throw err;
+    vote = await Vote.findOne({ slug: TESTKIT_VOTE_SLUG });
+    if (!vote) throw err;
+    cachedVoteId = vote._id.toString();
+    return { vote, created: false };
+  }
   cachedVoteId = vote._id.toString();
   return { vote, created: true };
 }
