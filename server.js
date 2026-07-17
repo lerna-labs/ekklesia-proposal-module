@@ -13,6 +13,7 @@ import {
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
+import { warnUnloadableExcludeScripts } from "./validation/applyPublicFieldExclusion.js";
 
 // Initialize console with timestamps
 initializeConsole();
@@ -56,6 +57,14 @@ async function startServer() {
   try {
     // Try to connect to MongoDB but don't fail if connection isn't established
     await connectToDatabase();
+
+    if (isDatabaseConnected()) {
+      try {
+        await warnUnloadableExcludeScripts();
+      } catch (err) {
+        console.error("Failed to validate Vote.excludeScript paths at startup:", err?.message ?? err);
+      }
+    }
 
     // Public read rate limit (200/min per IP): apply only to GET /api/v0/votes, /proposals, /comments
     app.use("/api/v0", (req, res, next) => {

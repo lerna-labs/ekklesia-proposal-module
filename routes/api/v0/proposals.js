@@ -15,7 +15,7 @@ import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
-import { loadExcludeScript } from "../../../validation/loadExcludeScript.js";
+import { applyPublicFieldExclusion } from "../../../validation/applyPublicFieldExclusion.js";
 import { loadListProjectionScript } from "../../../validation/loadListProjectionScript.js";
 import { verifyDeposit } from "../../../helper/verifyDeposit.js";
 import {
@@ -944,15 +944,10 @@ router.get("/:proposalId", async (req, res) => {
     let payload = proposal;
 
     // Apply exclude script: remove non-public fields unless proposer or vote admin
-    if (voteDoc?.excludeScript) {
-      const excludeMod = await loadExcludeScript(voteDoc.excludeScript);
-      if (excludeMod?.excludeNonPublicFields) {
-        payload = excludeMod.excludeNonPublicFields(payload, {
-          isProposer,
-          isAdmin: isVoteAdmin,
-        });
-      }
-    }
+    payload = await applyPublicFieldExclusion(payload, voteDoc, {
+      isProposer,
+      isAdmin: isVoteAdmin,
+    });
 
     // commentCount: total number of comments and replies on this proposal (excluding withdrawn)
     const commentCount = await Comment.countDocuments({
@@ -1361,24 +1356,16 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
     }
 
     // Apply exclude script: remove non-public fields unless proposer or vote admin (same as GET single).
-    if (voteDoc.excludeScript) {
-      const excludeMod = await loadExcludeScript(voteDoc.excludeScript);
-      if (excludeMod?.excludeNonPublicFields) {
-        proposals = proposals.map((proposal) => {
-          try {
-            const isProposer =
-              String(proposal.proposerId ?? "").trim() === authenticatedUserId;
-            return excludeMod.excludeNonPublicFields(proposal, {
-              isProposer,
-              isAdmin: isVoteAdmin,
-            });
-          } catch (err) {
-            console.warn("excludeNonPublicFields failed for proposal", proposal?._id, err.message);
-            return proposal;
-          }
+    proposals = await Promise.all(
+      proposals.map(async (proposal) => {
+        const isProposer =
+          String(proposal.proposerId ?? "").trim() === authenticatedUserId;
+        return applyPublicFieldExclusion(proposal, voteDoc, {
+          isProposer,
+          isAdmin: isVoteAdmin,
         });
-      }
-    }
+      }),
+    );
 
     let projectProposalListItem = null;
     if (voteDoc.listProjectionScript) {
