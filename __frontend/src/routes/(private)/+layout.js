@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 /** @type {import('./$types').LayoutLoad} */
 export async function load({ fetch, url }) {
+	// Session probe: plain fetch only — do not use api.fetch (401 there can run expireSession/goto).
 	const sessionRes = await fetch(`${API_URL}/session`, { credentials: 'include' });
 	if (!sessionRes.ok) {
 		redirectAfterLogin.set(url.pathname + url.search);

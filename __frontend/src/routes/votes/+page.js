@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { api } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ url, fetch }) {
@@ -8,29 +8,29 @@ export async function load({ url, fetch }) {
 	const search = url.searchParams.get('search') || '';
 	const slug = url.searchParams.get('slug') || '';
 
-	const apiUrl = import.meta.env.VITE_API_URL || '/api/v0';
 	const params = new URLSearchParams({ page: pageNum, limit: String(limit) });
 	if (search) params.set('search', search);
 	if (slug) params.set('slug', slug);
 
-	const response = await fetch(`${apiUrl}/votes?${params.toString()}`);
-
-	if (response.status === 404) {
-		return {
-			votes: [],
-			meta: {
-				page: 1,
-				limit,
-				total: 0,
-				totalPages: 1,
-				hasNextPage: false,
-				hasPreviousPage: false,
-			},
-		};
-	}
-
-	if (!response.ok) {
-		error(response.status, `Failed to load votes: ${response.statusText}`);
+	let response;
+	try {
+		response = await api.fetch(fetch, `/votes?${params.toString()}`);
+	} catch (err) {
+		// Soft 404 when search/slug filters match nothing (API returns 404)
+		if (err?.status === 404) {
+			return {
+				votes: [],
+				meta: {
+					page: 1,
+					limit,
+					total: 0,
+					totalPages: 1,
+					hasNextPage: false,
+					hasPreviousPage: false,
+				},
+			};
+		}
+		throw err;
 	}
 
 	const json = await response.json();
