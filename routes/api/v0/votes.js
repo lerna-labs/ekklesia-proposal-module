@@ -8,6 +8,10 @@ import { Vote } from "../../../schema/Vote.js";
 // helper imports
 import mongoose from "mongoose";
 import { rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
+import { escapeRegex } from "../../../helper/escapeRegex.js";
+
+/** Max length for vote title search (DoS guard before $regex). */
+const MAX_SEARCH_LENGTH = 100;
 
 /**
  * @route GET /api/v0/votes/:voteId
@@ -74,7 +78,7 @@ router.get("/:voteId", async (req, res, next) => {
  *     - totalPages: Total number of pages
  *     - hasNextPage: Boolean indicating if there's a next page
  *     - hasPreviousPage: Boolean indicating if there's a previous page
- * @returns {Object} 400 - Error if pagination parameters are invalid
+ * @returns {Object} 400 - Error if pagination parameters are invalid or search exceeds max length
  * @returns {Object} 404 - No votes found when search or slug parameters are provided
  */
 router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async (req, res) => {
@@ -94,6 +98,13 @@ router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async 
     if (search) {
       const searchTerm = search.trim();
 
+      if (searchTerm.length > MAX_SEARCH_LENGTH) {
+        return res.status(400).json({
+          status: "error",
+          message: `Search term must be at most ${MAX_SEARCH_LENGTH} characters`,
+        });
+      }
+
       // Check if search term is a valid MongoDB ObjectId (24 hex characters)
       if (
         mongoose.Types.ObjectId.isValid(searchTerm) &&
@@ -101,9 +112,9 @@ router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async 
       ) {
         // Search by _id (exact match)
         query._id = new mongoose.Types.ObjectId(searchTerm);
-      } else {
-        // Search by title (case-insensitive partial match)
-        query.title = { $regex: searchTerm, $options: "i" };
+      } else if (searchTerm) {
+        // Search by title (case-insensitive partial match); escape metacharacters
+        query.title = { $regex: escapeRegex(searchTerm), $options: "i" };
       }
     }
 

@@ -26,6 +26,7 @@ import {
   sendProposalWithdrawnNotification,
   sendSubmissionConfirmedNotification,
 } from "../../../mailer/notificationDispatch.js";
+import { escapeRegex } from "../../../helper/escapeRegex.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -136,11 +137,6 @@ function getByPath(obj, path) {
     if (current === undefined) return undefined;
   }
   return current;
-}
-
-/** Escape special regex characters in a string for safe use in MongoDB $regex. */
-function escapeRegex(str) {
-  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
