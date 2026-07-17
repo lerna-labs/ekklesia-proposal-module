@@ -88,6 +88,14 @@ export async function verifySignature(
     );
 }
 
+/**
+ * Verify that `signature` is a valid CIP-8/30 signature over `payload` from a key
+ * that appears in the native script behind `address` (script address).
+ *
+ * By design this is **membership-only** for Proposal Module session auth (F-002):
+ * it does not enforce native-script threshold (all/any/atLeast) or timelock rules.
+ * See docs/system-architecture.md §8.1. Full quorum remains a Voting Module concern.
+ */
 export async function isPartyToScript(
     payload,
     address,
@@ -151,6 +159,11 @@ export async function isPartyToScript(
 }
 
 
+/**
+ * Walk a native script and collect key hashes (and a `required` count for all/any/atLeast).
+ * Session auth only uses `keys` for membership checks via isPartyToScript; `required` is
+ * not applied for Proposal Module login (intentional — F-002 / system-architecture §8.1).
+ */
 export function getScriptCriteria(
     script_contents,
     carry = {keys: [], signers: [], signed: 0, required: 1, count: 0}

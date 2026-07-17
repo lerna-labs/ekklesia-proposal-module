@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.2.0                                                                  |
+| **Version**        | 1.2.1                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 23, 2026                                                      |
+| **Last Revised**   | July 17, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -1068,9 +1068,14 @@ Cardano identifier types:
 
 ### 4.1 `POST /session`
 
-Requests nonce for authentication of standard (non-script) wallet addresses.
-Creates a session with a random nonce that the user must sign to prove identity.
-Script addresses are not allowed (use `/multisig` route instead).
+Requests a nonce for wallet authentication. Creates a session with a random
+nonce that the user must sign to prove identity.
+
+- **Standard:** omit `scriptAddress`. Payment/stake or DRep key addresses only;
+  bare script addresses without `scriptAddress` are rejected.
+- **Multisig:** include `scriptAddress` (CIP-0129 script / multisig DRep
+  address). The nonce is bound to that script address; `signerAddress` is the
+  key that will sign.
 
 #### Request Body
 
@@ -1078,6 +1083,7 @@ Script addresses are not allowed (use `/multisig` route instead).
 |-----------------|--------|----------|----------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (must be valid Bech32 address) |
 | `signType`      | string | Yes      | Type of signature: `drep`, `stake`                       |
+| `scriptAddress` | string | No       | Multisig: CIP-0129 script address used as session identity |
 
 #### Success Response — `200 OK`
 
@@ -1090,12 +1096,15 @@ Script addresses are not allowed (use `/multisig` route instead).
 }
 ```
 
+For multisig requests, `userId` / related fields refer to `scriptAddress`, and
+the response also includes `scriptAddress`.
+
 [//]: # (@formatter:off)
 
 > **Note:**
 >
 > - The `dataHex` field contains a string with the prefix "Sign in! " followed by hex-encoded nonce (e.g.,`"Sign in! a3f8d2e1b4c9f0a7d6e5b8c1a2f3d4e5"`). The client must sign this entire string value and submit it via `PUT /session` to complete authentication.
-> - The `userId` field contains a Bech32-encoded Cardano identifier. It can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`) depending on the `signType` provided.
+> - The `userId` field contains a Bech32-encoded Cardano identifier. It can be a stake address (`stake1...`), CIP-0129 DRep ID (`drep1...`), or (multisig) the script address supplied as `scriptAddress`.
 > - The `userIdHex` and `signerAddressHex` fields contain hex-encoded versions of the address for clients that require hex formats.
 
 [//]: # (@formatter:on)
@@ -1104,8 +1113,8 @@ Script addresses are not allowed (use `/multisig` route instead).
 
 Returned when:
 
-- Address is a script address (must use `/multisig` route)
-- Address validation fails
+- Address is a script address and `scriptAddress` was not provided
+- Address or `scriptAddress` validation fails
 
 ```json
 {
@@ -1113,6 +1122,9 @@ Returned when:
   "message": "Script address not allowed. Please use the multisig route."
 }
 ```
+
+(Message text may refer to the multisig flow; the supported mechanism is
+including `scriptAddress` on this same endpoint.)
 
 #### Error Response — `500 Internal Server Error`
 
@@ -1153,6 +1165,14 @@ clears the nonce from session records. Also creates or updates the User record
 with the user's name (fetched from DRep registry or handle service). Nonce are
 atomically marked as used to prevent race conditions.
 
+**Multisig:** When `scriptAddress` is present, the server verifies that the
+signer is an **eligible key in the native script** (key-hash membership via
+`isPartyToScript`). It does **not** evaluate full native-script semantics
+(threshold `all` / `any` / `atLeast`, or timelock `before` / `after`). That is
+intentional for this module; see
+[system-architecture.md §8.1](system-architecture.md#81-accepted-risks) (F-002).
+The issued JWT `userId` is the script address.
+
 #### Request Body
 
 | Field           | Type   | Required | Description                                                                 |
@@ -1160,6 +1180,7 @@ atomically marked as used to prevent race conditions.
 | `signerAddress` | string | Yes      | The address of the signer (validated by middleware)                         |
 | `signType`      | string | Yes      | Type of signature: `drep`, `stake`                                          |
 | `signature`     | object | Yes      | Signature object containing the signed nonce (structure varies by signType) |
+| `scriptAddress` | string | No       | Multisig: CIP-0129 script address; triggers membership verification         |
 
 #### Success Response — `200 OK`
 
@@ -1172,22 +1193,24 @@ atomically marked as used to prevent race conditions.
 
 > **Note:** The JWT token is also set as an HTTP-only cookie named `token`.
 > Subsequent requests should include this cookie automatically. The token
-> contains `userId` (which can be a Cardano Bech32 stake address or CIP-0129
-> DRep ID) and `signType`.
+> contains `userId` (stake address, CIP-0129 DRep ID, or multisig script
+> address) and `signType`.
 
 #### Error Response — `400 Bad Request`
 
 Returned when:
 
-- Address is a script address (must use `/multisig` route)
+- Script address used without `scriptAddress` in the body
+- Multisig: signer is not a party to the script (membership check failed)
 - Nonce not found in the database
 - Nonce has expired (nonces expire after 5 minutes)
 - Invalid signature format (signature is not a valid object)
 - Signature verification fails
 - Signature verification throws an exception
 
-For security reasons, a generic error message is returned to prevent information
-leakage:
+For security reasons, a generic error message is often returned to prevent
+information leakage (multisig membership failure may return a specific
+“does not belong to the MultiSig” message):
 
 ```json
 {
@@ -2377,6 +2400,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.2.1   | 2026-07-17 | Clarify multisig `scriptAddress` on `POST`/`PUT /session`: membership-only native-script check by design (F-002); link to system-architecture §8.1.                                                                                                                                                                                                                                                                                      |
 | 1.2.0   | 2026-02-23 | Comment response: `user` renamed to `author`; top-level `userId` and `authorType` removed. Withdrawn comments visible to admin and comment author; `excludeWithdrawn` query param for comments and replies. Replies to withdrawn comments rejected with 400. `withdrawalDetails._id` excluded from response. |
 | 1.1.0   | 2026-02-20 | Some updates to spec to bring alignment with latest deployed changes                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.0.0   | 2026-02-20 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                               |

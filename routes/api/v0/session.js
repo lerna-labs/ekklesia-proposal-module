@@ -287,6 +287,8 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       return res.status(400).json({ status: "error", message: AUTH_ERROR_MESSAGE });
     }
 
+    // Membership-only by design (F-002): eligible key in script → session OK.
+    // Does not enforce native-script threshold/timelock. See system-architecture §8.1.
     const isParty = await isPartyToScript(
       nonceData.nonce,
       validatedScriptAddress,
