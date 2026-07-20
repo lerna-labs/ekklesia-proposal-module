@@ -1,0 +1,7 @@
+# F-005 Resolution
+
+**Status:** Resolved
+
+**Commits:** [`8d64667`](https://github.com/lerna-labs/ekklesia-proposal-module/commit/8d64667599320cad7e9253caeb01a5e6b3e7d441) — *Bugfix for potential duplicate slugs (F-005)*
+
+**How:** Added unique index on `Vote.slug` in `schema/Vote.js`, `helper/mongoErrors.js` for duplicate-key detection, and `__scripts/check-duplicate-vote-slugs.js` pre-release check script.
