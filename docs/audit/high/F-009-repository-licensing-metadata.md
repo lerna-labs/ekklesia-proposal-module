@@ -12,7 +12,6 @@
 - `LICENSE:1`
 - `README.md:3-10`
 - `package.json:35`
-- `__testkit/package.json:26`
 
 ## Observation
 

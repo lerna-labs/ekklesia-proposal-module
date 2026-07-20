@@ -8,4 +8,4 @@
 
 **How:** Root `LICENSE` is now Apache 2.0 and root `package.json` declares `"license": "Apache-2.0"`.
 
-**Remaining:** `README.md` still opens with a proprietary/confidential notice; `__testkit/package.json` still declares `"license": "ISC"`.
+**Remaining:** `README.md` still opens with a proprietary/confidential notice.

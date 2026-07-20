@@ -452,7 +452,7 @@ async function main() {
 			`    liveResubmitOpen (live edit / withdraw):       ${liveResubmitOpen(votePlain)}`,
 		);
 		console.log(
-			"\n  Log in with the wf4m stake in __testkit and open /dashboard (see file header if proposals are missing).\n",
+			"\n  Log in with the wf4m stake and open /dashboard (see file header if proposals are missing).\n",
 		);
 	} catch (e) {
 		console.error(e);

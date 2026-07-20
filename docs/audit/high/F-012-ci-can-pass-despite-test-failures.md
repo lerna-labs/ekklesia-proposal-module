@@ -26,4 +26,4 @@ Upload reports with `always()`, then add a final step that fails the workflow if
 
 ## Current Status
 
-Not proven. The previously cited `continue-on-error` workflows are no longer present, so the original CI failure pattern was not reproduced. However, no replacement test CI workflow was found that proves backend, frontend, or testkit failures fail CI. CI release confidence therefore remains unresolved.
+Not proven. The previously cited `continue-on-error` workflows are no longer present, so the original CI failure pattern was not reproduced. However, no replacement test CI workflow was found that proves backend or frontend failures fail CI. CI release confidence therefore remains unresolved.
