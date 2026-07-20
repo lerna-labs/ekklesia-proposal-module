@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.19",
-    "js-cookie": "^3.0.5",
+    "js-cookie": "^3.0.7",
     "json-diff-ts": "^4.10.0",
     "lucide-svelte": "^0.574.0",
     "markdown-it": "^14.2.0",
