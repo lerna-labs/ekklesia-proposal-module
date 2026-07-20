@@ -8,6 +8,27 @@ dotenv.config({
 import { loadEnvironmentVariables } from "../helper/envLoader.js";
 loadEnvironmentVariables();
 
+/** Local/dev database names only — refuse to wipe anything else. */
+const WIPE_ALLOWED_DATABASES = ["bugdet-module"];
+
+function assertSafeToWipe() {
+    const environment = process.env.NODE_ENV || "development";
+    if (environment === "production") {
+        console.error("Refusing to wipe database: NODE_ENV is production.");
+        process.exit(1);
+    }
+
+    const database = process.env.MONGODB_DATABASE;
+    if (!database || !WIPE_ALLOWED_DATABASES.includes(database)) {
+        console.error(
+            `Refusing to wipe database: MONGODB_DATABASE must be one of ${WIPE_ALLOWED_DATABASES.join(", ")} (got ${database ?? "unset"}).`,
+        );
+        process.exit(1);
+    }
+}
+
+assertSafeToWipe();
+
 // use dbManager for database connection
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
 
