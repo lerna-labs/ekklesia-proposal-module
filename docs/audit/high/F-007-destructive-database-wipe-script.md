@@ -5,13 +5,13 @@
 | **Severity** | High |
 | **Finding ID** | F-007 |
 | **Category** | Destructive setup script |
-| **Status** | Partially fixed |
+| **Status** | Resolved (script removed) |
 
 ## Affected Files
 
 - `package.json:31` (original)
 - `__setup/wipeDB.js:23-25` (original)
-- `__scripts/wipeDB.js` (current)
+- `__scripts/wipeDB.js` (later path; now removed)
 
 ## Observation
 
@@ -27,4 +27,4 @@ Add an explicit non-production guard, require an allowlisted database name, and 
 
 ## Current Status
 
-Partially fixed based on current source inspection. The old `fixtures:clean` script and `__setup/wipeDB.js` path are gone, but `__scripts/wipeDB.js` still deletes multiple collections without a production guard or confirmation.
+Resolved by removal: `__scripts/wipeDB.js` is no longer in the repository. The old `fixtures:clean` script and `__setup/wipeDB.js` path are also gone.

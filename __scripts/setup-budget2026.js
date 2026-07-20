@@ -1,6 +1,8 @@
 /**
  * Create or update the Cardano Budget 2026 vote (slug: cardano-budget-2026) with
- * official 2026 UTC windows, deposit/options/metaData matching __scripts/createDummyData.js.
+ * official 2026 UTC windows, deposit options, and pillar metadata from categories.csv.
+ *
+ * Fill ADMINS with Bech32 stake addresses before running.
  *
  * Usage (repo root): node __scripts/setup-budget2026.js
  */
@@ -25,20 +27,15 @@ const CSV_PATH = path.join(__dirname, "categories.csv");
 const SLUG = "cardano-budget-2026";
 const TITLE = "Cardano Budget Process 2026";
 
-const ADMINS = [
-  "stake1u8dluycewh6jfdpfrddk4lsdy6swlsky5uv5cnn9wq8t6ccu08kxv",
-  "stake1u8n0ufl3222z3f67mc7ve0ny2mheuknp55vsqhwmah385cskz2k9d",
-  "stake1u9vlhfcmx8p9ytsrlxtuse23ypgvz48ld9zspkdawqkt2vc0vesfq",
-];
+/** Bech32 stake addresses with vote admin rights. Fill before running. */
+const ADMINS = [];
 
-/** Same as createDummyData.js Vote.create depositOptions */
 const DEPOSIT_OPTIONS = {
   treasuryDonation: 1_000_000_000,
   depositAddress: "",
   depositAmount: 0,
 };
 
-/** Same as createDummyData.js Vote.create sortOptions */
 const SORT_OPTIONS = [
   { value: "submittedAt", label: "Submission Date", field: "submittedAt" },
   { value: "title", label: "Proposal Title", field: "title" },
@@ -47,7 +44,6 @@ const SORT_OPTIONS = [
   { value: "updatedAt", label: "Last Updated", field: "updatedAt" },
 ];
 
-/** Same as createDummyData.js Vote.create filterOptions */
 const FILTER_OPTIONS = [
   {
     param: "status",
@@ -66,7 +62,6 @@ const FILTER_OPTIONS = [
   },
 ];
 
-/** Same as createDummyData.js Vote.create searchOptions */
 const SEARCH_OPTIONS = [
   { field: "title", matchType: "like", caseSensitive: false },
   { field: "summary", matchType: "like", caseSensitive: false },
@@ -112,7 +107,6 @@ function parseCsvLine(line) {
 
 /**
  * Parse categories.csv and return pillars array { _id, title, description, sortOrder } (deduplicated by pillar title).
- * Mirrors __scripts/createDummyData.js buildPillarsFromCsv.
  */
 function buildPillarsFromCsv() {
   const raw = readFileSync(CSV_PATH, "utf8");
