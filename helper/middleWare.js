@@ -6,7 +6,7 @@ import {Proposal} from "../schema/Proposal.js";
 
 // helper imports
 import {verifyToken} from "../helper/verifyToken.js";
-import {validateAddress} from "../helper/validateAddress.js";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
 
 /**

@@ -15,8 +15,8 @@ import { generateNonce } from "@meshsdk/core";
 import {
   verifySignature,
   isPartyToScript,
-} from "../../../helper/verifySignature.js";
-import { validateAddress } from "../../../helper/validateAddress.js";
+} from "@lerna-labs/ekklesia-helpers/crypto";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import { validateDrep, fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
 import {
   nonceRequestLimiter,

@@ -13,7 +13,7 @@ import { z } from "zod";
 import { isAuthenticated, rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
 import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
-import { validateAddress } from "../../../helper/validateAddress.js";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { applyPublicFieldExclusion } from "../../../validation/applyPublicFieldExclusion.js";
 import { loadListProjectionScript } from "../../../validation/loadListProjectionScript.js";

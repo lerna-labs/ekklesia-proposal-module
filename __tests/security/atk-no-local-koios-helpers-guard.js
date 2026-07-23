@@ -1,7 +1,8 @@
 /**
- * Ratchet: chain lookup / deposit verification must come from
- * @lerna-labs/ekklesia-helpers/cardano — not local helper/koios.js or
- * helper/verifyDeposit.js (those files are removed).
+ * Ratchet: shared Cardano helpers must come from
+ * @lerna-labs/ekklesia-helpers — not local copies of
+ * helper/koios.js, helper/verifyDeposit.js, helper/verifySignature.js,
+ * or helper/validateAddress.js (those files are removed).
  */
 import fs from "fs/promises";
 import path from "path";
@@ -14,6 +15,8 @@ const repoRoot = path.resolve(__dirname, "../..");
 const FORBIDDEN = [
   /helper\/koios(?:\.js)?/,
   /helper\/verifyDeposit(?:\.js)?/,
+  /helper\/verifySignature(?:\.js)?/,
+  /helper\/validateAddress(?:\.js)?/,
   /from\s+["']\.\/koios\.js["']/,
   /from\s+["']\.\.\/.*\/koios\.js["']/,
 ];
@@ -24,6 +27,7 @@ const SKIP_DIRS = new Set([
   "__frontend",
   "coverage",
   "dist",
+  "docs",
 ]);
 
 async function* walk(dir) {
@@ -55,7 +59,12 @@ for await (const file of walk(repoRoot)) {
 }
 
 const missingLocals = [];
-for (const rel of ["helper/koios.js", "helper/verifyDeposit.js"]) {
+for (const rel of [
+  "helper/koios.js",
+  "helper/verifyDeposit.js",
+  "helper/verifySignature.js",
+  "helper/validateAddress.js",
+]) {
   try {
     await fs.access(path.join(repoRoot, rel));
     missingLocals.push(rel);
@@ -74,10 +83,10 @@ if (missingLocals.length) {
 
 if (offenders.length) {
   console.error(
-    "Forbidden local koios/verifyDeposit imports still present in:\n" +
+    "Forbidden local Cardano helper imports still present in:\n" +
       offenders.map((f) => `  - ${f}`).join("\n"),
   );
   process.exit(1);
 }
 
-console.log("No local koios/verifyDeposit helpers guard passed.");
+console.log("No local Cardano helpers guard passed.");
