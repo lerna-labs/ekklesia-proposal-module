@@ -17,7 +17,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-020 | Medium | Dependency monitoring | **Resolved** |
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
 | F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
-| F-023 | Medium | Session lifecycle / logout | Open |
+| F-023 | Medium | Session lifecycle / logout | **Resolved** |
 | F-024 | Low | Logging | Open |
 | F-025 | Low | Repository formatting | Open |
 | F-026 | Low | Graceful shutdown | Open |
@@ -343,14 +343,15 @@ Do not clear or rotate `unsubscribeSecret` in general notification settings upda
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Session lifecycle / logout |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `routes/api/v0/session.js` (DELETE logout)
 - `helper/verifyToken.js`
+- `schema/User.js` (`sessionVersion`)
 
-### Observation
+### Observation (original)
 
 Logout clears the browser cookie only. `verifyToken` still accepts any valid JWT until normal expiry.
 
@@ -364,7 +365,7 @@ Add JWT revocation, session-version validation, or short-lived access tokens wit
 
 ### Current status (2026-07-23)
 
-Open. Logout still only `clearCookie("token")`. No revocation, blocklist, or session-version check found in `verifyToken`. (Note: F-001 httpOnly cookie work is separate; logout still does not invalidate already-issued JWTs.)
+**Resolved.** `User.sessionVersion` is embedded in JWTs as `sv`; logout `$inc`s it; `verifyToken` rejects mismatched or missing `sv`. See `docs/audit/resolutions/F-023-resolution.md`.
 
 ---
 
@@ -619,15 +620,14 @@ Priority backlog from this set (excluding resolved items):
 
 1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
-3. **F-023** — Add logout-time JWT revocation or session-version checks  
-4. **F-024** — Structured logging  
-5. **F-025** — Add `.editorconfig`  
-6. **F-026** — Graceful HTTP shutdown  
-7. **F-027** — Align delete docs vs 200 JSON  
-8. **F-028** — Login redirect via load/guard  
-9. **F-029** — Remove SignerCS debug log  
-10. **F-030** — Version polling lifecycle cleanup  
-11. **F-031** — Configurable active vote slug  
+3. **F-024** — Structured logging  
+4. **F-025** — Add `.editorconfig`  
+5. **F-026** — Graceful HTTP shutdown  
+6. **F-027** — Align delete docs vs 200 JSON  
+7. **F-028** — Login redirect via load/guard  
+8. **F-029** — Remove SignerCS debug log  
+9. **F-030** — Version polling lifecycle cleanup  
+10. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).

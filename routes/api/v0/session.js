@@ -103,6 +103,12 @@ async function clearNoncesForUser(userId) {
   });
 }
 
+/** Current sessionVersion for JWT claim (missing user → 0). */
+async function getSessionVersion(userId) {
+  const user = await User.findById(userId).select("sessionVersion").lean();
+  return user?.sessionVersion ?? 0;
+}
+
 /**
  * Validate scriptAddress from body for multisig. Returns { validatedScriptAddress } or { error }.
  */
@@ -317,8 +323,9 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
     let token;
     try {
+      const sv = await getSessionVersion(validatedScriptAddress);
       token = jwt.sign(
-        { userId: validatedScriptAddress, signType, multiSig: true },
+        { userId: validatedScriptAddress, signType, multiSig: true, sv },
         process.env.JWT_SECRET,
         { expiresIn: JWT_MAX_AGE }
       );
@@ -394,8 +401,9 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
   let token;
   try {
+    const sv = await getSessionVersion(addressBech32);
     token = jwt.sign(
-      { userId: addressBech32, signType },
+      { userId: addressBech32, signType, sv },
       process.env.JWT_SECRET,
       { expiresIn: JWT_MAX_AGE }
     );
@@ -451,6 +459,16 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
  */
 router.delete("/", deleteSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
+
+  try {
+    await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+  } catch (error) {
+    console.error("Error incrementing sessionVersion on logout:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to logout. Please try again.",
+    });
+  }
 
   // Clear the cookie with matching options from when it was set
   res.clearCookie("token", {

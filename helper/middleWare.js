@@ -91,9 +91,9 @@ export function parsePagination(req, res, next) {
   next();
 }
 
-export function isAuthenticated(req, res, next) {
+export async function isAuthenticated(req, res, next) {
   try {
-    const userToken = verifyToken(req);
+    const userToken = await verifyToken(req);
     if (userToken.status === "error") {
       return res.status(userToken.code).json({
         status: "error",
@@ -103,7 +103,7 @@ export function isAuthenticated(req, res, next) {
       req.userId = userToken.userId;
       req.signType = userToken.signType;
       req.exp = userToken.exp;
-      next();  // add this
+      next();
 
     }
   } catch (error) {

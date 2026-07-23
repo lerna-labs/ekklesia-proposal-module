@@ -939,7 +939,7 @@ router.get("/:proposalId", async (req, res) => {
 
     // Resolve auth for access control (draft only) and field exclusion
     let authenticatedUserId = null;
-    const tokenResult = verifyToken(req);
+    const tokenResult = await verifyToken(req);
     if (tokenResult.status === "success" && tokenResult.userId) {
       authenticatedUserId = String(tokenResult.userId ?? "").trim();
     }
@@ -1074,7 +1074,7 @@ router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "s
     // Check authentication (optional - don't fail if token is missing).
     // Use same normalized comparison as GET single for consistent exclude/auth behavior.
     let authenticatedUserId = null;
-    const tokenResult = verifyToken(req);
+    const tokenResult = await verifyToken(req);
     if (tokenResult.status === "success" && tokenResult.userId) {
       authenticatedUserId = String(tokenResult.userId ?? "").trim();
     }

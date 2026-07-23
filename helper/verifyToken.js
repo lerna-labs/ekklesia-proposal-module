@@ -1,51 +1,20 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { User } from "../schema/User.js";
+
 const environment = process.env.NODE_ENV || "development";
 const envPath = `.env.${environment}`;
 dotenv.config({ path: envPath });
 
 /**
- * Verifies JWT token from the httpOnly request cookie
+ * Verifies JWT token from the httpOnly request cookie and checks sessionVersion.
  *
  * @param {Object} req - Express request object containing cookies
- * @returns {Object} Status object with result of verification
- *
- * @description
- * This function performs the following operations:
- * 1. Retrieves the JWT secret from environment variables
- * 2. Extracts the authentication token from the httpOnly `token` cookie
- * 3. Verifies the token's signature and expiration
- * 4. Validates the token's payload structure
- *
- * Return object format on success:
- * {
- *   status: "success",
- *   message: "Token is valid",
- *   userId: <decoded user ID (bech32 address)>,
- *   signType: <decoded sign type>,
- *   exp: <token expiration timestamp>
- * }
- *
- * Return object format on failure:
- * {
- *   status: "error",
- *   message: <error description>,
- *   code: <HTTP status code>
- * }
- *
- * Error cases handled:
- * - Missing JWT secret (500)
- * - Missing token (401)
- * - Invalid token format (401)
- * - Expired token (401)
- * - Invalid signature (401)
- * - Other verification errors (401)
+ * @returns {Promise<Object>} Status object with result of verification
  */
-export function verifyToken(req) {
-  // Get JWT secret from environment
+export async function verifyToken(req) {
   const JWT_SECRET = process.env.JWT_SECRET;
 
-  // Check if JWT_SECRET is available
   if (!JWT_SECRET) {
     console.error("JWT_SECRET is not defined in environment variables");
     return {
@@ -55,10 +24,8 @@ export function verifyToken(req) {
     };
   }
 
-  // Cookie-only auth (httpOnly); do not accept Authorization Bearer
   const token = req.cookies?.token;
 
-  // Return early if no token found
   if (!token) {
     return {
       status: "error",
@@ -67,11 +34,9 @@ export function verifyToken(req) {
     };
   }
 
-  // Verify token
   try {
     const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
 
-    // Make sure the token contains the required fields
     if (!decoded || !decoded.userId) {
       return {
         status: "error",
@@ -80,7 +45,25 @@ export function verifyToken(req) {
       };
     }
 
-    // Return success with voter ID
+    if (typeof decoded.sv !== "number") {
+      return {
+        status: "error",
+        message: "Invalid token",
+        code: 401,
+      };
+    }
+
+    const user = await User.findById(decoded.userId)
+      .select("sessionVersion")
+      .lean();
+    if ((user?.sessionVersion ?? 0) !== decoded.sv) {
+      return {
+        status: "error",
+        message: "Invalid token",
+        code: 401,
+      };
+    }
+
     return {
       status: "success",
       message: "Token is valid",
@@ -89,7 +72,6 @@ export function verifyToken(req) {
       exp: decoded.exp,
     };
   } catch (error) {
-    // Handle specific JWT error types
     if (error.name === "TokenExpiredError") {
       return {
         status: "error",
@@ -104,7 +86,6 @@ export function verifyToken(req) {
       };
     }
 
-    // Generic error fallback
     console.error("Token verification error:", error.message);
     return {
       status: "error",
