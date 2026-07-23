@@ -9,7 +9,7 @@ import {
     Ed25519Signature,
 } from "@emurgo/cardano-serialization-lib-nodejs";
 import {getAddressType} from "./validateAddress.js";
-import {getScript, fetchCalidusKey} from "./koios.js";
+import {getScript, fetchCalidusKey} from "@lerna-labs/ekklesia-helpers/cardano";
 
 export async function verifySignature(
     payload,

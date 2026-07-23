@@ -17,8 +17,7 @@ import {
   isPartyToScript,
 } from "../../../helper/verifySignature.js";
 import { validateAddress } from "../../../helper/validateAddress.js";
-import { validateDrep } from "../../../helper/koios.js";
-import { fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
+import { validateDrep, fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
 import {
   nonceRequestLimiter,
   sessionVerificationLimiter,

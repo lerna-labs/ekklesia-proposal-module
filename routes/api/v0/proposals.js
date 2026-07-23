@@ -17,7 +17,7 @@ import { validateAddress } from "../../../helper/validateAddress.js";
 import { loadValidationScript } from "../../../validation/loadValidationScript.js";
 import { applyPublicFieldExclusion } from "../../../validation/applyPublicFieldExclusion.js";
 import { loadListProjectionScript } from "../../../validation/loadListProjectionScript.js";
-import { verifyDeposit } from "../../../helper/verifyDeposit.js";
+import { verifyDeposit } from "@lerna-labs/ekklesia-helpers/cardano";
 import {
   getDraftOnlySubmissionBlockMessage,
   getLiveSubmissionWindowBlockMessage,
