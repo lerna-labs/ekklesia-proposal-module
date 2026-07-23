@@ -16,7 +16,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-019 | Medium | Open-source governance docs | Partially resolved |
 | F-020 | Medium | Dependency monitoring | **Resolved** |
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
-| F-022 | Medium | Notification unsubscribe token lifecycle | Open |
+| F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
 | F-023 | Medium | Session lifecycle / logout | Open |
 | F-024 | Low | Logging | Open |
 | F-025 | Low | Repository formatting | Open |
@@ -312,14 +312,14 @@ Remove `JWT_SECRET` from frontend env examples; document it only in backend/test
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Notification unsubscribe token lifecycle |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `routes/api/v0/notifications.js` (PUT handler; verify path)
 - `__tests/security/atk-unsubscribe-rotation-timing-guard.js`
 
-### Observation
+### Observation (original)
 
 PUT `/api/v0/notifications` unsets `notification.unsubscribeSecret` when email is cleared, while successful email verification rotates the secret. Preference updates can invalidate unsubscribe links at the wrong lifecycle point.
 
@@ -333,7 +333,7 @@ Do not clear or rotate `unsubscribeSecret` in general notification settings upda
 
 ### Current status (2026-07-23)
 
-Open. PUT still `$unset`s `notification.unsubscribeSecret` when email is cleared (`routes/api/v0/notifications.js:238`). `__tests/security/atk-unsubscribe-rotation-timing-guard.js` still fails for this reason.
+**Resolved.** PUT no longer `$unset`s `notification.unsubscribeSecret` when email is cleared; rotation remains only on successful verify. `atk-unsubscribe-rotation-timing-guard.js` passes. See `docs/audit/resolutions/F-022-resolution.md`.
 
 ---
 
@@ -619,16 +619,15 @@ Priority backlog from this set (excluding resolved items):
 
 1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
-3. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
-4. **F-023** — Add logout-time JWT revocation or session-version checks  
-5. **F-024** — Structured logging  
-6. **F-025** — Add `.editorconfig`  
-7. **F-026** — Graceful HTTP shutdown  
-8. **F-027** — Align delete docs vs 200 JSON  
-9. **F-028** — Login redirect via load/guard  
-10. **F-029** — Remove SignerCS debug log  
-11. **F-030** — Version polling lifecycle cleanup  
-12. **F-031** — Configurable active vote slug  
+3. **F-023** — Add logout-time JWT revocation or session-version checks  
+4. **F-024** — Structured logging  
+5. **F-025** — Add `.editorconfig`  
+6. **F-026** — Graceful HTTP shutdown  
+7. **F-027** — Align delete docs vs 200 JSON  
+8. **F-028** — Login redirect via load/guard  
+9. **F-029** — Remove SignerCS debug log  
+10. **F-030** — Version polling lifecycle cleanup  
+11. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).

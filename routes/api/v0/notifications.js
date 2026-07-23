@@ -235,7 +235,6 @@ router.put(
       unsets["notification.pendingEmail"] = "";
       unsets["notification.verifiedAt"] = "";
       unsets["notification.verificationIssuedAt"] = "";
-      unsets["notification.unsubscribeSecret"] = "";
     }
 
     if (Object.keys(updates).length > 0 || Object.keys(unsets).length > 0) {
