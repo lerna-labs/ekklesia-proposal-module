@@ -1,8 +1,16 @@
 <script>
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { versionChange } from '$stores/versionStore.js';
-	import { page } from '$app/stores';
+	import {
+		versionChange,
+		startVersionPolling,
+		stopVersionPolling
+	} from '$stores/versionStore.js';
+
+	onMount(() => {
+		startVersionPolling();
+		return () => stopVersionPolling();
+	});
 
 	function reload(e) {
 		e.preventDefault();

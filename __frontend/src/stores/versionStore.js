@@ -2,6 +2,8 @@ import { writable } from 'svelte/store';
 
 // Store the initial version we first load with
 let initialLoadVersion = null;
+/** @type {ReturnType<typeof setInterval> | null} */
+let pollId = null;
 
 export const versionInfo = writable({
 	version: null,
@@ -55,6 +57,16 @@ export async function fetchVersionInfo() {
 	}
 }
 
-// Start version checking every minute
-fetchVersionInfo(); // Initial check
-setInterval(fetchVersionInfo, 1000 * 60 * 5); // Check every 5 minutes
+/** Start initial fetch + 5-minute polling (idempotent). */
+export function startVersionPolling() {
+	if (pollId != null) return;
+	fetchVersionInfo();
+	pollId = setInterval(fetchVersionInfo, 1000 * 60 * 5);
+}
+
+/** Stop version polling. */
+export function stopVersionPolling() {
+	if (pollId == null) return;
+	clearInterval(pollId);
+	pollId = null;
+}

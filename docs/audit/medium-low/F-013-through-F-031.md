@@ -24,7 +24,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | **Resolved** |
 | F-029 | Low | Frontend cleanup | **Resolved** |
-| F-030 | Low | Frontend lifecycle cleanup | Open |
+| F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
 | F-031 | Low | Frontend maintainability | Open |
 
 **Tally:** 4 resolved · 1 partially resolved · 1 open upstream · 13 open · 0 no longer needed
@@ -558,13 +558,14 @@ Remove the log or replace with dev-only structured logging.
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Frontend lifecycle cleanup |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `__frontend/src/stores/versionStore.js`
+- `__frontend/src/lib/base/VersionCheck.svelte`
 
-### Observation
+### Observation (original)
 
 Polling starts at module scope with no cleanup path.
 
@@ -578,7 +579,7 @@ Expose start/stop functions, or move polling into component lifecycle code with 
 
 ### Current status (2026-07-23)
 
-Open. `fetchVersionInfo()` and `setInterval(..., 5 min)` still run at module scope.
+**Resolved.** `startVersionPolling` / `stopVersionPolling` in `versionStore.js`; `VersionCheck.svelte` starts on mount and clears on destroy. See `docs/audit/resolutions/F-030-resolution.md`.
 
 ---
 
@@ -622,8 +623,7 @@ Priority backlog from this set (excluding resolved items):
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
-5. **F-030** — Version polling lifecycle cleanup  
-6. **F-031** — Configurable active vote slug  
+5. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
 Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback; Koios/Blockfrost fetches still lack timeouts).
