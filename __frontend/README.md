@@ -36,6 +36,7 @@ SvelteKit frontend for the Ekklesia budget/vote module. It talks to the backend 
 ## Environment
 
 - **`VITE_API_URL`** — base URL for the backend API (e.g. `http://localhost:3000/api/v0` or same origin). Used for `/votes`, `/proposals`, `/session`, etc.
+- **`VITE_SITE_URL`** — public site origin with no trailing slash (e.g. `https://hydra-voting.intersectmbo.org`). Injected at build/dev into shell `og:url`, `og:image`, and `twitter:image`. Same role as backend `FRONTEND_URL`; if unset, those meta tags are omitted.
 
 ## Auth
 

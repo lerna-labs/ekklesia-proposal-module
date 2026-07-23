@@ -11,7 +11,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-014 | Medium | External dependency resilience | Open (upstream) |
 | F-015 | Medium | API contract / error shape | **Resolved** |
 | F-016 | Medium | Comment API correctness | **Resolved** |
-| F-017 | Medium | Frontend metadata / SEO | Open |
+| F-017 | Medium | Frontend metadata / SEO | **Resolved** |
 | F-018 | Medium | Debug logging | **Resolved** |
 | F-019 | Medium | Open-source governance docs | Partially resolved |
 | F-020 | Medium | Dependency monitoring | Open (scope reduced) |
@@ -161,13 +161,14 @@ Apply the same status and visibility filters inside the aggregation used for sor
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Frontend metadata / SEO |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `__frontend/src/app.html`
+- `__frontend/vite.config.js` (build-time inject)
 
-### Observation
+### Observation (original)
 
 Shell template has an empty `og:url` value.
 
@@ -181,7 +182,7 @@ Populate `og:url` from the public site URL, or remove the tag until the deployme
 
 ### Current status (2026-07-23)
 
-Open. `__frontend/src/app.html` still has `content=""`. Note: some share/page paths set OG URL elsewhere (`PageMetadata.svelte`, `routes/share/votes.js`), but the empty shell tag remains.
+**Resolved.** Shell `og:url`, `og:image`, and `twitter:image` are injected at Vite build/dev from `VITE_SITE_URL` (or omitted if unset). See `docs/audit/resolutions/F-017-resolution.md`.
 
 ---
 
@@ -619,20 +620,19 @@ Open. Still hardcoded in `Navigation.svelte`, `budget-process/+page.svelte`, and
 Priority backlog from this set (excluding resolved items):
 
 1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
-2. **F-017** — Fix or remove empty shell `og:url`  
-3. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
-4. **F-020** — Add Dependabot for `/__frontend` (`/__testkit` no longer needed)  
-5. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
-6. **F-023** — Add logout-time JWT revocation or session-version checks  
-7. **F-024** — Structured logging  
-8. **F-025** — Add `.editorconfig`  
-9. **F-026** — Graceful HTTP shutdown  
-10. **F-027** — Align delete docs vs 200 JSON  
-11. **F-028** — Login redirect via load/guard  
-12. **F-029** — Remove SignerCS debug log  
-13. **F-030** — Version polling lifecycle cleanup  
-14. **F-031** — Configurable active vote slug  
+2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
+3. **F-020** — Add Dependabot for `/__frontend` (`/__testkit` no longer needed)  
+4. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
+5. **F-023** — Add logout-time JWT revocation or session-version checks  
+6. **F-024** — Structured logging  
+7. **F-025** — Add `.editorconfig`  
+8. **F-026** — Graceful HTTP shutdown  
+9. **F-027** — Align delete docs vs 200 JSON  
+10. **F-028** — Login redirect via load/guard  
+11. **F-029** — Remove SignerCS debug log  
+12. **F-030** — Version polling lifecycle cleanup  
+13. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-018**, **F-021**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-021**.  
 No longer needed (partial): **F-020** `__testkit` Dependabot entry only.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
