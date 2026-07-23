@@ -101,7 +101,6 @@
       if (mode === "login") {
         dispatch("login", {
           address: signerAddress,
-          token: submitResponse.token,
           expiresIn: submitResponse.expiresIn,
           maxAge: submitResponse.maxAge,
         });

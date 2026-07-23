@@ -1,4 +1,4 @@
-import { loggedIn, user } from '$stores/sessionManager.js';
+import { loggedIn, user, sessionExpiresAt } from '$stores/sessionManager.js';
 const VITE_SERVER_STATUS = import.meta.env.VITE_SERVER_STATUS;
 const API_URL = import.meta.env.VITE_API_URL;
 import { error } from '@sveltejs/kit';
@@ -33,12 +33,18 @@ export async function load({ fetch }) {
             const sessionData = await sessionRes.json();
             user.set(sessionData);
             loggedIn.set(true);
+            if (sessionData.expiresIn != null) {
+                const expiresAt = new Date(sessionData.expiresIn).getTime();
+                sessionExpiresAt.set(Number.isFinite(expiresAt) ? expiresAt : null);
+            }
         } else {
             loggedIn.set(false);
+            sessionExpiresAt.set(null);
         }
     } catch (err) {
         console.error('Error validating session:', err);
         loggedIn.set(false);
+        sessionExpiresAt.set(null);
     }
 
     return {

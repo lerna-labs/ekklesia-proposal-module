@@ -151,7 +151,6 @@
     if (mode === "login") {
       dispatch("login", {
         address: connectedWallet.address,
-        token: submitResponse.token,
         expiresIn: submitResponse.expiresIn,
         maxAge: submitResponse.maxAge,
       });

@@ -5,7 +5,7 @@ const envPath = `.env.${environment}`;
 dotenv.config({ path: envPath });
 
 /**
- * Verifies JWT token from request cookies
+ * Verifies JWT token from the httpOnly request cookie
  *
  * @param {Object} req - Express request object containing cookies
  * @returns {Object} Status object with result of verification
@@ -13,7 +13,7 @@ dotenv.config({ path: envPath });
  * @description
  * This function performs the following operations:
  * 1. Retrieves the JWT secret from environment variables
- * 2. Extracts the authentication token from request cookies
+ * 2. Extracts the authentication token from the httpOnly `token` cookie
  * 3. Verifies the token's signature and expiration
  * 4. Validates the token's payload structure
  *
@@ -55,14 +55,8 @@ export function verifyToken(req) {
     };
   }
 
-  // Get token from cookie (preferred) or Authorization header
-  let token = req.cookies?.token;
-  if (!token) {
-    const auth = req.headers?.authorization;
-    if (auth && typeof auth === "string" && auth.startsWith("Bearer ")) {
-      token = auth.slice(7).trim();
-    }
-  }
+  // Cookie-only auth (httpOnly); do not accept Authorization Bearer
+  const token = req.cookies?.token;
 
   // Return early if no token found
   if (!token) {

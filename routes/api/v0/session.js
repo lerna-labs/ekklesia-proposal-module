@@ -126,6 +126,7 @@ function validateScriptAddress(scriptAddress) {
  * @returns {Object} 200 - Object containing:
  *   - userId: The user ID from the validated JWT token
  *   - name: The user's display name (from User record, if set)
+ *   - expiresIn: ISO timestamp when the session JWT expires
  *   - adminVoteIds: Array of vote _id strings where the authenticated user is an admin (only present if non-empty)
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
@@ -155,6 +156,9 @@ router.get("/", getSessionLimiter, isAuthenticated, async (req, res) => {
     userId,
     name: name ?? undefined,
   };
+  if (req.exp != null) {
+    payload.expiresIn = new Date(req.exp * 1000).toISOString();
+  }
   if (adminVoteIds.length > 0) {
     payload.adminVoteIds = adminVoteIds;
   }
@@ -250,7 +254,7 @@ const AUTH_ERROR_MESSAGE =
  * @access Public
  *
  * @param {Object} req.body - signerAddress, signType, signature; optional scriptAddress for multisig
- * @returns {Object} 200 - token, expiresIn, userId
+ * @returns {Object} 200 - expiresIn, userId (JWT is set only via httpOnly cookie)
  * @returns {Object} 400 - Nonce/signature/script validation errors
  * @returns {Object} 500 - JWT/database error
  */
@@ -335,7 +339,6 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
     setAuthCookie(res, token, expiryDate);
     console.log("MS: Login successful:", signerAddress, validatedScriptAddress);
     return res.status(200).json({
-      token,
       expiresIn: expiryDate,
       userId: validatedScriptAddress,
     });
@@ -431,7 +434,6 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
   console.log("Login successful:", signerAddress);
   setAuthCookie(res, token, expiryDate);
   return res.status(200).json({
-    token,
     expiresIn: expiryDate,
     userId: addressBech32,
   });

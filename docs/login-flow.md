@@ -96,7 +96,7 @@ attempts/min per IP).
    `User` with `name` and `lastLogin`.
 6. Cleans up other nonces for the user and old session documents.
 
-**Response (200):** `{ token, expiresIn }` (and `Set-Cookie: token=...`).
+**Response (200):** `{ expiresIn, userId }` (and `Set-Cookie: token=...` httpOnly). The JWT is not returned in the JSON body.
 
 ### 3. Validate session / get current user — `GET /api/v0/session`
 
@@ -106,21 +106,21 @@ profile data.
 **Auth:** Required. Uses `isAuthenticated` middleware, which calls
 `verifyToken(req)`.
 
-**Token source:** Backend reads the JWT from **cookies** only:
-`req.cookies?.token` (see `helper/verifyToken.js`). The server uses
-`cookie-parser` and CORS with `credentials: true` so the cookie set by
-`PUT /session` is sent on same-origin or configured cross-origin requests to the
-API.
+**Token source:** Backend reads the JWT from the **httpOnly cookie** only:
+`req.cookies?.token` (see `helper/verifyToken.js`). Bearer `Authorization`
+headers are not accepted. The server uses `cookie-parser` and CORS with
+`credentials: true` so the cookie set by `PUT /session` is sent on same-origin
+or configured cross-origin requests to the API.
 
 **Backend behavior:**
 
 1. `verifyToken(req)` validates `req.cookies.token`: signature, expiry, and
    presence of `userId`.
-2. On success, `req.userId` and `req.signType` are set; handler loads `User`
-   name and votes where the user is admin.
-3. Returns `{ userId, name?, adminVoteIds? }`.
+2. On success, `req.userId`, `req.signType`, and `req.exp` are set; handler loads
+   `User` name and votes where the user is admin.
+3. Returns `{ userId, name?, expiresIn?, adminVoteIds? }`.
 
-**Response (200):** `{ userId, name?, adminVoteIds? }`  
+**Response (200):** `{ userId, name?, expiresIn?, adminVoteIds? }`  
 **Response (401):** Missing or invalid token (handled by `isAuthenticated`).
 
 ### 4. Logout — `DELETE /api/v0/session`
@@ -129,10 +129,10 @@ API.
 
 **Auth:** Required (`isAuthenticated`).
 
-**Backend behavior:** Clears the `token` cookie with the same
+**Backend behavior:** Clears the httpOnly `token` cookie with the same
 path/secure/sameSite options used when setting it. Returns success. No
 server-side session store is updated; the JWT remains valid until expiry if
-someone else had stored it, so client-side token clearing is important.
+copied elsewhere, so the cookie is the only browser session handle.
 
 ---
 
@@ -140,28 +140,22 @@ someone else had stored it, so client-side token clearing is important.
 
 ### Session state (`sessionManager.js`)
 
-- **Stores:** `loggedIn` (boolean), `user` (object or null), `jwt` (token string
-  or null).
-- **Token storage:** `setJWT(token, expiresIn)` writes the token to:
-    - A cookie (via `js-cookie`) with path `/`, secure/sameSite by environment.
-    - `localStorage` as fallback.
-    - The `jwt` Svelte store.
-- **Token read:** `getJWT()` returns token from cookie or localStorage and
-  updates the `jwt` store.
+- **Stores:** `loggedIn` (boolean), `user` (object or null), `sessionExpiresAt`
+  (ms timestamp or null). The JWT itself is never held in JS-readable storage.
+- **Expiry:** `setSessionExpiry(expiresIn)` records expiry from login or
+  `GET /session` for the session-expiry banner.
 - **API helper:** `api.fetch(fetch, url, options)`:
-    - Uses `get(jwt) || getJWT()` and sets `Authorization: Bearer <token>` when
-      present.
-    - Sends `credentials: 'include'` so the browser also sends the cookie set by
-      the API (if same-origin or allowed origin).
-    - On 401, calls `logout()` and throws (e.g., redirect to log in / home).
+    - Sends `credentials: 'include'` so the browser sends the httpOnly cookie.
+    - Does not set `Authorization`.
+    - On 401 when `loggedIn` was true, calls `expireSession()` and throws.
 
 ### Layout and session hydration
 
 - **Root layout** (`__frontend/src/routes/+layout.js`): Runs in the client
-  (`csr = true`). If `getJWT()` returns a token, it calls
-  `api.fetch(fetch, '/session/')`. On 200, it sets `user` and `loggedIn`;
-  otherwise it sets `loggedIn = false`. This restores the session state on
-  reload/navigation.
+  (`csr = true`). Probes `GET ${API_URL}/session` with `credentials: 'include'`.
+  On 200, sets `user`, `loggedIn`, and `sessionExpiresAt` from `expiresIn`;
+  otherwise clears login state. This restores session state on reload without
+  reading the JWT in JavaScript.
 - **Private layout** (`__frontend/src/routes/(private)/+layout.js`): In `load`,
   fetches `GET ${API_URL}/session` with `credentials: 'include'`. If the
   response is not ok or `sessionData.userId` is missing, redirects to `/`.
@@ -177,38 +171,31 @@ someone else had stored it, so client-side token clearing is important.
 3. **Get nonce:** Frontend calls
    `getPayload("/session", connectedWallet.address, signType, scriptAddress)`,
    which does `POST /api/v0/session` with `{ signerAddress, signType }` (and
-   optional `scriptAddress`). The request uses `api.fetch`, so any existing
-   token is sent; the nonce endpoint does not require auth.
+   optional `scriptAddress`). The nonce endpoint does not require auth.
 4. **Sign:** Frontend uses `signData(connectedWallet, signer, payload.dataHex)`
    to have the wallet sign the nonce string.
 5. **Submit:** Frontend calls
    `submitSignature("/session", payload.userId, signType, signature, payload.merkleRoot, scriptAddress)`,
    which sends `PUT /api/v0/session` with
    `{ signerAddress, signature, signType, data, scriptAddress }`.
-6. **Backend** verifies signature, issues JWT, sets `token` cookie and returns
-   `{ token, expiresIn }`.
+6. **Backend** verifies signature, issues JWT, sets httpOnly `token` cookie and
+   returns `{ expiresIn, userId }` (no JWT in body).
 7. **Frontend** (`WalletSigner.svelte`): On success, `storeToken` runs:
-    - `setJWT(token, expiresIn)` — stores token in cookie, localStorage, and
-      `jwt` store.
+    - `setSessionExpiry(expiresIn)` — expiry only; JWT stays httpOnly.
     - `loggedIn.set(true)`.
-    - Fetches user data with `api.fetch(fetch, "/dashboard/")` and sets
-      `user.set(userData)`. (Note: the backend does not define
-      `/api/v0/dashboard`; the canonical endpoint for “current user” is
-      `GET /api/v0/session`. If using a single backend, this call may need to
-      target `/session/` or a proxy that maps `/dashboard` to session.)
-    - `goto("/")`, closes the dialog.
+    - Fetches user data with `api.fetch(fetch, "/session/")` and sets
+      `user.set(userData)`.
+    - Redirects (callback path, `/dashboard` from `/login`, or `invalidateAll`).
 
 So the **frontend login sequence** is: POST `/session` → sign nonce in wallet →
-PUT `/session` → store token and user, then redirect.
+PUT `/session` → set expiry and user from cookie session, then redirect.
 
 ### Logout
 
 - **Frontend:** `logout()` in `sessionManager.js`:
-    1. Calls `DELETE /api/v0/session` with `Authorization: Bearer <token>` (and
-       `credentials: 'include'`).
-    2. Clears the token cookie (same path/secure/sameSite as set) and
-       `localStorage`, sets `jwt`, `loggedIn`, and `user` to null, then
-       `goto("/")`.
+    1. Calls `DELETE /api/v0/session` with `credentials: 'include'`.
+    2. Clears legacy JS-readable token leftovers, sets `loggedIn` / `user` /
+       `sessionExpiresAt` to null, then `goto("/")`.
 
 ---
 
@@ -225,9 +212,9 @@ sequenceDiagram
     Backend-->>Frontend: { dataHex, userId, ... }
     User->>Frontend: Sign dataHex in wallet
     Frontend->>Backend: PUT /session<br/>{ signerAddress, signType, signature }
-    Backend-->>Frontend: Set-Cookie: token<br/>{ token, expiresIn }
+    Backend-->>Frontend: Set-Cookie: token HttpOnly<br/>{ expiresIn, userId }
     Frontend->>Backend: GET /session
-    Backend-->>Frontend: { userId, name?, ... }
+    Backend-->>Frontend: { userId, name?, expiresIn?, ... }
     Frontend-->>User: Redirect /
 ```
 
@@ -237,14 +224,12 @@ sequenceDiagram
 
 - **Backend:** Any route that needs the current user uses `isAuthenticated`. It
   reads the JWT from `req.cookies.token` via `verifyToken(req)` and attaches
-  `req.userId` and `req.signType`. The frontend sends the token in the cookie
-  (when calling the same API origin with `credentials: 'include'`) and
-  optionally in `Authorization: Bearer`; the backend currently uses only the
-  cookie for verification.
+  `req.userId`, `req.signType`, and `req.exp`. The frontend sends the token only
+  via the httpOnly cookie (`credentials: 'include'`).
 - **Frontend:** For authenticated API calls, use
-  `api.fetch(fetch, url, options)` so the token is added and 401 triggers
-  logout. Private pages live under `(private)` and rely on the private layout’s
-  session check and redirect.
+  `api.fetch(fetch, url, options)` so cookies are included and 401 triggers
+  session expiry handling. Private pages live under `(private)` and rely on the
+  private layout’s session check and redirect.
 
 ---
 
@@ -254,7 +239,7 @@ sequenceDiagram
   token lifetime. CORS is configured with `credentials: true` and an allowed
   origin (e.g. `FRONTEND_URL`).
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
-  Cookie and `localStorage` use is environment-aware (secure, sameSite).
+  Session auth relies on the server-set httpOnly cookie only.
 - Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
   are cleaned up by TTL and after successful login.
 

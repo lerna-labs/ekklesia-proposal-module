@@ -5,16 +5,16 @@
 | **Severity** | Critical |
 | **Finding ID** | F-001 |
 | **Category** | Token storage / session security |
-| **Status** | Partially fixed |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `__frontend/src/stores/sessionManager.js:124-165`
-- `helper/verifyToken.js:58-64`
+- `__frontend/src/stores/sessionManager.js`
+- `helper/verifyToken.js`
 
 ## Observation
 
-The backend sets an httpOnly cookie, but the frontend also writes the JWT into JavaScript-readable storage, including a client-managed cookie and localStorage. The frontend then sends the token as an `Authorization: Bearer` value, and the backend accepts bearer tokens.
+The backend sets an httpOnly cookie, but the frontend also wrote the JWT into JavaScript-readable storage, including a client-managed cookie and localStorage. The frontend then sent the token as an `Authorization: Bearer` value, and the backend accepted bearer tokens.
 
 ## Risk
 
@@ -26,4 +26,4 @@ Keep browser sessions in a server-set httpOnly cookie only. Remove localStorage 
 
 ## Current Status
 
-Partially fixed based on current source inspection. localStorage token storage was removed, but the frontend still writes a JavaScript-readable token cookie, `fetchJson()` can still send bearer authentication, and the backend still accepts bearer tokens.
+Resolved. Sessions use the server-set httpOnly `token` cookie only. The frontend does not store the JWT in localStorage, JS-readable cookies, or a Svelte store. Login responses omit the JWT body field. `verifyToken` reads the cookie only (no Bearer fallback). See [F-001-resolution.md](../resolutions/F-001-resolution.md).

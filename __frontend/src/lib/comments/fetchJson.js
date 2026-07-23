@@ -1,6 +1,5 @@
 import { get } from "svelte/store";
-import Cookies from "js-cookie";
-import { jwt, expireSession } from "$stores/sessionManager.js";
+import { loggedIn, expireSession } from "$stores/sessionManager.js";
 
 const API_BASE =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
@@ -16,9 +15,7 @@ const API_BASE =
  * @returns {Promise<{ ok: boolean; status: number; json: object }>}
  */
 export async function fetchJson(url, options = {}) {
-  const hadAuth =
-    Boolean(typeof document !== "undefined" && Cookies.get("token")) ||
-    Boolean(get(jwt));
+  const hadAuth = Boolean(get(loggedIn));
 
   const headers = new Headers(options.headers || {});
   headers.set("Content-Type", "application/json");

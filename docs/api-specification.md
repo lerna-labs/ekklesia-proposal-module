@@ -1188,15 +1188,15 @@ The issued JWT `userId` is the script address.
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresIn": "2026-02-11T09:23:33Z"
+  "expiresIn": "2026-02-11T09:23:33Z",
+  "userId": "stake1ux9...xyz"
 }
 ```
 
-> **Note:** The JWT token is also set as an HTTP-only cookie named `token`.
-> Subsequent requests should include this cookie automatically. The token
-> contains `userId` (stake address, CIP-0129 DRep ID, or multisig script
-> address) and `signType`.
+> **Note:** The JWT is set only as an HTTP-only cookie named `token` (not in the
+> JSON body). Subsequent requests must include this cookie via
+> `credentials: 'include'`. The token contains `userId` (stake address, CIP-0129
+> DRep ID, or multisig script address) and `signType`.
 
 #### Error Response — `400 Bad Request`
 
@@ -1278,6 +1278,7 @@ and (when applicable) the list of vote IDs for which they are an admin.
 {
   "userId": "stake1ux9...xyz",
   "name": "Alice",
+  "expiresIn": "2026-02-11T09:23:33Z",
   "adminVoteIds": [
     "a1b2c3d4e5f67890abcdef12",
     "b2c3d4e5f67890abcdef123"
@@ -1289,6 +1290,7 @@ and (when applicable) the list of vote IDs for which they are an admin.
 |----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `userId`       | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                            |
 | `name`         | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                        |
+| `expiresIn`    | string   | **Optional.** ISO timestamp when the session JWT expires (from the cookie token `exp`).                                                                                                               |
 | `adminVoteIds` | string[] | **Optional.** Array of vote `_id` values (as strings) for which the authenticated user is in the vote's `admins` array. Present only when the user is an admin of at least one vote; omitted otherwise. |
 
 > **Note:** The `userId` field contains a Bech32-encoded Cardano identifier. It

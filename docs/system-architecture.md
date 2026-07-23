@@ -102,15 +102,16 @@ Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
 - Hosting the proposal creation and editing form, with draft-save (partial
   validation) and submit (full validation via Zod schema) flows.
 - Managing session state via `sessionManager.js` (stores: `loggedIn`, `user`,
-  `jwt`). The JWT is persisted to both an HTTP-only cookie and `localStorage` as
-  a fallback.
+  `sessionExpiresAt`). The JWT is kept only in a server-set httpOnly cookie;
+  the frontend never stores the token in JavaScript-readable storage.
 - Providing the `WalletSigner` UI component for CIP-30 wallet connection and the
   nonce sign-in flow.
 - Protecting private routes under the `(private)` SvelteKit layout, which
   validates the session cookie on load and redirects unauthenticated users to
   `/`.
-- Calling the backend API via a shared `api.fetch` helper that injects the JWT (
-  `Authorization: Bearer`) and handles 401 responses by triggering logout.
+- Calling the backend API via a shared `api.fetch` helper that sends
+  `credentials: 'include'` (httpOnly cookie) and handles 401 responses by
+  triggering session expiry.
 
 **Routing structure (high level):**
 
@@ -322,7 +323,7 @@ flowchart TD
     DREP["DRep Registry<br />(at login)"]
     HANDLE["ADA Handle Service<br />(at login)"]
 
-    Frontend -->|"HTTPS · Authorization: Bearer JWT"| Backend
+    Frontend -->|"HTTPS · Cookie credentials include"| Backend
     Backend -->|"Mongoose ODM"| DB
     AUTH -->|"resolve display name"| DREP
     AUTH -->|"resolve display name"| HANDLE
@@ -370,8 +371,8 @@ sequenceDiagram
     Frontend->>Backend: PUT /session<br/>{ signerAddress, signType, signature }
     Backend->>MongoDB: verify sig, upsert User, issue JWT
     MongoDB-->>Backend: ok
-    Backend-->>Frontend: Set-Cookie: token=<JWT><br/>{ token, expiresIn }
-    Frontend-->>User: setJWT()<br />loggedIn = true
+    Backend-->>Frontend: Set-Cookie: token HttpOnly<br/>{ expiresIn, userId }
+    Frontend-->>User: setSessionExpiry()<br />loggedIn = true
 ```
 
 ### 5.3 Proposal Create / Submit Flow

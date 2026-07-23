@@ -24,9 +24,9 @@ import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
  * 3. If invalid, returns an appropriate error response
  *
  * On success, adds the following properties to the request:
- * - req.voterId: The authenticated voter's ID
+ * - req.userId: The authenticated user's ID
  * - req.signType: The type of signature used ('drep', etc.)
- * - req.multiSig: Boolean indicating if this is a multisig authentication
+ * - req.exp: JWT expiration timestamp (seconds since epoch)
  */
 /**
  * Middleware factory that rejects requests containing duplicate (array) query parameters.
@@ -102,6 +102,7 @@ export function isAuthenticated(req, res, next) {
     } else {
       req.userId = userToken.userId;
       req.signType = userToken.signType;
+      req.exp = userToken.exp;
       next();  // add this
 
     }
