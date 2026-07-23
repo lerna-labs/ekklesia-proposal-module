@@ -42,6 +42,6 @@
     "lucide-svelte": "^0.574.0",
     "markdown-it": "^14.2.0",
     "svelte-lexical": "^0.6.4",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   }
 }
