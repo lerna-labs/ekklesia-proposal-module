@@ -1,6 +1,8 @@
 /**
  * Create or update Constitutional Committee Election 2026 (slug: cc-vote-2026) with fixed UTC phase windows.
  *
+ * Fill ADMINS with Bech32 stake addresses before running.
+ *
  * Usage (repo root): node __scripts/setup-cc-vote2026.js
  */
 
@@ -22,11 +24,8 @@ const TITLE = "Constitutional Committee Election 2026";
 const DESCRIPTION =
   "Constitutional Committee Election 2026.";
 
-/** Replace with a real Bech32 stake address before running against production. */
-const ADMINS = ["stake1u8dluycewh6jfdpfrddk4lsdy6swlsky5uv5cnn9wq8t6ccu08kxv",
-  "stake1u8n0ufl3222z3f67mc7ve0ny2mheuknp55vsqhwmah385cskz2k9d",
-  "stake1u9vlhfcmx8p9ytsrlxtuse23ypgvz48ld9zspkdawqkt2vc0vesfq",
-  "stake1u887nvclsec08s7pfl0dexjtqz9fj3aactz2vnmtm48n5lcd5fx9q"];
+/** Bech32 stake addresses with vote admin rights. Fill before running. */
+const ADMINS = [];
 
 /** CC vote: no treasury minimum and no wallet deposit (amounts in lovelace). */
 const DEPOSIT_OPTIONS = {
@@ -145,9 +144,6 @@ async function main() {
     console.log(`   feedback:   ${dates.feedbackStartDate.toISOString()} → ${dates.feedbackEndDate.toISOString()}`);
     console.log(`   review:     ${dates.reviewStartDate.toISOString()} → ${dates.reviewEndDate.toISOString()}`);
     console.log(`   voting:     ${dates.votingStartDate.toISOString()} → ${dates.votingEndDate.toISOString()}`);
-    if (ADMINS.length === 1 && ADMINS[0] === "REPLACE_WITH_STAKE_ADDRESS") {
-      console.log("\n⚠️  Replace ADMINS in __scripts/setup-cc-vote2026.js with a real stake address before production.");
-    }
   } catch (e) {
     console.error(e);
     exitCode = 1;

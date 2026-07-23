@@ -26,5 +26,4 @@ will create / mutate documents in the connected MongoDB.
 ## Cleanup
 
 The race scripts tag created proposals with `[Wraith-2026-05-06-V2]` in the
-title. After confirming, drop them with the `__scripts/wipeDB.js` flow or a
-direct delete by tag.
+title. After confirming, delete them directly by that title tag in MongoDB.

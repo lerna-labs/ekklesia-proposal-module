@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Vote Schema – Field Reference                                                                           |
-| **Version**        | 0.1.4                                                                                                   |
+| **Version**        | 0.2.0                                                                                                   |
 | **Created**        | February 18, 2026                                                                                       |
-| **Last Revised**   | April 14, 2026                                                                                       |
+| **Last Revised**   | July 23, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -37,8 +37,23 @@ Implementation: [../schema/Vote.js](../schema/Vote.js).
 | Review end        | `reviewEndDate`          | Yes      | Date            | ISO 8601. End of review period; proposer re-submit and proposer withdrawal of **live** proposals are allowed only until this date.                                                                                                                                                 |
 | Voting start      | `votingStartDate`        | Yes      | Date            | ISO 8601. When on-chain/platform voting begins; vote **admin** withdrawal of **live** proposals is allowed only **before** this instant.                                                                                                                                               |
 | Voting end        | `votingEndDate`          | Yes      | Date            | ISO 8601. When voting ends (for scheduling/display; enforcement may expand later).                                                                                                                                           |
-| Validation Script | `validationScript`       | —        | String          | A string indicating which form validation to use, allows for future proofing later vote rounds                                                                                  |
-| Voting URL        | `votingUrl`              | —        | String          | A URL to the Ekklesia Voting Platform attached to this Vote                                                                                                                     |
+| Validation Script | `validationScript`       | Yes      | String          | Path under `validation/` to the form validation script (e.g. `budget2026/validationScript.js`). Used for POST/PUT proposal validation. |
+| Exclude Script    | `excludeScript`          | No       | String          | Optional path to a script that strips non-public fields on public proposal APIs. If set but unloadable, public viewers get `metaData: {}` (fail closed). |
+| List Projection Script | `listProjectionScript` | No    | String          | Optional script to shape `GET /proposals` list item payloads. See [proposal-list-projection-contract.md](proposal-list-projection-contract.md). |
+| Voting URL        | `votingUrl`              | No       | String          | URL to the Ekklesia Voting Platform for this vote. |
+| Results URL       | `resultsUrl`             | No       | String          | External results page (used in results notifications). |
+| Results published | `resultsPublishedAt`     | No       | Date \| null    | Set when results are officially published; drives results milestone emails. |
+| Notification dispatch | `notificationDispatch.votingOpenedSentAt` | No | Date \| null | Idempotency: set after voting-opened emails sent. |
+| — | `notificationDispatch.resultsPublishedSentAt` | No | Date \| null | Idempotency: set after results-published emails sent. |
+| Deposit options | `depositOptions.treasuryDonation` | Yes | Number | Mint donation amount in lovelace. |
+| — | `depositOptions.depositAddress` | No | String | Bech32 deposit address, or empty for no deposit. |
+| — | `depositOptions.depositAmount` | Yes | Number | Min deposit in lovelace (0 = none). |
+| Form | `form` | Yes | String | Frontend form folder name (e.g. `budget2026`, `cc-vote2026`). |
+| Comments enabled | `commentsEnabled` | Yes | Boolean | Default `true`. |
+| Sort options | `sortOptions` | No | Array | Optional; defaults to title / commentCount / submittedAt / updatedAt. |
+| Filter options | `filterOptions` | No | Array | Optional SearchFilter config; defaults include status filter. |
+| Search options | `searchOptions` | No | Array | Optional free-text search fields; defaults include title, summary, proposerId, `_id`. |
+| Meta data | `metaData` | No | Mixed | Vote-specific payload (e.g. strategyFramework.pillars). |
 | (timestamps)      | `createdAt`, `updatedAt` | —        | Date            | Set by Mongoose `timestamps: true`.                                                                                                                                             |
 
 ---
@@ -87,6 +102,8 @@ Implementation: [../schema/Vote.js](../schema/Vote.js).
   - `GET /votes` - [API Specification §3.1](api-specification.md#31-get-votes)
   - `GET /votes/{identifier}` - [API Specification §3.2](api-specification.md#32-get-votesidentifier)
   - `GET /votes/{voteId}/categories` - [API Specification §3.3](api-specification.md#33-get-votesvoteidcategories)
+- [notification-system-implementation.md](notification-system-implementation.md) — `notificationDispatch`, `resultsPublishedAt`
+- [proposal-list-projection-contract.md](proposal-list-projection-contract.md) — `listProjectionScript`
 - Schema implementation: 
   - [../schema/Vote.js](../schema/Vote.js).
 
@@ -106,6 +123,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                    |
 |---------|------------|--------------------------------------------------------------------------------|
+| 0.2.0   | 2026-07-23 | Document `excludeScript`, `listProjectionScript`, `notificationDispatch`, results URLs/dates, `depositOptions`, `form`, filter/sort/search options. |
 | 0.1.4   | 2026-04-14 | Document `votingStartDate` / `votingEndDate`; align window notes with API (drafts, feedback, review, admin withdraw) |
 | 0.1.3   | 2026-02-20 | Update missing `validationScript` and `votingUrl` from schema                  |
 | 0.1.2   | 2026-02-20 | Terminology updates to rename from Budgets to Votes for future-proofing        |

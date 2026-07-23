@@ -15,10 +15,9 @@ import { generateNonce } from "@meshsdk/core";
 import {
   verifySignature,
   isPartyToScript,
-} from "../../../helper/verifySignature.js";
-import { validateAddress } from "../../../helper/validateAddress.js";
-import { validateDrep } from "../../../helper/koios.js";
-import { fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
+} from "@lerna-labs/ekklesia-helpers/crypto";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
+import { validateDrep, fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
 import {
   nonceRequestLimiter,
   sessionVerificationLimiter,
@@ -104,6 +103,12 @@ async function clearNoncesForUser(userId) {
   });
 }
 
+/** Current sessionVersion for JWT claim (missing user → 0). */
+async function getSessionVersion(userId) {
+  const user = await User.findById(userId).select("sessionVersion").lean();
+  return user?.sessionVersion ?? 0;
+}
+
 /**
  * Validate scriptAddress from body for multisig. Returns { validatedScriptAddress } or { error }.
  */
@@ -127,6 +132,7 @@ function validateScriptAddress(scriptAddress) {
  * @returns {Object} 200 - Object containing:
  *   - userId: The user ID from the validated JWT token
  *   - name: The user's display name (from User record, if set)
+ *   - expiresIn: ISO timestamp when the session JWT expires
  *   - adminVoteIds: Array of vote _id strings where the authenticated user is an admin (only present if non-empty)
  * @returns {Object} 401 - Unauthorized if token is invalid or missing (handled by isAuthenticated middleware)
  */
@@ -156,6 +162,9 @@ router.get("/", getSessionLimiter, isAuthenticated, async (req, res) => {
     userId,
     name: name ?? undefined,
   };
+  if (req.exp != null) {
+    payload.expiresIn = new Date(req.exp * 1000).toISOString();
+  }
   if (adminVoteIds.length > 0) {
     payload.adminVoteIds = adminVoteIds;
   }
@@ -251,7 +260,7 @@ const AUTH_ERROR_MESSAGE =
  * @access Public
  *
  * @param {Object} req.body - signerAddress, signType, signature; optional scriptAddress for multisig
- * @returns {Object} 200 - token, expiresIn, userId
+ * @returns {Object} 200 - expiresIn, userId (JWT is set only via httpOnly cookie)
  * @returns {Object} 400 - Nonce/signature/script validation errors
  * @returns {Object} 500 - JWT/database error
  */
@@ -287,6 +296,8 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       return res.status(400).json({ status: "error", message: AUTH_ERROR_MESSAGE });
     }
 
+    // Membership-only by design (F-002): eligible key in script → session OK.
+    // Does not enforce native-script threshold/timelock. See system-architecture §8.1.
     const isParty = await isPartyToScript(
       nonceData.nonce,
       validatedScriptAddress,
@@ -312,8 +323,9 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
     let token;
     try {
+      const sv = await getSessionVersion(validatedScriptAddress);
       token = jwt.sign(
-        { userId: validatedScriptAddress, signType, multiSig: true },
+        { userId: validatedScriptAddress, signType, multiSig: true, sv },
         process.env.JWT_SECRET,
         { expiresIn: JWT_MAX_AGE }
       );
@@ -334,7 +346,6 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
     setAuthCookie(res, token, expiryDate);
     console.log("MS: Login successful:", signerAddress, validatedScriptAddress);
     return res.status(200).json({
-      token,
       expiresIn: expiryDate,
       userId: validatedScriptAddress,
     });
@@ -390,8 +401,9 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
   let token;
   try {
+    const sv = await getSessionVersion(addressBech32);
     token = jwt.sign(
-      { userId: addressBech32, signType },
+      { userId: addressBech32, signType, sv },
       process.env.JWT_SECRET,
       { expiresIn: JWT_MAX_AGE }
     );
@@ -430,7 +442,6 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
   console.log("Login successful:", signerAddress);
   setAuthCookie(res, token, expiryDate);
   return res.status(200).json({
-    token,
     expiresIn: expiryDate,
     userId: addressBech32,
   });
@@ -448,6 +459,16 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
  */
 router.delete("/", deleteSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
+
+  try {
+    await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+  } catch (error) {
+    console.error("Error incrementing sessionVersion on logout:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to logout. Please try again.",
+    });
+  }
 
   // Clear the cookie with matching options from when it was set
   res.clearCookie("token", {

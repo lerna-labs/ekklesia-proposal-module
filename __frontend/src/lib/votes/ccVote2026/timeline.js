@@ -7,17 +7,12 @@ export const budgetPhases = [
   {
     title: "Candidate registration",
     start: "2026-05-08T21:45:00.000Z",
-    end: "2026-06-07T21:45:00.000Z",
-  },
-  {
-    title: "Promotion and community engagement",
-    start: "2026-06-08T12:00:00.000Z",
-    end: "2026-06-13T12:00:00.000Z",
+    end: "2026-06-21T21:45:00.000Z",
   },
   {
     title: "Hydra voting period",
-    start: "2026-06-13T21:45:00.000Z",
-    end: "2026-07-13T21:45:00.000Z",
+    start: "2026-06-28T21:45:00.000Z",
+    end: "2026-07-23T21:45:00.000Z",
     link: {
       href: "https://intersect.ekklesia.vote/ballots/",
       label: "Go to Voting",
@@ -25,8 +20,8 @@ export const budgetPhases = [
   },
   {
     title: "Audited results published",
-    start: "2026-07-16T12:00:00.000Z",
-    end: "2026-07-16T23:59:59.999Z",
+    start: "2026-07-27T12:00:00.000Z",
+    end: "2026-07-27T23:59:59.999Z",
   },
   {
     title: "Update Committee governance action — Epoch 648",

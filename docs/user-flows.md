@@ -5,9 +5,9 @@
 | Field              | Detail                                                                            |
 |--------------------|-----------------------------------------------------------------------------------|
 | **Document Title** | User Flows                                                                        |
-| **Version**        | 0.1.2                                                                             |
+| **Version**        | 0.1.3                                                                             |
 | **Created**        | February 19, 2026                                                                 |
-| **Last Revised**   | February 19, 2026                                                                 |
+| **Last Revised**   | July 23, 2026                                                                 |
 | **Companion Doc**  | [System Architecture](system-architecture.md) · [Proposal Flow](proposal-flow.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>            |
 | **Status**         | Draft                                                                             |
@@ -57,7 +57,7 @@ flowchart TD
     B --> C["Select a vote<br />GET /votes?slug={slug}"]
     C --> D["Resolve voteId from response"]
     D --> E["View proposal list filtered by voteId<br />filter · search · sort"]
-    E --> F["Open proposal detail<br />/proposals/{proposalId}"]
+    E --> F["Open proposal detail<br />/votes/{voteSlug}/{proposalId}"]
     F --> G[Read full proposal]
     G --> H[Read comments and replies]
     H --> I{Want to comment?}
@@ -94,7 +94,7 @@ flowchart TD
 flowchart TD
     START(( )) --> A[/dashboard — view own proposals]
     A --> B[Click Create Proposal<br />select vote]
-    B --> C[/proposals/new — fill structured form]
+    B --> C["/dashboard/{voteSlug}/new — fill structured form"]
     C --> D{Save or Submit?}
 
     D -->|Save Draft| E["POST /proposals<br />status: draft · partial validation"]
@@ -120,7 +120,7 @@ flowchart TD
     START(( )) --> A[/dashboard — view own proposals]
     A --> B{Select action}
 
-    B -->|Edit draft| C["/proposals/{id}/edit"]
+    B -->|Edit draft| C["/dashboard/{voteSlug}/{proposalId}"]
     C --> D[Save changes<br />no full validation]
     D --> A
 
@@ -128,11 +128,11 @@ flowchart TD
     E --> F["DELETE /proposals/{id}"]
     F --> A
 
-    B -->|Edit live proposal| G["/proposals/{id}/edit"]
+    B -->|Edit live proposal| G["/dashboard/{voteSlug}/{proposalId}"]
     G --> H[Save changes<br />full validation · previous version archived]
     H --> A
 
-    B -->|Withdraw live proposal| I[Confirm withdrawal<br />before feedbackEndDate]
+    B -->|Withdraw live proposal| I[Confirm withdrawal<br />before reviewEndDate]
     I --> J["PUT /proposals/{id}/withdraw<br />category + comment"]
     J --> K([Proposal withdrawnByProposer<br />permanent locked record])
 ```
@@ -152,7 +152,7 @@ flowchart TD
     B --> C["Select vote<br />GET /votes?slug={slug}"]
     C --> D[Resolve voteId from response]
     D --> E["View proposals filtered by voteId<br />filter · search · sort"]
-    E --> F["Open proposal detail<br />/proposals/{proposalId}"]
+    E --> F["Open proposal detail<br />/votes/{voteSlug}/{proposalId}"]
     F --> G{Action?}
 
     G -->|Read only| E
@@ -196,9 +196,9 @@ flowchart TD
 
     D -->|Withdraw a live proposal| E[Select proposal]
     E --> F[Click Withdraw]
-    F --> G[Select reason category<br />Inappropriate content · Spam<br />Policy violation · Duplicate · Other]
+    F --> G[Select reason category<br />Inappropriate content · Spam<br />Policy violation · Duplicate submission · Other]
     G --> H[Optional: add note]
-    H --> I["PUT /proposals/{id}/withdraw<br />before reviewEndDate"]
+    H --> I["PUT /proposals/{id}/withdraw<br />before votingStartDate"]
     I --> J([Proposal withdrawnByAdmin<br />admin identity + reason recorded])
 ```
 
@@ -239,6 +239,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                          |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.3   | 2026-07-23 | Align frontend routes with SvelteKit paths under `/votes/{voteSlug}/…` and `/dashboard/{voteSlug}/…`; withdraw windows. |
 | 0.1.2   | 2026-02-19 | All Mermaid \n newlines replaced with br tags; colon-containing labels quoted; slug lookup corrected to GET /votes?slug={slug} with explicit voteId resolution step. |
 | 0.1.1   | 2026-02-19 | Terminology update: "Ekklesia Budget Module" → "Ekklesia Proposal Module"; "budget cycle" → "vote"; `/budgets` → `/votes`; `budget.admins` → `vote.admins`.          |
 | 0.1.0   | 2026-02-19 | Initial user flow document: public viewer, proposer (auth, create/submit, manage), DRep/authenticated user, and admin (proposals, comments) flows.                   |

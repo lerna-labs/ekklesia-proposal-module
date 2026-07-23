@@ -13,7 +13,10 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import EyeIcon from "@lucide/svelte/icons/eye";
+  import VoteIcon from "@lucide/svelte/icons/vote";
   import {
+    buildVoteVotingUrl,
+    canShowVotingUi,
     draftSubmissionOpen,
     liveResubmitOpen,
     proposerWithdrawOpen,
@@ -127,6 +130,8 @@
     {#if showMyProposals}
       {#each voteSections as { vote: sectionVote, proposals } (sectionVote._id)}
         {@const createActionLabel = sectionVote.form === "ccVote2026" ? "New Application" : "New Proposal"}
+        {@const votingHref = buildVoteVotingUrl(sectionVote)}
+        {@const showViewVoting = canShowVotingUi(sectionVote, policyNow) && votingHref}
         <Card.Root>
           <Card.Header class="flex flex-row flex-wrap items-center justify-between gap-3">
             <Card.Title>
@@ -135,7 +140,20 @@
                 ({proposals.length})
               </span>
             </Card.Title>
-            {#if sectionVote.slug && draftSubmissionOpen(sectionVote, policyNow)}
+            {#if showViewVoting}
+              <Button
+                href={votingHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outline"
+                class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"
+                aria-label="View Voting"
+                size="sm"
+              >
+                <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+                View Voting
+              </Button>
+            {:else if sectionVote.slug && draftSubmissionOpen(sectionVote, policyNow)}
               <Button
                 variant="outline"
                 class="add-item-btn w-fit cursor-pointer gap-1 text-xs text-white"

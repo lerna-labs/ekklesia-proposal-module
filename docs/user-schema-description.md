@@ -5,9 +5,9 @@
 | Field              | Detail                                                                  |
 |--------------------|-------------------------------------------------------------------------|
 | **Document Title** | User Schema – Field Reference                                           |
-| **Version**        | 0.1.1                                                                   |
+| **Version**        | 0.2.0                                                                   |
 | **Created**        | February 19, 2026                                                       |
-| **Last Revised**   | February 20, 2026                                                       |
+| **Last Revised**   | July 23, 2026                                                       |
 | **Companion Doc**  | [Login Flow](login-flow.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>  |
 | **Status**         | Draft                                                                   |
@@ -33,8 +33,28 @@ Implementation: [../schema/User.js](../schema/User.js).
 | ID         | `_id`       | Yes      | String | Yes       | Bech32-encoded Cardano address (`stake1…` or `drep1…`). Set on creation; cannot be changed. Used as the foreign key in Proposal (`proposerId`), Comment (`userId`), CommentLike (`userId`), and Vote (`admins`). |
 | Name       | `name`      | No       | String | No        | Display name resolved at login from the DRep registry (for DRep addresses) or ADA handle service (for stake addresses). May be absent if neither service returns a result. Updated on each successful login.     |
 | Last login | `lastLogin` | No       | Date   | No        | Timestamp of the most recent successful authentication. Defaults to `Date.now` on creation; updated on every successful `PUT /session`.                                                                          |
+| Session version | `sessionVersion` | No | Number | No | Monotonic counter (default `0`). Embedded in login JWTs as claim `sv`. Incremented on `DELETE /session` so prior tokens fail `verifyToken`. |
 | Created at | `createdAt` | —        | Date   | Yes       | Set by Mongoose `timestamps: true` on first save. Immutable.                                                                                                                                                     |
 | Updated at | `updatedAt` | —        | Date   | No        | Set by Mongoose `timestamps: true` and updated by a `pre("save")` middleware hook on every save.                                                                                                                 |
+
+---
+
+## `notification` subdocument
+
+Email notification preferences. See
+[notification-system-implementation.md](notification-system-implementation.md)
+and [api-specification.md §5.9](api-specification.md#59-notification-settings).
+
+| Field | Schema path | Required | Type | Validation / notes |
+|-------|-------------|----------|------|--------------------|
+| Email | `notification.email` | No | String \| null | Active delivery address (lowercased). Required with `verifiedAt` for broadcast sends. |
+| Pending email | `notification.pendingEmail` | No | String \| null | Address awaiting magic-link verification. |
+| Schedule | `notification.schedule` | No | String | `never` \| `6h` \| `daily` (default `daily`). |
+| Verified at | `notification.verifiedAt` | No | Date \| null | When `email` was confirmed. |
+| Verification issued at | `notification.verificationIssuedAt` | No | Date \| null | Timestamp / JWT `jti` anchor for the current pending verify link. |
+| Locale | `notification.locale` | No | String | Mail catalog locale (default `en`). |
+| Unsubscribe secret | `notification.unsubscribeSecret` | No | String \| null | Rotated on successful email verify; used to sign unsubscribe links. Not cleared when email is cleared via PUT. |
+| Last comment digest sent | `notification.lastCommentDigestSentAt` | No | Date \| null | Throttle anchor for comment digest sends. |
 
 ---
 
@@ -100,6 +120,17 @@ which is covered by the primary index.
   "_id": "stake1ux9r7ej8vphv0mkzfm0k7xrtghq4rsk0hzlwcmdkve2ja4gzqmhkq",
   "name": "$alice",
   "lastLogin": "2026-02-19T10:30:00Z",
+  "sessionVersion": 1,
+  "notification": {
+    "email": "alice@example.com",
+    "pendingEmail": null,
+    "schedule": "daily",
+    "verifiedAt": "2026-05-01T12:00:00.000Z",
+    "verificationIssuedAt": null,
+    "locale": "en",
+    "unsubscribeSecret": null,
+    "lastCommentDigestSentAt": null
+  },
   "createdAt": "2026-01-15T08:00:00Z",
   "updatedAt": "2026-02-19T10:30:00Z"
 }
@@ -110,6 +141,7 @@ which is covered by the primary index.
   "_id": "drep1ygcevxnpwdlep24c3ueznpk2lnll3t8ht6vupzjxmqrm87g9cxvq",
   "name": "DRep: Super Powerful DRep!",
   "lastLogin": "2026-02-19T09:15:00Z",
+  "sessionVersion": 0,
   "createdAt": "2026-02-01T12:00:00Z",
   "updatedAt": "2026-02-19T09:15:00Z"
 }
@@ -121,10 +153,13 @@ which is covered by the primary index.
 
 - [login-flow.md](login-flow.md) — Full authentication flow including User
   upsert on `PUT /session`
+- [notification-system-implementation.md](notification-system-implementation.md)
+  — Email preferences, verification, and dispatch
 - [api-specification.md](api-specification.md)
     - `GET /session` — Returns `userId` and `name` from the User record
     - `PUT /session` — Triggers User upsert after successful signature
       verification
+    - §5.9 — Notification settings endpoints
 - [vote-schema-description.md](vote-schema-description.md) — `admins` field
   references User `_id` values
 - [proposal-schema-description.md](proposal-schema-description.md) —
@@ -149,5 +184,6 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                       |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| 0.2.0   | 2026-07-23 | Add `sessionVersion` and `notification.*` fields; example documents updated.                                                      |
 | 0.1.1   | 2026-02-20 | Terminology update, update "Budget" to "Vote" to future-proof for other use cases                                                 |
 | 0.1.0   | 2026-02-19 | Initial schema description: field reference, schema notes on Bech32 _id and role derivation, indexes, examples, and related docs. |

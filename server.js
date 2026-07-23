@@ -9,10 +9,12 @@ import {
   connectToDatabase,
   isDatabaseConnected,
   checkDatabaseConnectionMW,
+  disconnectFromDatabase,
 } from "./helper/dbManager.js";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
+import { warnUnloadableExcludeScripts } from "./validation/applyPublicFieldExclusion.js";
 
 // Initialize console with timestamps
 initializeConsole();
@@ -57,6 +59,14 @@ async function startServer() {
     // Try to connect to MongoDB but don't fail if connection isn't established
     await connectToDatabase();
 
+    if (isDatabaseConnected()) {
+      try {
+        await warnUnloadableExcludeScripts();
+      } catch (err) {
+        console.error("Failed to validate Vote.excludeScript paths at startup:", err?.message ?? err);
+      }
+    }
+
     // Public read rate limit (200/min per IP): apply only to GET /api/v0/votes, /proposals, /comments
     app.use("/api/v0", (req, res, next) => {
       if (req.method === "GET" && /^\/(votes|proposals|comments)(\/|$)/.test(req.path)) {
@@ -65,7 +75,7 @@ async function startServer() {
       next();
     });
 
-    // Load all routes from the routes directory
+    // Load all routes from the routes directory (throws if any import fails)
     await loadRoutes(join(__dirname, "routes"), app);
 
     // Serve static files from the public directory (SvelteKit assets)
@@ -83,7 +93,7 @@ async function startServer() {
     // 404 handler (only for API routes now)
     app.use((req, res, next) => {
       if (req.path.startsWith("/api/")) {
-        return res.status(404).json({ error: "API route not found" });
+        return res.status(404).json({ status: "error", message: "API route not found" });
       }
       next();
     });
@@ -94,7 +104,7 @@ async function startServer() {
     app.use((err, req, res, next) => {
       if (err instanceof URIError) {
         console.warn(`Invalid URI attempted: ${req.url} from ${req.ip}`);
-        return res.status(400).json({ error: "Invalid request" });
+        return res.status(400).json({ status: "error", message: "Invalid request" });
       }
       next(err);
     });
@@ -103,7 +113,8 @@ async function startServer() {
     app.use((err, req, res, next) => {
       console.error(`Error processing request: ${err.message}`);
       res.status(err.status || 500).json({
-        error:
+        status: "error",
+        message:
           process.env.NODE_ENV === "production"
             ? "Internal server error"
             : err.message,
@@ -111,7 +122,7 @@ async function startServer() {
     });
 
     // Start listening
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(
         `Server running on port ${PORT} in ${process.env.NODE_ENV || "development"
         } mode`
@@ -125,9 +136,47 @@ async function startServer() {
         );
       }
     });
+
+    let shuttingDown = false;
+    const SHUTDOWN_FORCE_EXIT_MS = 10_000;
+
+    function shutdown(signal) {
+      if (shuttingDown) return;
+      shuttingDown = true;
+      console.info(`Received ${signal}; draining HTTP server…`);
+
+      const forceTimer = setTimeout(() => {
+        console.error("Graceful shutdown timed out; forcing exit");
+        process.exit(1);
+      }, SHUTDOWN_FORCE_EXIT_MS);
+      forceTimer.unref?.();
+
+      server.close(async (err) => {
+        if (err) {
+          console.error(`Error closing HTTP server: ${err.message}`);
+        } else {
+          console.info("HTTP server closed");
+        }
+        try {
+          await disconnectFromDatabase();
+        } catch (disconnectErr) {
+          console.error(
+            `Error disconnecting from MongoDB: ${disconnectErr.message}`
+          );
+          clearTimeout(forceTimer);
+          process.exit(1);
+          return;
+        }
+        clearTimeout(forceTimer);
+        process.exit(err ? 1 : 0);
+      });
+    }
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
   } catch (error) {
-    console.error(`Server error: ${error.message}`);
-    // Don't exit the process - let the server continue running
+    console.error(`Server startup failed: ${error.message}`);
+    process.exit(1);
   }
 }
 

@@ -143,7 +143,18 @@
                   class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
-                  Cardano Budget 2026
+                  Budget 2026 Proposals
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://intersect.ekklesia.vote/ballots/6a1512d782978c99456fe6de/proposals"
+                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onclick={closeMenu}
+                >
+                  Budget 2026 Voting
                 </a>
               </li>
             </ul>

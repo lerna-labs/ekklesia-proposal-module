@@ -4,7 +4,7 @@
  * Used when validationScript is "cc-vote2026/validationScript.js".
  */
 import { z } from "zod";
-import { validateAddress } from "../../helper/validateAddress.js";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 
 const objectIdString = z
   .string()

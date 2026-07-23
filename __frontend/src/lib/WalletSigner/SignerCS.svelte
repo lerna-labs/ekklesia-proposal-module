@@ -5,11 +5,7 @@
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { toast } from "svelte-sonner";
-  import {
-    getPayload,
-    signData,
-    submitSignature,
-  } from "$lib/WalletSigner/WalletSigner.js";
+  import { getPayload, signData, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
   import SignerCommand from "./SignerCommand.svelte";
 
   const dispatch = createEventDispatcher();
@@ -40,8 +36,7 @@
   // Request payload for signing
   async function requestPayload() {
     loading = true;
-    let url =
-      mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
+    let url = mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
     if (mode !== "login" && multiSig) {
       url += "/multisig";
     }
@@ -49,12 +44,7 @@
       url += "/" + tx;
     }
     try {
-      const payload = await getPayload(
-        url,
-        signerAddress,
-        signType,
-        scriptAddress,
-      );
+      const payload = await getPayload(url, signerAddress, signType, scriptAddress);
       if (payload?.error) {
         toast.error(payload.error);
         loading = false;
@@ -79,8 +69,7 @@
       loading = false;
       return;
     }
-    let url =
-      mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
+    let url = mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
     if (mode !== "login" && multiSig) {
       url += "/multisig";
     }
@@ -101,7 +90,6 @@
       if (mode === "login") {
         dispatch("login", {
           address: signerAddress,
-          token: submitResponse.token,
           expiresIn: submitResponse.expiresIn,
           maxAge: submitResponse.maxAge,
         });
@@ -109,7 +97,6 @@
         dispatch("success", submitResponse);
       }
     } catch (e) {
-      console.log("this error");
       toast.error(e.body.message || "Error submitting signature");
       loading = false;
       return;
@@ -124,11 +111,7 @@
 {#if !receivedPayload}
   <Input type="text" {placeholder} class="w-full" bind:value={signerAddress} />
 
-  <Button
-    class="mt-2 w-full"
-    onclick={requestPayload}
-    disabled={!signType || !signerAddress || loading}
-  >
+  <Button class="mt-2 w-full" onclick={requestPayload} disabled={!signType || !signerAddress || loading}>
     {#if !signType}
       Select how to sign
     {:else if !signerAddress}
@@ -143,12 +126,7 @@
 {/if}
 
 {#if receivedPayload}
-  <SignerCommand
-    {signerAddress}
-    {signType}
-    dataHex={receivedPayload.dataHex}
-    payload={receivedPayload}
-  />
+  <SignerCommand {signerAddress} {signType} dataHex={receivedPayload.dataHex} payload={receivedPayload} />
 
   <Textarea
     placeholder="Paste the JSON payload here"
@@ -158,11 +136,7 @@
     rows={4}
   />
 
-  <Button
-    class="mt-2 w-full"
-    onclick={submitPayload}
-    disabled={!signerAddress || !signatureJSON}
-  >
+  <Button class="mt-2 w-full" onclick={submitPayload} disabled={!signerAddress || !signatureJSON}>
     {#if !signerAddress}
       Select how to sign
     {:else if !signatureJSON}

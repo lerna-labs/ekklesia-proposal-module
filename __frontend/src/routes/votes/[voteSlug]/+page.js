@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { api } from '$stores/sessionManager.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ params, url, fetch }) {
@@ -13,14 +14,7 @@ export async function load({ params, url, fetch }) {
 	const status = url.searchParams.get('status') || 'live';
 	const proposer = url.searchParams.get('proposer') || '';
 
-	const apiUrl = import.meta.env.VITE_API_URL || '/api/v0';
-
-	const fetchVote = await fetch(`${apiUrl}/votes/?slug=${voteSlug}`);
-
-	if (!fetchVote.ok) {
-		error(fetchVote.status, `Failed to load vote: ${fetchVote.statusText}`);
-	}
-
+	const fetchVote = await api.fetch(fetch, `/votes/?slug=${encodeURIComponent(voteSlug)}`);
 	const voteResponse = await fetchVote.json();
 	let voteData = voteResponse.data[0];
 	if (!voteData) {
@@ -51,11 +45,10 @@ export async function load({ params, url, fetch }) {
 	if (search) proposalsSearchParams.set('search', search);
 	if (status) proposalsSearchParams.set('status', status);
 	if (proposer) proposalsSearchParams.set('proposer', proposer);
-	const proposalsUrl = `${apiUrl}/proposals?${proposalsSearchParams.toString()}`;
-	const proposalsResponse = await fetch(proposalsUrl, { credentials: 'include' });
 
 	let proposals = { data: [], pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 } };
-	if (proposalsResponse.ok) {
+	try {
+		const proposalsResponse = await api.fetch(fetch, `/proposals?${proposalsSearchParams.toString()}`);
 		const json = await proposalsResponse.json();
 		const meta = json.meta ?? {};
 		proposals = {
@@ -67,6 +60,9 @@ export async function load({ params, url, fetch }) {
 				itemsPerPage: meta.limit ?? 10,
 			},
 		};
+	} catch (err) {
+		// Keep page usable if proposal list fails (except session expiry which api.fetch already handled)
+		if (err?.status === 401) throw err;
 	}
 
 	const pillars = voteData.metaData?.strategyFramework?.pillars ?? [];

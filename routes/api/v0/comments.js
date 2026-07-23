@@ -19,8 +19,8 @@ const router = Router();
 
 const COMMENT_STATUSES = ["live", "withdrawnByAdmin"];
 
-function getAuthenticatedUserId(req) {
-  const tokenResult = verifyToken(req);
+async function getAuthenticatedUserId(req) {
+  const tokenResult = await verifyToken(req);
   if (tokenResult.status === "success" && tokenResult.userId) {
     return tokenResult.userId.toString();
   }
@@ -102,7 +102,7 @@ async function formatComment(
 ) {
   const userId = comment.userId;
   const userDoc = userId
-    ? await User.findById(userId).select("-lastLogin -createdAt -updatedAt").lean()
+    ? await User.findById(userId).select("_id name").lean()
     : null;
   let type = "user";
   if (proposal?.proposerId && userId === proposal.proposerId) type = "proposer";
@@ -124,7 +124,7 @@ async function formatComment(
     authenticatedUserId &&
     (await CommentLike.exists({ commentId: comment._id, userId: authenticatedUserId }));
   const author = userDoc
-    ? { ...userDoc, type }
+    ? { _id: userDoc._id, name: userDoc.name ?? null, type }
     : userId
       ? { _id: userId, name: null, type }
       : null;
@@ -207,7 +207,7 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
       ? await Vote.findById(proposal.voteId).select("admins").lean()
       : null;
 
-    const userId = getAuthenticatedUserId(req);
+    const userId = await getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
     const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId);
     if (statusFilter.error) {
@@ -386,6 +386,7 @@ router.get("/", rejectDuplicateParams("proposal", "status", "sort", "direction",
                 threadReplies: 0,
                 likeCountArr: 0,
                 userArr: 0,
+                user: 0,
                 userTypeMatch: 0,
                 replyUserTypeMatchCount: 0,
               },
@@ -583,7 +584,7 @@ router.get("/:commentId/replies", rejectDuplicateParams("status"), parsePaginati
       ? await Proposal.findById(parentComment.proposalId).select("proposerId voteId").lean()
       : null;
     const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
-    const userId = getAuthenticatedUserId(req);
+    const userId = await getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
     const statusFilter = getCommentStatusCondition(statusParam, isAdmin, userId);
     if (statusFilter.error) {
@@ -818,7 +819,7 @@ router.get("/:commentId", async (req, res) => {
       ? await Proposal.findById(comment.proposalId).select("proposerId voteId").lean()
       : null;
     const vote = proposal?.voteId ? await Vote.findById(proposal.voteId).select("admins").lean() : null;
-    const userId = getAuthenticatedUserId(req);
+    const userId = await getAuthenticatedUserId(req);
     const isAdmin = isVoteAdmin(proposal, vote, userId);
     // User._id is String (bech32), and comment.userId is now also String
     const commentUser = comment.userId ? await User.findById(comment.userId).select("_id").lean() : null;

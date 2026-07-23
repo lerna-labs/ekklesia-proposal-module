@@ -13,6 +13,7 @@
   import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
   import XIcon from "@lucide/svelte/icons/x";
   import { user } from "$stores/sessionManager.js";
+  import { canShowVotingUi } from "$lib/voteWindowPolicy.js";
 
   const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
     eager: true,
@@ -90,10 +91,12 @@
   let { data } = $props();
   let vote = $derived(data.vote);
   let isCcVoteContext = $derived(vote?.form === "ccVote2026");
+
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
   /** Aligns with WalletSigner / API: DRep sessions use a CIP129 id starting with `drep`. */
   let isDrepUser = $derived(Boolean($user?.userId?.startsWith?.("drep")));
+  let showVoteListCta = $derived(!isDrepUser || canShowVotingUi(vote, policyNow));
 
   /** CTA for `vote.form` from `$lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
   const VoteListCta = $derived.by(() => {
@@ -253,14 +256,14 @@
 
     {#if listTimelinePhases}
       <div
-        class={isDrepUser
-          ? "mt-4 grid grid-cols-1 gap-6 sm:items-stretch"
-          : "mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"}
+        class={showVoteListCta
+          ? "mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 sm:items-stretch"
+          : "mt-4 grid grid-cols-1 gap-6 sm:items-stretch"}
       >
         <div class="flex h-full min-w-0 flex-col">
           <BudgetProcessTimeline phases={listTimelinePhases} />
         </div>
-        {#if !isDrepUser}
+        {#if showVoteListCta}
           <div class="flex h-full min-w-0 flex-col *:mt-0">
             {#key vote?.form ?? ""}
               <VoteListCta {vote} {policyNow} />
@@ -268,7 +271,7 @@
           </div>
         {/if}
       </div>
-    {:else if !isDrepUser}
+    {:else if showVoteListCta}
       <div class="mt-4">
         {#key vote?.form ?? ""}
           <VoteListCta {vote} {policyNow} />
@@ -342,7 +345,7 @@
       <!-- Proposals List -->
       <div class="space-y-4">
         {#each proposals as proposal (proposal._id || proposal.id)}
-          <ProposalCard {proposal} {vote} />
+          <ProposalCard {proposal} {vote} {policyNow} />
         {/each}
       </div>
 

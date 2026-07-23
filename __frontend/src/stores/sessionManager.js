@@ -1,7 +1,6 @@
 import { goto } from '$app/navigation';
 import { error } from '@sveltejs/kit';
 import { get, writable } from 'svelte/store';
-import Cookies from 'js-cookie';
 import { toast } from 'svelte-sonner';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,7 +13,6 @@ export const loggedIn = writable(false);
 export const showLogin = writable(false);
 export const redirectAfterLogin = writable(null);
 export const user = writable(null);
-export const jwt = writable(null);
 export const sessionExpiresAt = writable(null);
 export const sessionExpiryBannerVisible = writable(false);
 
@@ -27,23 +25,6 @@ export function safeRedirectPath(input, fallback = '/') {
 		return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 	} catch {
 		return fallback;
-	}
-}
-
-function getExpiryFromJwt(token) {
-	try {
-		if (!token || typeof token !== 'string') return null;
-		const parts = token.split('.');
-		if (parts.length !== 3) return null;
-		// JWT payload is base64url encoded; normalize before atob.
-		const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-		const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-		const payload = JSON.parse(atob(padded));
-		if (!payload?.exp) return null;
-		const expiryMs = Number(payload.exp) * 1000;
-		return Number.isFinite(expiryMs) ? expiryMs : null;
-	} catch {
-		return null;
 	}
 }
 
@@ -64,22 +45,10 @@ function getExpiryFromInput(expiresIn) {
 }
 
 function clearClientSessionState({ openLogin = false, notify = false } = {}) {
-	// Determine environment and protocol (same as in setJWT)
-	const isDev = import.meta.env.DEV;
-	const isSecureContext =
-		typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-	// Configure cookie removal with the same options used when setting
-	const cookieOptions = {
-		path: '/',
-		secure: !isDev || isSecureContext,
-		sameSite: isDev ? 'lax' : 'strict'
-	};
-
-	// Clear cookie with matching options
-	Cookies.remove('token', cookieOptions);
-
-	// Clear localStorage if present
+	// Clear legacy JS-readable token leftovers (HttpOnly cookie is cleared by DELETE /session)
+	if (typeof document !== 'undefined') {
+		document.cookie = 'token=; path=/; max-age=0';
+	}
 	if (typeof window !== 'undefined') {
 		localStorage.removeItem('token');
 		// proposal-module specific cleanup
@@ -87,7 +56,6 @@ function clearClientSessionState({ openLogin = false, notify = false } = {}) {
 	}
 
 	// Clear session stores
-	jwt.set(null);
 	sessionExpiresAt.set(null);
 	sessionExpiryBannerVisible.set(false);
 	loggedIn.set(false);
@@ -114,54 +82,16 @@ export async function expireSession() {
 	}
 }
 
-// Set JWT in cookie only
-export function setJWT(token, expiresIn) {
-	const expiresAt = getExpiryFromInput(expiresIn) ?? getExpiryFromJwt(token);
-
-	if (typeof document !== 'undefined') {
-		// Determine environment and protocol
-		const isDev = import.meta.env.DEV;
-		const isSecureContext = window.location.protocol === 'https:';
-
-		// Configure cookie settings based on environment
-		const cookieOptions = {
-			expires: new Date(expiresIn),
-			path: '/',
-			// Only set secure flag if in production or using HTTPS
-			secure: !isDev || isSecureContext,
-			// Use 'lax' in development, 'strict' in production
-			sameSite: isDev ? 'lax' : 'strict'
-		};
-
-		Cookies.set('token', token, cookieOptions);
-	}
-
-	// Update Svelte store
-	jwt.set(token);
-	sessionExpiresAt.set(expiresAt);
-}
-
-// Get JWT from cookie
-export function getJWT() {
-	let token = null;
-
-	if (Cookies.get('token')) {
-		token = decodeURIComponent(Cookies.get('token'));
-	}
-
-	// console.log('Token from cookie:', token);
-	jwt.set(token);
-	sessionExpiresAt.set(getExpiryFromJwt(token));
-	return token;
+/** Record session expiry from login / GET /session (JWT stays httpOnly-only). */
+export function setSessionExpiry(expiresIn) {
+	sessionExpiresAt.set(getExpiryFromInput(expiresIn));
 }
 
 // Handle connection failures gracefully
 export const api = {
 	fetch: async (fetch, url, options = {}) => {
 		try {
-			const hadAuth =
-				Boolean(typeof document !== 'undefined' && Cookies.get('token')) ||
-				Boolean(get(jwt));
+			const hadAuth = Boolean(get(loggedIn));
 
 			// Set up headers
 			const headers = new Headers(options.headers || {});

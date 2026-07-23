@@ -10,7 +10,7 @@
     api,
     loggedIn,
     user,
-    setJWT,
+    setSessionExpiry,
     showLogin,
     redirectAfterLogin,
     safeRedirectPath,
@@ -110,8 +110,8 @@
 
   // store token
   async function storeToken(event) {
-    const { address, token, expiresIn } = event.detail;
-    setJWT(token, expiresIn);
+    const { expiresIn } = event.detail;
+    setSessionExpiry(expiresIn);
     loggedIn.set(true);
     toast.success("Login successful");
     // get user data

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { api } from '$stores/sessionManager.js';
-import { draftSubmissionOpen } from '$lib/voteWindowPolicy.js';
+import { canShowVotingUi, draftSubmissionOpen } from '$lib/voteWindowPolicy.js';
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {
@@ -17,6 +17,12 @@ export async function load({ fetch, params, parent }) {
 
 	const vote = votes[0];
 	const now = new Date();
+	if (canShowVotingUi(vote, now)) {
+		error(
+			403,
+			'Voting is open for this vote. New proposals cannot be created during the voting period.',
+		);
+	}
 	if (!draftSubmissionOpen(vote, now)) {
 		error(
 			403,

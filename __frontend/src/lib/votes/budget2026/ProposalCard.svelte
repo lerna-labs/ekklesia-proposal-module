@@ -6,6 +6,7 @@
   import { user } from "$stores/sessionManager.js";
   import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
+  import VoteIcon from "@lucide/svelte/icons/vote";
   import UserIcon from "@lucide/svelte/icons/user";
   import HomeIcon from "@lucide/svelte/icons/home";
   import ClockIcon from "@lucide/svelte/icons/clock";
@@ -15,7 +16,8 @@
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import { formatAda } from "$lib/utils.js";
   import { formatUsd } from "$lib/utils.js";
-  let { proposal, vote, showLink = true, class: className } = $props();
+  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
   let revisionDrawerOpen = $state(false);
 
   function capitalizeFirst(val) {
@@ -25,9 +27,7 @@
   }
 
   const isOwnProposal = $derived(
-    $user?.userId &&
-      proposal?.proposerId &&
-      String(proposal.proposerId).trim() === String($user.userId).trim(),
+    $user?.userId && proposal?.proposerId && String(proposal.proposerId).trim() === String($user.userId).trim(),
   );
 
   const isVoteAdmin = $derived(
@@ -37,23 +37,21 @@
       $user.adminVoteIds.includes(String(vote._id)),
   );
 
-  const canWithdraw = $derived(
-    (isOwnProposal || isVoteAdmin) && proposal?.status === "live",
-  );
+  const canWithdraw = $derived((isOwnProposal || isVoteAdmin) && proposal?.status === "live");
 
   let withdrawalDetailsDialogOpen = $state(false);
 
   const proposalHref = $derived(
-    vote && (proposal._id || proposal.id)
-      ? `/votes/${vote.slug}/${proposal._id || proposal.id}`
-      : null,
+    vote && (proposal._id || proposal.id) ? `/votes/${vote.slug}/${proposal._id || proposal.id}` : null,
   );
-  const commentsHref = $derived(
-    proposalHref ? `${proposalHref}#comments` : null,
-  );
-  const commentCount = $derived(
-    proposal?.commentCount != null ? Number(proposal.commentCount) : null,
-  );
+
+  const voteNowHref = $derived.by(() => {
+    if (proposal?.status !== "live") return null;
+    if (!canShowVotingUi(vote, policyNow)) return null;
+    return buildProposalVotingUrl(vote, proposal._id ?? proposal.id);
+  });
+  const commentsHref = $derived(proposalHref ? `${proposalHref}#comments` : null);
+  const commentCount = $derived(proposal?.commentCount != null ? Number(proposal.commentCount) : null);
   const proposerHref = $derived(
     vote?.slug && proposal?.proposerId
       ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
@@ -64,19 +62,16 @@
 </script>
 
 <Card.Root
-  class="hover:shadow-md transition-shadow gap-y-3 py-4 sm:py-6 {className ||
-    ''} {proposal?.status === 'withdrawnByProposer' ||
-  proposal?.status === 'withdrawnByAdmin'
+  class="hover:shadow-md transition-shadow gap-y-3 py-4 sm:py-6 {className || ''} {proposal?.status ===
+    'withdrawnByProposer' || proposal?.status === 'withdrawnByAdmin'
     ? 'bg-red-100/50'
     : ''}"
 >
   <Card.Header class="relative pb-0 px-4 sm:px-6">
-    <Card.Title
-      class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0 line-clamp-2"
-    >
-      <a href={proposalHref} class="hover:underline cursor-pointer"
-        >{proposal.title || proposal.name || "Untitled Proposal"}</a
-      >
+    <Card.Title class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0 line-clamp-2">
+      <a href={proposalHref} class="hover:underline cursor-pointer">
+        {proposal.title || proposal.name || "Untitled Proposal"}
+      </a>
     </Card.Title>
     <Card.Description>
       <div class="text-xs font-medium text-muted-foreground mb-1">
@@ -89,9 +84,7 @@
       <div class="text-xs font-medium text-muted-foreground mb-1">
         <span class="">
           Proposer Type: <span class="text-black font-normal">
-            {capitalizeFirst(
-              proposal.metaData?.contractingParty?.legalEntityType,
-            )}
+            {capitalizeFirst(proposal.metaData?.contractingParty?.legalEntityType)}
           </span>
         </span>
       </div>
@@ -100,59 +93,42 @@
   <Card.Content class="space-y-3 px-4 sm:px-6">
     <!-- Description block: medium bold labels -->
 
-    <Card.Root
-      class="rounded-lg border bg-card shadow-sm p-4 mt-2 mb-6 w-fit min-w-[200px] gap-0"
-    >
+    <Card.Root class="rounded-lg border bg-card shadow-sm p-4 mt-2 mb-6 w-fit min-w-[200px] gap-0">
       <Card.Header class="p-0 m-0">
-        <Card.Title
-          class="text-xs font-medium text-muted-foreground leading-none"
-        >
-          Requested Budget
-        </Card.Title>
+        <Card.Title class="text-xs font-medium text-muted-foreground leading-none">Requested Budget</Card.Title>
       </Card.Header>
       <Card.Content class="p-0 pt-0 space-y-1">
         <div class="text-black font-semibold text-md">
           {formatAda(proposal.metaData?.totalBudget)} ADA
         </div>
         <div class="text-muted-foreground text-xs">
-          USD equivalent ${formatUsd(
-            proposal.metaData?.totalBudget *
-              (proposal.metaData?.conversionRate ?? 0),
-          )} (ADA/USD {proposal.metaData?.conversionRate ?? 0})
+          USD equivalent ${formatUsd(proposal.metaData?.totalBudget * (proposal.metaData?.conversionRate ?? 0))} (ADA/USD
+          {proposal.metaData?.conversionRate ?? 0})
         </div>
       </Card.Content>
     </Card.Root>
 
     {#if proposal.summary}
       <div>
-        <div class="text-xs font-medium text-muted-foreground mb-1"
-          >Overview:</div
-        >
+        <div class="text-xs font-medium text-muted-foreground mb-1">Overview:</div>
         <div class="text-sm line-clamp-10 ++:first:mt-0">
-          <Markdown
-            content={proposal.summary}
-            class="text-xs leading-tight line-clamp-10"
-          />
+          <Markdown content={proposal.summary} class="text-xs leading-tight line-clamp-10" />
         </div>
       </div>
     {/if}
 
     <div class="flex justify-between mt-0">
       <div>
-        <span class="text-xs font-medium text-muted-foreground mb-1"
-          >Submitted on:</span
-        >
-        <span class="text-black text-xs"
-          >{formatUtcInstant(proposal.submittedAt, {
+        <span class="text-xs font-medium text-muted-foreground mb-1">Submitted on:</span>
+        <span class="text-black text-xs">
+          {formatUtcInstant(proposal.submittedAt, {
             dateStyle: "short",
             timeStyle: "short",
-          })}</span
-        >
+          })}
+        </span>
       </div>
       <div>
-        <span class="text-xs font-medium text-muted-foreground mb-1"
-          >Last edited on:</span
-        >
+        <span class="text-xs font-medium text-muted-foreground mb-1">Last edited on:</span>
         <span class="text-black font-normal text-xs">
           {formatUtcInstant(proposal.updatedAt, {
             dateStyle: "short",
@@ -173,13 +149,9 @@
       <Card.Root class="bg-white mt-8">
         <Card.Header>
           <Card.Title>
-            {proposal.status === "withdrawnByAdmin"
-              ? "Proposal Withdrawn by Admin"
-              : "Proposal Withdrawn by Proposer"}
+            {proposal.status === "withdrawnByAdmin" ? "Proposal Withdrawn by Admin" : "Proposal Withdrawn by Proposer"}
 
-            <span
-              class="ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
-            >
+            <span class="ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white">
               {wd.category}
             </span>
           </Card.Title>
@@ -198,9 +170,9 @@
       </Card.Root>
     {/if}
   </Card.Content>
-  {#if (showLink && proposalHref) || canWithdraw || commentsHref}
+  {#if (showLink && proposalHref) || canWithdraw || commentsHref || voteNowHref}
     <Card.Footer class="flex flex-col items-start gap-3 pt-0 px-4 sm:px-6">
-      {#if commentsHref || (showLink && proposalHref)}
+      {#if commentsHref || (showLink && proposalHref) || voteNowHref}
         <div class="flex items-center gap-2 flex-wrap justify-between w-full">
           {#if commentsHref}
             <Button
@@ -208,35 +180,44 @@
               variant="outline"
               size="sm"
               class="text-xs shrink-0"
-              aria-label={commentCount != null
-                ? `Comments (${commentCount})`
-                : "View comments"}
+              aria-label={commentCount != null ? `Comments (${commentCount})` : "View comments"}
             >
               <MessageSquareMoreIcon class="size-4 mr-1" />
               Comments ({commentCount != null ? commentCount : "-"})
             </Button>
           {/if}
 
-          {#if showLink && proposalHref}
-            <Button
-              href={proposalHref}
-              variant="secondary"
-              size="sm"
-              class="text-xs shrink-0 bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
-            >
-              <FileTextIcon class="size-4 mr-1" />
-              Read Proposal
-            </Button>
-          {/if}
+          <div class="flex items-center gap-2 flex-wrap shrink-0">
+            {#if showLink && proposalHref}
+              <Button
+                href={proposalHref}
+                variant="secondary"
+                size="sm"
+                class="text-xs shrink-0 bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+              >
+                <FileTextIcon class="size-4 mr-1" />
+                Read Proposal
+              </Button>
+            {/if}
+            {#if voteNowHref}
+              <Button
+                href={voteNowHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+                size="sm"
+                class="text-xs shrink-0 animate-pulse bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+              >
+                <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+                Vote Now!
+              </Button>
+            {/if}
+          </div>
         </div>
       {/if}
       {#if canWithdraw}
         <div class="mt-2 w-full">
-          <ProposalCardDangerZone
-            {proposal}
-            isProposer={isOwnProposal}
-            onSuccess={() => invalidateAll()}
-          />
+          <ProposalCardDangerZone {proposal} isProposer={isOwnProposal} onSuccess={() => invalidateAll()} />
         </div>
       {/if}
     </Card.Footer>

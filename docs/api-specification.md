@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.2.0                                                                  |
+| **Version**        | 1.3.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | February 23, 2026                                                      |
+| **Last Revised**   | July 23, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -105,8 +105,9 @@
       - [Success Response — `200 OK`](#success-response--200-ok-12)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-10)
       - [Error Response — `401 Unauthorized`](#error-response--401-unauthorized-3)
-      - [Error Response — `403 Forbidden`](#error-response--403-forbidden)
+      - [Error Response — `403 Forbidden`](#error-response--403-forbidden-1)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-8)
+      - [Error Response — `409 Conflict`](#error-response--409-conflict)
       - [Error Response — `500 Internal Server Error`](#error-response--500-internal-server-error-3)
     - [5.3 `PUT /proposals/{proposalId}/withdraw`](#53-put-proposalsproposalidwithdraw)
       - [Headers](#headers-4)
@@ -115,16 +116,16 @@
       - [Success Response — `200 OK`](#success-response--200-ok-13)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-11)
       - [Error Response — `401 Unauthorized`](#error-response--401-unauthorized-4)
-      - [Error Response — `403 Forbidden`](#error-response--403-forbidden-1)
+      - [Error Response — `403 Forbidden`](#error-response--403-forbidden-2)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-9)
       - [Error Response — `500 Internal Server Error`](#error-response--500-internal-server-error-4)
     - [5.4 `DELETE /proposals/{proposalId}`](#54-delete-proposalsproposalid)
       - [Headers](#headers-5)
       - [Path Parameters](#path-parameters-7)
-      - [Success Response — `204 No Content`](#success-response--204-no-content)
+      - [Success Response — `200 OK`](#success-response--200-ok-14)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-12)
       - [Error Response — `401 Unauthorized`](#error-response--401-unauthorized-5)
-      - [Error Response — `403 Forbidden`](#error-response--403-forbidden-2)
+      - [Error Response — `403 Forbidden`](#error-response--403-forbidden-3)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-10)
       - [Error Response — `500 Internal Server Error`](#error-response--500-internal-server-error-5)
     - [5.5 `POST /comments`](#55-post-comments)
@@ -137,7 +138,7 @@
       - [Headers](#headers-7)
       - [Path Parameters](#path-parameters-8)
       - [Request Body](#request-body-6)
-      - [Success Response — `200 OK`](#success-response--200-ok-14)
+      - [Success Response — `200 OK`](#success-response--200-ok-15)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-14)
       - [Error Response — `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`](#error-response--401-unauthorized-403-forbidden-404-not-found-500-internal-server-error-1)
     - [5.7 `POST /comments/{commentId}/like`](#57-post-commentscommentidlike)
@@ -151,9 +152,30 @@
       - [Headers](#headers-9)
       - [Path Parameters](#path-parameters-10)
       - [Request Body](#request-body-8)
-      - [Success Response — `200 OK`](#success-response--200-ok-15)
+      - [Success Response — `200 OK`](#success-response--200-ok-16)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-16)
       - [Error Response — `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`](#error-response--401-unauthorized-403-forbidden-404-not-found-500-internal-server-error-2)
+    - [5.9 Notification settings](#59-notification-settings)
+      - [5.9.1 `GET /notifications`](#591-get-notifications)
+        - [Success Response — `200 OK`](#success-response--200-ok-17)
+      - [5.9.2 `PUT /notifications`](#592-put-notifications)
+        - [Request Body](#request-body-9)
+        - [Success Response — `200 OK`](#success-response--200-ok-18)
+        - [Error Response — `400 Bad Request`](#error-response--400-bad-request-17)
+        - [Error Response — `409 Conflict`](#error-response--409-conflict-1)
+      - [5.9.3 `DELETE /notifications/pending`](#593-delete-notificationspending)
+        - [Error Response — `400 Bad Request`](#error-response--400-bad-request-18)
+      - [5.9.4 `POST /notifications/resend`](#594-post-notificationsresend)
+        - [Success Response — `200 OK`](#success-response--200-ok-19)
+        - [Error Response — `400 Bad Request`](#error-response--400-bad-request-19)
+      - [5.9.5 `POST /notifications/verify`](#595-post-notificationsverify)
+        - [Request Body](#request-body-10)
+        - [Success Response — `200 OK`](#success-response--200-ok-20)
+        - [Error Response — `400 Bad Request`](#error-response--400-bad-request-20)
+      - [5.9.6 `POST /notifications/unsubscribe`](#596-post-notificationsunsubscribe)
+        - [Request Body](#request-body-11)
+        - [Success Response — `200 OK`](#success-response--200-ok-21)
+        - [Error Response — `400 Bad Request`](#error-response--400-bad-request-21)
   - [6. Rate Limiting \& Caching](#6-rate-limiting--caching)
   - [7. Error Responses](#7-error-responses)
     - [7.1 Response format](#71-response-format)
@@ -169,9 +191,10 @@ This document is the API Specification for the Ekklesia Proposal Module. It
 provides a complete catalogue of every public and authenticated endpoint,
 covering status codes, pagination, and error handling.
 
-Together with the companion Ekklesia Integration Plan, these two documents form
-the authoritative reference for the Proposal Module's API surface and should be
-kept up to date as the module evolves.
+This document is the authoritative reference for the Proposal Module's API
+surface and should be kept up to date as the module evolves. The module is
+standalone (independent auth, database, and session store from the Voting
+Module).
 
 ---
 
@@ -189,8 +212,7 @@ kept up to date as the module evolves.
   `https://domain.tld/api/v0`.
 - **Requests** – Request bodies must be `Content-Type: application/json`. The
   API returns JSON; clients may send `Accept: application/json`.
-- **Responses** – All responses return **JSON** (except 204 No Content, which
-  has no body).
+- **Responses** – All responses return **JSON**.
 - **Pagination** – All paginated list endpoints use the same `meta` shape:
   `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The
   list of items is in the `data` array.
@@ -736,10 +758,12 @@ proposal's vote `admins` array) can use the `status` parameter to filter by
 `live`, `withdrawn`, or `withdrawnByAdmin`. Sort by `sort` (default `date`, i.e.
 `createdAt`), `replyCount`, or `likeCount`, with `direction` `asc` or `desc`;
 default is newest first (`direction=desc`). Each comment includes an `author`
-object (the comment author; `lastLogin`, `createdAt`, and `updatedAt` are
-excluded; a `type` field is added: `"proposer"` if the author is the proposal's
-proposer, `"admin"` if the author is in the vote's `admins`
-array, otherwise `"user"`), `replyCount`, and `likeCount`. `proposalId`,
+object containing **only** `_id`, `name`, and `type` (the comment author's
+public display fields; notification preferences, email addresses, unsubscribe
+secrets, and other internal user fields are never included). `type` is
+`"proposer"` if the author is the proposal's proposer, `"admin"` if the author
+is in the vote's `admins` array, otherwise `"user"`. Each comment also includes
+`replyCount` and `likeCount`. `proposalId`,
 `status`, `parentId`, and `userId` are excluded from each comment.**Comment
 authors** see `withdrawalDetails` (if present) for their own comments (e.g. when
 withdrawn by admin).
@@ -1068,9 +1092,14 @@ Cardano identifier types:
 
 ### 4.1 `POST /session`
 
-Requests nonce for authentication of standard (non-script) wallet addresses.
-Creates a session with a random nonce that the user must sign to prove identity.
-Script addresses are not allowed (use `/multisig` route instead).
+Requests a nonce for wallet authentication. Creates a session with a random
+nonce that the user must sign to prove identity.
+
+- **Standard:** omit `scriptAddress`. Payment/stake or DRep key addresses only;
+  bare script addresses without `scriptAddress` are rejected.
+- **Multisig:** include `scriptAddress` (CIP-0129 script / multisig DRep
+  address). The nonce is bound to that script address; `signerAddress` is the
+  key that will sign.
 
 #### Request Body
 
@@ -1078,6 +1107,7 @@ Script addresses are not allowed (use `/multisig` route instead).
 |-----------------|--------|----------|----------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (must be valid Bech32 address) |
 | `signType`      | string | Yes      | Type of signature: `drep`, `stake`                       |
+| `scriptAddress` | string | No       | Multisig: CIP-0129 script address used as session identity |
 
 #### Success Response — `200 OK`
 
@@ -1090,12 +1120,15 @@ Script addresses are not allowed (use `/multisig` route instead).
 }
 ```
 
+For multisig requests, `userId` / related fields refer to `scriptAddress`, and
+the response also includes `scriptAddress`.
+
 [//]: # (@formatter:off)
 
 > **Note:**
 >
 > - The `dataHex` field contains a string with the prefix "Sign in! " followed by hex-encoded nonce (e.g.,`"Sign in! a3f8d2e1b4c9f0a7d6e5b8c1a2f3d4e5"`). The client must sign this entire string value and submit it via `PUT /session` to complete authentication.
-> - The `userId` field contains a Bech32-encoded Cardano identifier. It can be a stake address (`stake1...`) or CIP-0129 DRep ID (`drep1...`) depending on the `signType` provided.
+> - The `userId` field contains a Bech32-encoded Cardano identifier. It can be a stake address (`stake1...`), CIP-0129 DRep ID (`drep1...`), or (multisig) the script address supplied as `scriptAddress`.
 > - The `userIdHex` and `signerAddressHex` fields contain hex-encoded versions of the address for clients that require hex formats.
 
 [//]: # (@formatter:on)
@@ -1104,8 +1137,8 @@ Script addresses are not allowed (use `/multisig` route instead).
 
 Returned when:
 
-- Address is a script address (must use `/multisig` route)
-- Address validation fails
+- Address is a script address and `scriptAddress` was not provided
+- Address or `scriptAddress` validation fails
 
 ```json
 {
@@ -1113,6 +1146,9 @@ Returned when:
   "message": "Script address not allowed. Please use the multisig route."
 }
 ```
+
+(Message text may refer to the multisig flow; the supported mechanism is
+including `scriptAddress` on this same endpoint.)
 
 #### Error Response — `500 Internal Server Error`
 
@@ -1153,6 +1189,14 @@ clears the nonce from session records. Also creates or updates the User record
 with the user's name (fetched from DRep registry or handle service). Nonce are
 atomically marked as used to prevent race conditions.
 
+**Multisig:** When `scriptAddress` is present, the server verifies that the
+signer is an **eligible key in the native script** (key-hash membership via
+`isPartyToScript`). It does **not** evaluate full native-script semantics
+(threshold `all` / `any` / `atLeast`, or timelock `before` / `after`). That is
+intentional for this module; see
+[system-architecture.md §8.1](system-architecture.md#81-accepted-risks) (F-002).
+The issued JWT `userId` is the script address.
+
 #### Request Body
 
 | Field           | Type   | Required | Description                                                                 |
@@ -1160,34 +1204,37 @@ atomically marked as used to prevent race conditions.
 | `signerAddress` | string | Yes      | The address of the signer (validated by middleware)                         |
 | `signType`      | string | Yes      | Type of signature: `drep`, `stake`                                          |
 | `signature`     | object | Yes      | Signature object containing the signed nonce (structure varies by signType) |
+| `scriptAddress` | string | No       | Multisig: CIP-0129 script address; triggers membership verification         |
 
 #### Success Response — `200 OK`
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "expiresIn": "2026-02-11T09:23:33Z"
+  "expiresIn": "2026-02-11T09:23:33Z",
+  "userId": "stake1ux9...xyz"
 }
 ```
 
-> **Note:** The JWT token is also set as an HTTP-only cookie named `token`.
-> Subsequent requests should include this cookie automatically. The token
-> contains `userId` (which can be a Cardano Bech32 stake address or CIP-0129
-> DRep ID) and `signType`.
+> **Note:** The JWT is set only as an HTTP-only cookie named `token` (not in the
+> JSON body). Subsequent requests must include this cookie via
+> `credentials: 'include'`. The token contains `userId` (stake address, CIP-0129
+> DRep ID, or multisig script address) and `signType`.
 
 #### Error Response — `400 Bad Request`
 
 Returned when:
 
-- Address is a script address (must use `/multisig` route)
+- Script address used without `scriptAddress` in the body
+- Multisig: signer is not a party to the script (membership check failed)
 - Nonce not found in the database
 - Nonce has expired (nonces expire after 5 minutes)
 - Invalid signature format (signature is not a valid object)
 - Signature verification fails
 - Signature verification throws an exception
 
-For security reasons, a generic error message is returned to prevent information
-leakage:
+For security reasons, a generic error message is often returned to prevent
+information leakage (multisig membership failure may return a specific
+“does not belong to the MultiSig” message):
 
 ```json
 {
@@ -1253,6 +1300,7 @@ and (when applicable) the list of vote IDs for which they are an admin.
 {
   "userId": "stake1ux9...xyz",
   "name": "Alice",
+  "expiresIn": "2026-02-11T09:23:33Z",
   "adminVoteIds": [
     "a1b2c3d4e5f67890abcdef12",
     "b2c3d4e5f67890abcdef123"
@@ -1264,6 +1312,7 @@ and (when applicable) the list of vote IDs for which they are an admin.
 |----------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `userId`       | string   | **Required.** Bech32-encoded Cardano identifier from the validated JWT (stake address, DRep ID, or pool ID).                                                                                            |
 | `name`         | string   | **Optional.** User's display name from the User record (e.g. from DRep registry or handle service at login). Omitted if not set.                                                                        |
+| `expiresIn`    | string   | **Optional.** ISO timestamp when the session JWT expires (from the cookie token `exp`).                                                                                                               |
 | `adminVoteIds` | string[] | **Optional.** Array of vote `_id` values (as strings) for which the authenticated user is in the vote's `admins` array. Present only when the user is an admin of at least one vote; omitted otherwise. |
 
 > **Note:** The `userId` field contains a Bech32-encoded Cardano identifier. It
@@ -1589,15 +1638,23 @@ Updates an existing proposal. Only the proposal owner (authenticated user's
 until the vote's `reviewEndDate`; after that, the proposal is locked.
 
 **Versioning when updating a live proposal:** If the proposal's current `status`
-is `"live"`, the server preserves the current version before applying the
-update: (1) the current proposal document is copied into a new document with
-`status: "archived"` (and a new `_id`); (2) the proposal at `proposalId` is
-overwritten with the request body; (3) the `versions` array on the updated
-proposal is appended with an entry
-`{ _id: <archivedDocumentId>, createdAt: <archivedDocumentCreatedAt> }` so the
-previous version can be referenced. For proposals that are not yet live (e.g.
-`"draft"`), the document is updated in place and no archived copy is created
-(though implementations may still append to `versions` for audit if desired).
+is `"live"`, the server preserves the current version with an optimistic
+compare-and-swap (CAS):
+
+1. The server records the proposal's current `version` as the expected version
+   (default `1` if unset).
+2. The current proposal document is copied into a new document with
+   `status: "archived"` (and a new `_id`).
+3. The live document is updated atomically via `findOneAndUpdate` filtered on
+   `{ _id, status: "live", version: expectedVersion }`: fields are `$set` from
+   the request, `version` is `$inc`'d by 1, and `versions` is `$push`'d with
+   `{ _id: <archivedDocumentId>, createdAt: <archivedDocumentCreatedAt> }`.
+4. If the CAS misses (another writer changed the live proposal first), the
+   orphan archived copy is deleted and the API returns **409 Conflict**. The
+   client should re-fetch and retry.
+
+For proposals that are not yet live (e.g. `"draft"`), the document is updated in
+place and no archived copy is created.
 
 #### Headers
 
@@ -1724,6 +1781,19 @@ Returned when:
 }
 ```
 
+#### Error Response — `409 Conflict`
+
+Returned when a live proposal update loses the optimistic version CAS (another
+request archived/updated the same live proposal concurrently). The client should
+re-fetch the proposal and retry.
+
+```json
+{
+  "status": "error",
+  "message": "Proposal was modified concurrently. Please retry."
+}
+```
+
 #### Error Response — `500 Internal Server Error`
 
 Returned when:
@@ -1749,18 +1819,18 @@ of the proposal may be changed; this endpoint only performs the withdrawal.
 
 - **Proposer** — Authenticated user's `userId` matches the proposal's
   `proposerId`. The proposal's status is set to `"withdrawnByProposer"`.
-  Withdrawal is allowed until the vote's `feedbackEndDate`.
+  Withdrawal is allowed until the vote's `reviewEndDate`.
 - **Vote admin** — Authenticated user's `userId` is in the proposal's vote
   `admins` array. The proposal's status is set to `"withdrawnByAdmin"`.
-  Withdrawal is allowed until the vote's `reviewEndDate`.
+  Withdrawal is allowed only **before** the vote's `votingStartDate`.
 
 **Constraints:**
 
 - Only the proposer or a vote admin can call this endpoint.
 - The proposal's current status must be `"live"`. Draft, already withdrawn, or
   archived proposals cannot be withdrawn via this endpoint.
-- **Proposer:** withdrawal only allowed until the vote's `feedbackEndDate`. *
-  *Vote admin:** withdrawal only allowed until the vote's `reviewEndDate`.
+- **Proposer:** withdrawal only allowed until the vote's `reviewEndDate`.
+  **Vote admin:** withdrawal only allowed before the vote's `votingStartDate`.
 
 #### Headers
 
@@ -1821,10 +1891,10 @@ Returned when:
 
 - The proposal's current status is not `"live"` (e.g., already withdrawn, or
   still draft).
-- **Proposer** calls after the vote's `feedbackEndDate` (the proposer withdrawal
+- **Proposer** calls after the vote's `reviewEndDate` (the proposer withdrawal
   window has closed).
-- **Vote admin** calls after the vote's `reviewEndDate` (the admin withdrawal
-  window has closed).
+- **Vote admin** calls on or after the vote's `votingStartDate` (the admin
+  withdrawal window has closed).
 - `category` is missing or not one of the allowed values.
 
 ```json
@@ -1834,21 +1904,21 @@ Returned when:
 }
 ```
 
-Or when the proposer's withdrawal window has closed:
+Or when the proposer withdrawal window has closed:
 
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be withdrawn by the proposer after the vote feedback period has ended (feedbackEndDate)."
+  "message": "Proposer withdrawal is not allowed after the vote review period has ended (reviewEndDate)."
 }
 ```
 
-Or when the admin's withdrawal window has closed:
+Or when the admin withdrawal window has closed:
 
 ```json
 {
   "status": "error",
-  "message": "Proposals cannot be withdrawn by an admin after the vote review period has ended (reviewEndDate)."
+  "message": "Admin withdrawal is only allowed before voting starts (votingStartDate)."
 }
 ```
 
@@ -1924,9 +1994,16 @@ be deleted via this endpoint.
 |--------------|--------|----------|------------------------------------------------------|
 | `proposalId` | string | Yes      | MongoDB ObjectId of the proposal to delete (24 hex). |
 
-#### Success Response — `204 No Content`
+#### Success Response — `200 OK`
 
-The proposal was deleted. The response body is empty.
+The proposal was deleted.
+
+```json
+{
+  "status": "success",
+  "message": "Proposal deleted"
+}
+```
 
 #### Error Response — `400 Bad Request`
 
@@ -2301,6 +2378,190 @@ the comment's proposal).
 
 ---
 
+### 5.9 Notification settings
+
+Email notification preferences and verification. Implementation details (cron
+milestones, mail transport, eligibility) are in
+[notification-system-implementation.md](notification-system-implementation.md).
+User field reference:
+[user-schema-description.md](user-schema-description.md).
+
+**Shared notification state shape** (returned by GET/PUT and nested under
+`notification` on verify/unsubscribe success):
+
+| Field          | Type            | Description                                                                 |
+|----------------|-----------------|-----------------------------------------------------------------------------|
+| `email`        | string \| null  | Active delivery address (verified).                                         |
+| `pendingEmail` | string \| null  | Address awaiting magic-link verification.                                   |
+| `schedule`     | string          | `never` \| `6h` \| `daily` (default `daily`).                               |
+| `verifiedAt`   | string \| null  | ISO 8601 when `email` was confirmed; required for broadcast sends.          |
+| `locale`       | string          | Mail catalog locale (e.g. `en`).                                            |
+
+#### 5.9.1 `GET /notifications`
+
+Returns the authenticated user's notification settings.
+
+**Auth:** Cookie JWT required.
+
+##### Success Response — `200 OK`
+
+```json
+{
+  "email": "proposer@example.com",
+  "pendingEmail": null,
+  "schedule": "daily",
+  "verifiedAt": "2026-05-01T12:00:00.000Z",
+  "locale": "en"
+}
+```
+
+#### 5.9.2 `PUT /notifications`
+
+Updates schedule and/or email. Setting a new email (different from current
+`email` / `pendingEmail`) stores it as `pendingEmail` and sends a verification
+magic link (30m TTL) to `FRONTEND_URL/notifications/verify?token=...`. Clearing
+email (`email: ""`) unsets `email`, `pendingEmail`, `verifiedAt`, and
+`verificationIssuedAt`; it does **not** rotate or clear
+`notification.unsubscribeSecret`.
+
+**Auth:** Cookie JWT required. Dedicated write / verify-dispatch rate limits
+apply.
+
+##### Request Body
+
+| Field      | Type   | Required | Description                                                                 |
+|------------|--------|----------|-----------------------------------------------------------------------------|
+| `schedule` | string | No       | One of `never`, `6h`, `daily`.                                              |
+| `email`    | string | No       | New address to verify, or `""` to clear notification email fields.          |
+
+##### Success Response — `200 OK`
+
+Notification state plus `emailSendFailed` (boolean) when a verification send was
+attempted.
+
+```json
+{
+  "email": null,
+  "pendingEmail": "new@example.com",
+  "schedule": "daily",
+  "verifiedAt": null,
+  "locale": "en",
+  "emailSendFailed": false
+}
+```
+
+##### Error Response — `400 Bad Request`
+
+Invalid schedule or email format.
+
+##### Error Response — `409 Conflict`
+
+A different `pendingEmail` is already awaiting confirmation
+(`code: "PENDING_EMAIL_EXISTS"`). Verify, resend, or cancel pending first.
+
+```json
+{
+  "status": "error",
+  "code": "PENDING_EMAIL_EXISTS",
+  "message": "A confirmation is already pending for old@example.com. Verify it, resend the link, or cancel the pending email before changing it."
+}
+```
+
+#### 5.9.3 `DELETE /notifications/pending`
+
+Cancels the pending email verification (`pendingEmail` and
+`verificationIssuedAt` unset). Returns updated notification state.
+
+**Auth:** Cookie JWT required.
+
+##### Error Response — `400 Bad Request`
+
+No pending email to cancel.
+
+#### 5.9.4 `POST /notifications/resend`
+
+Resends the verification email for the current `pendingEmail`. Rotates
+`verificationIssuedAt` (invalidates prior magic links).
+
+**Auth:** Cookie JWT required. Dedicated resend rate limit.
+
+##### Success Response — `200 OK`
+
+```json
+{
+  "status": "success",
+  "emailSendFailed": false
+}
+```
+
+##### Error Response — `400 Bad Request`
+
+No pending email address to verify.
+
+#### 5.9.5 `POST /notifications/verify`
+
+Confirms a pending email using the magic-link token (no session cookie
+required). On success, sets `notification.email`, `verifiedAt`, rotates
+`unsubscribeSecret`, and clears `pendingEmail`.
+
+##### Request Body
+
+| Field   | Type   | Required | Description                          |
+|---------|--------|----------|--------------------------------------|
+| `token` | string | Yes      | JWT from the verification email URL. |
+
+##### Success Response — `200 OK`
+
+```json
+{
+  "status": "success",
+  "notification": {
+    "email": "new@example.com",
+    "pendingEmail": null,
+    "schedule": "daily",
+    "verifiedAt": "2026-07-23T18:00:00.000Z",
+    "locale": "en"
+  }
+}
+```
+
+##### Error Response — `400 Bad Request`
+
+Missing, invalid, expired, or stale token (e.g. superseded by resend).
+
+#### 5.9.6 `POST /notifications/unsubscribe`
+
+Sets `notification.schedule` to `never` using a signed unsubscribe token from
+email links (no session cookie required). Token must match the user's current
+`unsubscribeSecret`.
+
+##### Request Body
+
+| Field   | Type   | Required | Description                           |
+|---------|--------|----------|---------------------------------------|
+| `token` | string | Yes      | JWT with purpose `notification-unsubscribe`. |
+
+##### Success Response — `200 OK`
+
+```json
+{
+  "status": "success",
+  "notification": {
+    "email": "proposer@example.com",
+    "pendingEmail": null,
+    "schedule": "never",
+    "verifiedAt": "2026-05-01T12:00:00.000Z",
+    "locale": "en"
+  }
+}
+```
+
+##### Error Response — `400 Bad Request`
+
+Missing, invalid, expired, or secret-mismatched token.
+
+---
+
 ## 6. Rate Limiting & Caching
 
 Rate limiting is applied per IP or per authenticated user as indicated below.
@@ -2323,6 +2584,8 @@ present; session and write endpoints must not be cached.
 | `GET /session` (check session)                                                                                                                                                                                                                                                           | 60 per IP   | 1 min  | —              |
 | `DELETE /session` (logout)                                                                                                                                                                                                                                                               | 20 per IP   | 1 min  | —              |
 | **Authenticated write (Section 5)** — `POST /proposals`, `PUT /proposals/{proposalId}`, `PUT /proposals/{proposalId}/withdraw`, `DELETE /proposals/{proposalId}`, `POST /comments`, `PUT /comments/{commentId}`, `POST /comments/{commentId}/like`, `PUT /comments/{commentId}/withdraw` | 10 per user | 1 min  | —              |
+| `GET/PUT /notifications`, `DELETE /notifications/pending`                                                                                                                                                                                                                                | Dedicated per-user write / verify-dispatch limiters | — | — |
+| `POST /notifications/resend`, `POST /notifications/verify`, `POST /notifications/unsubscribe`                                                                                                                                                                                            | Dedicated route limiters (resend / verify / unsubscribe) | — | — |
 
 ---
 
@@ -2352,12 +2615,12 @@ validation; clients should not rely on them.
 | **401 Unauthorized**          | Authentication required or invalid. | Missing or invalid JWT (cookie), expired session, or unauthenticated access to an endpoint that requires a session.                                                                                        |
 | **403 Forbidden**             | Authenticated but not allowed.      | User is logged in but lacks permission (e.g. not the proposer, not a vote admin) for the requested action.                                                                                                 |
 | **404 Not Found**             | Resource not found.                 | No resource for the given id. For `GET /proposals/{proposalId}`, when the proposal exists but the caller is not allowed to see it, the API returns **403 Forbidden** instead.                              |
+| **409 Conflict**              | Concurrent or state conflict.       | Live proposal update lost optimistic version CAS (retry after re-fetch); notification `PUT` while a different `pendingEmail` is awaiting verification (`PENDING_EMAIL_EXISTS`).                            |
 | **429 Too Many Requests**     | Rate limit exceeded.                | Per-IP or per-user limit exceeded (see Section 6).                                                                                                                                                         |
 | **500 Internal Server Error** | Server-side failure.                | Unexpected errors (e.g. database or external service failure). The `message` may be generic; details are not guaranteed.                                                                                   |
 
-Success responses use **200 OK**, **201 Created** (for create endpoints), or *
-*204 No Content** (for successful delete with no body). Some 200 responses
-return a resource body; others (e.g., logout) may return an envelope such as
+Success responses use **200 OK** or **201 Created** (for create endpoints). Some 200 responses
+return a resource body; others (e.g., logout, draft delete) may return an envelope such as
 `{ "status": "success", "message": "..." }`. Redirects and other status codes
 are not used for the endpoints defined in this specification.
 
@@ -2377,6 +2640,9 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.3.0   | 2026-07-23 | Live `PUT /proposals/{proposalId}`: optimistic version CAS and `409 Conflict` on concurrent update (F-006). Added §5.9 notification settings endpoints. Documented `409` in §7.2. Aligned proposal withdraw windows with implementation (proposer ≤ `reviewEndDate`; admin before `votingStartDate`). Removed dangling Ekklesia Integration Plan reference. |
+| 1.2.2   | 2026-07-23 | `DELETE /proposals/{proposalId}` success documented as `200 OK` JSON (`status`/`message`), matching implementation (F-027). Removed obsolete 204 No Content convention.                                                                                                                                                                                                                                                                  |
+| 1.2.1   | 2026-07-17 | Clarify multisig `scriptAddress` on `POST`/`PUT /session`: membership-only native-script check by design (F-002); link to system-architecture §8.1.                                                                                                                                                                                                                                                                                      |
 | 1.2.0   | 2026-02-23 | Comment response: `user` renamed to `author`; top-level `userId` and `authorType` removed. Withdrawn comments visible to admin and comment author; `excludeWithdrawn` query param for comments and replies. Replies to withdrawn comments rejected with 400. `withdrawalDetails._id` excluded from response. |
 | 1.1.0   | 2026-02-20 | Some updates to spec to bring alignment with latest deployed changes                                                                                                                                                                                                                                                                                                                                                                   |
 | 1.0.0   | 2026-02-20 | Publish version "1.0.0" to represent initial MVP status of API endpoints                                                                                                                                                                                                                                                                                                                                                               |

@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Proposal Schema – Field Reference                                                                       |
-| **Version**        | 0.1.2                                                                                                   |
+| **Version**        | 0.1.3                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | February 20, 2026                                                                                       |
+| **Last Revised**   | July 23, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -21,9 +21,11 @@ Legend: **\*** = mandatory in PDF; **Not Public** = PDF marks field as not
 public (yellow).
 
 **Draft vs live:** For `status: "draft"`, only `voteId` and `status` are required on create; `title` is optional (can be empty); `summary` and most `metaData` are optional. When
-submitting with `status: "live"`, the API and frontend enforce full validation (
-see [proposalCreateSchema.js](../validation/proposalCreateSchema.js)
-and [Schema.js](../__frontend/src/lib/budget2026/Schema.js)).
+submitting with `status: "live"`, the API and frontend enforce full validation
+via the vote's `validationScript` (e.g.
+[validation/budget2026/validationScript.js](../validation/budget2026/validationScript.js))
+and the matching frontend Zod schema (e.g.
+[__frontend/src/lib/forms/budget2026/Schema.js](../__frontend/src/lib/forms/budget2026/Schema.js)).
 
 ---
 
@@ -109,7 +111,7 @@ At least one item is required in `budgetBreakdown` per work package.
 
 | PDF field        | Schema path                      | Required | Max length / type           | Validation / notes                                                                                       |
 |------------------|----------------------------------|----------|-----------------------------|----------------------------------------------------------------------------------------------------------|
-| Cost Category *  | `budgetBreakdown[].costCategory` | Yes      | String (from category list) | Must be one of the names in [costCategories.json](../__frontend/src/lib/budget2026/costCategories.json). |
+| Cost Category *  | `budgetBreakdown[].costCategory` | Yes      | String (from category list) | Must be one of the names in [costCategories.json](../validation/budget2026/costCategories.json) (mirrored under `__frontend/src/lib/forms/budget2026/`). |
 | Item Description | `budgetBreakdown[].description`  | Yes      | String                      | 1–600 chars.                                                                                             |
 | Qty              | `budgetBreakdown[].quantity`     | Yes      | Number                      | > 0 (API min 0.001).                                                                                     |
 | Unit Cost (ada)  | `budgetBreakdown[].unitPrice`    | Yes      | Number                      | ADA, ≥ 0.                                                                                                |
@@ -235,7 +237,8 @@ for draft.
 ## Cost categories (budgetBreakdown[].costCategory)
 
 The allowed values are defined
-in [costCategories.json](../__frontend/src/lib/budget2026/costCategories.json).
+in [costCategories.json](../validation/budget2026/costCategories.json)
+(mirrored under `__frontend/src/lib/forms/budget2026/`).
 Current list: *Resources (Labor)*, *Development*, *Infrastructure*, *Security &
 Audits*, *Legal & Compliance*, *Engagement & Ecosystem support*, *Research*,
 *Operations*, *Governance*.
@@ -247,10 +250,10 @@ Audits*, *Legal & Compliance*, *Engagement & Ecosystem support*, *Research*,
 - [api-specification.md](api-specification.md) – API request/response for
   proposals.
 - Schema implementation: [../schema/Proposal.js](../schema/Proposal.js).
-- API create/update
-  validation: [../validation/proposalCreateSchema.js](../validation/proposalCreateSchema.js);
-  frontend
-  form: [../__frontend/src/lib/budget2026/Schema.js](../__frontend/src/lib/budget2026/Schema.js).
+- Vote-scoped create/update validation (example):
+  [../validation/budget2026/validationScript.js](../validation/budget2026/validationScript.js);
+  frontend form (example):
+  [../__frontend/src/lib/forms/budget2026/Schema.js](../__frontend/src/lib/forms/budget2026/Schema.js).
 
 ---
 
@@ -266,8 +269,9 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 - **PATCH** — Backwards-compatible fixes and clarifications (e.g. typo
   corrections, clarified wording, alignment with implementation).
 
-| Version | Date       | Description                                                                                                                                                                                                                       |
-|---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Version | Date       | Description |
+|---------|------------|-------------|
+| 0.1.3   | 2026-07-23 | Fix validation/form paths to `validation/<form>/` and `__frontend/src/lib/forms/`; clarify costCategories location. |
 | 0.1.2   | 2026-02-20 | Update references to "Budget" item to be renamed "Votes"                                                                                                                                                                          |
 | 0.1.1   | 2026-02-19 | Grammar corrections and formatting tweaks                                                                                                                                                                                         |
 | 0.1.0   | 2026-02-18 | Document metadata block and Revision history. Content aligned with implementation: draft vs live requirements, cost categories source, link titles 1–255 chars, quantity &gt; 0, treasury/prior-funding optional-for-draft notes. |

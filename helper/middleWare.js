@@ -6,7 +6,7 @@ import {Proposal} from "../schema/Proposal.js";
 
 // helper imports
 import {verifyToken} from "../helper/verifyToken.js";
-import {validateAddress} from "../helper/validateAddress.js";
+import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
 
 /**
@@ -24,9 +24,9 @@ import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
  * 3. If invalid, returns an appropriate error response
  *
  * On success, adds the following properties to the request:
- * - req.voterId: The authenticated voter's ID
+ * - req.userId: The authenticated user's ID
  * - req.signType: The type of signature used ('drep', etc.)
- * - req.multiSig: Boolean indicating if this is a multisig authentication
+ * - req.exp: JWT expiration timestamp (seconds since epoch)
  */
 /**
  * Middleware factory that rejects requests containing duplicate (array) query parameters.
@@ -91,9 +91,9 @@ export function parsePagination(req, res, next) {
   next();
 }
 
-export function isAuthenticated(req, res, next) {
+export async function isAuthenticated(req, res, next) {
   try {
-    const userToken = verifyToken(req);
+    const userToken = await verifyToken(req);
     if (userToken.status === "error") {
       return res.status(userToken.code).json({
         status: "error",
@@ -102,7 +102,8 @@ export function isAuthenticated(req, res, next) {
     } else {
       req.userId = userToken.userId;
       req.signType = userToken.signType;
-      next();  // add this
+      req.exp = userToken.exp;
+      next();
 
     }
   } catch (error) {

@@ -121,17 +121,6 @@ export async function connectToDatabase(isReconnectAttempt = false) {
       }
     });
 
-    // Register cleanup handler for graceful shutdown
-    process.on("SIGINT", async () => {
-      if (connection) {
-        console.info(
-          "Closing MongoDB connection due to application termination"
-        );
-        await connection.close();
-        process.exit(0);
-      }
-    });
-
     // Log success but mask password
     const dbInfo = `${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_DATABASE}`;
     console.info(`Successfully connected to MongoDB at ${dbInfo}`);

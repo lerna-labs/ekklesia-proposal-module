@@ -5,12 +5,14 @@
   import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
+  import VoteIcon from "@lucide/svelte/icons/vote";
   import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
   import { formatUtcInstant } from "$lib/formatUtc.js";
+  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
 
-  let { proposal, vote, showLink = true, class: className } = $props();
+  let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
   let withdrawalDetailsDialogOpen = $state(false);
 
   const TRACK_LABELS = {
@@ -66,6 +68,12 @@
   const commentCount = $derived(
     proposal?.commentCount != null ? Number(proposal.commentCount) : null,
   );
+
+  const voteNowHref = $derived.by(() => {
+    if (proposal?.status !== "live") return null;
+    if (!canShowVotingUi(vote, policyNow)) return null;
+    return buildProposalVotingUrl(vote, proposal._id ?? proposal.id);
+  });
 </script>
 
 <Card.Root
@@ -169,9 +177,9 @@
       </Card.Root>
     {/if}
   </Card.Content>
-  {#if (showLink && proposalHref) || canWithdraw || commentsHref}
+  {#if (showLink && proposalHref) || canWithdraw || commentsHref || voteNowHref}
     <Card.Footer class="flex flex-col items-start gap-3 pt-0 px-4 sm:px-6">
-      {#if commentsHref || (showLink && proposalHref)}
+      {#if commentsHref || (showLink && proposalHref) || voteNowHref}
         <div class="flex items-center gap-2 flex-wrap justify-between w-full">
           {#if commentsHref}
             <Button
@@ -188,17 +196,32 @@
             </Button>
           {/if}
 
-          {#if showLink && proposalHref}
-            <Button
-              href={proposalHref}
-              variant="secondary"
-              size="sm"
-              class="text-xs shrink-0 bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
-            >
-              <FileTextIcon class="size-4 mr-1" />
-              Read Proposal
-            </Button>
-          {/if}
+          <div class="flex items-center gap-2 flex-wrap shrink-0">
+            {#if showLink && proposalHref}
+              <Button
+                href={proposalHref}
+                variant="secondary"
+                size="sm"
+                class="text-xs shrink-0 bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+              >
+                <FileTextIcon class="size-4 mr-1" />
+                Read Proposal
+              </Button>
+            {/if}
+            {#if voteNowHref}
+              <Button
+                href={voteNowHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="secondary"
+                size="sm"
+                class="text-xs shrink-0 animate-pulse bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+              >
+                <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+                Vote Now!
+              </Button>
+            {/if}
+          </div>
         </div>
       {/if}
       {#if canWithdraw}

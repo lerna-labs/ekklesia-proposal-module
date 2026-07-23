@@ -23,6 +23,7 @@
     showComments = false,
     commentsHref = "",
     isWithdrawn = false,
+    policyNow = new Date(),
   } = $props();
 
   function goBackToList() {
@@ -51,7 +52,7 @@
         </Button>
       </div>
     {/if}
-    <ProposalPageTitle {proposal} {vote} {commentCount} {commentsHref} {showComments} />
+    <ProposalPageTitle {proposal} {vote} {commentCount} {commentsHref} {showComments} {policyNow} />
 
     <ProposalPageKeyDetails {proposal} {vote} {pillars} />
 
