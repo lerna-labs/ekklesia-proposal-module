@@ -121,7 +121,7 @@
     - [5.4 `DELETE /proposals/{proposalId}`](#54-delete-proposalsproposalid)
       - [Headers](#headers-5)
       - [Path Parameters](#path-parameters-7)
-      - [Success Response — `204 No Content`](#success-response--204-no-content)
+      - [Success Response — `200 OK`](#success-response--200-ok-14)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-12)
       - [Error Response — `401 Unauthorized`](#error-response--401-unauthorized-5)
       - [Error Response — `403 Forbidden`](#error-response--403-forbidden-2)
@@ -137,7 +137,7 @@
       - [Headers](#headers-7)
       - [Path Parameters](#path-parameters-8)
       - [Request Body](#request-body-6)
-      - [Success Response — `200 OK`](#success-response--200-ok-14)
+      - [Success Response — `200 OK`](#success-response--200-ok-15)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-14)
       - [Error Response — `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`](#error-response--401-unauthorized-403-forbidden-404-not-found-500-internal-server-error-1)
     - [5.7 `POST /comments/{commentId}/like`](#57-post-commentscommentidlike)
@@ -151,7 +151,7 @@
       - [Headers](#headers-9)
       - [Path Parameters](#path-parameters-10)
       - [Request Body](#request-body-8)
-      - [Success Response — `200 OK`](#success-response--200-ok-15)
+      - [Success Response — `200 OK`](#success-response--200-ok-16)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-16)
       - [Error Response — `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `500 Internal Server Error`](#error-response--401-unauthorized-403-forbidden-404-not-found-500-internal-server-error-2)
   - [6. Rate Limiting \& Caching](#6-rate-limiting--caching)
@@ -189,8 +189,7 @@ kept up to date as the module evolves.
   `https://domain.tld/api/v0`.
 - **Requests** – Request bodies must be `Content-Type: application/json`. The
   API returns JSON; clients may send `Accept: application/json`.
-- **Responses** – All responses return **JSON** (except 204 No Content, which
-  has no body).
+- **Responses** – All responses return **JSON**.
 - **Pagination** – All paginated list endpoints use the same `meta` shape:
   `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The
   list of items is in the `data` array.
@@ -1951,9 +1950,16 @@ be deleted via this endpoint.
 |--------------|--------|----------|------------------------------------------------------|
 | `proposalId` | string | Yes      | MongoDB ObjectId of the proposal to delete (24 hex). |
 
-#### Success Response — `204 No Content`
+#### Success Response — `200 OK`
 
-The proposal was deleted. The response body is empty.
+The proposal was deleted.
+
+```json
+{
+  "status": "success",
+  "message": "Proposal deleted"
+}
+```
 
 #### Error Response — `400 Bad Request`
 
@@ -2382,9 +2388,8 @@ validation; clients should not rely on them.
 | **429 Too Many Requests**     | Rate limit exceeded.                | Per-IP or per-user limit exceeded (see Section 6).                                                                                                                                                         |
 | **500 Internal Server Error** | Server-side failure.                | Unexpected errors (e.g. database or external service failure). The `message` may be generic; details are not guaranteed.                                                                                   |
 
-Success responses use **200 OK**, **201 Created** (for create endpoints), or *
-*204 No Content** (for successful delete with no body). Some 200 responses
-return a resource body; others (e.g., logout) may return an envelope such as
+Success responses use **200 OK** or **201 Created** (for create endpoints). Some 200 responses
+return a resource body; others (e.g., logout, draft delete) may return an envelope such as
 `{ "status": "success", "message": "..." }`. Redirects and other status codes
 are not used for the endpoints defined in this specification.
 
@@ -2404,6 +2409,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.2.2   | 2026-07-23 | `DELETE /proposals/{proposalId}` success documented as `200 OK` JSON (`status`/`message`), matching implementation (F-027). Removed obsolete 204 No Content convention.                                                                                                                                                                                                                                                                  |
 | 1.2.1   | 2026-07-17 | Clarify multisig `scriptAddress` on `POST`/`PUT /session`: membership-only native-script check by design (F-002); link to system-architecture §8.1.                                                                                                                                                                                                                                                                                      |
 | 1.2.0   | 2026-02-23 | Comment response: `user` renamed to `author`; top-level `userId` and `authorType` removed. Withdrawn comments visible to admin and comment author; `excludeWithdrawn` query param for comments and replies. Replies to withdrawn comments rejected with 400. `withdrawalDetails._id` excluded from response. |
 | 1.1.0   | 2026-02-20 | Some updates to spec to bring alignment with latest deployed changes                                                                                                                                                                                                                                                                                                                                                                   |

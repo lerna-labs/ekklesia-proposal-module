@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Proposal Flow – Draft, Save, and Submit                                                                 |
-| **Version**        | 0.1.4                                                                                                   |
+| **Version**        | 0.1.5                                                                                                   |
 | **Created**        | February 18, 2026                                                                                       |
-| **Last Revised**   | February 19, 2026                                                                                       |
+| **Last Revised**   | July 23, 2026                                                                                           |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -279,7 +279,7 @@ sequenceDiagram
     else Proposal status is draft
         Backend->>MongoDB: Delete proposal document
         MongoDB-->>Backend: ok
-        Backend-->>Frontend: 204 No Content
+        Backend-->>Frontend: 200 OK { status, message: Proposal deleted }
         Frontend-->>Proposer: Proposal deleted ✓
     end
 ```
@@ -354,6 +354,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                   |
 |---------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.5   | 2026-07-23 | Align draft delete success with API: `200 OK` JSON instead of `204 No Content` (F-027).                                                                                         |
 | 0.1.4   | 2026-02-20 | Terminology change, modify references to "Budgets" to be "Votes"                                                                                                              |
 | 0.1.3   | 2026-02-19 | Remove the concept/ability to "withdraw" a draft proposal. Draft proposals may be deleted by the author, otherwise only live proposals may be withdrawn by admin or the user. |
 | 0.1.2   | 2026-02-19 | Add sequence diagrams and flowcharts for documenting various state changes of proposals.                                                                                      |

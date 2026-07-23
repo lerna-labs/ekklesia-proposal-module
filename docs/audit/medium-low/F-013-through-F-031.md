@@ -21,7 +21,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-024 | Low | Logging | Open |
 | F-025 | Low | Repository formatting | Open |
 | F-026 | Low | Graceful shutdown | **Resolved** |
-| F-027 | Low | Documentation drift | Open |
+| F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | Open |
 | F-029 | Low | Frontend cleanup | Open |
 | F-030 | Low | Frontend lifecycle cleanup | Open |
@@ -465,7 +465,7 @@ Add server-level SIGTERM/SIGINT handling: close the HTTP server, drain connectio
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Documentation drift |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
@@ -473,7 +473,7 @@ Add server-level SIGTERM/SIGINT handling: close the HTTP server, drain connectio
 - `docs/proposal-flow.md`
 - `routes/api/v0/proposals.js` (delete handler)
 
-### Observation
+### Observation (original)
 
 Docs document proposal delete as `204 No Content`; the route returns `200` JSON.
 
@@ -487,7 +487,7 @@ Align docs and implementation (document 200 JSON, or change the route to 204 wit
 
 ### Current status (2026-07-23)
 
-Open. Docs still describe 204; the delete route still returns `200` JSON (`{ status, message: "Proposal deleted" }`).
+**Resolved.** Docs updated to match the route: `200 OK` with `{ status: "success", message: "Proposal deleted" }`. Implementation unchanged. See `docs/audit/resolutions/F-027-resolution.md`.
 
 ---
 
@@ -621,11 +621,10 @@ Priority backlog from this set (excluding resolved items):
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
-5. **F-027** — Align delete docs vs 200 JSON  
-6. **F-028** — Login redirect via load/guard  
-7. **F-029** — Remove SignerCS debug log  
-8. **F-030** — Version polling lifecycle cleanup  
-9. **F-031** — Configurable active vote slug  
+5. **F-028** — Login redirect via load/guard  
+6. **F-029** — Remove SignerCS debug log  
+7. **F-030** — Version polling lifecycle cleanup  
+8. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
