@@ -5,7 +5,7 @@
 | **Severity** | High |
 | **Finding ID** | F-004 |
 | **Category** | Privacy / public data exposure |
-| **Status** | Partially resolved |
+| **Status** | Accepted (by design) |
 
 ## Affected Files
 
@@ -28,4 +28,4 @@ Fail closed for Budget 2026 proposal data. Make exclusion mandatory for applicab
 
 ## Current Status
 
-**Partially resolved.** When a vote has `excludeScript` set but the script fails to load, public responses strip `metaData` (fail closed). Startup warns on unloadable exclude scripts. Votes with no `excludeScript` still return full proposal data to public callers; exclusion is not mandatory. See `docs/audit/resolutions/F-004-resolution.md`.
+**Accepted (by design) — not fully resolved as mandatory exclusion.** When a vote has `excludeScript` set but the script fails to load, public responses strip `metaData` (fail closed). Votes with no `excludeScript` returning full proposal data to public callers is intentional. See `docs/audit/resolutions/F-004-resolution.md`.

@@ -5,7 +5,7 @@
 | **Severity** | High |
 | **Finding ID** | F-008 |
 | **Category** | Frontend auth / API handling |
-| **Status** | Partially resolved |
+| **Status** | Accepted (by design) |
 
 ## Affected Files
 
@@ -27,4 +27,4 @@ Route authenticated and API loads through one shared fetch wrapper, or add equiv
 
 ## Current Status
 
-**Partially resolved.** Vote and proposal loaders use shared `api.fetch()` with cookie credentials and centralized 401 handling. `fetchJson.js` dropped bearer auth and calls `expireSession()` on 401 when the client had auth. JWT is httpOnly-only (F-001). Residual: `(private)/+layout.js` intentionally uses raw `fetch` for the session probe (documented in-file). See `docs/audit/resolutions/F-008-resolution.md`.
+**Accepted (by design).** Vote and proposal loaders use shared `api.fetch()` with cookie credentials and centralized 401 handling; bearer auth removed; JWT is httpOnly-only (F-001). The remaining raw `fetch` in `(private)/+layout.js` for the session probe is intentional and documented in-file. See `docs/audit/resolutions/F-008-resolution.md`.
