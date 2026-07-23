@@ -1,9 +1,11 @@
 # F-012 Resolution
 
-**Status:** Not resolved
+**Status:** Resolved
 
-**Commits:** None identified for a replacement test CI workflow
+**Commits:** Pending (landed with this change)
 
-**How:** The audit-cited workflows (`generate-test-reports.yml`, `playwright.yml` with `continue-on-error`) are not present on the current branch. Only `.github/dependabot.yml` exists ([`2526c54`](https://github.com/lerna-labs/ekklesia-proposal-module/commit/2526c54)). No workflow was found that runs backend or frontend tests and fails the job on test failure.
+**How:**
+- Replaced root `npm test` placeholder with `test:guards` (`__tests/run-guards.js`: `*-guard.js` + `atk-route-loader-isolation.js`, including mail-transport lazy Google import) and `test:mailer` (`node --test mailer/tests/*.test.js`).
+- Added `.github/workflows/ci.yml` with parallel `backend` (`npm ci` → `npm test`) and `frontend` (`npm ci` → `npm run check` → `npm run build`) jobs on Node 22. No `continue-on-error`.
 
-**Remaining:** CI release confidence is still unproven; root `npm test` remains a placeholder.
+**Remaining:** No full API/integration or Playwright E2E in CI (needs DB/secrets/wallets). That is future work; F-012’s fail-closed CI requirement is met.

@@ -5,12 +5,13 @@
 | **Severity** | High |
 | **Finding ID** | F-012 |
 | **Category** | CI / release readiness |
-| **Status** | Not resolved |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `.github/workflows/` (none for tests currently)
-- Root `package.json` `test` script
+- `.github/workflows/ci.yml`
+- `package.json` (`test`, `test:guards`, `test:mailer`)
+- `__tests/run-guards.js`
 
 ## Observation
 
@@ -26,4 +27,4 @@ Add CI that runs backend and frontend tests and fails the job on test failure. U
 
 ## Current Status
 
-**Not resolved.** Cited workflows are gone; only Dependabot (and CODEOWNERS) remain under `.github/`. No replacement workflow runs backend/frontend tests and fails on failure. Root `npm test` remains a placeholder. See `docs/audit/resolutions/F-012-resolution.md`.
+**Resolved.** `.github/workflows/ci.yml` runs on push/PR with no `continue-on-error`: backend `npm test` (security ratchets including mail-transport lazy Google import + mailer `node:test`) and frontend `npm run check` (`svelte-check`) then `npm run build`. Root `npm test` is no longer a placeholder. Live Wraith PoCs and mailer/dev-tests remain out of CI by design. Integration/E2E coverage is future work, not a reopen of F-012. See `docs/audit/resolutions/F-012-resolution.md`.
