@@ -1,16 +1,6 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import { ArrowLeft } from "lucide-svelte";
-  import { loggedIn, showLogin } from "$stores/sessionManager.js";
-  import { goto } from "$app/navigation";
-  import { onMount } from "svelte";
-  onMount(() => {
-    if ($loggedIn) {
-      goto("/dashboard");
-    } else {
-      showLogin.set(true);
-    }
-  });
 </script>
 
 <section class="container mx-auto max-w-4xl py-8 px-4">

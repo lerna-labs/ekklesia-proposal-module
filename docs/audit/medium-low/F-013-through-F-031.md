@@ -22,7 +22,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-025 | Low | Repository formatting | Open |
 | F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | **Resolved** |
-| F-028 | Low | Frontend UX | Open |
+| F-028 | Low | Frontend UX | **Resolved** |
 | F-029 | Low | Frontend cleanup | Open |
 | F-030 | Low | Frontend lifecycle cleanup | Open |
 | F-031 | Low | Frontend maintainability | Open |
@@ -497,13 +497,14 @@ Align docs and implementation (document 200 JSON, or change the route to 204 wit
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Frontend UX |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `__frontend/src/routes/login/+page.svelte`
+- `__frontend/src/routes/login/+page.js`
 
-### Observation
+### Observation (original)
 
 Authenticated users are redirected in `onMount`.
 
@@ -517,7 +518,7 @@ Move the redirect into a `load` function or shared route guard.
 
 ### Current status (2026-07-23)
 
-Open. Login redirect still runs in `onMount`.
+**Resolved.** Redirect and `showLogin` open moved to `login/+page.js` `load` (after `parent()`). See `docs/audit/resolutions/F-028-resolution.md`.
 
 ---
 
@@ -621,10 +622,9 @@ Priority backlog from this set (excluding resolved items):
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
-5. **F-028** — Login redirect via load/guard  
-6. **F-029** — Remove SignerCS debug log  
-7. **F-030** — Version polling lifecycle cleanup  
-8. **F-031** — Configurable active vote slug  
+5. **F-029** — Remove SignerCS debug log  
+6. **F-030** — Version polling lifecycle cleanup  
+7. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
