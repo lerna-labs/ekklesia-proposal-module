@@ -14,7 +14,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-017 | Medium | Frontend metadata / SEO | **Resolved** |
 | F-018 | Medium | Debug logging | **Resolved** |
 | F-019 | Medium | Open-source governance docs | Partially resolved |
-| F-020 | Medium | Dependency monitoring | Open (scope reduced) |
+| F-020 | Medium | Dependency monitoring | **Resolved** |
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
 | F-022 | Medium | Notification unsubscribe token lifecycle | Open |
 | F-023 | Medium | Session lifecycle / logout | Open |
@@ -255,14 +255,14 @@ Still missing: populated `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, changelog, and
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Dependency monitoring |
-| **Status** | Open (scope reduced) |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `.github/dependabot.yml`
 - `__frontend/package.json` (separate npm workspace)
 
-### Observation
+### Observation (original)
 
 Dependabot monitors only `/`. Separate package manifests can miss updates/security alerts.
 
@@ -272,9 +272,7 @@ Add Dependabot npm entries for all remaining package manifests (originally `/__f
 
 ### Current status (2026-07-23)
 
-Open for `__frontend`. Dependabot still only lists `directory: "/"`.
-
-**Scope note:** `__testkit` is no longer in the repository, so the audit’s `/__testkit` Dependabot entry is **no longer needed**. Frontend coverage is still required.
+**Resolved.** Dependabot now covers `/` and `/__frontend`. `__testkit` is gone from the repo, so no entry for it. See `docs/audit/resolutions/F-020-resolution.md`.
 
 ---
 
@@ -621,18 +619,16 @@ Priority backlog from this set (excluding resolved items):
 
 1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
-3. **F-020** — Add Dependabot for `/__frontend` (`/__testkit` no longer needed)  
-4. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
-5. **F-023** — Add logout-time JWT revocation or session-version checks  
-6. **F-024** — Structured logging  
-7. **F-025** — Add `.editorconfig`  
-8. **F-026** — Graceful HTTP shutdown  
-9. **F-027** — Align delete docs vs 200 JSON  
-10. **F-028** — Login redirect via load/guard  
-11. **F-029** — Remove SignerCS debug log  
-12. **F-030** — Version polling lifecycle cleanup  
-13. **F-031** — Configurable active vote slug  
+3. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
+4. **F-023** — Add logout-time JWT revocation or session-version checks  
+5. **F-024** — Structured logging  
+6. **F-025** — Add `.editorconfig`  
+7. **F-026** — Graceful HTTP shutdown  
+8. **F-027** — Align delete docs vs 200 JSON  
+9. **F-028** — Login redirect via load/guard  
+10. **F-029** — Remove SignerCS debug log  
+11. **F-030** — Version polling lifecycle cleanup  
+12. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-021**.  
-No longer needed (partial): **F-020** `__testkit` Dependabot entry only.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
