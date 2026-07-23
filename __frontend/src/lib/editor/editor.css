@@ -24,6 +24,13 @@
   overflow-y: auto;
 }
 
+/* Dialogs already scroll their body; avoid a second scrollbar. */
+[data-slot="alert-dialog-content"] .editor-shell .editor-container .editor-scroller,
+[data-slot="dialog-content"] .editor-shell .editor-container .editor-scroller {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .toolbar-row {
   display: flex;
   align-items: center;
