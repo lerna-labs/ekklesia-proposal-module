@@ -20,7 +20,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-023 | Medium | Session lifecycle / logout | **Resolved** |
 | F-024 | Low | Logging | Open |
 | F-025 | Low | Repository formatting | Open |
-| F-026 | Low | Graceful shutdown | Open |
+| F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | Open |
 | F-028 | Low | Frontend UX | Open |
 | F-029 | Low | Frontend cleanup | Open |
@@ -435,14 +435,14 @@ Open. No `.editorconfig` or `.prettierrc*` present at repo root or under `__fron
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Graceful shutdown |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `helper/dbManager.js` (MongoDB close on SIGINT)
 - `server.js`
 
-### Observation
+### Observation (original)
 
 MongoDB close is handled on SIGINT, but the HTTP server is not closed/drained on shutdown.
 
@@ -456,8 +456,7 @@ Add server-level SIGTERM/SIGINT handling: close the HTTP server, drain connectio
 
 ### Current status (2026-07-23)
 
-Open. `server.js` still uses `app.listen` without `server.close` / SIGTERM drain. `helper/dbManager.js` still only closes MongoDB on `SIGINT`.
-
+**Resolved.** `server.js` drains via `server.close` on SIGTERM/SIGINT, then `disconnectFromDatabase()`. The dbManager SIGINT-only exit handler was removed. See `docs/audit/resolutions/F-026-resolution.md`.
 ---
 
 ## F-027: Proposal Delete Docs Say 204, API Returns 200
@@ -622,12 +621,11 @@ Priority backlog from this set (excluding resolved items):
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
-5. **F-026** — Graceful HTTP shutdown  
-6. **F-027** — Align delete docs vs 200 JSON  
-7. **F-028** — Login redirect via load/guard  
-8. **F-029** — Remove SignerCS debug log  
-9. **F-030** — Version polling lifecycle cleanup  
-10. **F-031** — Configurable active vote slug  
+5. **F-027** — Align delete docs vs 200 JSON  
+6. **F-028** — Login redirect via load/guard  
+7. **F-029** — Remove SignerCS debug log  
+8. **F-030** — Version polling lifecycle cleanup  
+9. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).

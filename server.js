@@ -9,6 +9,7 @@ import {
   connectToDatabase,
   isDatabaseConnected,
   checkDatabaseConnectionMW,
+  disconnectFromDatabase,
 } from "./helper/dbManager.js";
 import cookieParser from "cookie-parser";
 import compression from "compression";
@@ -121,7 +122,7 @@ async function startServer() {
     });
 
     // Start listening
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(
         `Server running on port ${PORT} in ${process.env.NODE_ENV || "development"
         } mode`
@@ -135,6 +136,44 @@ async function startServer() {
         );
       }
     });
+
+    let shuttingDown = false;
+    const SHUTDOWN_FORCE_EXIT_MS = 10_000;
+
+    function shutdown(signal) {
+      if (shuttingDown) return;
+      shuttingDown = true;
+      console.info(`Received ${signal}; draining HTTP server…`);
+
+      const forceTimer = setTimeout(() => {
+        console.error("Graceful shutdown timed out; forcing exit");
+        process.exit(1);
+      }, SHUTDOWN_FORCE_EXIT_MS);
+      forceTimer.unref?.();
+
+      server.close(async (err) => {
+        if (err) {
+          console.error(`Error closing HTTP server: ${err.message}`);
+        } else {
+          console.info("HTTP server closed");
+        }
+        try {
+          await disconnectFromDatabase();
+        } catch (disconnectErr) {
+          console.error(
+            `Error disconnecting from MongoDB: ${disconnectErr.message}`
+          );
+          clearTimeout(forceTimer);
+          process.exit(1);
+          return;
+        }
+        clearTimeout(forceTimer);
+        process.exit(err ? 1 : 0);
+      });
+    }
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
   } catch (error) {
     console.error(`Server startup failed: ${error.message}`);
     process.exit(1);
