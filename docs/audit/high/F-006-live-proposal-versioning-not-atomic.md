@@ -5,11 +5,11 @@
 | **Severity** | High |
 | **Finding ID** | F-006 |
 | **Category** | Data consistency / versioning |
-| **Status** | Open |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `routes/api/v0/proposals.js:552-623`
+- `routes/api/v0/proposals.js` (live → live `PUT /:proposalId` path)
 
 ## Observation
 
@@ -25,4 +25,4 @@ Wrap archive and live update in a MongoDB transaction, or use optimistic locking
 
 ## Current Status
 
-Open. Live proposal updates still archive one document and then save the live proposal without a MongoDB transaction or optimistic lock.
+Resolved. Live → live updates archive a snapshot, then apply the live change with `Proposal.findOneAndUpdate` filtered on `_id`, `status: "live"`, and the expected `version`. On CAS miss the orphan archive is deleted and the API returns 409.

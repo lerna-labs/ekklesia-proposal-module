@@ -558,12 +558,14 @@ router.delete("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async 
  * Archived proposals are read-only and cannot be updated (400). When the proposal is currently live:
  * status is immutable (400 if body tries to change it); updates are locked after the vote's
  * reviewEndDate (400); the current version is archived (new doc with status "archived") and
- * a reference is appended to versions before applying the update.
+ * a reference is appended to versions via an optimistic version CAS (`findOneAndUpdate`) before
+ * applying the update (409 on concurrent conflict).
  * @access Private (proposer only)
  * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
  * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
  * @returns {Object} 403 - Not the proposer
  * @returns {Object} 404 - Proposal not found
+ * @returns {Object} 409 - Live proposal was modified concurrently (optimistic lock conflict); retry
  */
 router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
@@ -699,8 +701,10 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
     }
 
     const previousStatus = proposal.status;
+    /** @type {number|null} Expected live version for optimistic CAS (F-006). */
+    let expectedVersion = null;
 
-    // When proposal is already live: reject status change; enforce reviewEndDate lock; archive current version then apply update
+    // When proposal is already live: reject status change; enforce reviewEndDate lock
     if (proposal.status === "live") {
       if (status !== "live") {
         return res.status(400).json({
@@ -715,21 +719,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
           message: "Proposal cannot be updated after the vote review period has ended (reviewEndDate).",
         });
       }
-      // Versioning: copy current document to a new doc with status "archived" (new _id), then append { _id, createdAt } to versions
-      const currentState = proposal.toObject ? proposal.toObject() : { ...proposal };
-      delete currentState._id;
-      delete currentState.createdAt;
-      delete currentState.updatedAt;
-      currentState.status = "archived";
-      currentState.versions = [];
-      currentState.currentProposalId = proposal._id;
-      const archivedDoc = new Proposal(currentState);
-      await archivedDoc.save();
-      if (!Array.isArray(proposal.versions)) proposal.versions = [];
-      proposal.versions.push({
-        _id: archivedDoc._id,
-        createdAt: archivedDoc.createdAt,
-      });
+      expectedVersion = proposal.version ?? 1;
     }
 
     const rawMetaData = metaData;
@@ -800,6 +790,55 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       }
     }
 
+    // Live → live: archive snapshot then atomic CAS on version (F-006)
+    if (previousStatus === "live") {
+      const currentState = proposal.toObject ? proposal.toObject() : { ...proposal };
+      delete currentState._id;
+      delete currentState.createdAt;
+      delete currentState.updatedAt;
+      currentState.status = "archived";
+      currentState.versions = [];
+      currentState.currentProposalId = proposal._id;
+      const archivedDoc = new Proposal(currentState);
+      await archivedDoc.save();
+
+      const updated = await Proposal.findOneAndUpdate(
+        {
+          _id: proposal._id,
+          status: "live",
+          version: expectedVersion,
+        },
+        {
+          $set: {
+            voteId: new mongoose.Types.ObjectId(voteId),
+            title,
+            summary: summary ?? "",
+            status: "live",
+            metaData: sanitizedMetaData,
+            submittedAt: proposal.submittedAt || new Date(),
+          },
+          $inc: { version: 1 },
+          $push: {
+            versions: {
+              _id: archivedDoc._id,
+              createdAt: archivedDoc.createdAt,
+            },
+          },
+        },
+        { new: true },
+      );
+
+      if (!updated) {
+        await Proposal.deleteOne({ _id: archivedDoc._id });
+        return res.status(409).json({
+          status: "error",
+          message: "Proposal was modified concurrently. Please retry.",
+        });
+      }
+
+      return res.status(200).json(updated.toObject ? updated.toObject() : updated);
+    }
+
     proposal.voteId = new mongoose.Types.ObjectId(voteId);
     proposal.title = title;
     proposal.summary = summary ?? "";
@@ -807,11 +846,9 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
     proposal.metaData = sanitizedMetaData;
     if (status === "live") {
       proposal.submittedAt = proposal.submittedAt || new Date();
-      // Version is set only by the backend, never from request body. 1 on first submit, increment on re-submit.
+      // Version is set only by the backend, never from request body. 1 on first submit.
       if (previousStatus === "draft") {
         proposal.version = 1;
-      } else if (previousStatus === "live") {
-        proposal.version = (proposal.version ?? 1) + 1;
       }
     }
     await proposal.save();
