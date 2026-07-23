@@ -12,8 +12,8 @@
     "backup": "node backup/backup.js"
   },
   "keywords": [],
-  "author": "Mad Orkestra for Lerna Labs",
-  "license": "ISC",
+  "author": "Mad Orkestra & Adam Dean for Lerna Labs",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "@emurgo/cardano-serialization-lib-nodejs": "^15.0.3",

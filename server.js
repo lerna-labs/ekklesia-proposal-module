@@ -13,6 +13,7 @@ import {
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
+import { warnUnloadableExcludeScripts } from "./validation/applyPublicFieldExclusion.js";
 
 // Initialize console with timestamps
 initializeConsole();
@@ -57,6 +58,14 @@ async function startServer() {
     // Try to connect to MongoDB but don't fail if connection isn't established
     await connectToDatabase();
 
+    if (isDatabaseConnected()) {
+      try {
+        await warnUnloadableExcludeScripts();
+      } catch (err) {
+        console.error("Failed to validate Vote.excludeScript paths at startup:", err?.message ?? err);
+      }
+    }
+
     // Public read rate limit (200/min per IP): apply only to GET /api/v0/votes, /proposals, /comments
     app.use("/api/v0", (req, res, next) => {
       if (req.method === "GET" && /^\/(votes|proposals|comments)(\/|$)/.test(req.path)) {
@@ -65,7 +74,7 @@ async function startServer() {
       next();
     });
 
-    // Load all routes from the routes directory
+    // Load all routes from the routes directory (throws if any import fails)
     await loadRoutes(join(__dirname, "routes"), app);
 
     // Serve static files from the public directory (SvelteKit assets)
@@ -126,8 +135,8 @@ async function startServer() {
       }
     });
   } catch (error) {
-    console.error(`Server error: ${error.message}`);
-    // Don't exit the process - let the server continue running
+    console.error(`Server startup failed: ${error.message}`);
+    process.exit(1);
   }
 }
 

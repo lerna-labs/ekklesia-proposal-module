@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.5                                                                  |
+| **Version**        | 0.1.6                                                                  |
 | **Created**        | February 19, 2026                                                      |
-| **Last Revised**   | February 20, 2026                                                      |
+| **Last Revised**   | July 17, 2026                                                          |
 | **Companion Doc**  | [API Specification](api-specification.md)                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -36,6 +36,7 @@
     - [6. Role-Based Access Control Summary](#6-role-based-access-control-summary)
     - [7. Infrastructure \& Deployment](#7-infrastructure--deployment)
     - [8. Security Considerations](#8-security-considerations)
+        - [8.1 Accepted risks](#81-accepted-risks)
     - [9. Out of Scope (MVP)](#9-out-of-scope-mvp)
     - [Revision History](#revision-history)
 
@@ -470,9 +471,22 @@ environment, its own database instance, and its own deployment pipeline.
 | **Nonce replay**             | Nonces are single-use; atomically set to `null` on use                                                                                                                                                                                                                                                                                                        |
 | **Nonce flooding**           | Nonces expire after 5 minutes; Session documents TTL-expire after 1 hour                                                                                                                                                                                                                                                                                      |
 | **Unauthorized data access** | Role checks at the route level for all write endpoints; draft proposals return 403 (not 404) to avoid information leakage on existence                                                                                                                                                                                                                        |
-| **Script addresses**         | Standard script addresses are rejected at `POST /session`. Multisig DRep addresses are supported: any single eligible key within the multisig may sign to obtain a session. Full multisig validation remains required for on-chain actions (e.g. vote casting) in the Ekklesia Voting Module, but is not required for Proposal Module session authentication. |
+| **Script addresses**         | Standard script addresses without `scriptAddress` are rejected at session login. Multisig DRep (script) addresses are supported via membership-only verification — see [§8.1](#81-accepted-risks) (F-002). Full native-script quorum/timelock remains required for on-chain actions in the Ekklesia Voting Module, not for Proposal Module session authentication. |
 | **Rate limiting (write)**    | Authenticated write endpoints limited to 10 req/user/min                                                                                                                                                                                                                                                                                                      |
 | **Input validation**         | Mongoose schema validation + Joi/Zod validation at the API layer; ObjectId format checked before all DB queries                                                                                                                                                                                                                                               |
+
+### 8.1 Accepted risks
+
+#### F-002 — Multisig session authentication uses key membership, not full native-script evaluation
+
+| Field | Detail |
+|-------|--------|
+| **Status** | Accepted / by design |
+| **Observation** | `getScriptCriteria()` collects native-script keys (and could derive a required signer count), but session login uses `isPartyToScript()`, which only checks that the signing key hash appears in the script’s key list. Threshold (`all` / `any` / `atLeast`) and timelock (`before` / `after`) rules are not enforced for session issuance. |
+| **Behavior** | Any single eligible key contained in the native script may obtain a Proposal Module session for that script address (`userId` = script address). |
+| **Rationale** | Proposal Module actions (creating/editing proposals, commenting) are off-chain and do not require on-chain multisig quorum. Proving that the signer is a party to the script is sufficient for off-chain session identity. Requiring full native-script satisfaction for login would not match this product model. |
+| **Out of scope here** | Enforcing threshold and timelock semantics for on-chain actions (e.g. vote casting) — that remains the Ekklesia Voting Module’s responsibility. |
+| **Implementation** | `helper/verifySignature.js` (`isPartyToScript`, `getScriptCriteria`); `routes/api/v0/session.js` (`PUT /session` when `scriptAddress` is present). |
 
 ---
 
@@ -506,6 +520,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                         |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.6   | 2026-07-17 | Document F-002 as accepted risk: multisig session auth is membership-only by design (§8.1).                                                         |
 | 0.1.5   | 2026-02-20 | Terminology update to rename "Budget" to "Vote" to align with future use cases                                                                      |
 | 0.1.4   | 2026-02-19 | Add reference to user-schema-description.md                                                                                                         |
 | 0.1.3   | 2026-02-19 | Correction to remove reference to /admin routes as all displays are handled via the authenticated user's permissions                                |

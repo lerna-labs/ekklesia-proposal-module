@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Login Flow (Frontend & Backend)                                                                         |
-| **Version**        | 0.1.2                                                                                                   |
+| **Version**        | 0.1.3                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | February 20, 2026                                                                                       |
+| **Last Revised**   | July 17, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -256,8 +256,25 @@ sequenceDiagram
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
   Cookie and `localStorage` use is environment-aware (secure, sameSite).
 - Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
-  are cleaned up by TTL and after successful login. Script/multisig addresses
-  use a separate multisig flow (not detailed here).
+  are cleaned up by TTL and after successful login.
+
+### Multisig (script) addresses
+
+When the client includes `scriptAddress` on `POST /session` and `PUT /session`,
+the script address is the session identity (`userId`); the connected wallet key
+is only the signer.
+
+1. **Nonce** — Bound to `scriptAddress` (not the payment/stake key alone).
+2. **Verify** — Backend calls `isPartyToScript()`: the signature must be valid
+   and the signing key hash must appear in the native script’s key list
+   (**membership only**). The server does **not** require satisfying the full
+   native script (e.g. `atLeast N`, `all`, or timelock windows) to issue a JWT.
+3. **JWT** — `userId` is the script address; subsequent proposal/comment actions
+   run as that identity.
+
+This is intentional for the Proposal Module (off-chain proposals and comments do
+not require on-chain multisig quorum). See
+[system-architecture.md §8.1](system-architecture.md#81-accepted-risks) (F-002).
 
 ---
 
@@ -285,6 +302,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                         |
 |---------|------------|-----------------------------------------------------|
+| 0.1.3   | 2026-07-17 | Document multisig membership-only session semantics (F-002). |
 | 0.1.2   | 2026-02-20 | Update to rename "Budget" to "Vote"                 |
 | 0.1.1   | 2026-02-19 | Grammar and formatting updates.                     |
 | 0.1.0   | 2026-02-18 | Document metadata block and Revision history added. |

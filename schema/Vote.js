@@ -92,7 +92,8 @@ const voteSchema = new Schema(
       type: String,
       required: true,
     },
-    /** Optional Script to exclude fields from the public API */
+    /** Optional. When set, public proposal APIs run this script to strip non-public fields.
+     * Omit for fully public votes. If set but unloadable, public viewers get metaData: {}. */
     excludeScript: {
       type: String,
       required: false,
@@ -201,6 +202,9 @@ const voteSchema = new Schema(
     collection: "votes",
   }
 );
+
+/** Lookup key for GET /votes/:slug and frontend routes; must be unique. */
+voteSchema.index({ slug: 1 }, { unique: true });
 
 const Vote = mongoose.model("Vote", voteSchema);
 export { Vote };

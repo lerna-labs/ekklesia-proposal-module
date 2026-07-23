@@ -1,14 +1,5 @@
 # Ekklesia Proposal Module
 
-> [!CAUTION]
-> **CONFIDENTIAL & PROPRIETARY**
-> This repository and its contents are the confidential and proprietary
-> information of Ekklesia Voting Tech. Access is restricted to authorized
-> personnel only. Unauthorized copying, distribution, disclosure, or use of any
-> materials contained herein is strictly prohibited and may result in legal
-> action. By accessing this repository, you agree to maintain strict
-> confidentiality of all contents.
-
 ## Overview
 
 Full-stack Cardano governance proposal platform for collecting proposals and
@@ -23,15 +14,21 @@ challenge with their Cardano wallet (Ed25519/CIP-30 signatures).
 2. `npm install`
 3. `npm start`
 
-### Cardano Budget 2026 vote (database)
+### Vote setup (database)
 
-To create or update the **Cardano Budget Process 2026** vote document (`slug: cardano-budget-2026`) in MongoDB—including official 2026 UTC windows, `budget2026` validation scripts, 1000 ADA treasury donation in lovelace, and the same `metaData` / sort / filter / search options as `__scripts/createDummyData.js`—run:
+Create or update vote documents in MongoDB. Requires a working MongoDB connection (`MONGODB_*` in `.env` or `.env.development`).
+
+Fill `ADMINS` in each setup script with Bech32 stake addresses before running. Seed countries and regions first so form dropdowns work:
 
 ```bash
+node __scripts/seedCountries.js
+node __scripts/seedRegions.js
 node __scripts/setup-budget2026.js
+node __scripts/setup-cc-vote2026.js
 ```
 
-Requires a working MongoDB connection (`MONGODB_*` in `.env` or `.env.development`). On first run, pillar categories are loaded from `__scripts/categories.csv`. Re-running the script updates dates and settings but keeps existing vote pillar ids so linked proposals stay consistent.
+- **Budget 2026** (`slug: cardano-budget-2026`): official 2026 UTC windows, `budget2026` validation scripts, 1000 ADA treasury donation in lovelace. On first run, pillars load from `__scripts/categories.csv`. Re-running updates dates and settings but keeps existing pillar ids.
+- **CC Vote 2026** (`slug: cc-vote-2026`): fixed UTC phase windows and `cc-vote2026` validation scripts.
 
 See [System Architecture](docs/system-architecture.md) for a full overview of
 components and deployment.
