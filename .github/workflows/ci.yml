@@ -15,6 +15,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=critical
       - run: npm test
 
   frontend:
@@ -31,5 +32,6 @@ jobs:
           cache: npm
           cache-dependency-path: __frontend/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=critical
       - run: npm run check
       - run: npm run build

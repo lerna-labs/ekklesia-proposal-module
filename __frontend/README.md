@@ -4,6 +4,8 @@ SvelteKit frontend for the Ekklesia Proposal Module. It talks to the backend API
 (see project root) for votes, proposals, categories, session, comments, and
 notification settings.
 
+Requires **Node.js 22+**.
+
 ## Stack
 
 - **SvelteKit 2** with **Svelte 5** (runes, snippets)
