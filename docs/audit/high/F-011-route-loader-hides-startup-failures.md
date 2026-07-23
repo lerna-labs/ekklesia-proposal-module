@@ -5,17 +5,16 @@
 | **Severity** | High |
 | **Finding ID** | F-011 |
 | **Category** | Startup reliability |
-| **Status** | Open |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `helper/loadRoutes.js:39-42`
-- `server.js:68-69`
-- `helper/koios.js:11-19`
+- `helper/loadRoutes.js`
+- `server.js`
 
 ## Observation
 
-Route-loading errors are caught and logged without failing startup. Some modules can throw during import when required API configuration is missing.
+Route-loading errors were previously caught and logged without failing startup. Some modules can throw during import when required API configuration is missing.
 
 ## Risk
 
@@ -27,4 +26,4 @@ Re-throw route import failures during startup, or expose a failed health state a
 
 ## Current Status
 
-Open. Route import errors are still caught and logged without failing startup.
+**Resolved.** `helper/loadRoutes.js` collects per-file import failures during the route walk and throws before the server listens if any route failed to load. See `docs/audit/resolutions/F-011-resolution.md`.

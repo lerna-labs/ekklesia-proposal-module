@@ -5,13 +5,14 @@
 | **Severity** | High |
 | **Finding ID** | F-004 |
 | **Category** | Privacy / public data exposure |
-| **Status** | Open |
+| **Status** | Partially resolved |
 
 ## Affected Files
 
-- `schema/Vote.js:95-99`
-- `routes/api/v0/proposals.js:731-741`
-- `validation/budget2026/excludeScript.js:18-24`
+- `schema/Vote.js`
+- `routes/api/v0/proposals.js`
+- `validation/applyPublicFieldExclusion.js`
+- `validation/budget2026/excludeScript.js`
 
 ## Observation
 
@@ -27,4 +28,4 @@ Fail closed for Budget 2026 proposal data. Make exclusion mandatory for applicab
 
 ## Current Status
 
-Open. `excludeScript` remains optional, and proposal endpoints still filter only when a loadable exclusion script is configured.
+**Partially resolved.** When a vote has `excludeScript` set but the script fails to load, public responses strip `metaData` (fail closed). Startup warns on unloadable exclude scripts. Votes with no `excludeScript` still return full proposal data to public callers; exclusion is not mandatory. See `docs/audit/resolutions/F-004-resolution.md`.

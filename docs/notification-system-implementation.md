@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | Notification System (Implementation)                                  |
-| **Version**        | 0.2.1                                                                  |
+| **Version**        | 0.2.2                                                                  |
 | **Created**        | May 4, 2026                                                            |
-| **Last Revised**   | May 4, 2026 (patch: doc sync with mailer)                             |
+| **Last Revised**   | July 23, 2026                                                         |
 | **Companion Doc**  | [System Architecture](system-architecture.md) · [User Schema](user-schema-description.md) · [Vote Schema](vote-schema-description.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -213,11 +213,12 @@ node mailer/dev-tests/email-events.test.js
 
 - [`mailer/dev-tests/google-send-smoke.js`](../mailer/dev-tests/google-send-smoke.js) — minimal Gmail API send for Workspace debugging
 - [system-architecture.md](system-architecture.md)
-- [user-schema-description.md](user-schema-description.md) — extend with
-  `notification` subdocument when documenting User fields in detail
+- [user-schema-description.md](user-schema-description.md) — `notification`
+  subdocument and related fields
 - [vote-schema-description.md](vote-schema-description.md) — `notificationDispatch`,
   `resultsPublishedAt`, URLs
-- [api-specification.md](api-specification.md) — proposal and comment routes
+- [api-specification.md](api-specification.md) — §5.9 notification settings;
+  proposal and comment routes
 - Implementation hub: [`mailer/notificationDispatch.js`](../mailer/notificationDispatch.js)
 
 ---
@@ -233,6 +234,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 0.2.2   | 2026-07-23 | Cross-links: user/vote schemas and API §5.9 now document notification fields/endpoints. |
 | 0.1.0   | 2026-05-04 | Initial implementation overview: eligibility, event catalog, mailer, cron, persistence, API surface, env, dev test script. |
 | 0.2.0   | 2026-05-04 | Google Workspace transport (`EMAIL_PROVIDER=google`), transport retries, bulk `EMAIL_FANOUT_DELAY_MS` in notification dispatch. |
 | 0.2.1   | 2026-05-04 | Doc sync: dual transport in scope; transport table + env (`IMPERSONATE_USER`, dev recipient vars, JWT JSON notes); dev verification (Google samples, `EMAIL_SEND_FAIL_HARD`, `google-send-smoke.js`). |

@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.6                                                                  |
+| **Version**        | 0.1.7                                                                  |
 | **Created**        | February 19, 2026                                                      |
-| **Last Revised**   | July 17, 2026                                                          |
+| **Last Revised**   | July 23, 2026                                                          |
 | **Companion Doc**  | [API Specification](api-specification.md)                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -63,7 +63,9 @@ The Proposal Module enables:
 
 This document covers the major components, their responsibilities, how they
 interact, and the deployment topology. It should be read alongside
-the [API Specification](api-specification.md) and the Ekklesia Integration Plan.
+the [API Specification](api-specification.md). The module is standalone
+(independent auth endpoints, database, and session store from the Voting
+Module).
 
 ---
 
@@ -74,7 +76,7 @@ components:
 
 | Component       | Technology                                     | Responsibility                                                 |
 |-----------------|------------------------------------------------|----------------------------------------------------------------|
-| **Frontend**    | SvelteKit + Tailwind CSS + Shadcn              | UI, routing, session management, form validation               |
+| **Frontend**    | SvelteKit + Tailwind CSS + shadcn-svelte | UI, routing, session management, form validation               |
 | **Backend API** | Node.js + Express                              | Business logic, access control, data validation, JWT issuance  |
 | **Database**    | MongoDB (Mongoose)                             | Persistent storage for all Proposal Module data                |
 | **Auth Layer**  | Ekklesia auth (CIP-30 wallet / CLI credential) | Identity verification, nonce challenge-response, JWT lifecycle |
@@ -93,7 +95,7 @@ display names.
 ### 3.1 Frontend (SvelteKit)
 
 The frontend is a SvelteKit single-page application served from the Proposal
-Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
+Module's own domain. It is styled with Tailwind CSS and [shadcn-svelte](https://shadcn-svelte.com/) components.
 
 **Key responsibilities:**
 
@@ -115,14 +117,14 @@ Module's own domain. It is styled with Tailwind CSS and Shadcn UI components.
 
 **Routing structure (high level):**
 
-| Route                          | Access              | Description                 |
-|--------------------------------|---------------------|-----------------------------|
-| `/votes`                       | Public              | Vote cycle listing          |
-| `/votes/{slug}`                | Public              | Vote detail + proposal list |
-| `/proposals/{proposalId}`      | Public / Role-gated | Proposal detail view        |
-| `/proposals/new`               | Proposer            | Create new proposal         |
-| `/proposals/{proposalId}/edit` | Proposer (owner)    | Edit draft or live proposal |
-| `/dashboard`                   | Authenticated       | User's own proposals        |
+| Route                                            | Access              | Description                          |
+|--------------------------------------------------|---------------------|--------------------------------------|
+| `/votes`                                        | Public              | Vote cycle listing                   |
+| `/votes/{voteSlug}`                             | Public              | Vote detail + proposal list          |
+| `/votes/{voteSlug}/{proposalId}`               | Public / Role-gated | Proposal detail view                 |
+| `/(private)/dashboard`                           | Authenticated       | User's own proposals                 |
+| `/(private)/dashboard/{voteSlug}/new`            | Proposer            | Create new proposal for that vote    |
+| `/(private)/dashboard/{voteSlug}/{proposalId}`   | Proposer (owner)    | Edit draft or live proposal          |
 
 ### 3.2 Backend API (Node.js / Express)
 
@@ -208,7 +210,7 @@ collection or join.
 |----------------|------------------------------|------------------------------|-----------------|----------------------------------------------------------------------------------------------|
 | Admin identity | `withdrawalDetails.userId`   | `withdrawalDetails.userId`   | String (Bech32) | The `_id` of the admin who performed the action                                              |
 | Timestamp      | `withdrawalDetails.date`     | `withdrawalDetails.date`     | Date            | When the withdrawal was recorded                                                             |
-| Reason code    | `withdrawalDetails.category` | `withdrawalDetails.category` | String (enum)   | One of: `Inappropriate content`, `Spam`, `Policy violation`, `Duplicate submission`, `Other` |
+| Reason code    | `withdrawalDetails.category` | `withdrawalDetails.category` | String (enum)   | Proposal: `Inappropriate content`, `Spam`, `Policy violation`, `Duplicate submission`, `Other`. Comment: same except `Duplicate` (not `Duplicate submission`). |
 | Optional note  | `withdrawalDetails.comment`  | `withdrawalDetails.comment`  | String          | Free-text elaboration on the reason; required when category is `Other`                       |
 
 **Querying admin actions:**
@@ -274,9 +276,10 @@ between the two applications.
 | Integration point          | Description                                                                                                                                          |
 |----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Auth pattern**           | Implements the same wallet-signature challenge-response flow (`POST /session` → sign nonce → `PUT /session`) as the Ekklesia Voting Module           |
-| **JWT structure**          | JWT payload shape (`{ userId, signType }`) and cookie configuration (`token`, HTTP-only, `SameSite=Strict`) are consistent with the Ekklesia pattern |
+| **JWT structure**          | JWT payload shape (`{ userId, signType, sv }`) and cookie configuration (`token`, HTTP-only, `SameSite=Strict`) are consistent with the Ekklesia pattern; `sv` is `User.sessionVersion` (invalidated on logout) |
 | **Identity types**         | Supports the same Cardano identifier types: `stake1…`, `drep1…` (bech32)                                                                             |
-| **Frontend session store** | `sessionManager.js` pattern (stores: `loggedIn`, `user`, `jwt`) is adopted from the Ekklesia frontend implementation                                 |
+| **Frontend session store** | `sessionManager.js` pattern (stores: `loggedIn`, `user`, `sessionExpiresAt`); JWT stays in the server-set httpOnly cookie only                                 |
+| **Signature verification** | Session auth uses `verifySignature` / address helpers from public `@lerna-labs/ekklesia-helpers`                                                         |
 | **DRep registry lookup**   | On successful login, the backend queries the DRep registry (external) to resolve a display name for DRep-authenticated users                         |
 | **ADA handle service**     | On successful login, the backend queries the ADA handle service (external) to resolve a display name for stake-address-authenticated users           |
 
@@ -298,11 +301,11 @@ gracefully and do not prevent JWT issuance.
 ```mermaid
 flowchart TD
     subgraph Browser["Client (Browser)"]
-        subgraph Frontend["SvelteKit Frontend (Tailwind CSS + Shadcn)"]
-            PV["Public Views<br />/votes · /proposals"]
-            PR["Proposer (Private)<br />/dashboard · /proposals/new · /proposals/edit"]
-            AD["Admin (Private)<br />/admin · Vote oversight"]
-            SM["sessionManager.js<br />loggedIn / user / jwt stores"]
+        subgraph Frontend["SvelteKit Frontend (Tailwind CSS + shadcn-svelte)"]
+            PV["Public Views<br />/votes · /votes/slug/proposalId"]
+            PR["Proposer (Private)<br />/dashboard · /dashboard/voteSlug/new · edit"]
+            AD["Admin (Private)<br />same routes · permission-gated"]
+            SM["sessionManager.js<br />loggedIn / user / sessionExpiresAt"]
             WS["WalletSigner<br />CIP-30 wallet connect + nonce sign"]
         end
     end
@@ -311,7 +314,7 @@ flowchart TD
         subgraph API["Proposal Module API  /api/v0"]
             PUB["Public Reads §3<br />GET /votes<br />GET /proposals<br />GET /comments"]
             AUTH["Auth Endpoints §4<br />POST /session<br />PUT /session<br />GET /session<br />DELETE /session"]
-            WRITE["Authed Writes §5<br />POST /proposals<br />PUT /proposals<br />POST /comments<br />PUT /comments"]
+            WRITE["Authed Writes §5<br />POST /proposals<br />PUT /proposals<br />POST /comments<br />PUT /comments<br />notifications"]
             MW["Middleware<br />isAuthenticated · verifyToken<br />rate limiters · CORS"]
         end
     end
@@ -411,7 +414,7 @@ sequenceDiagram
 
     Admin->>Frontend: View draft proposals
     Frontend->>Backend: GET /proposals?vote=X&status=draft<br/>Cookie: token=<admin JWT>
-    Backend->>Backend: verify admin in vote.adminVoteIds
+    Backend->>Backend: verify admin in vote.admins
     Backend-->>Frontend: 200 OK (drafts visible)
     Frontend-->>Admin: Draft proposal list
 
@@ -429,21 +432,21 @@ sequenceDiagram
 
 Access control is enforced in the backend API on every request. The
 authenticated user's `userId` (from the JWT) is checked against proposal
-`proposerId` fields and vote `adminVoteIds` arrays to determine role at request
+`proposerId` fields and vote `admins` arrays to determine role at request
 time.
 
-| Role         | Identity                                             | Key permissions                                                                                                                                      |
-|--------------|------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Public**   | Unauthenticated                                      | Read `live` and `withdrawn` proposals and comments                                                                                                   |
-| **User**     | Any authenticated wallet                             | Public access + create and manage own comments                                                                                                       |
-| **Proposer** | Authenticated wallet; owns a proposal                | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `feedbackEndDate`                                              |
-| **DRep**     | Authenticated via `drep1…` credential                | Same as User in this MVP (view and comment)                                                                                                          |
-| **Admin**    | Authenticated wallet; address in `vote.adminVoteIds` | All of the above + view draft proposals for assigned votes; withdraw live proposals until `reviewEndDate`; withdraw comments until `feedbackEndDate` |
+| Role         | Identity                                          | Key permissions                                                                                                                                      |
+|--------------|---------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Public**   | Unauthenticated                                   | Read `live` and `withdrawn` proposals and comments                                                                                                   |
+| **User**     | Any authenticated wallet                          | Public access + create and manage own comments                                                                                                       |
+| **Proposer** | Authenticated wallet; owns a proposal             | User access + CRUD on own proposals (all statuses); withdraw own live proposals until `reviewEndDate`                                                |
+| **DRep**     | Authenticated via `drep1…` credential             | Same as User in this MVP (view and comment)                                                                                                          |
+| **Admin**    | Authenticated wallet; address in `vote.admins`    | All of the above + view draft proposals for assigned votes; withdraw live proposals before `votingStartDate`; withdraw comments until `feedbackEndDate` |
 
 Admin status is vote-scoped — a user is only an admin for the specific votes in
-which their address appears in the `adminVoteIds` array. The `GET /session`
-endpoint returns `adminVoteIds` to inform the frontend which votes the user can
-administer.
+which their address appears in the `admins` array. The `GET /session`
+endpoint returns `adminVoteIds` (vote `_id` values) to inform the frontend which
+votes the user can administer.
 
 ---
 
@@ -458,7 +461,7 @@ environment, its own database instance, and its own deployment pipeline.
 | **Frontend**              | Proposal Module hosting (European region) | SvelteKit app served from its own domain; no shared origin with `ekklesia.vote`                           |
 | **Backend API**           | Proposal Module hosting (European region) | Standalone Express process; own environment variables and configuration                                   |
 | **Database**              | MongoDB (European region)                 | Dedicated MongoDB instance for the Proposal Module; no shared collections with the Ekklesia Voting Module |
-| **Environment variables** | Proposal Module `.env`                    | `JWT_SECRET`, `JWT_MAX_AGE`, `FRONTEND_URL`, `MONGO_URI` scoped to this application only                  |
+| **Environment variables** | Proposal Module `.env`                    | `JWT_SECRET`, `JWT_MAX_AGE`, `FRONTEND_URL`, `MONGODB_HOST` / `MONGODB_PORT` / `MONGODB_DATABASE` (and related auth vars) scoped to this application only |
 
 ---
 
@@ -521,6 +524,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                         |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.7   | 2026-07-23 | Align FE stack (shadcn-svelte), routes, `vote.admins` vs session `adminVoteIds`, `MONGODB_*` env, httpOnly session store; withdraw windows; drop Integration Plan ref. |
 | 0.1.6   | 2026-07-17 | Document F-002 as accepted risk: multisig session auth is membership-only by design (§8.1).                                                         |
 | 0.1.5   | 2026-02-20 | Terminology update to rename "Budget" to "Vote" to align with future use cases                                                                      |
 | 0.1.4   | 2026-02-19 | Add reference to user-schema-description.md                                                                                                         |

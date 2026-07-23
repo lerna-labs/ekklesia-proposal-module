@@ -46,4 +46,6 @@ components and deployment.
 | [Vote Schema](docs/vote-schema-description.md)         | Vote (funding cycle) schema with submission, feedback, and review date windows           |
 | [Comment Schema](docs/comment-schema-description.md)   | Comment and reply schema including likes and withdrawal details                          |
 | [User Schema](docs/user-schema-description.md)         | User schema with Bech32 address keys and runtime role derivation                         |
+| [Notifications](docs/notification-system-implementation.md) | Email notifications, preferences API, cron milestones, and mail transport           |
+| [Proposal List Projection](docs/proposal-list-projection-contract.md) | Vote-specific `GET /proposals` list field contract                         |
 

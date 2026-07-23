@@ -5,15 +5,15 @@
 | **Severity** | High |
 | **Finding ID** | F-010 |
 | **Category** | Public installability |
-| **Status** | Fixed |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `package.json:39`
+- `package.json`
 
 ## Observation
 
-The root package depends on private `@lerna-labs/ekklesia-helpers@^0.1.0`. This blocks public `npm install` for contributors without the required package-registry access.
+The root package previously depended on private `@lerna-labs/ekklesia-helpers@^0.1.0`. This blocked public `npm install` for contributors without the required package-registry access.
 
 ## Risk
 
@@ -25,4 +25,4 @@ Publish the helper package publicly, vendor or replace the required helper code,
 
 ## Current Status
 
-Fixed by install verification. The dependency is now `@lerna-labs/ekklesia-helpers@^1.0.0`, and `npm ls` confirms `@lerna-labs/ekklesia-helpers@1.0.0` is installed locally.
+**Resolved.** Dependency is `@lerna-labs/ekklesia-helpers@^2.0.0` (publicly installable). See `docs/audit/resolutions/F-010-resolution.md`.

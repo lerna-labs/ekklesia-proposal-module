@@ -5,13 +5,12 @@
 | **Severity** | High |
 | **Finding ID** | F-002 |
 | **Category** | Authentication / multisig authorization |
-| **Status** | Open |
+| **Status** | Accepted (by design) |
 
 ## Affected Files
 
-- `helper/verifySignature.js:133-151`
-- `helper/verifySignature.js:154-190`
-- `routes/api/v0/session.js:290-300`
+- `helper/verifySignature.js`
+- `routes/api/v0/session.js`
 
 ## Observation
 
@@ -27,4 +26,4 @@ Replace the membership-only check with full native-script evaluation. The evalua
 
 ## Current Status
 
-Open. The current source still calls `isPartyToScript()` during multisig login, and that helper still accepts key membership without enforcing threshold or timelock semantics.
+**Accepted (by design) — not resolved.** Multisig session login remains membership-only (`isPartyToScript()`); threshold and timelock rules are intentionally not enforced. Documented in-session/helper comments and architecture notes. See `docs/audit/resolutions/F-002-resolution.md`.

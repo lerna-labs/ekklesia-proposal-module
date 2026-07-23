@@ -18,16 +18,16 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
 | F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
 | F-023 | Medium | Session lifecycle / logout | **Resolved** |
-| F-024 | Low | Logging | Open |
+| F-024 | Low | Logging | Accepted |
 | F-025 | Low | Repository formatting | Open |
 | F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | **Resolved** |
 | F-029 | Low | Frontend cleanup | **Resolved** |
 | F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
-| F-031 | Low | Frontend maintainability | Open |
+| F-031 | Low | Frontend maintainability | Accepted (by design) |
 
-**Tally:** 4 resolved · 1 partially resolved · 1 open upstream · 13 open · 0 no longer needed
+**Tally:** 14 resolved · 1 partially resolved · 1 open upstream · 1 open · 2 accepted
 
 ---
 
@@ -242,10 +242,12 @@ Add standard governance files aligned with Intersect open-source expectations.
 **Partially resolved.** Present since last re-verify:
 
 - `.github/CODEOWNERS` (`* @Crypto2099 @MadOrkestra`)
-- `SECURITY.md` (`ab9f14a`) — vulnerability reporting to `security@intersectmbo.org`
-- `CONTRIBUTING.md` (`204fde0`) — stub only (“Template file to be populated”)
+- `SECURITY.md` — vulnerability reporting to `security@intersectmbo.org`
+- `CONTRIBUTING.md` — populated with setup, docs pointer, and PR guidance (no longer a stub)
 
-Still missing: populated `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
+Still missing: `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
+
+**Note:** This repository is planned to move to the Intersect GitHub organization. Remaining governance docs (and related org templates/policies) are expected to be handled as part of that move rather than fully completed in the current private/client-owned tree.
 
 ---
 
@@ -375,7 +377,7 @@ Add JWT revocation, session-version validation, or short-lived access tokens wit
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Logging |
-| **Status** | Open |
+| **Status** | Accepted |
 
 ### Affected files
 
@@ -395,7 +397,7 @@ Replace with structured logging that supports levels and environment-specific ou
 
 ### Current status (2026-07-23)
 
-Open. Direct `console.*` remains widespread (~240 hits outside `node_modules`/`docs`/`logs`). `helper/consoleManager.js` only prefixes console methods; it is not a structured logger.
+**Accepted — not resolved.** Direct `console.*` (via `helper/consoleManager.js` prefixing) is accepted as-is; no structured logging migration planned. See `docs/audit/resolutions/F-024-resolution.md`.
 
 ---
 
@@ -426,6 +428,8 @@ Add `.editorconfig` with the repository’s indentation, charset, and line-endin
 ### Current status (2026-07-23)
 
 Open. No `.editorconfig` or `.prettierrc*` present at repo root or under `__frontend`.
+
+**Note:** This repository is planned to move to the Intersect GitHub organization. Client-specific editor / formatter settings should be aligned with Intersect org conventions as part of that move rather than inventing a one-off config in the current tree.
 
 ---
 
@@ -589,7 +593,7 @@ Expose start/stop functions, or move polling into component lifecycle code with 
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Frontend maintainability |
-| **Status** | Open |
+| **Status** | Accepted (by design) |
 
 ### Affected files
 
@@ -611,19 +615,18 @@ Derive the active vote slug from configuration or API data.
 
 ### Current status (2026-07-23)
 
-Open. Still hardcoded in `Navigation.svelte`, `budget-process/+page.svelte`, and `budget-process/+page.js`. (`Header.svelte` no longer carries it, as previously noted.)
+**Accepted (by design) — not resolved.** Hardcoded budget vote routes/slug are intentional per client request. No configurable slug work planned. See `docs/audit/resolutions/F-031-resolution.md`.
 
 ---
 
 ## What still needs fixing
 
-Priority backlog from this set (excluding resolved items):
+Priority backlog from this set (excluding resolved / accepted items):
 
 1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements  
-2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
-3. **F-024** — Structured logging  
-4. **F-025** — Add `.editorconfig`  
-5. **F-031** — Configurable active vote slug  
+2. **F-019** — Finish remaining governance docs (CoC, changelog, issue/PR templates); CONTRIBUTING/SECURITY/CODEOWNERS present — deferred to Intersect GitHub move  
+3. **F-025** — Add `.editorconfig` — deferred to Intersect GitHub move (client/org editor settings)  
 
 Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
+Accepted (not fixed): **F-024**, **F-031**.  
 Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback; Koios/Blockfrost fetches still lack timeouts).

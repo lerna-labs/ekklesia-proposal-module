@@ -5,15 +5,16 @@
 | **Severity** | High |
 | **Finding ID** | F-003 |
 | **Category** | Input validation / query safety |
-| **Status** | Open |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `routes/api/v0/votes.js:94-106`
+- `routes/api/v0/votes.js`
+- `helper/escapeRegex.js`
 
 ## Observation
 
-When the vote search input is not an ObjectId, the route passes raw user input directly into MongoDB as a case-insensitive regex.
+When the vote search input is not an ObjectId, the route previously passed raw user input directly into MongoDB as a case-insensitive regex.
 
 ## Risk
 
@@ -25,4 +26,4 @@ Escape regex metacharacters before query construction, cap search length, or mov
 
 ## Current Status
 
-Open. The vote search path still passes raw `searchTerm` into MongoDB `$regex`.
+**Resolved.** Search terms are escaped via `helper/escapeRegex.js` before `$regex` queries, and terms over 100 characters are rejected (`MAX_SEARCH_LENGTH`). See `docs/audit/resolutions/F-003-resolution.md`.

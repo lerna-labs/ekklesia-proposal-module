@@ -1,13 +1,15 @@
-# Ekklesia Budget Module — Frontend
+# Ekklesia Proposal Module — Frontend
 
-SvelteKit frontend for the Ekklesia budget/vote module. It talks to the backend API (see project root) for votes, proposals, categories, session, and comments.
+SvelteKit frontend for the Ekklesia Proposal Module. It talks to the backend API
+(see project root) for votes, proposals, categories, session, comments, and
+notification settings.
 
 ## Stack
 
 - **SvelteKit 2** with **Svelte 5** (runes, snippets)
 - **adapter-static** — build outputs to `../public` for serving from the Express backend
-- **Tailwind CSS 4** + **bits-ui** for UI components
-- **Wallet sign-in** via stake/DRep (Mesh/CIP-30) with JWT session
+- **Tailwind CSS 4** + [**shadcn-svelte**](https://shadcn-svelte.com/) for UI components
+- **Wallet sign-in** via stake/DRep (Mesh/CIP-30) with httpOnly JWT cookie session
 
 ## Structure
 
@@ -20,12 +22,12 @@ SvelteKit frontend for the Ekklesia budget/vote module. It talks to the backend 
   - **`/(private)/dashboard/[voteSlug]/new`** — new proposal for the vote with slug `[voteSlug]`
   - **`/(private)/dashboard/[voteSlug]/[proposalId]`** — edit proposal
 - **`src/lib/`** — shared code:
-  - **`budget2026/`** — proposal form (Form.svelte, work packages, legal declarations, etc.) and schema/config for the 2026 validation script
+  - **`forms/budget2026/`** (and other form folders) — proposal form, schema/config for the vote’s validation script
   - **`form/`** — reusable form primitives (Input, Textarea, DatePicker, etc.)
-  - **`components/ui/`** — bits-ui–based UI (button, card, dialog, select, etc.)
+  - **`components/ui/`** — shadcn-svelte UI (button, card, dialog, select, etc.)
   - **`WalletSigner/`** — wallet connect and sign-in flow
   - **`base/`** — Header, Footer, Logo, VersionCheck
-- **`src/stores/`** — session (user, JWT, api fetch) and version store
+- **`src/stores/`** — session (`loggedIn`, `user`, `sessionExpiresAt`, `api.fetch`) and version store
 
 ## Scripts
 
@@ -35,9 +37,16 @@ SvelteKit frontend for the Ekklesia budget/vote module. It talks to the backend 
 
 ## Environment
 
-- **`VITE_API_URL`** — base URL for the backend API (e.g. `http://localhost:3000/api/v0` or same origin). Used for `/votes`, `/proposals`, `/session`, etc.
+See [`.env.example`](.env.example).
+
+- **`VITE_API_URL`** — base URL for the backend API (e.g. `http://localhost:3000/api/v0` or same origin). Used for `/votes`, `/proposals`, `/session`, `/notifications`, etc.
 - **`VITE_SITE_URL`** — public site origin with no trailing slash (e.g. `https://hydra-voting.intersectmbo.org`). Injected at build/dev into shell `og:url`, `og:image`, and `twitter:image`. Same role as backend `FRONTEND_URL`; if unset, those meta tags are omitted.
+- **`VITE_SERVER_STATUS`** — health endpoint path (e.g. `/health`).
+- **`VITE_MAINTENANCE_MODE`** — `true` / `false` to show the maintenance banner.
+- **`VITE_WALLETSIGNER_USER_TYPES`** — comma-separated sign types (e.g. `stake,drep`).
+- **`VITE_WALLETSIGNER_USER_DEFAULT`** — default sign type.
+- **`VITE_WALLETSIGNER_MULTISIG`** — `true` / `false` to enable multisig options.
 
 ## Auth
 
-Private routes (dashboard, new proposal, edit) require a valid session. Session is established via wallet sign-in; the backend sets an HTTP-only cookie and returns `userId`, optional `name`, and `adminVoteIds` from `GET /session`.
+Private routes (dashboard, new proposal, edit) require a valid session. Session is established via wallet sign-in; the backend sets an HTTP-only cookie. The frontend never stores the JWT in JavaScript-readable storage. `GET /session` returns `userId`, optional `name`, `expiresIn`, and optional `adminVoteIds`.

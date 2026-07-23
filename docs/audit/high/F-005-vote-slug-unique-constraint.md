@@ -5,16 +5,17 @@
 | **Severity** | High |
 | **Finding ID** | F-005 |
 | **Category** | Data integrity / unique lookup key |
-| **Status** | Open |
+| **Status** | Resolved |
 
 ## Affected Files
 
-- `schema/Vote.js:50-53`
-- `routes/api/v0/votes.js:178-196`
+- `schema/Vote.js`
+- `helper/mongoErrors.js`
+- `routes/api/v0/votes.js`
 
 ## Observation
 
-`Vote.slug` is required, but no unique schema constraint or unique index is defined. The API and frontend use the slug as a routing and lookup key.
+`Vote.slug` is required and used as a routing/lookup key. Previously no unique schema constraint or unique index was defined.
 
 ## Risk
 
@@ -26,4 +27,4 @@ Add a unique index on `slug`, handle duplicate-key errors, and run a migration o
 
 ## Current Status
 
-Open. `Vote.slug` remains required but not unique, and slug lookup still uses `findOne({ slug })`.
+**Resolved.** Unique index on `Vote.slug` in `schema/Vote.js`; duplicate-key handling via `helper/mongoErrors.js`. See `docs/audit/resolutions/F-005-resolution.md`.

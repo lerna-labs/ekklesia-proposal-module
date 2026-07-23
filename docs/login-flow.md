@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Login Flow (Frontend & Backend)                                                                         |
-| **Version**        | 0.1.3                                                                                                   |
+| **Version**        | 0.1.4                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | July 17, 2026                                                                                       |
+| **Last Revised**   | July 23, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -22,8 +22,9 @@ and backend stay in sync.
 
 Authentication is **wallet-based**: the user proves ownership of a Cardano
 address (stake or DRep) by signing a nonce challenge. No passwords are stored.
-The backend issues a JWT after verifying the signature; the frontend stores the
-JWT and sends it (or relies on the cookie set by the API) on later requests.
+The backend issues a JWT after verifying the signature and sets it only as an
+httpOnly `token` cookie. The frontend never stores the JWT in JavaScript-readable
+storage; later requests send the cookie via `credentials: 'include'`.
 
 - **Backend**:
     - Express under `/api/v0`
@@ -88,8 +89,9 @@ attempts/min per IP).
    sets `nonce` to `null` (single-use).
 2. Verifies the signature via
    `verifySignature(nonce, signerAddress, signature)`.
-3. Builds a JWT with `{ userId, signType }`, signed with `JWT_SECRET`, expiry
-   from `JWT_MAX_AGE` (e.g. `1d`).
+3. Builds a JWT with `{ userId, signType, sv }`, signed with `JWT_SECRET`,
+   expiry from `JWT_MAX_AGE` (e.g. `1d`). `sv` is the user's current
+   `sessionVersion` (default `0`).
 4. Sets HTTP-only cookie `token` (same options as in `routes/api/v0/session.js`:
    path `/`, secure in production, sameSite strict/lax).
 5. Optionally fetches display name (DRep registry or handle service) and upserts
@@ -114,8 +116,10 @@ or configured cross-origin requests to the API.
 
 **Backend behavior:**
 
-1. `verifyToken(req)` validates `req.cookies.token`: signature, expiry, and
-   presence of `userId`.
+1. `verifyToken(req)` validates `req.cookies.token`: signature, expiry,
+   presence of `userId`, and that claim `sv` is a number matching
+   `User.sessionVersion` for that `userId`. Tokens without `sv` or with a
+   mismatched version are rejected (401).
 2. On success, `req.userId`, `req.signType`, and `req.exp` are set; handler loads
    `User` name and votes where the user is admin.
 3. Returns `{ userId, name?, expiresIn?, adminVoteIds? }`.
@@ -125,14 +129,16 @@ or configured cross-origin requests to the API.
 
 ### 4. Logout — `DELETE /api/v0/session`
 
-**Purpose:** Invalidate the session by clearing the auth cookie.
+**Purpose:** Invalidate the session by clearing the auth cookie and bumping
+server-side session version.
 
 **Auth:** Required (`isAuthenticated`).
 
-**Backend behavior:** Clears the httpOnly `token` cookie with the same
-path/secure/sameSite options used when setting it. Returns success. No
-server-side session store is updated; the JWT remains valid until expiry if
-copied elsewhere, so the cookie is the only browser session handle.
+**Backend behavior:** Increments `User.sessionVersion` for the authenticated
+user (so existing JWTs with the previous `sv` fail `verifyToken`), then clears
+the httpOnly `token` cookie with the same path/secure/sameSite options used when
+setting it. Returns success. Pre-deploy JWTs issued without an `sv` claim also
+fail verification and require a one-time re-login.
 
 ---
 
@@ -237,7 +243,8 @@ sequenceDiagram
 
 - **Backend:** `JWT_SECRET` is required; `JWT_MAX_AGE` (e.g. `1d`) controls
   token lifetime. CORS is configured with `credentials: true` and an allowed
-  origin (e.g. `FRONTEND_URL`).
+  origin (e.g. `FRONTEND_URL`). Login JWTs include `sv` (`User.sessionVersion`);
+  logout increments that version so prior tokens are rejected.
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
   Session auth relies on the server-set httpOnly cookie only.
 - Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
@@ -287,6 +294,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                         |
 |---------|------------|-----------------------------------------------------|
+| 0.1.4   | 2026-07-23 | Document `sessionVersion` / JWT `sv` and logout invalidation (F-023); clarify httpOnly-only JWT. |
 | 0.1.3   | 2026-07-17 | Document multisig membership-only session semantics (F-002). |
 | 0.1.2   | 2026-02-20 | Update to rename "Budget" to "Vote"                 |
 | 0.1.1   | 2026-02-19 | Grammar and formatting updates.                     |

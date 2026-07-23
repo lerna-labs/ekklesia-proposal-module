@@ -5,7 +5,7 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Proposal Flow – Draft, Save, and Submit                                                                 |
-| **Version**        | 0.1.5                                                                                                   |
+| **Version**        | 0.1.6                                                                                                   |
 | **Created**        | February 18, 2026                                                                                       |
 | **Last Revised**   | July 23, 2026                                                                                           |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
@@ -75,8 +75,8 @@ flowchart TD
     ARCHIVED -->|New version published| LIVE
 
     LIVE --> WDL{Withdraw?}
-    WDL -->|Proposer · before feedbackEndDate| WBP([withdrawnByProposer])
-    WDL -->|Admin · before reviewEndDate| WBA([withdrawnByAdmin])
+    WDL -->|Proposer · before reviewEndDate| WBP([withdrawnByProposer])
+    WDL -->|Admin · before votingStartDate| WBA([withdrawnByAdmin])
 ```
 
 ---
@@ -181,9 +181,10 @@ sequenceDiagram
 - **User:** Edits an already-submitted (live) proposal.
 - **API:** `PUT /proposals/{proposalId}` with updated data. **`status` must
   remain `"live"`** (server rejects any attempt to change status).
-- **Behavior:** Server creates an **archived** copy of the current version, then
-  updates the proposal in place and appends the previous version to
-  `versions`
+- **Behavior:** Server archives the current version, then applies the live
+  update with an optimistic version compare-and-swap. Concurrent conflicts
+  return **409 Conflict** (orphan archive deleted); the client should re-fetch
+  and retry
   (
   see [api-specification.md §5.2](api-specification.md#52-put-proposalsproposalid)).
 
@@ -207,10 +208,16 @@ sequenceDiagram
     else Validation passes
         Backend->>MongoDB: Copy current doc → new doc<br/>{ status: "archived", new _id }
         MongoDB-->>Backend: { archivedId, archivedAt }
-        Backend->>MongoDB: Overwrite proposal at original {id}<br/>Append { archivedId, archivedAt } to versions[]
-        MongoDB-->>Backend: ok
-        Backend-->>Frontend: 200 OK<br/>{ status: "live", version: N+1, versions: [...] }
-        Frontend-->>Proposer: Changes saved ✓
+        Backend->>MongoDB: findOneAndUpdate<br/>filter {_id, status live, version N}<br/>$set fields, $inc version, $push versions
+        alt CAS miss
+            Backend->>MongoDB: Delete orphan archived doc
+            Backend-->>Frontend: 409 Conflict<br/>retry after re-fetch
+            Frontend-->>Proposer: Conflict — retry
+        else CAS ok
+            MongoDB-->>Backend: updated live doc
+            Backend-->>Frontend: 200 OK<br/>{ status: "live", version: N+1, versions: [...] }
+            Frontend-->>Proposer: Changes saved ✓
+        end
     end
 ```
 
@@ -218,7 +225,7 @@ sequenceDiagram
 
 - **User (proposer or vote admin):** Withdraws a **live** proposal.
 - **API:** `PUT /proposals/{proposalId}/withdraw` with `category` and `comment` (both required). See [api-specification.md §5.3](api-specification.md#53-put-proposalsproposalidwithdraw).
-- **Constraints:** Only **live** proposals can be withdrawn. Proposer can withdraw until the vote’s `feedbackEndDate`, admin until `reviewEndDate`. Draft proposals cannot be withdrawn; use **Delete proposal** (§3.6) instead.
+- **Constraints:** Only **live** proposals can be withdrawn. Proposer can withdraw until the vote’s `reviewEndDate`, admin only **before** `votingStartDate`. Draft proposals cannot be withdrawn; use **Delete proposal** (§3.6) instead.
 
 ```mermaid
 sequenceDiagram
@@ -236,9 +243,9 @@ sequenceDiagram
     Backend->>Backend: Check proposal is live
 
     alt Proposal is live AND caller is Proposer
-        Backend->>Backend: Check now ≤ feedbackEndDate
-    else Proposal is live AND caller is Admin
         Backend->>Backend: Check now ≤ reviewEndDate
+    else Proposal is live AND caller is Admin
+        Backend->>Backend: Check now &lt; votingStartDate
     end
 
     alt Date check fails
@@ -354,6 +361,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                   |
 |---------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.6   | 2026-07-23 | Live update flow: optimistic version CAS; concurrent conflict returns 409 (F-006). Align withdraw windows with code (proposer ≤ reviewEndDate; admin before votingStartDate). |
 | 0.1.5   | 2026-07-23 | Align draft delete success with API: `200 OK` JSON instead of `204 No Content` (F-027).                                                                                         |
 | 0.1.4   | 2026-02-20 | Terminology change, modify references to "Budgets" to be "Votes"                                                                                                              |
 | 0.1.3   | 2026-02-19 | Remove the concept/ability to "withdraw" a draft proposal. Draft proposals may be deleted by the author, otherwise only live proposals may be withdrawn by admin or the user. |

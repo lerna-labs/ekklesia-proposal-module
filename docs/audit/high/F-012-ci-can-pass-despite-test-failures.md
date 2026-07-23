@@ -5,16 +5,16 @@
 | **Severity** | High |
 | **Finding ID** | F-012 |
 | **Category** | CI / release readiness |
-| **Status** | Not proven |
+| **Status** | Not resolved |
 
 ## Affected Files
 
-- `.github/workflows/generate-test-reports.yml:66-82` (original)
-- `.github/workflows/playwright.yml:113-119` (original)
+- `.github/workflows/` (none for tests currently)
+- Root `package.json` `test` script
 
 ## Observation
 
-The backend test-report workflow records failed command status but does not fail the job. The frontend Playwright step uses `continue-on-error: true`.
+The original audit cited backend test-report and frontend Playwright workflows that could pass despite failures (`continue-on-error` / non-failing status recording). Those workflows are no longer present.
 
 ## Risk
 
@@ -22,8 +22,8 @@ CI can appear successful while tests fail, which weakens release confidence for 
 
 ## Recommendation
 
-Upload reports with `always()`, then add a final step that fails the workflow if the backend test status or Playwright outcome failed.
+Add CI that runs backend and frontend tests and fails the job on test failure. Upload reports with `always()` if needed, then fail on aggregated outcomes.
 
 ## Current Status
 
-Not proven. The previously cited `continue-on-error` workflows are no longer present, so the original CI failure pattern was not reproduced. However, no replacement test CI workflow was found that proves backend or frontend failures fail CI. CI release confidence therefore remains unresolved.
+**Not resolved.** Cited workflows are gone; only Dependabot (and CODEOWNERS) remain under `.github/`. No replacement workflow runs backend/frontend tests and fails on failure. Root `npm test` remains a placeholder. See `docs/audit/resolutions/F-012-resolution.md`.
