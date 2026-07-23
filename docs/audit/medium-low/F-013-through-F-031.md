@@ -8,7 +8,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | ID | Severity | Category | Status |
 |----|----------|----------|--------|
 | F-013 | Medium | COSE validation | **Resolved** |
-| F-014 | Medium | External dependency resilience | Open (upstream) |
+| F-014 | Medium | External dependency resilience | Open (upstream, partial) |
 | F-015 | Medium | API contract / error shape | **Resolved** |
 | F-016 | Medium | Comment API correctness | **Resolved** |
 | F-017 | Medium | Frontend metadata / SEO | **Resolved** |
@@ -68,7 +68,7 @@ Fix the precedence check and normalize validator return/throw behavior.
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | External dependency resilience |
-| **Status** | Open (upstream) |
+| **Status** | Open (upstream, partial) |
 
 ### Affected files
 
@@ -90,7 +90,7 @@ Add `AbortController` timeouts, explicit timeout handling, and bounded retry or 
 
 ### Current status (2026-07-23)
 
-**Open (upstream).** Local `helper/koios.js` / `verifyDeposit.js` were removed (`56c1630`; #525). Cardano lookups now go through `@lerna-labs/ekklesia-helpers/cardano`, which adds primary/secondary provider fallback (Koios ↔ Blockfrost) but still uses bare `fetch()` with no `AbortController` timeout or bounded retry in `KoiosProvider` / `BlockfrostProvider`. Availability risk remains for this app via the dependency; fix site is no longer in-tree.
+**Open (upstream, partial).** This app depends on `@lerna-labs/ekklesia-helpers@^2.0.0`. Helpers `2.0.0` improves provider error taxonomy (`ProviderError` / auth / rate-limit with `retryAfterSeconds`) and keeps primary/secondary Koios↔Blockfrost fallback. It still does **not** put `AbortController` timeouts on `KoiosProvider` / `BlockfrostProvider` `get`/`post` (those remain bare `fetch()`). A 3s `AbortController` exists only for pool-metadata recovery in `cardanoApi.js`. Availability risk from hung provider calls remains; fix site is still upstream helpers.
 
 ---
 
@@ -618,7 +618,7 @@ Open. Still hardcoded in `Navigation.svelte`, `budget-process/+page.svelte`, and
 
 Priority backlog from this set (excluding resolved items):
 
-1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
+1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements  
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
@@ -626,4 +626,4 @@ Priority backlog from this set (excluding resolved items):
 6. **F-031** — Configurable active vote slug  
 
 Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**.  
-Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
+Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback; Koios/Blockfrost fetches still lack timeouts).
