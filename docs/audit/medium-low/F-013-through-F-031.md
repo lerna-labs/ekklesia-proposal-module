@@ -1,15 +1,15 @@
 # Medium and Low Findings: F-013 through F-031
 
 Source: *Ekklesia Proposal Module — Open Source Readiness Audit* (2026-06-26, updated 2026-07-08).  
-Re-verified against the current working tree on **2026-07-20**. No code changes in this pass.
+Re-verified against the current working tree on **2026-07-23**. No code changes in this pass.
 
 ## Summary
 
 | ID | Severity | Category | Status |
 |----|----------|----------|--------|
-| F-013 | Medium | COSE validation | Open |
-| F-014 | Medium | External dependency resilience | Open |
-| F-015 | Medium | API contract / error shape | Open |
+| F-013 | Medium | COSE validation | **Resolved** |
+| F-014 | Medium | External dependency resilience | Open (upstream) |
+| F-015 | Medium | API contract / error shape | **Resolved** |
 | F-016 | Medium | Comment API correctness | **Resolved** |
 | F-017 | Medium | Frontend metadata / SEO | Open |
 | F-018 | Medium | Debug logging | **Resolved** |
@@ -27,7 +27,7 @@ Re-verified against the current working tree on **2026-07-20**. No code changes 
 | F-030 | Low | Frontend lifecycle cleanup | Open |
 | F-031 | Low | Frontend maintainability | Open |
 
-**Tally:** 3 resolved · 1 partially resolved · 15 open · 0 no longer needed
+**Tally:** 4 resolved · 1 partially resolved · 1 open upstream · 13 open · 0 no longer needed
 
 ---
 
@@ -37,11 +37,12 @@ Re-verified against the current working tree on **2026-07-20**. No code changes 
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | COSE validation |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
-- `helper/verifySignature.js` (around the COSE key-structure check and `parse_cose_signature` / validator paths)
+- ~~`helper/verifySignature.js`~~ (removed)
+- Now: `@lerna-labs/ekklesia-helpers/crypto` (`verifySignature`)
 
 ### Observation
 
@@ -55,9 +56,9 @@ Malformed COSE input may not be validated predictably; error paths can lose the 
 
 Fix the precedence check and normalize validator return/throw behavior.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. `!cose_key_structure instanceof Map` remains at `helper/verifySignature.js:216`. Validator error-message mismatch remains.
+**Resolved.** Local `helper/verifySignature.js` was removed (`56c1630`, `3f4653e`; issue #523). Session auth imports `verifySignature` from `@lerna-labs/ekklesia-helpers/crypto`. In helpers `1.1.1`, the COSE key check is correctly parenthesized as `!(cose_key_structure instanceof Map)`, and validator `{ error }` results are rethrown as `Error` before higher-level `{ error }` returns. `__tests/security/atk-no-local-koios-helpers-guard.js` ratchets that the local helper file stays deleted.
 
 ---
 
@@ -67,11 +68,13 @@ Open. `!cose_key_structure instanceof Map` remains at `helper/verifySignature.js
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | External dependency resilience |
-| **Status** | Open |
+| **Status** | Open (upstream) |
 
 ### Affected files
 
-- `helper/koios.js` (`fetchDrepName`, `getScript`, `fetchTxInfo`, and related external calls)
+- ~~`helper/koios.js`~~ (removed)
+- Now: `@lerna-labs/ekklesia-helpers` (`dist/cardano/koiosProvider.js`, `blockfrostProvider.js`, `cardanoApi.js`)
+- Call sites in this repo: `routes/api/v0/session.js`, `routes/api/v0/proposals.js` (via helpers cardano/crypto APIs)
 
 ### Observation
 
@@ -83,11 +86,11 @@ Slow external APIs can hold backend requests open and degrade availability.
 
 ### Recommendation
 
-Add `AbortController` timeouts, explicit timeout handling, and bounded retry or caching behavior.
+Add `AbortController` timeouts, explicit timeout handling, and bounded retry or caching behavior (in the shared helpers package, or wrap call sites here if helpers cannot change soon).
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. No `AbortController` / timeout / bounded-retry usage found in `helper/koios.js`.
+**Open (upstream).** Local `helper/koios.js` / `verifyDeposit.js` were removed (`56c1630`; #525). Cardano lookups now go through `@lerna-labs/ekklesia-helpers/cardano`, which adds primary/secondary provider fallback (Koios ↔ Blockfrost) but still uses bare `fetch()` with no `AbortController` timeout or bounded retry in `KoiosProvider` / `BlockfrostProvider`. Availability risk remains for this app via the dependency; fix site is no longer in-tree.
 
 ---
 
@@ -97,14 +100,14 @@ Open. No `AbortController` / timeout / bounded-retry usage found in `helper/koio
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | API contract / error shape |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `server.js` (global 404 / URI / error handlers)
 - API routes under `routes/api/v0/` (typically `{ status, message }`)
 
-### Observation
+### Observation (original)
 
 `server.js` emits `{ error }`, while most API routes emit `{ status, message }`.
 
@@ -116,9 +119,9 @@ API consumers and frontend code must handle inconsistent error envelopes.
 
 Standardize on one response shape and enforce it in tests/docs.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. `server.js` still returns `{ error: "..." }` for 404/invalid-request/general errors.
+**Resolved.** Global 404 / URI / general error handlers in `server.js` now return `{ status: "error", message }` to match routes and API spec §7.1. See `docs/audit/resolutions/F-015-resolution.md`.
 
 ---
 
@@ -146,7 +149,7 @@ Public reply-count sorting could include replies that are not visible in the pub
 
 Apply the same status and visibility filters inside the aggregation used for sorting.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 **Resolved.** `getVisibleReplyStatusMatch` / `replyVisibilityMatch` is applied in `$graphLookup.restrictSearchWithMatch` before reply counts are calculated. Matches the audit’s fixed status; no further action required for this finding.
 
@@ -176,7 +179,7 @@ Shared links can produce incomplete or incorrect preview metadata when the shell
 
 Populate `og:url` from the public site URL, or remove the tag until the deployment URL is known.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 Open. `__frontend/src/app.html` still has `content=""`. Note: some share/page paths set OG URL elsewhere (`PageMetadata.svelte`, `routes/share/votes.js`), but the empty shell tag remains.
 
@@ -206,7 +209,7 @@ Browser console noise and unnecessary implementation detail in production.
 
 Gate behind `import.meta.env.DEV` or an explicit debug flag that defaults off.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 **Resolved.** `DEBUG_AUTOSAVE = false` with gated `autosaveLog`. Matches the audit’s fixed status; no further action required for this finding.
 
@@ -233,9 +236,15 @@ Contributors lack clear contribution, ownership, security disclosure, and releas
 
 Add standard governance files aligned with Intersect open-source expectations.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-**Partially resolved.** `.github/CODEOWNERS` exists (`* @Crypto2099 @MadOrkestra`). Still missing: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
+**Partially resolved.** Present since last re-verify:
+
+- `.github/CODEOWNERS` (`* @Crypto2099 @MadOrkestra`)
+- `SECURITY.md` (`ab9f14a`) — vulnerability reporting to `security@intersectmbo.org`
+- `CONTRIBUTING.md` (`204fde0`) — stub only (“Template file to be populated”)
+
+Still missing: populated `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
 
 ---
 
@@ -260,7 +269,7 @@ Dependabot monitors only `/`. Separate package manifests can miss updates/securi
 
 Add Dependabot npm entries for all remaining package manifests (originally `/__frontend` and `/__testkit`).
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 Open for `__frontend`. Dependabot still only lists `directory: "/"`.
 
@@ -292,7 +301,7 @@ Contributors may copy backend secrets into frontend env files or misunderstand c
 
 Remove `JWT_SECRET` from frontend env examples; document it only in backend/test env docs.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 **Resolved.** `__frontend/.env.example` contains only `VITE_*` variables. Matches the audit’s fixed status; no further action required for this finding.
 
@@ -323,9 +332,9 @@ Weakens unsubscribe-link reliability and makes token invalidation semantics inco
 
 Do not clear or rotate `unsubscribeSecret` in general notification settings updates. Rotate/initialize only at the intended verification/email-change lifecycle point. Keep the security guard passing.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. PUT still `$unset`s `notification.unsubscribeSecret` when email is cleared (`routes/api/v0/notifications.js:238`). The rotation-timing guard still fails for this reason.
+Open. PUT still `$unset`s `notification.unsubscribeSecret` when email is cleared (`routes/api/v0/notifications.js:238`). `__tests/security/atk-unsubscribe-rotation-timing-guard.js` still fails for this reason.
 
 ---
 
@@ -354,9 +363,9 @@ A stolen or copied token can remain usable after logout until it expires.
 
 Add JWT revocation, session-version validation, or short-lived access tokens with server-side refresh/session rotation.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. Logout still only `clearCookie("token")`. No revocation, blocklist, or session-version check found in `verifyToken`.
+Open. Logout still only `clearCookie("token")`. No revocation, blocklist, or session-version check found in `verifyToken`. (Note: F-001 httpOnly cookie work is separate; logout still does not invalidate already-issued JWTs.)
 
 ---
 
@@ -384,9 +393,9 @@ Production logs can become noisy and hard to filter by level or component.
 
 Replace with structured logging that supports levels and environment-specific output.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. Direct `console.*` remains widespread. `helper/consoleManager.js` only prefixes console methods; it is not a structured logger.
+Open. Direct `console.*` remains widespread (~240 hits outside `node_modules`/`docs`/`logs`). `helper/consoleManager.js` only prefixes console methods; it is not a structured logger.
 
 ---
 
@@ -414,9 +423,9 @@ Contributors using different editors may produce inconsistent indentation or lin
 
 Add `.editorconfig` with the repository’s indentation, charset, and line-ending expectations.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. No `.editorconfig` or `.prettierrc*` present.
+Open. No `.editorconfig` or `.prettierrc*` present at repo root or under `__frontend`.
 
 ---
 
@@ -445,9 +454,9 @@ In-flight requests may be dropped during deploys or process restarts.
 
 Add server-level SIGTERM/SIGINT handling: close the HTTP server, drain connections, then close MongoDB.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. `server.js` still uses `app.listen` without `server.close` / SIGTERM drain.
+Open. `server.js` still uses `app.listen` without `server.close` / SIGTERM drain. `helper/dbManager.js` still only closes MongoDB on `SIGINT`.
 
 ---
 
@@ -477,9 +486,9 @@ API consumers can implement the wrong success handling for draft deletion.
 
 Align docs and implementation (document 200 JSON, or change the route to 204 with no body).
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. Docs still describe 204; the delete route still returns 200 JSON.
+Open. Docs still describe 204; the delete route still returns `200` JSON (`{ status, message: "Proposal deleted" }`).
 
 ---
 
@@ -507,7 +516,7 @@ Authenticated users can briefly see the login page before redirect.
 
 Move the redirect into a `load` function or shared route guard.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 Open. Login redirect still runs in `onMount`.
 
@@ -537,7 +546,7 @@ Unhelpful browser console output; inconsistent with production logging expectati
 
 Remove the log or replace with dev-only structured logging.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 Open. `console.log("this error")` is still present.
 
@@ -567,7 +576,7 @@ The interval is harder to control in tests or embedded contexts.
 
 Expose start/stop functions, or move polling into component lifecycle code with cleanup.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
 Open. `fetchVersionInfo()` and `setInterval(..., 5 min)` still run at module scope.
 
@@ -585,6 +594,7 @@ Open. `fetchVersionInfo()` and `setInterval(..., 5 min)` still run at module sco
 
 - `__frontend/src/lib/base/Navigation.svelte`
 - `__frontend/src/routes/budget-process/+page.svelte`
+- `__frontend/src/routes/budget-process/+page.js` (also hardcodes the slug for the vote fetch)
 
 ### Observation
 
@@ -598,9 +608,9 @@ Changing the active vote slug requires code edits and can break navigation.
 
 Derive the active vote slug from configuration or API data.
 
-### Current status (2026-07-20)
+### Current status (2026-07-23)
 
-Open. Removed from `Header.svelte` (as noted in the audit), but still hardcoded in `Navigation.svelte` and `budget-process/+page.svelte`.
+Open. Still hardcoded in `Navigation.svelte`, `budget-process/+page.svelte`, and `budget-process/+page.js`. (`Header.svelte` no longer carries it, as previously noted.)
 
 ---
 
@@ -608,22 +618,21 @@ Open. Removed from `Header.svelte` (as noted in the audit), but still hardcoded 
 
 Priority backlog from this set (excluding resolved items):
 
-1. **F-013** — Fix COSE precedence / validator error handling  
-2. **F-014** — Add Koios fetch timeouts and bounded retries  
-3. **F-015** — Unify API error envelopes  
-4. **F-017** — Fix or remove empty shell `og:url`  
-5. **F-019** — Finish governance docs (CONTRIBUTING, SECURITY, CoC, changelog, issue/PR templates)  
-6. **F-020** — Add Dependabot for `/__frontend` (`/__testkit` no longer needed)  
-7. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
-8. **F-023** — Add logout-time JWT revocation or session-version checks  
-9. **F-024** — Structured logging  
-10. **F-025** — Add `.editorconfig`  
-11. **F-026** — Graceful HTTP shutdown  
-12. **F-027** — Align delete docs vs 200 JSON  
-13. **F-028** — Login redirect via load/guard  
-14. **F-029** — Remove SignerCS debug log  
-15. **F-030** — Version polling lifecycle cleanup  
-16. **F-031** — Configurable active vote slug  
+1. **F-014** — Timeouts/retries in `@lerna-labs/ekklesia-helpers` Cardano providers (or wrap here)  
+2. **F-017** — Fix or remove empty shell `og:url`  
+3. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
+4. **F-020** — Add Dependabot for `/__frontend` (`/__testkit` no longer needed)  
+5. **F-022** — Stop clearing `unsubscribeSecret` on general notification PUT  
+6. **F-023** — Add logout-time JWT revocation or session-version checks  
+7. **F-024** — Structured logging  
+8. **F-025** — Add `.editorconfig`  
+9. **F-026** — Graceful HTTP shutdown  
+10. **F-027** — Align delete docs vs 200 JSON  
+11. **F-028** — Login redirect via load/guard  
+12. **F-029** — Remove SignerCS debug log  
+13. **F-030** — Version polling lifecycle cleanup  
+14. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-016**, **F-018**, **F-021**.  
-No longer needed (partial): **F-020** `__testkit` Dependabot entry only.
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-018**, **F-021**.  
+No longer needed (partial): **F-020** `__testkit` Dependabot entry only.  
+Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).

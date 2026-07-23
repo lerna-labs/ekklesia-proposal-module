@@ -92,7 +92,7 @@ async function startServer() {
     // 404 handler (only for API routes now)
     app.use((req, res, next) => {
       if (req.path.startsWith("/api/")) {
-        return res.status(404).json({ error: "API route not found" });
+        return res.status(404).json({ status: "error", message: "API route not found" });
       }
       next();
     });
@@ -103,7 +103,7 @@ async function startServer() {
     app.use((err, req, res, next) => {
       if (err instanceof URIError) {
         console.warn(`Invalid URI attempted: ${req.url} from ${req.ip}`);
-        return res.status(400).json({ error: "Invalid request" });
+        return res.status(400).json({ status: "error", message: "Invalid request" });
       }
       next(err);
     });
@@ -112,7 +112,8 @@ async function startServer() {
     app.use((err, req, res, next) => {
       console.error(`Error processing request: ${err.message}`);
       res.status(err.status || 500).json({
-        error:
+        status: "error",
+        message:
           process.env.NODE_ENV === "production"
             ? "Internal server error"
             : err.message,
