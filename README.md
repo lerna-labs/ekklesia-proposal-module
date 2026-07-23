@@ -10,6 +10,8 @@ challenge with their Cardano wallet (Ed25519/CIP-30 signatures).
 
 ## Getting Started
 
+Requires **Node.js 22+**.
+
 1. Copy `.env.example` to `.env` and fill in required variables
 2. `npm install`
 3. `npm start`
