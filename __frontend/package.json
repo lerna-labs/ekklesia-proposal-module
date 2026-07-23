@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.19",
-    "json-diff-ts": "^4.10.0",
+    "json-diff-ts": "^4.10.4",
     "lucide-svelte": "^0.574.0",
     "markdown-it": "^14.2.0",
     "svelte-lexical": "^0.6.4",
