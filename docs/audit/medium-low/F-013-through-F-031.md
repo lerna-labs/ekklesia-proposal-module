@@ -23,7 +23,7 @@ Re-verified against the current working tree on **2026-07-23**. No code changes 
 | F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | **Resolved** |
-| F-029 | Low | Frontend cleanup | Open |
+| F-029 | Low | Frontend cleanup | **Resolved** |
 | F-030 | Low | Frontend lifecycle cleanup | Open |
 | F-031 | Low | Frontend maintainability | Open |
 
@@ -528,13 +528,13 @@ Move the redirect into a `load` function or shared route guard.
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Frontend cleanup |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
 - `__frontend/src/lib/WalletSigner/SignerCS.svelte`
 
-### Observation
+### Observation (original)
 
 Catch block logs leftover debug text (`console.log("this error")`).
 
@@ -548,7 +548,7 @@ Remove the log or replace with dev-only structured logging.
 
 ### Current status (2026-07-23)
 
-Open. `console.log("this error")` is still present.
+**Resolved.** `SignerCS.svelte` has no leftover `console.log("this error")`; catch paths use `toast.error` only. See `docs/audit/resolutions/F-029-resolution.md`.
 
 ---
 
@@ -622,9 +622,8 @@ Priority backlog from this set (excluding resolved items):
 2. **F-019** — Finish governance docs (populate CONTRIBUTING, CoC, changelog, issue/PR templates)  
 3. **F-024** — Structured logging  
 4. **F-025** — Add `.editorconfig`  
-5. **F-029** — Remove SignerCS debug log  
-6. **F-030** — Version polling lifecycle cleanup  
-7. **F-031** — Configurable active vote slug  
+5. **F-030** — Version polling lifecycle cleanup  
+6. **F-031** — Configurable active vote slug  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**.  
 Upstream residual: **F-014** (local Koios helper gone; bare-fetch hangs live in `@lerna-labs/ekklesia-helpers`).
