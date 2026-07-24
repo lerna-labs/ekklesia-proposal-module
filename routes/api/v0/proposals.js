@@ -27,6 +27,11 @@ import {
   sendSubmissionConfirmedNotification,
 } from "../../../mailer/notificationDispatch.js";
 import { escapeRegex } from "../../../helper/escapeRegex.js";
+import {
+  TREASURY_VERIFY_UNAVAILABLE_MESSAGE,
+  mapTreasuryProviderError,
+  alertTreasuryProviderAuthFailure,
+} from "../../../helper/mapTreasuryProviderError.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -65,12 +70,46 @@ function requiresTreasuryDonationValidation(voteDoc) {
 }
 
 /**
+ * Respond for a failed treasury tx-hash validation: 503 when verification was
+ * impossible (provider outage/throttle), else 400 for a genuine mismatch.
+ * Never forwards provider error text to the client.
+ * @param {import("express").Response} res
+ * @param {{ unavailable?: boolean, retryAfterSeconds?: number, error?: string }} validationResult
+ */
+function sendTreasuryValidationFailure(res, validationResult) {
+  if (validationResult.unavailable) {
+    if (
+      validationResult.retryAfterSeconds != null &&
+      Number.isFinite(validationResult.retryAfterSeconds)
+    ) {
+      res.set(
+        "Retry-After",
+        String(Math.ceil(validationResult.retryAfterSeconds)),
+      );
+    }
+    return res.status(503).json({
+      status: "error",
+      message: TREASURY_VERIFY_UNAVAILABLE_MESSAGE,
+    });
+  }
+  return res.status(400).json({
+    status: "error",
+    message: "Validation failed",
+    errors: treasuryTxHashErrorTree(validationResult.error),
+  });
+}
+
+/**
  * Validate treasury donation tx hash: normalize, check uniqueness across proposals, call verifyDeposit.
  * @param {string} txHash - Raw tx hash from metaData.treasuryDonationTxHash
  * @param {string} proposerId - Proposer stake address
  * @param {import("mongoose").LeanDocument} voteDoc - Vote document (lean) with depositOptions.treasuryDonation
  * @param {{ excludeProposalIds?: import("mongoose").Types.ObjectId[] }} [options] - On PUT, exclude current proposal + versions
- * @returns {Promise<{ ok: true, normalizedHash: string } | { ok: false, error: string }>}
+ * @returns {Promise<
+ *   | { ok: true, normalizedHash: string }
+ *   | { ok: false, error: string }
+ *   | { ok: false, unavailable: true, retryAfterSeconds?: number, alert?: "auth" }
+ * >}
  */
 async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, options = {}) {
   const normalizedHash = String(txHash ?? "").trim().toLowerCase();
@@ -97,9 +136,21 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     return { ok: false, error: "This transaction hash is already used by another proposal" };
   }
 
-  const result = await verifyDeposit(normalizedHash, proposerId, {
-    treasuryDonation,
-  });
+  let result;
+  try {
+    result = await verifyDeposit(normalizedHash, proposerId, {
+      treasuryDonation,
+    });
+  } catch (err) {
+    const unavailable = mapTreasuryProviderError(err);
+    if (unavailable) {
+      if (unavailable.alert === "auth") {
+        alertTreasuryProviderAuthFailure(err);
+      }
+      return unavailable;
+    }
+    throw err;
+  }
   if (result !== true) {
     return { ok: false, error: result?.error ?? "Transaction verification failed" };
   }
@@ -256,11 +307,7 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         {},
       );
       if (!validationResult.ok) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validation failed",
-          errors: treasuryTxHashErrorTree(validationResult.error),
-        });
+        return sendTreasuryValidationFailure(res, validationResult);
       }
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
     }
@@ -757,11 +804,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         { excludeProposalIds },
       );
       if (!validationResult.ok) {
-        return res.status(400).json({
-          status: "error",
-          message: "Validation failed",
-          errors: treasuryTxHashErrorTree(validationResult.error),
-        });
+        return sendTreasuryValidationFailure(res, validationResult);
       }
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
     }
