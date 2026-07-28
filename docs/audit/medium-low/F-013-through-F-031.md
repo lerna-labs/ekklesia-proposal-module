@@ -1,7 +1,7 @@
 # Medium and Low Findings: F-013 through F-031
 
 Source: *Ekklesia Proposal Module — Open Source Readiness Audit* (2026-06-26, updated 2026-07-08).  
-Re-verified against the current working tree on **2026-07-23**. No code changes in this pass.
+Re-verified against the current working tree on **2026-07-23**. F-014 app-side treasury-verify→503 note updated **2026-07-24**.
 
 ## Summary
 
@@ -75,6 +75,7 @@ Fix the precedence check and normalize validator return/throw behavior.
 - ~~`helper/koios.js`~~ (removed)
 - Now: `@lerna-labs/ekklesia-helpers` (`dist/cardano/koiosProvider.js`, `blockfrostProvider.js`, `cardanoApi.js`)
 - Call sites in this repo: `routes/api/v0/session.js`, `routes/api/v0/proposals.js` (via helpers cardano/crypto APIs)
+- App-side provider-error mapping: `helper/mapTreasuryProviderError.js` (treasury donation verification on live submit)
 
 ### Observation
 
@@ -82,15 +83,17 @@ External service calls use bare `fetch()` without timeouts or bounded retries.
 
 ### Risk
 
-Slow external APIs can hold backend requests open and degrade availability.
+Slow external APIs can hold backend requests open and degrade availability. Separately, if call sites treat provider failures as validation failures, proposers can be told a genuine on-chain donation is invalid when the chain data provider is merely unavailable.
 
 ### Recommendation
 
-Add `AbortController` timeouts, explicit timeout handling, and bounded retry or caching behavior (in the shared helpers package, or wrap call sites here if helpers cannot change soon).
+Add `AbortController` timeouts, explicit timeout handling, and bounded retry or caching behavior (in the shared helpers package, or wrap call sites here if helpers cannot change soon). At call sites, map `ProviderError` (and subclasses) to an “unable to verify / retry” response rather than a client validation error.
 
-### Current status (2026-07-23)
+### Current status (2026-07-24)
 
-**Open (upstream, partial).** This app depends on `@lerna-labs/ekklesia-helpers@^2.0.0`. Helpers `2.0.0` improves provider error taxonomy (`ProviderError` / auth / rate-limit with `retryAfterSeconds`) and keeps primary/secondary Koios↔Blockfrost fallback. It still does **not** put `AbortController` timeouts on `KoiosProvider` / `BlockfrostProvider` `get`/`post` (those remain bare `fetch()`). A 3s `AbortController` exists only for pool-metadata recovery in `cardanoApi.js`. Availability risk from hung provider calls remains; fix site is still upstream helpers.
+**Open (upstream, partial).** This app depends on `@lerna-labs/ekklesia-helpers@^2.0.0`. Helpers `2.0.0` improves provider error taxonomy (`ProviderError` / `ProviderAuthError` / `ProviderRateLimitError` with `retryAfterSeconds`) and keeps primary/secondary Koios↔Blockfrost fallback. It still does **not** put `AbortController` timeouts on `KoiosProvider` / `BlockfrostProvider` `get`/`post` (those remain bare `fetch()`). A 3s `AbortController` exists only for pool-metadata recovery in `cardanoApi.js`. Availability risk from hung provider calls remains; fix site is still upstream helpers.
+
+**App-side (done, 2026-07-24):** Live proposal treasury donation verification in `routes/api/v0/proposals.js` catches `ProviderError` via `helper/mapTreasuryProviderError.js` and returns **503** with a fixed retry message (optional `Retry-After` from rate-limit; operational `console.error` on credential rejection). Genuine `verifyDeposit` `{ error }` results stay **400**. Ratchet: `__tests/security/atk-treasury-verify-unavailable-guard.js`. Provider error text is not forwarded to clients.
 
 ---
 
@@ -623,10 +626,10 @@ Derive the active vote slug from configuration or API data.
 
 Priority backlog from this set (excluding resolved / accepted items):
 
-1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements  
+1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream.  
 2. **F-019** — Finish remaining governance docs (CoC, changelog, issue/PR templates); CONTRIBUTING/SECURITY/CODEOWNERS present — deferred to Intersect GitHub move  
 3. **F-025** — Add `.editorconfig` — deferred to Intersect GitHub move (client/org editor settings)  
 
 Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
 Accepted (not fixed): **F-024**, **F-031**.  
-Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback; Koios/Blockfrost fetches still lack timeouts).
+Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback + app maps treasury `ProviderError`→503; Koios/Blockfrost fetches still lack timeouts).

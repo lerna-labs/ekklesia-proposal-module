@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.3.0                                                                  |
+| **Version**        | 1.4.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | July 23, 2026                                                      |
+| **Last Revised**   | July 24, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -97,6 +97,7 @@
       - [Success Response — `201 Created`](#success-response--201-created)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-9)
       - [Error Response — `401 Unauthorized`](#error-response--401-unauthorized-2)
+      - [Error Response — `503 Service Unavailable`](#error-response--503-service-unavailable)
       - [Error Response — `500 Internal Server Error`](#error-response--500-internal-server-error-2)
     - [5.2 `PUT /proposals/{proposalId}`](#52-put-proposalsproposalid)
       - [Headers](#headers-3)
@@ -108,6 +109,7 @@
       - [Error Response — `403 Forbidden`](#error-response--403-forbidden-1)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-8)
       - [Error Response — `409 Conflict`](#error-response--409-conflict)
+      - [Error Response — `503 Service Unavailable`](#error-response--503-service-unavailable-1)
       - [Error Response — `500 Internal Server Error`](#error-response--500-internal-server-error-3)
     - [5.3 `PUT /proposals/{proposalId}/withdraw`](#53-put-proposalsproposalidwithdraw)
       - [Headers](#headers-4)
@@ -1566,6 +1568,11 @@ Returned when:
 - `status` is `"live"` but the current time is before the vote's
   `submissionStartDate` (the submission window has not yet opened)
 - `status` is not `"draft"` or `"live"` for new proposals
+- `status` is `"live"` and the vote requires a treasury donation, but on-chain
+  verification of `metaData.treasuryDonationTxHash` fails a genuine check
+  (missing/invalid hash, wrong stake key, insufficient donation, transaction
+  not found on chain, or hash already used by another non-draft proposal).
+  These responses include an `errors` tree for `metaData.treasuryDonationTxHash`.
 
 ```json
 {
@@ -1601,6 +1608,26 @@ Or when the vote's submission window has not yet opened:
 }
 ```
 
+Or when treasury donation verification fails a genuine on-chain check:
+
+```json
+{
+  "status": "error",
+  "message": "Validation failed",
+  "errors": {
+    "properties": {
+      "metaData": {
+        "properties": {
+          "treasuryDonationTxHash": {
+            "errors": ["Transaction not found"]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 #### Error Response — `401 Unauthorized`
 
 Returned when:
@@ -1612,6 +1639,22 @@ Returned when:
 {
   "status": "error",
   "message": "No token provided"
+}
+```
+
+#### Error Response — `503 Service Unavailable`
+
+Returned when `status` is `"live"`, the vote requires a treasury donation, and
+chain-data providers cannot complete verification (outage, throttle, or rejected
+credentials after fallback). This is not a client validation failure; the
+proposer should retry. When the provider sent a retry delay, the response
+includes a `Retry-After` header (seconds). Provider error detail is never
+included in the body.
+
+```json
+{
+  "status": "error",
+  "message": "Unable to verify treasury donation right now. Please retry shortly."
 }
 ```
 
@@ -1724,6 +1767,10 @@ Returned when:
 - Updating to `status: "live"` without required legal declarations.
 - Current time is after the vote's `reviewEndDate` (the proposal is locked and
   cannot be updated).
+- Promoting to `status: "live"` when the vote requires a treasury donation and
+  on-chain verification of `metaData.treasuryDonationTxHash` fails a genuine
+  check (same cases as `POST /proposals` §5.1). These responses include an
+  `errors` tree for `metaData.treasuryDonationTxHash`.
 
 ```json
 {
@@ -1791,6 +1838,20 @@ re-fetch the proposal and retry.
 {
   "status": "error",
   "message": "Proposal was modified concurrently. Please retry."
+}
+```
+
+#### Error Response — `503 Service Unavailable`
+
+Returned when promoting to `status: "live"`, the vote requires a treasury
+donation, and chain-data providers cannot complete verification (same semantics
+as `POST /proposals` §5.1). Optional `Retry-After` header; provider detail is
+never included in the body.
+
+```json
+{
+  "status": "error",
+  "message": "Unable to verify treasury donation right now. Please retry shortly."
 }
 ```
 
@@ -2617,7 +2678,8 @@ validation; clients should not rely on them.
 | **404 Not Found**             | Resource not found.                 | No resource for the given id. For `GET /proposals/{proposalId}`, when the proposal exists but the caller is not allowed to see it, the API returns **403 Forbidden** instead.                              |
 | **409 Conflict**              | Concurrent or state conflict.       | Live proposal update lost optimistic version CAS (retry after re-fetch); notification `PUT` while a different `pendingEmail` is awaiting verification (`PENDING_EMAIL_EXISTS`).                            |
 | **429 Too Many Requests**     | Rate limit exceeded.                | Per-IP or per-user limit exceeded (see Section 6).                                                                                                                                                         |
-| **500 Internal Server Error** | Server-side failure.                | Unexpected errors (e.g. database or external service failure). The `message` may be generic; details are not guaranteed.                                                                                   |
+| **503 Service Unavailable**   | Temporary dependency failure.       | Live proposal submit/update cannot verify treasury donation because chain-data providers are unavailable or throttled (retry; honour `Retry-After` when present). Also used when a vote validation script cannot be loaded. |
+| **500 Internal Server Error** | Server-side failure.                | Unexpected errors (e.g. database failure). The `message` may be generic; details are not guaranteed. Provider outages during treasury verification use **503**, not 500.                                      |
 
 Success responses use **200 OK** or **201 Created** (for create endpoints). Some 200 responses
 return a resource body; others (e.g., logout, draft delete) may return an envelope such as
@@ -2640,6 +2702,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.4.0   | 2026-07-24 | Document `503` on live `POST`/`PUT /proposals` when treasury donation verification cannot reach chain-data providers (fixed retry message; optional `Retry-After`). Clarify genuine verification failures remain `400` with `errors` for `metaData.treasuryDonationTxHash`. Add `503` to §7.2. |
 | 1.3.0   | 2026-07-23 | Live `PUT /proposals/{proposalId}`: optimistic version CAS and `409 Conflict` on concurrent update (F-006). Added §5.9 notification settings endpoints. Documented `409` in §7.2. Aligned proposal withdraw windows with implementation (proposer ≤ `reviewEndDate`; admin before `votingStartDate`). Removed dangling Ekklesia Integration Plan reference. |
 | 1.2.2   | 2026-07-23 | `DELETE /proposals/{proposalId}` success documented as `200 OK` JSON (`status`/`message`), matching implementation (F-027). Removed obsolete 204 No Content convention.                                                                                                                                                                                                                                                                  |
 | 1.2.1   | 2026-07-17 | Clarify multisig `scriptAddress` on `POST`/`PUT /session`: membership-only native-script check by design (F-002); link to system-architecture §8.1.                                                                                                                                                                                                                                                                                      |
