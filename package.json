@@ -21,7 +21,7 @@
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "@emurgo/cardano-serialization-lib-nodejs": "^15.0.3",
+    "@emurgo/cardano-serialization-lib-nodejs": "^16.0.0",
     "@lerna-labs/ekklesia-helpers": "^2.0.0",
     "@meshsdk/core": "^1.9.1",
     "compression": "^1.8.1",
