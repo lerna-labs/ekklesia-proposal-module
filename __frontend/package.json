@@ -47,5 +47,8 @@
     "markdown-it": "^14.2.0",
     "svelte-lexical": "^0.6.5",
     "zod": "^4.4.3"
+  },
+  "overrides": {
+    "cookie": "0.7.0"
   }
 }

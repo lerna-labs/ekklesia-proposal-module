@@ -41,8 +41,10 @@
     "zod": "^4.4.3"
   },
   "overrides": {
-    "undici": "6.27.0",
+    "undici": "6.28.0",
     "ip-address": "10.3.1",
-    "nanoid": "3.3.18"
+    "nanoid": "3.3.18",
+    "brace-expansion": "2.1.4",
+    "qs": "6.16.0"
   }
 }
