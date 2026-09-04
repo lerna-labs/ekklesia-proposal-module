@@ -20,3 +20,15 @@ treat `docs/audit/` as contributor onboarding material.
 - Keep changes focused; match existing code style.
 - Update product docs when you change API contracts, schemas, auth, or routes.
 - Prefer clear commit messages that explain *why*.
+
+## Changelog entries
+
+Every change to shipped behavior needs a changelog entry. Run:
+
+```bash
+npx changeset
+```
+
+and follow the prompts. It writes a small markdown file under `.changeset/`
+that you commit alongside your change. A pull request into `development`
+without one (and without a `skip-changelog` label) will fail CI.
