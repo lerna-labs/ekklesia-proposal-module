@@ -1,6 +1,6 @@
 version: 2
-# Automatic pull requests are disabled: open-pull-requests-limit is 0 on both
-# blocks below. Dependabot alerts stay enabled and are the signal; dependency
+# Automatic pull requests are disabled: open-pull-requests-limit is 0 on every
+# block below. Dependabot alerts stay enabled and are the signal; dependency
 # updates land as maintainer-authored batches. Dependabot security updates are
 # disabled in repository settings for the same reason.
 #
@@ -11,9 +11,31 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    target-branch: "development"
     open-pull-requests-limit: 0
+    cooldown:
+      default-days: 3
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 14
+
   - package-ecosystem: "npm"
     directory: "/__frontend"
     schedule:
       interval: "weekly"
+    target-branch: "development"
     open-pull-requests-limit: 0
+    cooldown:
+      default-days: 3
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 14
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "development"
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 7
