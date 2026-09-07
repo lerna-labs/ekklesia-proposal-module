@@ -1,4 +1,4 @@
-<script lang="ts">
+<script>
   import { getContext } from "svelte";
   import {
     BoldButton,
@@ -17,9 +17,7 @@
   import { sanitizeUrl } from "svelte-lexical";
 
   let { quote = false } = $props();
-  const isLink = getContext("isLink") as {
-    subscribe: (fn: (v: boolean) => void) => () => void;
-  };
+  const isLink = getContext("isLink");
 </script>
 
 <Toolbar>

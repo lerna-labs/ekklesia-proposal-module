@@ -1,0 +1,11 @@
+node_modules/
+__frontend/
+public/
+backup/data/
+logs/
+package-lock.json
+*.min.js
+docs/
+*.md
+.changeset/
+.cursor/
