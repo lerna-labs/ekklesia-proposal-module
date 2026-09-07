@@ -29,16 +29,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import {
-  renderDigestFromPayload,
-  renderInstantDigestFromPayload,
-} from "../render.js";
+import { renderDigestFromPayload, renderInstantDigestFromPayload } from "../render.js";
 import { getEmailProvider, send as sendEmail } from "../transport.js";
 import { resolveServiceAccountKeyPath } from "../googleWorkspaceSend.js";
-import {
-  instantEventFixture,
-  commentDigestAggregatedFixture,
-} from "./fixtures.js";
+import { instantEventFixture, commentDigestAggregatedFixture } from "./fixtures.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "../..");
@@ -61,11 +55,7 @@ function sleep(ms) {
 
 /** Recipient for Google sample sends only (real inbox). */
 function googleSampleRecipientEmail() {
-  return (
-    process.env.MAILTEST_TO_EMAIL?.trim() ||
-    process.env.GOOGLE_DEV_TEST_EMAIL?.trim() ||
-    ""
-  );
+  return process.env.MAILTEST_TO_EMAIL?.trim() || process.env.GOOGLE_DEV_TEST_EMAIL?.trim() || "";
 }
 
 function sampleRecipientEmail() {
@@ -83,8 +73,7 @@ function outboundSendConfigured() {
   }
   if (p === "google") {
     const imp =
-      process.env.GMAIL_IMPERSONATE_USER?.trim() ||
-      process.env.WORKSPACE_SENDER_EMAIL?.trim();
+      process.env.GMAIL_IMPERSONATE_USER?.trim() || process.env.WORKSPACE_SENDER_EMAIL?.trim();
     if (!imp) return false;
     if (!googleSampleRecipientEmail()) return false;
     return fs.existsSync(resolveServiceAccountKeyPath());
@@ -104,10 +93,7 @@ function outboundSkipHint() {
 }
 
 function sendFailHardEnabled() {
-  return (
-    process.env.MAILTRAP_SEND === "1" ||
-    process.env.EMAIL_SEND_FAIL_HARD === "1"
-  );
+  return process.env.MAILTRAP_SEND === "1" || process.env.EMAIL_SEND_FAIL_HARD === "1";
 }
 
 /** Spaces out outbound API calls so providers return fewer 429s. */
@@ -211,9 +197,7 @@ function parseCli(argv) {
     if (INSTANT_IDS.has(normalized)) {
       return { mode: "only", target: normalized };
     }
-    console.error(
-      `email-events: unknown --only id "${onlyValue}". Use --list.`,
-    );
+    console.error(`email-events: unknown --only id "${onlyValue}". Use --list.`);
     process.exit(1);
   }
 
@@ -225,9 +209,7 @@ async function maybeSendDevSample(category, subject, html) {
   const force = sendFailHardEnabled();
   if (!outboundSendConfigured()) {
     if (force) {
-      throw new Error(
-        `Sample send requires ${provider} credentials: ${outboundSkipHint()}`,
-      );
+      throw new Error(`Sample send requires ${provider} credentials: ${outboundSkipHint()}`);
     }
     console.warn(
       `[email-events] Skip send (${category}, provider=${provider}): ${outboundSkipHint()}`,
@@ -235,10 +217,7 @@ async function maybeSendDevSample(category, subject, html) {
     return;
   }
 
-  const toEmail =
-    provider === "google"
-      ? googleSampleRecipientEmail()
-      : sampleRecipientEmail();
+  const toEmail = provider === "google" ? googleSampleRecipientEmail() : sampleRecipientEmail();
 
   await throttleOutboundBeforeSend();
 
@@ -278,10 +257,7 @@ async function assertInstantEvent(type) {
       break;
     case "proposal_withdrawn":
       assert.ok(result.html.includes("Policy breach"), `${type}: reason`);
-      assert.ok(
-        result.html.includes("Admin withdrawal note"),
-        `${type}: comment`,
-      );
+      assert.ok(result.html.includes("Admin withdrawal note"), `${type}: comment`);
       break;
     case "voting_opened":
       assert.ok(result.html.includes("Vote now"), `${type}: vote now CTA label`);
@@ -289,10 +265,7 @@ async function assertInstantEvent(type) {
         result.html.includes("https://example.test/votes/milestone/voting"),
         `${type}: vote CTA href`,
       );
-      assert.ok(
-        !result.html.includes("View proposal"),
-        `${type}: no proposal card CTA`,
-      );
+      assert.ok(!result.html.includes("View proposal"), `${type}: no proposal card CTA`);
       break;
     case "results_published":
       assert.ok(result.html.includes("View results"), `${type}: view results CTA label`);
@@ -300,10 +273,7 @@ async function assertInstantEvent(type) {
         result.html.includes("https://example.test/results/milestone"),
         `${type}: results CTA href`,
       );
-      assert.ok(
-        !result.html.includes("View proposal"),
-        `${type}: no proposal card CTA`,
-      );
+      assert.ok(!result.html.includes("View proposal"), `${type}: no proposal card CTA`);
       break;
     default:
       break;
@@ -341,11 +311,7 @@ async function assertCommentDigest() {
 async function runOnly(target) {
   if (target === "comment") {
     const commentDigest = await assertCommentDigest();
-    await maybeSendDevSample(
-      "digest-new-comment",
-      commentDigest.subject,
-      commentDigest.html,
-    );
+    await maybeSendDevSample("digest-new-comment", commentDigest.subject, commentDigest.html);
     console.log("email-events.test.js: --only comment passed");
     return;
   }
@@ -365,29 +331,17 @@ async function runAll() {
     instantEventFixture("submission_confirmed"),
     { brand: BRAND },
   );
-  await maybeSendDevSample(
-    "instant-sample",
-    sampleInstant.subject,
-    sampleInstant.html,
-  );
+  await maybeSendDevSample("instant-sample", sampleInstant.subject, sampleInstant.html);
 
   const commentDigest = await assertCommentDigest();
-  await maybeSendDevSample(
-    "digest-new-comment",
-    commentDigest.subject,
-    commentDigest.html,
-  );
+  await maybeSendDevSample("digest-new-comment", commentDigest.subject, commentDigest.html);
 
   console.log("email-events.test.js: all checks passed");
 }
 
 async function runCronCases() {
   const votingOpened = await assertInstantEvent("voting_opened");
-  await maybeSendDevSample(
-    "instant-voting_opened",
-    votingOpened.subject,
-    votingOpened.html,
-  );
+  await maybeSendDevSample("instant-voting_opened", votingOpened.subject, votingOpened.html);
 
   const resultsPublished = await assertInstantEvent("results_published");
   await maybeSendDevSample(
@@ -397,11 +351,7 @@ async function runCronCases() {
   );
 
   const commentDigest = await assertCommentDigest();
-  await maybeSendDevSample(
-    "digest-new-comment",
-    commentDigest.subject,
-    commentDigest.html,
-  );
+  await maybeSendDevSample("digest-new-comment", commentDigest.subject, commentDigest.html);
 
   console.log("email-events.test.js: cron cases sent (comment, voting_opened, results_published)");
 }

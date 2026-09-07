@@ -8,7 +8,9 @@ function normalizeRecipient(to) {
 }
 
 function normalizeProvider(raw) {
-  const p = String(raw || "mailtrap").trim().toLowerCase();
+  const p = String(raw || "mailtrap")
+    .trim()
+    .toLowerCase();
   if (p === "gmail" || p === "google" || p === "google_workspace" || p === "workspace") {
     return "google";
   }
@@ -24,15 +26,7 @@ export function getEmailProvider() {
  * Generic email transport entry point.
  * Supports Mailtrap (sandbox) and Google Workspace (Gmail API + service account).
  */
-export async function send({
-  from,
-  to,
-  subject,
-  html,
-  text,
-  headers = {},
-  category,
-}) {
+export async function send({ from, to, subject, html, text, headers = {}, category }) {
   const provider = getEmailProvider();
 
   const recipients = normalizeRecipient(to);
@@ -51,7 +45,7 @@ export async function send({
       }).then((result) => ({
         messageId: result?.message_ids?.[0] ?? null,
         providerResponse: result,
-      }))
+      })),
     );
   }
 
@@ -66,11 +60,9 @@ export async function send({
         text,
         headers,
         category,
-      })
+      }),
     );
   }
 
-  throw new Error(
-    `Unknown EMAIL_PROVIDER: ${provider}. Use mailtrap or google.`,
-  );
+  throw new Error(`Unknown EMAIL_PROVIDER: ${provider}. Use mailtrap or google.`);
 }

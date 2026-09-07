@@ -21,14 +21,7 @@ const FORBIDDEN = [
   /from\s+["']\.\.\/.*\/koios\.js["']/,
 ];
 
-const SKIP_DIRS = new Set([
-  "node_modules",
-  ".git",
-  "__frontend",
-  "coverage",
-  "dist",
-  "docs",
-]);
+const SKIP_DIRS = new Set(["node_modules", ".git", "__frontend", "coverage", "dist", "docs"]);
 
 async function* walk(dir) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -74,10 +67,7 @@ for (const rel of [
 }
 
 if (missingLocals.length) {
-  console.error(
-    "Local helper files must remain deleted:",
-    missingLocals.join(", "),
-  );
+  console.error("Local helper files must remain deleted:", missingLocals.join(", "));
   process.exit(1);
 }
 

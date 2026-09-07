@@ -22,15 +22,11 @@ const source = await fs.readFile(proposalsPath, "utf8");
 const checks = [
   {
     ok: schema.includes('"metaData.treasuryDonationTxHash": 1'),
-    message:
-      "Missing unique index key on metaData.treasuryDonationTxHash (#418).",
+    message: "Missing unique index key on metaData.treasuryDonationTxHash (#418).",
   },
   {
-    ok: !/index\(\s*\{\s*voteId:\s*1,\s*"metaData\.treasuryDonationTxHash"/.test(
-      schema,
-    ),
-    message:
-      "Treasury hash unique index must be global (no voteId in key) (#418).",
+    ok: !/index\(\s*\{\s*voteId:\s*1,\s*"metaData\.treasuryDonationTxHash"/.test(schema),
+    message: "Treasury hash unique index must be global (no voteId in key) (#418).",
   },
   {
     ok:
@@ -41,7 +37,8 @@ const checks = [
       "Treasury hash index must be unique with partialFilterExpression excluding draft/archived and empty hashes (#418).",
   },
   {
-    ok: source.includes('from "../../../helper/mongoErrors.js"') &&
+    ok:
+      source.includes('from "../../../helper/mongoErrors.js"') &&
       source.includes("isDuplicateKeyError"),
     message: "proposals route must import isDuplicateKeyError (#418).",
   },
@@ -50,8 +47,7 @@ const checks = [
       source.includes("isTreasuryTxHashDuplicateKeyError") &&
       source.includes("sendTreasuryTxHashAlreadyUsed") &&
       source.includes("This transaction hash is already used by another proposal"),
-    message:
-      "POST/PUT must map treasury E11000 to the already-used 400 error tree (#418).",
+    message: "POST/PUT must map treasury E11000 to the already-used 400 error tree (#418).",
   },
 ];
 

@@ -49,7 +49,7 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true, // Important for cookies
-  })
+  }),
 );
 app.use("/api", checkDatabaseConnectionMW); // Check database connection for all API routes
 
@@ -63,7 +63,10 @@ async function startServer() {
       try {
         await warnUnloadableExcludeScripts();
       } catch (err) {
-        console.error("Failed to validate Vote.excludeScript paths at startup:", err?.message ?? err);
+        console.error(
+          "Failed to validate Vote.excludeScript paths at startup:",
+          err?.message ?? err,
+        );
       }
     }
 
@@ -114,26 +117,18 @@ async function startServer() {
       console.error(`Error processing request: ${err.message}`);
       res.status(err.status || 500).json({
         status: "error",
-        message:
-          process.env.NODE_ENV === "production"
-            ? "Internal server error"
-            : err.message,
+        message: process.env.NODE_ENV === "production" ? "Internal server error" : err.message,
       });
     });
 
     // Start listening
     const server = app.listen(PORT, () => {
       console.log(
-        `Server running on port ${PORT} in ${process.env.NODE_ENV || "development"
-        } mode`
+        `Server running on port ${PORT} in ${process.env.NODE_ENV || "development"} mode`,
       );
       if (!isDatabaseConnected()) {
-        console.warn(
-          "Server started without database connection. Some features may not work."
-        );
-        console.info(
-          "The application will automatically try to reconnect to the database."
-        );
+        console.warn("Server started without database connection. Some features may not work.");
+        console.info("The application will automatically try to reconnect to the database.");
       }
     });
 
@@ -160,9 +155,7 @@ async function startServer() {
         try {
           await disconnectFromDatabase();
         } catch (disconnectErr) {
-          console.error(
-            `Error disconnecting from MongoDB: ${disconnectErr.message}`
-          );
+          console.error(`Error disconnecting from MongoDB: ${disconnectErr.message}`);
           clearTimeout(forceTimer);
           process.exit(1);
           return;

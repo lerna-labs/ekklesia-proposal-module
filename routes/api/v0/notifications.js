@@ -54,7 +54,7 @@ function buildVerifyToken({ userId, email, jti }) {
       jti,
     },
     process.env.JWT_SECRET,
-    { expiresIn: MAGIC_LINK_TTL }
+    { expiresIn: MAGIC_LINK_TTL },
   );
 }
 
@@ -112,42 +112,37 @@ router.get("/", isAuthenticated, async (req, res) => {
   }
 });
 
-router.delete(
-  "/pending",
-  isAuthenticated,
-  notificationsWriteLimiter,
-  async (req, res) => {
-    try {
-      const userId = String(req.userId);
-      const userDoc = await User.findById(userId).select("notification").lean();
-      if (!userDoc?.notification?.pendingEmail) {
-        return res.status(400).json({
-          status: "error",
-          message: "No pending email address to cancel.",
-        });
-      }
-
-      await User.updateOne(
-        { _id: userId },
-        {
-          $unset: {
-            "notification.pendingEmail": "",
-            "notification.verificationIssuedAt": "",
-          },
-        },
-      );
-
-      const updatedUser = await User.findById(userId).select("notification").lean();
-      return res.status(200).json(getNotificationState(updatedUser));
-    } catch (error) {
-      console.error("DELETE /api/v0/notifications/pending error:", error);
-      return res.status(500).json({
+router.delete("/pending", isAuthenticated, notificationsWriteLimiter, async (req, res) => {
+  try {
+    const userId = String(req.userId);
+    const userDoc = await User.findById(userId).select("notification").lean();
+    if (!userDoc?.notification?.pendingEmail) {
+      return res.status(400).json({
         status: "error",
-        message: "Failed to cancel pending email.",
+        message: "No pending email address to cancel.",
       });
     }
-  },
-);
+
+    await User.updateOne(
+      { _id: userId },
+      {
+        $unset: {
+          "notification.pendingEmail": "",
+          "notification.verificationIssuedAt": "",
+        },
+      },
+    );
+
+    const updatedUser = await User.findById(userId).select("notification").lean();
+    return res.status(200).json(getNotificationState(updatedUser));
+  } catch (error) {
+    console.error("DELETE /api/v0/notifications/pending error:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to cancel pending email.",
+    });
+  }
+});
 
 router.put(
   "/",
@@ -155,135 +150,132 @@ router.put(
   notificationsWriteLimiter,
   notificationsVerifyDispatchLimiter,
   async (req, res) => {
-  try {
-    const userId = String(req.userId);
-    const scheduleRaw = req.body?.schedule;
-    const emailRaw = req.body?.email;
-    const updates = {};
-    const unsets = {};
-    let emailSendFailed = false;
-    let verifyUrl = null;
+    try {
+      const userId = String(req.userId);
+      const scheduleRaw = req.body?.schedule;
+      const emailRaw = req.body?.email;
+      const updates = {};
+      const unsets = {};
+      let emailSendFailed = false;
+      let verifyUrl = null;
 
-    if (scheduleRaw != null) {
-      const schedule = String(scheduleRaw).trim().toLowerCase();
-      if (!SCHEDULE_VALUES.has(schedule)) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid schedule. Must be one of: never, 6h, daily.",
-        });
-      }
-      updates["notification.schedule"] = schedule;
-    }
-
-    let normalizedEmail = null;
-    const emailProvided = typeof emailRaw === "string";
-    const emailCleared = emailProvided && emailRaw.trim() === "";
-    if (emailProvided && !emailCleared) {
-      normalizedEmail = emailRaw.trim().toLowerCase();
-      if (!validator.isEmail(normalizedEmail)) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid email address.",
-        });
-      }
-    }
-
-    const userDoc = await User.findById(userId).lean();
-    if (!userDoc) {
-      return res.status(404).json({
-        status: "error",
-        message: "User not found",
-      });
-    }
-
-    const existing = getNotificationState(userDoc);
-    const pendingNormalized = existing.pendingEmail
-      ? String(existing.pendingEmail).toLowerCase()
-      : null;
-    if (
-      pendingNormalized &&
-      normalizedEmail != null &&
-      normalizedEmail !== pendingNormalized
-    ) {
-      return res.status(409).json({
-        status: "error",
-        code: "PENDING_EMAIL_EXISTS",
-        message: `A confirmation is already pending for ${existing.pendingEmail}. Verify it, resend the link, or cancel the pending email before changing it.`,
-      });
-    }
-
-    const emailChanged =
-      normalizedEmail != null &&
-      normalizedEmail !== (existing.email ? String(existing.email).toLowerCase() : null) &&
-      normalizedEmail !== pendingNormalized;
-
-    if (emailChanged) {
-      const verificationIssuedAt = new Date();
-      updates["notification.pendingEmail"] = normalizedEmail;
-      updates["notification.verificationIssuedAt"] = verificationIssuedAt;
-
-      const token = buildVerifyToken({
-        userId,
-        email: normalizedEmail,
-        jti: verificationIssuedAt.getTime(),
-      });
-      verifyUrl = buildVerifyUrl(token);
-    }
-
-    if (emailCleared) {
-      unsets["notification.email"] = "";
-      unsets["notification.pendingEmail"] = "";
-      unsets["notification.verifiedAt"] = "";
-      unsets["notification.verificationIssuedAt"] = "";
-    }
-
-    if (Object.keys(updates).length > 0 || Object.keys(unsets).length > 0) {
-      /** @type {{ $set?: Record<string, unknown>, $unset?: Record<string, string> }} */
-      const updateDoc = {};
-      if (Object.keys(updates).length > 0) updateDoc.$set = updates;
-      if (Object.keys(unsets).length > 0) updateDoc.$unset = unsets;
-      await User.updateOne({ _id: userId }, updateDoc);
-    }
-
-    if (verifyUrl && normalizedEmail) {
-      try {
-        const recipientHash = hashRecipientEmail(normalizedEmail);
-        const sentAfter = new Date(Date.now() - NOTIFICATION_VERIFY_RECIPIENT_COOLDOWN_MS);
-        const recentSend = await EmailSendLedger.findOne({
-          recipientHash,
-          category: MAGIC_LINK_CATEGORY,
-          sentAt: { $gte: sentAfter },
-        })
-          .select("_id")
-          .lean();
-
-        if (!recentSend) {
-          await sendVerificationEmail({ toEmail: normalizedEmail, verifyUrl });
-          await EmailSendLedger.create({
-            recipientHash,
-            category: MAGIC_LINK_CATEGORY,
-            sentAt: new Date(),
+      if (scheduleRaw != null) {
+        const schedule = String(scheduleRaw).trim().toLowerCase();
+        if (!SCHEDULE_VALUES.has(schedule)) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid schedule. Must be one of: never, 6h, daily.",
           });
         }
-      } catch (error) {
-        emailSendFailed = true;
-        console.error("Failed to send notification verification email:", error);
+        updates["notification.schedule"] = schedule;
       }
-    }
 
-    const updatedUser = await User.findById(userId).select("notification").lean();
-    return res.status(200).json({
-      ...getNotificationState(updatedUser),
-      emailSendFailed,
-    });
-  } catch (error) {
-    console.error("PUT /api/v0/notifications error:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Failed to update notification settings",
-    });
-  }
-});
+      let normalizedEmail = null;
+      const emailProvided = typeof emailRaw === "string";
+      const emailCleared = emailProvided && emailRaw.trim() === "";
+      if (emailProvided && !emailCleared) {
+        normalizedEmail = emailRaw.trim().toLowerCase();
+        if (!validator.isEmail(normalizedEmail)) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid email address.",
+          });
+        }
+      }
+
+      const userDoc = await User.findById(userId).lean();
+      if (!userDoc) {
+        return res.status(404).json({
+          status: "error",
+          message: "User not found",
+        });
+      }
+
+      const existing = getNotificationState(userDoc);
+      const pendingNormalized = existing.pendingEmail
+        ? String(existing.pendingEmail).toLowerCase()
+        : null;
+      if (pendingNormalized && normalizedEmail != null && normalizedEmail !== pendingNormalized) {
+        return res.status(409).json({
+          status: "error",
+          code: "PENDING_EMAIL_EXISTS",
+          message: `A confirmation is already pending for ${existing.pendingEmail}. Verify it, resend the link, or cancel the pending email before changing it.`,
+        });
+      }
+
+      const emailChanged =
+        normalizedEmail != null &&
+        normalizedEmail !== (existing.email ? String(existing.email).toLowerCase() : null) &&
+        normalizedEmail !== pendingNormalized;
+
+      if (emailChanged) {
+        const verificationIssuedAt = new Date();
+        updates["notification.pendingEmail"] = normalizedEmail;
+        updates["notification.verificationIssuedAt"] = verificationIssuedAt;
+
+        const token = buildVerifyToken({
+          userId,
+          email: normalizedEmail,
+          jti: verificationIssuedAt.getTime(),
+        });
+        verifyUrl = buildVerifyUrl(token);
+      }
+
+      if (emailCleared) {
+        unsets["notification.email"] = "";
+        unsets["notification.pendingEmail"] = "";
+        unsets["notification.verifiedAt"] = "";
+        unsets["notification.verificationIssuedAt"] = "";
+      }
+
+      if (Object.keys(updates).length > 0 || Object.keys(unsets).length > 0) {
+        /** @type {{ $set?: Record<string, unknown>, $unset?: Record<string, string> }} */
+        const updateDoc = {};
+        if (Object.keys(updates).length > 0) updateDoc.$set = updates;
+        if (Object.keys(unsets).length > 0) updateDoc.$unset = unsets;
+        await User.updateOne({ _id: userId }, updateDoc);
+      }
+
+      if (verifyUrl && normalizedEmail) {
+        try {
+          const recipientHash = hashRecipientEmail(normalizedEmail);
+          const sentAfter = new Date(Date.now() - NOTIFICATION_VERIFY_RECIPIENT_COOLDOWN_MS);
+          const recentSend = await EmailSendLedger.findOne({
+            recipientHash,
+            category: MAGIC_LINK_CATEGORY,
+            sentAt: { $gte: sentAfter },
+          })
+            .select("_id")
+            .lean();
+
+          if (!recentSend) {
+            await sendVerificationEmail({ toEmail: normalizedEmail, verifyUrl });
+            await EmailSendLedger.create({
+              recipientHash,
+              category: MAGIC_LINK_CATEGORY,
+              sentAt: new Date(),
+            });
+          }
+        } catch (error) {
+          emailSendFailed = true;
+          console.error("Failed to send notification verification email:", error);
+        }
+      }
+
+      const updatedUser = await User.findById(userId).select("notification").lean();
+      return res.status(200).json({
+        ...getNotificationState(updatedUser),
+        emailSendFailed,
+      });
+    } catch (error) {
+      console.error("PUT /api/v0/notifications error:", error);
+      return res.status(500).json({
+        status: "error",
+        message: "Failed to update notification settings",
+      });
+    }
+  },
+);
 
 router.post("/resend", isAuthenticated, notificationsResendLimiter, async (req, res) => {
   try {
@@ -304,7 +296,7 @@ router.post("/resend", isAuthenticated, notificationsResendLimiter, async (req, 
         $set: {
           "notification.verificationIssuedAt": verificationIssuedAt,
         },
-      }
+      },
     );
 
     const token = buildVerifyToken({
@@ -355,7 +347,12 @@ router.post("/verify", notificationsVerifyLimiter, async (req, res) => {
       });
     }
 
-    if (decoded?.purpose !== "email-verify" || !decoded?.userId || !decoded?.email || !decoded?.jti) {
+    if (
+      decoded?.purpose !== "email-verify" ||
+      !decoded?.userId ||
+      !decoded?.email ||
+      !decoded?.jti
+    ) {
       return res.status(400).json({
         status: "error",
         message: "Verification link is invalid.",
@@ -399,7 +396,7 @@ router.post("/verify", notificationsVerifyLimiter, async (req, res) => {
         $unset: {
           "notification.pendingEmail": "",
         },
-      }
+      },
     );
 
     const updatedUser = await User.findById(decoded.userId).select("notification").lean();
@@ -436,11 +433,7 @@ router.post("/unsubscribe", notificationsUnsubscribeLimiter, async (req, res) =>
       });
     }
 
-    if (
-      decoded?.purpose !== "notification-unsubscribe" ||
-      !decoded?.userId ||
-      !decoded?.v
-    ) {
+    if (decoded?.purpose !== "notification-unsubscribe" || !decoded?.userId || !decoded?.v) {
       return res.status(400).json({
         status: "error",
         message: "Unsubscribe link is invalid.",
@@ -453,14 +446,12 @@ router.post("/unsubscribe", notificationsUnsubscribeLimiter, async (req, res) =>
     if (!userDoc || userDoc?.notification?.unsubscribeSecret !== decoded.v) {
       return res.status(400).json({
         status: "error",
-        message: "This unsubscribe link is no longer valid. Use notification settings in your account.",
+        message:
+          "This unsubscribe link is no longer valid. Use notification settings in your account.",
       });
     }
 
-    await User.updateOne(
-      { _id: decoded.userId },
-      { $set: { "notification.schedule": "never" } },
-    );
+    await User.updateOne({ _id: decoded.userId }, { $set: { "notification.schedule": "never" } });
 
     const updatedUser = await User.findById(decoded.userId).select("notification").lean();
     return res.status(200).json({

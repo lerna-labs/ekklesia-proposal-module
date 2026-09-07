@@ -17,9 +17,7 @@ const verifyDispatchMaxRaw = Number.parseInt(
   10,
 );
 const NOTIFICATION_VERIFY_DISPATCH_MAX_PER_HOUR =
-  Number.isFinite(verifyDispatchMaxRaw) && verifyDispatchMaxRaw > 0
-    ? verifyDispatchMaxRaw
-    : 5;
+  Number.isFinite(verifyDispatchMaxRaw) && verifyDispatchMaxRaw > 0 ? verifyDispatchMaxRaw : 5;
 
 /**
  * Rate limiter for nonce requests (POST /session).

@@ -17,7 +17,7 @@ const commentLikeSchema = new Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 commentLikeSchema.index({ commentId: 1, userId: 1 }, { unique: true });

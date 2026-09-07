@@ -53,7 +53,6 @@ router.get("/", async (req, res) => {
     return `${days}d ${hours}h ${minutes}m ${secs}s`;
   };
 
-
   return res.json({
     status: "operational",
     message: "System is operational",
@@ -69,12 +68,8 @@ router.get("/", async (req, res) => {
       nodeVersion: process.version,
       memoryUsage: {
         rss: `${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`,
-        heapTotal: `${Math.round(
-          process.memoryUsage().heapTotal / 1024 / 1024
-        )} MB`,
-        heapUsed: `${Math.round(
-          process.memoryUsage().heapUsed / 1024 / 1024
-        )} MB`,
+        heapTotal: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)} MB`,
+        heapUsed: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`,
       },
     },
     frontend: frontendVersion,

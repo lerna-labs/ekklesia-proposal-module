@@ -19,11 +19,9 @@ const checks = [
     message: "Missing Proposal.findOneAndUpdate for live version CAS (F-006).",
   },
   {
-    ok:
-      source.includes("status: \"live\"") &&
-      source.includes("version: expectedVersion"),
+    ok: source.includes('status: "live"') && source.includes("version: expectedVersion"),
     message:
-      "findOneAndUpdate filter must include status: \"live\" and version: expectedVersion (F-006).",
+      'findOneAndUpdate filter must include status: "live" and version: expectedVersion (F-006).',
   },
   {
     ok: source.includes("$inc: { version: 1 }"),
@@ -33,8 +31,7 @@ const checks = [
     ok:
       source.includes("Proposal.deleteOne({ _id: archivedDoc._id })") &&
       source.includes("status(409)"),
-    message:
-      "CAS miss must delete orphan archive and return 409 (F-006).",
+    message: "CAS miss must delete orphan archive and return 409 (F-006).",
   },
 ];
 

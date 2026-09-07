@@ -33,7 +33,13 @@ const proposalSchema = new Schema(
       type: {
         category: {
           type: String,
-          enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
+          enum: [
+            "Inappropriate content",
+            "Spam",
+            "Policy violation",
+            "Duplicate submission",
+            "Other",
+          ],
         },
         userId: String,
         comment: String,
@@ -52,7 +58,7 @@ const proposalSchema = new Schema(
     submittedAt: { type: Date, required: false },
     version: { type: Number, default: 1 },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 // List by proposer (dashboard "my proposals")

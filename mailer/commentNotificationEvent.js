@@ -19,7 +19,7 @@ const commentNotificationEventSchema = new Schema(
     timestamps: true,
     versionKey: false,
     collection: "commentNotificationEvents",
-  }
+  },
 );
 
 commentNotificationEventSchema.index({ recipientUserId: 1, status: 1, createdAt: 1 });

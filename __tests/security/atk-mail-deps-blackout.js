@@ -41,9 +41,7 @@ let healthOk = false;
 let apiBlackout = true;
 for (const p of probes) {
   const res = await fetch(`${API}${p.path}`, { method: p.method });
-  const ok = Array.isArray(p.expect)
-    ? p.expect.includes(res.status)
-    : res.status === p.expect;
+  const ok = Array.isArray(p.expect) ? p.expect.includes(res.status) : res.status === p.expect;
   console.log(`${p.method} ${p.path} -> ${res.status} (${ok ? "ok" : "unexpected"})`);
   if (p.path === "/health" && res.status === 200) healthOk = true;
   if (p.path.startsWith("/api/") && res.status !== 404) apiBlackout = false;

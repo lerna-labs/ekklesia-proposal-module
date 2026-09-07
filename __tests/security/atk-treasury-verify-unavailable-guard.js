@@ -48,15 +48,13 @@ const sourceChecks = [
     message: "503 responses must use TREASURY_VERIFY_UNAVAILABLE_MESSAGE (not provider text).",
   },
   {
-    ok: (source.match(/sendTreasuryValidationFailure\(res,\s*validationResult\)/g) || [])
-      .length >= 2,
+    ok:
+      (source.match(/sendTreasuryValidationFailure\(res,\s*validationResult\)/g) || []).length >= 2,
     message:
       "Both treasury verification call sites (POST create + PUT update) must use sendTreasuryValidationFailure.",
   },
   {
-    ok:
-      source.includes('res.status(503).json({') &&
-      source.includes("Retry-After"),
+    ok: source.includes("res.status(503).json({") && source.includes("Retry-After"),
     message: "Unavailable path must return 503 and pass through Retry-After when present.",
   },
   {
@@ -142,6 +140,4 @@ assert.ok(
   "Genuine validation failures must still surface as Validation failed (400).",
 );
 
-console.log(
-  "Treasury verify unavailable→503 / mismatch→400 guard check passed.",
-);
+console.log("Treasury verify unavailable→503 / mismatch→400 guard check passed.");

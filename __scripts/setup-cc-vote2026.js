@@ -21,8 +21,7 @@ import { Vote } from "../schema/Vote.js";
 
 const SLUG = "cc-vote-2026";
 const TITLE = "Constitutional Committee Election 2026";
-const DESCRIPTION =
-  "Constitutional Committee Election 2026.";
+const DESCRIPTION = "Constitutional Committee Election 2026.";
 
 /** Bech32 stake addresses with vote admin rights. Fill before running. */
 const ADMINS = [];
@@ -140,10 +139,18 @@ async function main() {
     const action = existing ? "updated" : "created";
     console.log(`\n✅ Vote ${action}: ${vote._id}`);
     console.log(`   slug: ${vote.slug}`);
-    console.log(`   submission: ${dates.submissionStartDate.toISOString()} → ${dates.submissionEndDate.toISOString()}`);
-    console.log(`   feedback:   ${dates.feedbackStartDate.toISOString()} → ${dates.feedbackEndDate.toISOString()}`);
-    console.log(`   review:     ${dates.reviewStartDate.toISOString()} → ${dates.reviewEndDate.toISOString()}`);
-    console.log(`   voting:     ${dates.votingStartDate.toISOString()} → ${dates.votingEndDate.toISOString()}`);
+    console.log(
+      `   submission: ${dates.submissionStartDate.toISOString()} → ${dates.submissionEndDate.toISOString()}`,
+    );
+    console.log(
+      `   feedback:   ${dates.feedbackStartDate.toISOString()} → ${dates.feedbackEndDate.toISOString()}`,
+    );
+    console.log(
+      `   review:     ${dates.reviewStartDate.toISOString()} → ${dates.reviewEndDate.toISOString()}`,
+    );
+    console.log(
+      `   voting:     ${dates.votingStartDate.toISOString()} → ${dates.votingEndDate.toISOString()}`,
+    );
   } catch (e) {
     console.error(e);
     exitCode = 1;

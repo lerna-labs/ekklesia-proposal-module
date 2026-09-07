@@ -28,7 +28,9 @@ if (!formatCommentSection.includes('.select("_id name")')) {
 }
 
 if (formatCommentSection.includes('select("-lastLogin')) {
-  console.error("formatComment must not use exclusion-only user select (allows notification leak).");
+  console.error(
+    "formatComment must not use exclusion-only user select (allows notification leak).",
+  );
   process.exit(1);
 }
 
