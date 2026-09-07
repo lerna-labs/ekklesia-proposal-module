@@ -5,7 +5,7 @@
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { toast } from "svelte-sonner";
-  import { getPayload, signData, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
+  import { getPayload, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
   import SignerCommand from "./SignerCommand.svelte";
 
   const dispatch = createEventDispatcher();
@@ -64,7 +64,7 @@
     let signature;
     try {
       signature = JSON.parse(signatureJSON);
-    } catch (e) {
+    } catch (_e) {
       toast.error("Invalid JSON format");
       loading = false;
       return;

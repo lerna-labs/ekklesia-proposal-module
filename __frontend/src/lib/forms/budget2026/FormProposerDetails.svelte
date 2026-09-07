@@ -2,7 +2,7 @@
   /** @see __frontend/docs/budget2026/form-proposer-details.md Version: 1.1.0 */
   import Input from "$lib/components/form/Input.svelte";
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const proposerErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.proposerDetails,

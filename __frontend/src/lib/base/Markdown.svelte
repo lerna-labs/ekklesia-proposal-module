@@ -35,7 +35,7 @@
 </script>
 
 {#if html}
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div
     class="markdown max-w-none {className}"
     data-slot="markdown"
@@ -43,6 +43,7 @@
     onclick={handleContainerClick}
     onkeydown={handleContainerKeydown}
   >
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -- markdown-it html:false + link click intercept -->
     {@html html}
   </div>
 {:else}

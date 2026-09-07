@@ -3,7 +3,6 @@
   import { page } from "$app/state";
   import * as Card from "$lib/components/ui/card";
   import * as Pagination from "$lib/components/ui/pagination";
-  import * as Separator from "$lib/components/ui/separator";
   import ProposalCard from "$lib/ProposalCard.svelte";
   import { Button } from "$lib/components/ui/button";
   import Search from "$lib/Search.svelte";
@@ -112,7 +111,6 @@
   });
   let proposals = $derived(data.proposals.data);
   let proposalPagination = $derived(data.proposals.pagination);
-  let pillars = $derived(data.pillars ?? []);
   const DEFAULT_SORT = "submittedAt";
   const sortFromData = $derived(data.listState?.sort ?? DEFAULT_SORT);
   const ascendingFromData = $derived((data.listState?.direction ?? "desc") !== "desc");

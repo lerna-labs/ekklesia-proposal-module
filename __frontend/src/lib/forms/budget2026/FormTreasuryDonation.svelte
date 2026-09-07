@@ -3,7 +3,7 @@
   /** Pre-submission step: Treasury Donation Verification (content aligned with spec). */
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), proposal, validationErrors } = $props();
 
   /** Errors for this section: metaData.treasuryDonation* so Input/Checkbox can resolve by id. */
   let treasuryDonationErrors = $derived(validationErrors?.properties?.metaData);

@@ -14,13 +14,11 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { budgetRowSchema, COST_CATEGORIES_LIST } from "./Schema.js";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ToolTip from "$lib/components/form/ToolTip.svelte";
-  import { fade } from "svelte/transition";
 
   let {
     value = $bindable([]),
@@ -205,7 +203,6 @@
                   {row.costCategory ?? "—"}
                 </td>
                 <td class="p-3 align-top font-medium">
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                   <button
                     type="button"
                     class="cursor-pointer text-left hover:underline focus:outline-none"

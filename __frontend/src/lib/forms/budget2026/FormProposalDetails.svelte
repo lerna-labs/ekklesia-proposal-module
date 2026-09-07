@@ -2,7 +2,7 @@
   import * as Field from "$lib/components/ui/field/index.js";
   import InputNumber from "$lib/components/form/InputNumber.svelte";
   import FormWorkPackages from "./FormWorkPackages.svelte";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const metaErrors = $derived(validationErrors?.properties?.metaData?.properties ?? {});
   const conversionRateErrors = $derived({

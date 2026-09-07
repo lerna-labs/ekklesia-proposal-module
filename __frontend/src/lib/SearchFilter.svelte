@@ -175,7 +175,9 @@
     if (typeof window !== "undefined" && listStateKey) {
       try {
         window.localStorage.removeItem(listStateKey);
-      } catch (_) {}
+      } catch (_) {
+        // ignore localStorage errors (private mode / quota)
+      }
     }
     const qs = queryStringWithLiteralCommas(searchParams);
     const url = qs ? `${page.url.pathname}?${qs}` : page.url.pathname;

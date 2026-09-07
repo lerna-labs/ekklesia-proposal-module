@@ -73,7 +73,7 @@
           <span class="min-w-0 flex-1" aria-hidden="true"></span>
         </div>
         <ul class="consortium-member-list m-0 list-none space-y-2 p-0">
-          {#each members as member, index (index)}
+          {#each members as _member, index (index)}
             <li>
               <FormConsortiumMemberCard
                 bind:member={formData.metaData.consortium.members[index]}

@@ -7,10 +7,6 @@
   import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import VoteIcon from "@lucide/svelte/icons/vote";
-  import UserIcon from "@lucide/svelte/icons/user";
-  import HomeIcon from "@lucide/svelte/icons/home";
-  import ClockIcon from "@lucide/svelte/icons/clock";
-  import * as Popover from "$lib/components/ui/popover";
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import Markdown from "$lib/base/Markdown.svelte";
   import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
@@ -18,7 +14,6 @@
   import { formatUsd } from "$lib/utils.js";
   import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
   let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
-  let revisionDrawerOpen = $state(false);
 
   function capitalizeFirst(val) {
     const s = (val ?? "").toString();
@@ -58,13 +53,6 @@
   const commentCount = $derived(
     proposal?.commentCount != null ? Number(proposal.commentCount) : null,
   );
-  const proposerHref = $derived(
-    vote?.slug && proposal?.proposerId
-      ? `/votes/${vote.slug}?proposer=${encodeURIComponent(proposal.proposerId)}&page=1`
-      : null,
-  );
-
-  const labelClass = "text-xs font-semibold text-muted-foreground";
 </script>
 
 <Card.Root

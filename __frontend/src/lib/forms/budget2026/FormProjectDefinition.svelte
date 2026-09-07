@@ -2,7 +2,7 @@
   /** @see __frontend/docs/budget2026/form-project-definition.md Version: 1.0.0 */
   import Input from "$lib/components/form/Input.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
   import InputNumber from "$lib/components/form/InputNumber.svelte";
 
   const estimatedDurationErrors = $derived({

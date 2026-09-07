@@ -116,7 +116,6 @@
             <li>
               <Card.Root class="py-2">
                 <Card.Header class="flex flex-row items-start gap-2 py-0 pr-2 pl-3 text-sm">
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                   <div
                     class="objective-text line-clamp-3 flex min-h-8 min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-left focus:outline-none"
                     role="button"

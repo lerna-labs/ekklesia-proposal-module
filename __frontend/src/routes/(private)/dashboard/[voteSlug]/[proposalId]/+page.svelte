@@ -18,7 +18,6 @@
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
-  let saving = $state(false);
   let validationErrors = $state(null);
   let formRef = $state({});
   const formKey = $derived(vote?.form ?? "default");
@@ -48,7 +47,6 @@
       toast.error("Proposal vote is missing.");
       return;
     }
-    saving = true;
     validationErrors = null;
     try {
       const body = { ...payload, voteId: proposal.voteId };
@@ -80,8 +78,6 @@
           : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
       toast.error(msg);
       throw err;
-    } finally {
-      saving = false;
     }
   }
 </script>

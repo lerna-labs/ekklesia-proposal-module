@@ -14,7 +14,6 @@
     required = false,
     disabled = false,
     maxLength,
-    minLength,
     type = "text",
     min,
     max,

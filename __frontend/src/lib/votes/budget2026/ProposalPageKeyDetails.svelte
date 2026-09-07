@@ -2,12 +2,10 @@
   import * as Card from "$lib/components/ui/card";
   import * as Popover from "$lib/components/ui/popover";
   import { Button } from "$lib/components/ui/button";
-  import { Badge } from "$lib/components/ui/badge";
   import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
-  import LinkIcon from "@lucide/svelte/icons/link";
   import HashIcon from "@lucide/svelte/icons/hash";
   import HomeIcon from "@lucide/svelte/icons/home";
   import ShieldCheckIcon from "@lucide/svelte/icons/shield-check";
@@ -17,13 +15,10 @@
   import { toast } from "svelte-sonner";
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import * as Accordion from "$lib/components/ui/accordion/index.js";
   import ShareProposalPopover from "$lib/components/ShareProposalPopover.svelte";
 
-  let { proposal, vote, pillars = [] } = $props();
+  let { proposal, vote } = $props();
 
-  let otherAdminModalOpen = $state(false);
   let linkWarningDialog;
 
   const labelClass = "text-xs font-semibold text-muted-foreground";
@@ -35,14 +30,12 @@
   const totalBudget = $derived(proposal?.metaData?.totalBudget ?? null);
   const conversionRate = $derived(proposal?.metaData?.proposalDetails?.conversionRate ?? 0);
   const administrator = $derived(proposal?.metaData?.administrator ?? "");
-  const otherAdministrator = $derived(proposal?.metaData?.otherAdministrator ?? "");
   const administratorLabel = $derived.by(() => {
     const adm = String(administrator).trim();
     if (adm === "Intersect" || adm === "Yes") return "Intersect";
     if (adm === "Other" || adm === "No") return "Other";
     return adm || null;
   });
-  const isOtherAdministrator = $derived(administrator === "Other" || administrator === "No");
   const estimatedDuration = $derived(proposal?.metaData?.estimatedDuration);
   const submittedAt = $derived(proposal?.submittedAt);
   const updatedAt = $derived(proposal?.updatedAt);

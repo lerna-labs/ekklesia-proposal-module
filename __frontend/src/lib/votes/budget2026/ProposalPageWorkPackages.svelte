@@ -117,7 +117,6 @@
     <ul class="work-package-list mb-1! list-none space-y-2 p-0">
       {#each workPackages as wp, i}
         {@const name = (wp?.name ?? "").toString().trim() || `Work package ${i + 1}`}
-        {@const totalAda = wpTotals[i] ?? 0}
         {@const isExpanded = expanded[i] === true}
         {@const milestones = Array.isArray(wp?.milestones) ? wp.milestones : []}
         {@const noMilestones = wp?.noMilestonesBreakdown === true}

@@ -5,7 +5,6 @@
   import EyeIcon from "@lucide/svelte/icons/eye";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import { writePreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
   const DEBUG_AUTOSAVE = false;
@@ -27,10 +26,6 @@
     /** When true, auto-save interval is paused (e.g. while legal declarations modal is open). */
     autoSavePaused = false,
   } = $props();
-
-  const previewHref = $derived(
-    proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}?preview` : null,
-  );
 
   async function onPreviewClick() {
     if (!vote?.slug || !getPayload) return;
@@ -272,14 +267,12 @@
       try {
         const p = JSON.parse(payloadJson);
         writePreviewPayload(proposalId, p);
-      } catch (_) {}
+      } catch (_) {
+        // ignore localStorage / JSON errors (private mode / quota)
+      }
     }, PREVIEW_DEBOUNCE_MS);
     return () => clearTimeout(id);
   });
-
-  function formatLastSaved(ts) {
-    return formatUtcInstant(ts, { hour: "2-digit", minute: "2-digit" });
-  }
 </script>
 
 <section

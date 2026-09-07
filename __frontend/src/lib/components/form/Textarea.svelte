@@ -21,7 +21,6 @@
     notPublic = false,
     required = false,
     maxLength,
-    minLength,
     class: className,
   } = $props();
 
