@@ -3,7 +3,7 @@
   import * as Tabs from "$lib/components/ui/tabs/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { Button } from "$lib/components/ui/button";
   import { toast } from "svelte-sonner";
   import { goto, invalidateAll } from "$app/navigation";
   import {
@@ -63,8 +63,6 @@
     return () => window.removeEventListener("click", handleClick, true);
   });
 
-  const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
-  const userTypes = USER_TYPES.split(",");
   const multisigEnabledByEnv = import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
 
   $effect(() => {

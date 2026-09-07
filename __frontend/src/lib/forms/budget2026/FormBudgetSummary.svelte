@@ -3,7 +3,7 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const workPackages = $derived(formData.metaData?.proposalDetails?.workPackages ?? []);
   const conversionRateNum = $derived.by(() => {
@@ -31,9 +31,6 @@
     });
   });
   const grandTotalAda = $derived(summaryRows.reduce((sum, r) => sum + r.totalAda, 0));
-  const grandTotalUsd = $derived(
-    conversionRateNum != null ? grandTotalAda * conversionRateNum : null,
-  );
 
   const administrator = $derived(formData.metaData?.administrator ?? "");
   const isIntersect = $derived(administrator === "Intersect");

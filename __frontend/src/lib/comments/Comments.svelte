@@ -6,11 +6,9 @@
   import { fetchJson } from "./fetchJson.js";
   import { commentAuthorLabel as authorLabel } from "./commentAuthorLabel.js";
   import CommentsHeader from "./CommentsHeader.svelte";
-  import CommentCard from "./CommentCard.svelte";
   import CommentsAddReplyDialog from "./CommentsAddReplyDialog.svelte";
   import CommentsEditDialog from "./CommentsEditDialog.svelte";
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
-  import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
   import {
     feedbackActionsOpen,

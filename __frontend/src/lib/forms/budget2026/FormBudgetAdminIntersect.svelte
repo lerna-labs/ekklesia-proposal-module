@@ -5,7 +5,7 @@
   import SelectCountries from "$lib/components/form/SelectCountries.svelte";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const COMPANY_FIELDS = [
     "legalEntityName",

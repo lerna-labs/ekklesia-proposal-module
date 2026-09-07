@@ -5,13 +5,12 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
-  import { getLocalTimeZone, today } from "@internationalized/date";
+  import { getLocalTimeZone } from "@internationalized/date";
 
   let {
     id,
     required,
     label,
-    placeholder,
     value = $bindable(),
     minValue,
     maxValue,

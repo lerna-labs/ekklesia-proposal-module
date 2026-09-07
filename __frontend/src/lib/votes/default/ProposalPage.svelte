@@ -6,13 +6,10 @@
   let {
     proposal,
     vote,
-    pillars = [],
-    commentCount,
     backToVoteUrl = "",
     voteUrl = "",
     currentVersionHref = null,
     showComments = false,
-    commentsHref = "",
     isWithdrawn = false,
   } = $props();
 

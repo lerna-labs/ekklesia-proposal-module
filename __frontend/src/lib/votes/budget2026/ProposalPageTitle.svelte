@@ -15,10 +15,6 @@
 
   let revisionDrawerOpen = $state(false);
 
-  const showVersionBadge = $derived(
-    (proposal?.version != null && proposal.version > 1) ||
-      (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
-  );
   const resolvedCommentCount = $derived.by(() => {
     if (commentCount != null) {
       const fromProp = Number(commentCount);

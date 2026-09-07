@@ -5,21 +5,13 @@
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import FormPillarCard from "./FormPillarCard.svelte";
 
-  let {
-    formData = $bindable(),
-    vote,
-    pillars: pillarOptions = [],
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), pillars: pillarOptions = [], validationErrors } = $props();
 
   let sfErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.strategyFramework ??
       validationErrors?.properties?.strategyFramework,
   );
   let pillarsError = $derived(sfErrors?.properties?.pillars?.errors?.[0]);
-  let pillarRationaleError = $derived(sfErrors?.properties?.pillarRationale?.errors?.[0]);
-  let kpiAlignmentError = $derived(sfErrors?.properties?.kpiAlignment?.errors?.[0]);
 </script>
 
 <Field.Set class="space-y-1">

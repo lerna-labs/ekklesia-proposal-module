@@ -1,7 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import { Button } from "$lib/components/ui/button/index.js";
-  import { getWallets, enableWallet, checkNetwork, getSignerAddress } from "./WalletConnect.js";
+  import { getWallets, enableWallet, getSignerAddress } from "./WalletConnect.js";
   import { onMount, createEventDispatcher } from "svelte";
   import { toast } from "svelte-sonner";
   const dispatch = createEventDispatcher();

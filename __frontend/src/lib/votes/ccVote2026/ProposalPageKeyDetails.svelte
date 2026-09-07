@@ -15,7 +15,7 @@
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import { shortenString } from "$lib/utils.js";
   import Markdown from "$lib/base/Markdown.svelte";
-  import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
+  import { buildSocialRows, toText } from "./proposalPageUtils.js";
 
   let { proposal, vote } = $props();
 

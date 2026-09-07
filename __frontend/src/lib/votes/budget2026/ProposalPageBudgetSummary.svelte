@@ -5,7 +5,6 @@
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
 
   let { proposal } = $props();
   let expandedPriorFunding = $state(true);

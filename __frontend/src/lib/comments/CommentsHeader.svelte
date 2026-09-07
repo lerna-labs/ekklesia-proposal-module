@@ -21,7 +21,6 @@
     pendingProposer = $bindable(false),
     pendingDrep = $bindable(false),
     pendingAdmin = $bindable(false),
-    userTypeFilter = [],
     hasActiveSort,
     hasActiveFilter,
     onApplySort,
