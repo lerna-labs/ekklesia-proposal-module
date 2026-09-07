@@ -6,8 +6,7 @@
 
   let token = $derived(data?.token ?? null);
   let state = $derived(
-    data?.state ??
-      (data?.processing ? "processing" : token ? "processing" : "invalid"),
+    data?.state ?? (data?.processing ? "processing" : token ? "processing" : "invalid"),
   );
 
   let isSuccess = $derived(state === "success");
@@ -25,11 +24,14 @@
       return "You will no longer receive proposal and vote notification emails. You can turn notifications back on anytime from your dashboard.";
     }
     if (isInvalid) {
-      return data?.message ??
-        "This link is no longer valid. Open your dashboard to change notification settings.";
+      return (
+        data?.message ??
+        "This link is no longer valid. Open your dashboard to change notification settings."
+      );
     }
-    return data?.message ??
-      "We could not complete unsubscribe. Please try again from your dashboard.";
+    return (
+      data?.message ?? "We could not complete unsubscribe. Please try again from your dashboard."
+    );
   });
 </script>
 
@@ -39,9 +41,9 @@
       <Card.Title>{title}</Card.Title>
     </Card.Header>
     <Card.Content class="space-y-4">
-      <p class="text-sm text-muted-foreground">{message}</p>
+      <p class="text-muted-foreground text-sm">{message}</p>
       {#if data?.message && isUnexpected}
-        <p class="text-sm text-destructive">{data.message}</p>
+        <p class="text-destructive text-sm">{data.message}</p>
       {/if}
       <Button href="/dashboard" class="w-full sm:w-auto">Back to dashboard</Button>
     </Card.Content>

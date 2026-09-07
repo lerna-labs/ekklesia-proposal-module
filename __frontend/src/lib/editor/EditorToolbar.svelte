@@ -82,9 +82,7 @@
         class="toolbar-item spaced"
         class:active={blockType === "quote"}
         title={blockType === "quote" ? "Unquote" : "Quote"}
-        aria-label={blockType === "quote"
-          ? "Remove quote formatting"
-          : "Format as quote"}
+        aria-label={blockType === "quote" ? "Remove quote formatting" : "Format as quote"}
       >
         <i class="icon quote"></i>
       </button>

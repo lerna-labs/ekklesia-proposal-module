@@ -9,11 +9,7 @@
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
   import FormWorkPackagesObjectives from "./FormWorkPackagesObjectives.svelte";
 
-  let {
-    draft = $bindable({}),
-    draftErrors = null,
-    idPrefix = "wp",
-  } = $props();
+  let { draft = $bindable({}), draftErrors = null, idPrefix = "wp" } = $props();
 
   /** Form components look up errors by id: validationErrors.properties[id]. Backend returns keys like "name", "summary". Map to prefixed id. */
   function validationErrorsForField(fieldKey) {
@@ -41,13 +37,11 @@
   />
 
   <div class="space-y-1">
-    <h4>
-      Please describe this Work Package at a high level
-    </h4>
-    <p class="text-sm text-muted-foreground">
-      Describe the main activities and, where relevant, the key outputs or
-      deliverables. The goal is to give reviewers enough context to understand
-      what this work covers, without requiring a detailed delivery plan.
+    <h4>Please describe this Work Package at a high level</h4>
+    <p class="text-muted-foreground text-sm">
+      Describe the main activities and, where relevant, the key outputs or deliverables. The goal is
+      to give reviewers enough context to understand what this work covers, without requiring a
+      detailed delivery plan.
     </p>
   </div>
 
@@ -64,9 +58,7 @@
   />
 
   <div class="space-y-1">
-    <h4>
-      What is this work package intended to achieve?
-    </h4>
+    <h4>What is this work package intended to achieve?</h4>
   </div>
 
   <FormWorkPackagesObjectives
@@ -75,14 +67,11 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4>
-      Why does this work matter to Cardano, and how will success be measured?
-    </h4>
-    <p class="text-sm text-muted-foreground">
-      Describe what will change or improve for Cardano as a result of this
-      work package, and why that change justifies the investment. Then define
-      one or more metrics that will be used to assess whether the expected
-      value has been achieved.
+    <h4>Why does this work matter to Cardano, and how will success be measured?</h4>
+    <p class="text-muted-foreground text-sm">
+      Describe what will change or improve for Cardano as a result of this work package, and why
+      that change justifies the investment. Then define one or more metrics that will be used to
+      assess whether the expected value has been achieved.
     </p>
   </div>
 
@@ -109,10 +98,8 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4>
-      Is this a new initiative or a continuation of existing work?
-    </h4>
-    <p class="text-sm text-muted-foreground">
+    <h4>Is this a new initiative or a continuation of existing work?</h4>
+    <p class="text-muted-foreground text-sm">
       Select the option that best describes the nature of this work package.
     </p>
   </div>
@@ -130,10 +117,8 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4>
-      How would you classify the primary nature of this work proposal?
-    </h4>
-    <p class="text-sm text-muted-foreground">
+    <h4>How would you classify the primary nature of this work proposal?</h4>
+    <p class="text-muted-foreground text-sm">
       This helps reviewers understand whether the work is primarily technical or non-technical.
     </p>
   </div>
@@ -151,10 +136,7 @@
   />
 
   <div class="mt-4 space-y-1">
-    <h4>
-      Is there any extra material you would like to share about this work
-      package?
-    </h4>
+    <h4>Is there any extra material you would like to share about this work package?</h4>
   </div>
 
   <LinkListEditor

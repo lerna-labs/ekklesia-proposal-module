@@ -9,11 +9,7 @@
   import Textarea from "$lib/components/form/Textarea.svelte";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
 
-  let {
-    open = $bindable(false),
-    proposal = null,
-    onSuccess = () => {},
-  } = $props();
+  let { open = $bindable(false), proposal = null, onSuccess = () => {} } = $props();
 
   let category = $state("");
   let comment = $state("");
@@ -31,13 +27,7 @@
   const withdrawSchema = z.object({
     category: z
       .enum(
-        [
-          "Inappropriate content",
-          "Spam",
-          "Policy violation",
-          "Duplicate submission",
-          "Other",
-        ],
+        ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
         {
           message: "Please select a reason.",
         },
@@ -71,17 +61,13 @@
     validationErrors = null;
     submitting = true;
     try {
-      const res = await api.fetch(
-        fetch,
-        `/proposals/${proposal._id}/withdraw`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            category: result.data.category,
-            comment: result.data.comment,
-          }),
-        },
-      );
+      const res = await api.fetch(fetch, `/proposals/${proposal._id}/withdraw`, {
+        method: "PUT",
+        body: JSON.stringify({
+          category: result.data.category,
+          comment: result.data.comment,
+        }),
+      });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         toast.error(err?.message ?? "Failed to withdraw proposal");
@@ -99,25 +85,23 @@
 </script>
 
 <AlertDialog.Root bind:open>
-  <AlertDialog.Content class="sm:max-w-md max-h-[90dvh] flex flex-col min-h-0">
+  <AlertDialog.Content class="flex max-h-[90dvh] min-h-0 flex-col sm:max-w-md">
     <AlertDialog.Header class="shrink-0">
       <AlertDialog.Title>Withdraw Proposal</AlertDialog.Title>
       <AlertDialog.Description>
         {#if proposal}
           <div
-            class="mt-2 outline-destructive p-2 rounded-md border-destructive border-2 text-destructive text-medium"
+            class="outline-destructive border-destructive text-destructive text-medium mt-2 rounded-md border-2 p-2"
           >
-            You are about to withdraw Proposal "{proposal.title ??
-              proposal._id}". This proposal will be marked as withdrawn and
-            removed from the vote. For transparency reasons withdrawn proposals
-            remain visible to the public including your withdrawal reason and
-            comment. Proceed with caution, withdrawing a proposal cannot be
-            undone.
+            You are about to withdraw Proposal "{proposal.title ?? proposal._id}". This proposal
+            will be marked as withdrawn and removed from the vote. For transparency reasons
+            withdrawn proposals remain visible to the public including your withdrawal reason and
+            comment. Proceed with caution, withdrawing a proposal cannot be undone.
           </div>
         {/if}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 overflow-y-auto min-h-0 flex-1">
+    <div class="grid min-h-0 flex-1 gap-4 overflow-y-auto">
       <div class="grid gap-2">
         <Label.Root for="withdraw-reason" class="gap-0">
           Withdrawal Reason
@@ -130,9 +114,8 @@
         >
           <Select.Trigger
             id="withdraw-reason"
-            class="w-full aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
-            aria-invalid={validationErrors?.properties?.category?.errors
-              ?.length > 0}
+            class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 w-full aria-invalid:ring-[3px]"
+            aria-invalid={validationErrors?.properties?.category?.errors?.length > 0}
             aria-label="Withdrawal reason"
           >
             <span class="line-clamp-1">{triggerContent}</span>
@@ -163,13 +146,11 @@
         />
       </div>
     </div>
-    <AlertDialog.Footer class="gap-1 shrink-0">
-      <AlertDialog.Cancel disabled={submitting} class="cursor-pointer">
-        Cancel
-      </AlertDialog.Cancel>
+    <AlertDialog.Footer class="shrink-0 gap-1">
+      <AlertDialog.Cancel disabled={submitting} class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
         disabled={submitting}
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmWithdraw}
       >
         <Trash2Icon class="size-4" />

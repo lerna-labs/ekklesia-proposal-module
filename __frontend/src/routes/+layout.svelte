@@ -12,17 +12,18 @@
 
 <Toaster />
 <VersionCheck />
-<div class="fixed top-0 left-0 right-0 z-50">
+<div class="fixed top-0 right-0 left-0 z-50">
   <SessionExpiryTimer />
 </div>
-<div class="min-h-dvh flex flex-col">
+<div class="flex min-h-dvh flex-col">
   {#if maintenanceModeEnabled}
     <div class="bg-orange-500 px-4 py-2 text-center text-sm font-medium text-white">
-      Ongoing Maintenance until 20:00 UTC. You may experience intermittent issues. Please check back later.
+      Ongoing Maintenance until 20:00 UTC. You may experience intermittent issues. Please check back
+      later.
     </div>
   {/if}
   <Header />
-  <main class="flex-1 flex flex-col">
+  <main class="flex flex-1 flex-col">
     {@render children()}
   </main>
   <Footer />

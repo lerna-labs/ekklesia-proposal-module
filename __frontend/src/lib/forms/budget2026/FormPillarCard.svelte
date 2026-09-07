@@ -17,12 +17,8 @@
   const description = $derived((pillar?.description ?? "").toString().trim());
 
   const colonIndex = $derived(title.indexOf(splitBy));
-  const firstPart = $derived(
-    colonIndex >= 0 ? title.slice(0, colonIndex).trim() : "",
-  );
-  const secondPart = $derived(
-    colonIndex >= 0 ? title.slice(colonIndex + 1).trim() : title,
-  );
+  const firstPart = $derived(colonIndex >= 0 ? title.slice(0, colonIndex).trim() : "");
+  const secondPart = $derived(colonIndex >= 0 ? title.slice(colonIndex + 1).trim() : title);
 
   function toggleSelect(e) {
     e?.preventDefault?.();
@@ -35,24 +31,26 @@
   role={readOnly ? undefined : "button"}
   tabindex={readOnly ? undefined : 0}
   aria-pressed={readOnly ? undefined : selected}
-  class="pt-4 pb-4 rounded-md border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring {readOnly
+  class="focus-visible:ring-ring rounded-md border pt-4 pb-4 focus:outline-none focus-visible:ring-2 {readOnly
     ? 'cursor-default'
     : 'cursor-pointer'} {selected
-    ? 'bg-(--mbo-electric-blue) text-white border-(--mbo-electric-blue)'
-    : 'bg-slate-50 border-muted-foreground/20'} {className}"
+    ? 'border-(--mbo-electric-blue) bg-(--mbo-electric-blue) text-white'
+    : 'border-muted-foreground/20 bg-slate-50'} {className}"
   {...restProps}
   onclick={readOnly ? () => {} : toggleSelect}
-  onkeydown={readOnly ? () => {} : (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleSelect(e);
-    }
-  }}
+  onkeydown={readOnly
+    ? () => {}
+    : (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleSelect(e);
+        }
+      }}
 >
-  <Card.Header class="flex flex-col gap-0.5 pt-0 pb-1 pl-4 pr-4 text-sm">
+  <Card.Header class="flex flex-col gap-0.5 pt-0 pr-4 pb-1 pl-4 text-sm">
     {#if firstPart}
       <div
-        class="flex items-center gap-1.5 shrink-0 {selected
+        class="flex shrink-0 items-center gap-1.5 {selected
           ? 'text-white/80'
           : 'text-muted-foreground'}"
       >
@@ -60,9 +58,9 @@
         <span class="text-xs">{firstPart}</span>
       </div>
     {/if}
-    <div class="min-w-0 w-full">
+    <div class="w-full min-w-0">
       <span
-        class="text-lg font-medium truncate block mt-2 {selected
+        class="mt-2 block truncate text-lg font-medium {selected
           ? 'text-white'
           : 'text-foreground'}"
       >
@@ -71,9 +69,7 @@
     </div>
   </Card.Header>
   <Card.Content
-    class="pl-4 pr-4 pt-0 pb-0 -mt-6 {selected
-      ? 'text-white/90'
-      : 'text-muted-foreground'}"
+    class="-mt-6 pt-0 pr-4 pb-0 pl-4 {selected ? 'text-white/90' : 'text-muted-foreground'}"
   >
     {#if description}
       <div class="text-sm **:first:mt-0 [&_.markdown]:text-inherit">

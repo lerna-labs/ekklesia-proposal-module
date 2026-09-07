@@ -55,7 +55,7 @@
 
 <div class="space-y-3">
   <h2>Track Selection</h2>
-  <p class="text-sm text-muted-foreground pb-4">Which type of candidate are you applying for?</p>
+  <p class="text-muted-foreground pb-4 text-sm">Which type of candidate are you applying for?</p>
 
   <div class="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Track selection">
     {#each TRACKS as t (t.id)}
@@ -66,8 +66,8 @@
         aria-checked={track === t.id}
         disabled={trackLocked}
         class={cn(
-          "flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-center transition-colors min-h-[5.5rem]",
-          trackLocked ? "opacity-80 cursor-not-allowed" : "cursor-pointer",
+          "flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-lg border p-4 text-center transition-colors",
+          trackLocked ? "cursor-not-allowed opacity-80" : "cursor-pointer",
           track === t.id
             ? "border-(--mbo-electric-blue) bg-(--mbo-light-blue) ring-2 ring-(--mbo-sky-blue)/70 dark:border-(--mbo-electric-blue) dark:bg-(--mbo-primary-surface) dark:ring-(--mbo-tangy-blue)/40"
             : "border-border hover:bg-muted/50",
@@ -75,14 +75,19 @@
         onclick={() => requestTrack(/** @type {CcTrack} */ (t.id))}
       >
         <Icon
-          class={cn("size-8 shrink-0", track === t.id ? "text-(--mbo-electric-blue)" : "text-muted-foreground")}
+          class={cn(
+            "size-8 shrink-0",
+            track === t.id ? "text-(--mbo-electric-blue)" : "text-muted-foreground",
+          )}
           strokeWidth={1.5}
           aria-hidden="true"
         />
         <span
           class={cn(
-            "font-medium text-sm",
-            track === t.id ? "text-(--mbo-cardano-blue) dark:text-(--mbo-sky-blue)" : "text-foreground",
+            "text-sm font-medium",
+            track === t.id
+              ? "text-(--mbo-cardano-blue) dark:text-(--mbo-sky-blue)"
+              : "text-foreground",
           )}
         >
           {t.label}
@@ -91,7 +96,7 @@
     {/each}
   </div>
   {#if trackLocked}
-    <p class="text-xs text-muted-foreground">Track cannot be changed for a live proposal.</p>
+    <p class="text-muted-foreground text-xs">Track cannot be changed for a live proposal.</p>
   {/if}
 </div>
 
@@ -100,13 +105,16 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Change track?</AlertDialog.Title>
       <AlertDialog.Description>
-        Switching tracks will clear what you have entered for this proposal (including title, summary, and
-        track-specific fields). This cannot be undone from here.
+        Switching tracks will clear what you have entered for this proposal (including title,
+        summary, and track-specific fields). This cannot be undone from here.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="gap-2">
       <AlertDialog.Cancel onclick={cancelSwitch}>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action class="bg-destructive text-white hover:bg-destructive/90" onclick={confirmSwitch}>
+      <AlertDialog.Action
+        class="bg-destructive hover:bg-destructive/90 text-white"
+        onclick={confirmSwitch}
+      >
         Reset and switch track
       </AlertDialog.Action>
     </AlertDialog.Footer>

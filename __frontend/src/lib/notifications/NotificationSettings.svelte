@@ -87,7 +87,8 @@
       }
       onSaved?.(payload);
     } catch (error) {
-      const message = error?.body?.message ?? error?.message ?? "Could not save notification settings.";
+      const message =
+        error?.body?.message ?? error?.message ?? "Could not save notification settings.";
       toast.error(message);
     } finally {
       submitting = false;
@@ -112,7 +113,8 @@
         toast.success("Verification email sent.");
       }
     } catch (error) {
-      const message = error?.body?.message ?? error?.message ?? "Could not resend verification email.";
+      const message =
+        error?.body?.message ?? error?.message ?? "Could not resend verification email.";
       toast.error(message);
     } finally {
       submitting = false;
@@ -147,15 +149,15 @@
 
 <div class="space-y-4">
   <h3 class="text-base font-semibold">Notification Settings</h3>
-  <p class="text-sm text-muted-foreground">
-    We'll send you a digest of the latest changes and updates to your proposal when you opt-in by providing and
-    verifying your email and frequency below.
+  <p class="text-muted-foreground text-sm">
+    We'll send you a digest of the latest changes and updates to your proposal when you opt-in by
+    providing and verifying your email and frequency below.
   </p>
   <div class="grid gap-4 md:grid-cols-2">
     <Field.Field class="gap-2">
       <Field.Label
         for="notifications-email"
-        class="flex flex-row items-center gap-1 mb-0 pb-0 text-sm font-medium shrink-0 w-fit"
+        class="mb-0 flex w-fit shrink-0 flex-row items-center gap-1 pb-0 text-sm font-medium"
       >
         Email
       </Field.Label>
@@ -177,12 +179,16 @@
     <Field.Field class="gap-2">
       <Field.Label
         for="notifications-schedule"
-        class="flex flex-row items-center gap-1 mb-0 pb-0 text-sm font-medium shrink-0 w-fit"
+        class="mb-0 flex w-fit shrink-0 flex-row items-center gap-1 pb-0 text-sm font-medium"
       >
         Schedule
         <ToolTip content={SCHEDULE_HELP} fieldLabel="Schedule" />
       </Field.Label>
-      <Select.Root type="single" value={schedule} onValueChange={(value) => value != null && (schedule = value)}>
+      <Select.Root
+        type="single"
+        value={schedule}
+        onValueChange={(value) => value != null && (schedule = value)}
+      >
         <Select.Trigger id="notifications-schedule" disabled={submitting} class="w-full">
           <span class="line-clamp-1">{selectedScheduleLabel}</span>
         </Select.Trigger>
@@ -200,7 +206,9 @@
       <span class="text-muted-foreground">Status:</span>
       <Badge
         variant="secondary"
-        class={statusLabel === "Verified" ? "bg-green-600 text-white border-transparent" : undefined}
+        class={statusLabel === "Verified"
+          ? "border-transparent bg-green-600 text-white"
+          : undefined}
       >
         {statusLabel}
       </Badge>
@@ -213,10 +221,22 @@
       {submitting ? "Saving…" : hasExistingEmail ? "Update Settings" : "Save Settings"}
     </Button>
     {#if canResend}
-      <Button type="button" variant="outline" disabled={submitting} onclick={resendVerification} class="cursor-pointer">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={submitting}
+        onclick={resendVerification}
+        class="cursor-pointer"
+      >
         {submitting ? "Sending…" : "Resend"}
       </Button>
-      <Button type="button" variant="outline" disabled={submitting} onclick={cancelPending} class="cursor-pointer">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={submitting}
+        onclick={cancelPending}
+        class="cursor-pointer"
+      >
         Cancel pending
       </Button>
     {/if}

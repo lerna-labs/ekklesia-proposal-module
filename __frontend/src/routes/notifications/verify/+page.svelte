@@ -25,9 +25,11 @@
   });
 
   let message = $derived.by(() => {
-    if (isSuccess) return "Your notification email is confirmed. You can manage settings in your dashboard.";
+    if (isSuccess)
+      return "Your notification email is confirmed. You can manage settings in your dashboard.";
     if (isProcessing) return "Please wait while we confirm your email address.";
-    if (isInvalid) return "This verification link is no longer valid. Request a new email from dashboard settings.";
+    if (isInvalid)
+      return "This verification link is no longer valid. Request a new email from dashboard settings.";
     return "We could not complete verification. Please try again from your dashboard.";
   });
 </script>
@@ -38,9 +40,9 @@
       <Card.Title>{title}</Card.Title>
     </Card.Header>
     <Card.Content class="space-y-4">
-      <p class="text-sm text-muted-foreground">{message}</p>
+      <p class="text-muted-foreground text-sm">{message}</p>
       {#if data?.message && isUnexpected}
-        <p class="text-sm text-destructive">{data.message}</p>
+        <p class="text-destructive text-sm">{data.message}</p>
       {/if}
       <Button href="/dashboard" class="w-full sm:w-auto">Back to dashboard</Button>
     </Card.Content>

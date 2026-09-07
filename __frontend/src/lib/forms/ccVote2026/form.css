@@ -2,7 +2,7 @@
 
 /* Match global h3 (layout.css) — accordion uses h2 for semantics but same visual scale as field group titles */
 form .section-title {
-  @apply text-2xl! font-medium! leading-tight! text-foreground cursor-pointer max-w-4xl mx-auto;
+  @apply text-foreground mx-auto max-w-4xl cursor-pointer text-2xl! leading-tight! font-medium!;
 }
 
 form .section-title:hover {
@@ -27,7 +27,7 @@ form [data-slot="accordion-content"][data-state="open"] {
 }
 
 [id$="-declaration-agreement"] .section-title h2 {
-  @apply text-2xl! font-medium! leading-tight! text-foreground;
+  @apply text-foreground text-2xl! leading-tight! font-medium!;
 }
 
 /* Tighter gap under subsection headings — spacing from space-y-1 only, not form h3 mb-2 */
@@ -58,7 +58,7 @@ form h5 {
 }
 
 form p {
-  @apply text-sm mb-4;
+  @apply mb-4 text-sm;
 }
 
 form strong {
@@ -66,7 +66,7 @@ form strong {
 }
 
 form ul {
-  @apply list-disc mb-4 pl-6 space-y-2;
+  @apply mb-4 list-disc space-y-2 pl-6;
   list-style-type: square;
 }
 
@@ -80,7 +80,7 @@ form ul li {
 }
 
 form ol {
-  @apply list-decimal mb-4 pl-6 space-y-2;
+  @apply mb-4 list-decimal space-y-2 pl-6;
 }
 
 form ol li {

@@ -42,36 +42,40 @@
   const displayReplyCount = $derived.by(() => {
     const api = comment?.replyCount ?? 0;
     const loaded =
-      loadedReplyTotal != null && typeof loadedReplyTotal === "number"
-        ? loadedReplyTotal
-        : null;
+      loadedReplyTotal != null && typeof loadedReplyTotal === "number" ? loadedReplyTotal : null;
     if (loaded != null) return Math.max(api, loaded);
     return api;
   });
 </script>
 
-<Card.Root class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-white opacity-50' : ''}">
+<Card.Root
+  class="mb-4 {isReply ? 'ml-4' : ''} {comment?.withdrawalDetails ? 'bg-white opacity-50' : ''}"
+>
   <Card.Header>
-    <Card.Title class="flex flex-wrap justify-between items-start gap-2 pb-0">
-      <div class="flex flex-wrap items-center gap-1.5 font-medium text-sm">
+    <Card.Title class="flex flex-wrap items-start justify-between gap-2 pb-0">
+      <div class="flex flex-wrap items-center gap-1.5 text-sm font-medium">
         {authorLabel(comment)}
         {#if comment?.author?.type === "admin"}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-orange) text-white">Admin</Badge>
+          <Badge variant="secondary" class="bg-(--mbo-orange) text-xs text-white">Admin</Badge>
         {/if}
         {#if comment?.author?.type === "proposer"}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Proposer</Badge>
+          <Badge variant="secondary" class="bg-(--mbo-electric-blue) text-xs text-white"
+            >Proposer</Badge
+          >
         {/if}
         {#if comment?.author?._id?.startsWith?.("drep")}
-          <Badge variant="secondary" class="text-xs bg-black text-white">DRep</Badge>
+          <Badge variant="secondary" class="bg-black text-xs text-white">DRep</Badge>
         {/if}
         {#if isOwn}
-          <Badge variant="secondary" class="text-xs bg-(--mbo-electric-blue) text-white">Your Comment</Badge>
+          <Badge variant="secondary" class="bg-(--mbo-electric-blue) text-xs text-white"
+            >Your Comment</Badge
+          >
         {/if}
         {#if comment?.withdrawalDetails}
           <Badge variant="destructive" class="text-xs">Withdrawn</Badge>
         {/if}
       </div>
-      <span class="text-muted-foreground font-normal shrink-0 text-xs">
+      <span class="text-muted-foreground shrink-0 text-xs font-normal">
         <Timestamp value={comment?.createdAt} />
       </span>
     </Card.Title>
@@ -89,7 +93,7 @@
           {/if}
         </p>
 
-        <p class="text-black italic text-xs">
+        <p class="text-xs text-black italic">
           Withdrawn on {formatUtcInstant(comment.withdrawalDetails.date, {
             dateStyle: "long",
             timeStyle: "short",
@@ -109,11 +113,7 @@
           size="sm"
           class="text-xs"
           disabled={isOwn || likeDisabled}
-          title={isOwn
-            ? undefined
-            : likeDisabled
-              ? likeDisabledTitle || undefined
-              : undefined}
+          title={isOwn ? undefined : likeDisabled ? likeDisabledTitle || undefined : undefined}
           aria-label={isOwn
             ? undefined
             : likeDisabled
@@ -121,7 +121,7 @@
               : "Like comment"}
           onclick={() => onToggleLike?.(comment)}
         >
-          <Heart class="size-3.5 {comment?.userLiked ? 'fill-current text-destructive' : ''}" />
+          <Heart class="size-3.5 {comment?.userLiked ? 'text-destructive fill-current' : ''}" />
           <span class="ml-1">{comment?.likeCount ?? 0}</span>
         </Button>
       {/if}
@@ -139,18 +139,14 @@
         </Button>
       {/if}
     </div>
-    <div class="flex flex-wrap items-center gap-2 ml-auto">
+    <div class="ml-auto flex flex-wrap items-center gap-2">
       {#if showReplyButton && !comment?.withdrawalDetails}
         <Button
           variant="secondary"
           size="sm"
-          class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          class="bg-(--mbo-electric-blue) text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
           disabled={isOwn || replyDisabled}
-          title={isOwn
-            ? undefined
-            : replyDisabled
-              ? replyDisabledTitle || undefined
-              : undefined}
+          title={isOwn ? undefined : replyDisabled ? replyDisabledTitle || undefined : undefined}
           aria-label={isOwn
             ? undefined
             : replyDisabled
@@ -166,7 +162,7 @@
         <Button
           variant="secondary"
           size="sm"
-          class="text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          class="bg-(--mbo-electric-blue) text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
           onclick={() => onEdit?.(comment)}
         >
           <Pencil class="size-3.5" />
@@ -177,7 +173,7 @@
         <Button
           variant="destructive"
           size="sm"
-          class="text-xs bg-destructive text-white hover:bg-destructive/90"
+          class="bg-destructive hover:bg-destructive/90 text-xs text-white"
           disabled={withdrawDisabled}
           aria-label={withdrawDisabled
             ? `Withdraw comment unavailable. ${withdrawDisabledTitle}`
@@ -185,7 +181,7 @@
           title={withdrawDisabled ? withdrawDisabledTitle || undefined : "Withdraw comment"}
           onclick={() => onWithdraw?.(comment)}
         >
-          <Trash2Icon class="size-4 mr-1" />
+          <Trash2Icon class="mr-1 size-4" />
           Withdraw Comment
         </Button>
       {/if}

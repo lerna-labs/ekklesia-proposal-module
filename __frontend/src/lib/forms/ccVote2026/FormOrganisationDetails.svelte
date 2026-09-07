@@ -11,7 +11,9 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
+  const organisationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.organisation,
+  );
 
   const organisationNameErrors = $derived({
     properties: {
@@ -80,7 +82,9 @@
   }
 
   function onXBlur() {
-    formData.metaData.organisation.xUsername = normalizeXUsername(formData.metaData.organisation.xUsername);
+    formData.metaData.organisation.xUsername = normalizeXUsername(
+      formData.metaData.organisation.xUsername,
+    );
   }
 
   function onLinkedInBlur() {
@@ -136,7 +140,7 @@
     />
   </section>
 
-  <div class="md:grid md:grid-cols-2 gap-6">
+  <div class="gap-6 md:grid md:grid-cols-2">
     <section class="space-y-1.5">
       <h3>Who is the primary contact person?</h3>
       <Input
@@ -171,7 +175,7 @@
     </section>
   </div>
 
-  <div class="md:grid md:grid-cols-2 gap-6">
+  <div class="gap-6 md:grid md:grid-cols-2">
     <section class="space-y-1.5">
       <h3>What is your Pool ID? (if applicable)</h3>
       <Input

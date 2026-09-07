@@ -34,15 +34,12 @@
     loadError = null;
     fetch(`${apiUrl}/countries`)
       .then((res) => {
-        if (!res.ok)
-          throw new Error(res.statusText || "Failed to load countries");
+        if (!res.ok) throw new Error(res.statusText || "Failed to load countries");
         return res.json();
       })
       .then((data) => {
         if (cancelled) return;
-        const raw = Array.isArray(data)
-          ? data
-          : (data?.data ?? data?.countries ?? []);
+        const raw = Array.isArray(data) ? data : (data?.data ?? data?.countries ?? []);
         items = raw
           .map((c) => {
             if (typeof c === "string") return { value: c, label: c };
@@ -67,9 +64,7 @@
   let open = $state(false);
   let searchQuery = $state("");
 
-  const selectedLabel = $derived(
-    items.find((item) => item.value === value)?.label ?? "",
-  );
+  const selectedLabel = $derived(items.find((item) => item.value === value)?.label ?? "");
 
   const displayValue = $derived(open ? searchQuery : selectedLabel);
 
@@ -78,9 +73,7 @@
     q === ""
       ? items
       : items.filter(
-          (item) =>
-            item.label.toLowerCase().includes(q) ||
-            item.value.toLowerCase().includes(q),
+          (item) => item.label.toLowerCase().includes(q) || item.value.toLowerCase().includes(q),
         ),
   );
 
@@ -90,8 +83,8 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1 w-full">
-    <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+  <div class="flex w-full items-center gap-1">
+    <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
       {label}
       {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
@@ -103,16 +96,16 @@
     {#if descriptionProp}
       <ToolTip content={descriptionProp} fieldLabel={label} />
     {/if}
-    <span class="flex-1 min-w-0" aria-hidden="true"></span>
+    <span class="min-w-0 flex-1" aria-hidden="true"></span>
   </div>
   <div
-    class="rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 rounded-md border aria-invalid:ring-[3px]"
     aria-invalid={schemaError ? true : false}
   >
     {#snippet triggerChild({ props })}
       <div
         {...props}
-        class="flex h-9 w-full items-center gap-2 rounded-md border-0 bg-transparent px-3 py-1 text-base shadow-none outline-none focus-within:ring-[3px] focus-within:ring-ring/50 md:text-sm"
+        class="focus-within:ring-ring/50 flex h-9 w-full items-center gap-2 rounded-md border-0 bg-transparent px-3 py-1 text-base shadow-none outline-none focus-within:ring-[3px] md:text-sm"
       >
         <input
           type="text"
@@ -125,14 +118,14 @@
           oninput={(e) => (searchQuery = e.currentTarget.value)}
           onfocus={() => (open = true)}
           disabled={loading}
-          class="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          class="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         <ChevronDownIcon class="size-4 shrink-0 opacity-50" />
       </div>
     {/snippet}
     <Select.Root type="single" bind:value bind:open>
       <Select.Trigger
-        class="w-full justify-between data-placeholder:text-muted-foreground"
+        class="data-placeholder:text-muted-foreground w-full justify-between"
         child={triggerChild}
       />
       <Select.Content
@@ -141,11 +134,9 @@
         onOpenAutoFocus={(e) => e?.preventDefault?.()}
       >
         {#if loading}
-          <div class="py-4 text-center text-sm text-muted-foreground">
-            Loading…
-          </div>
+          <div class="text-muted-foreground py-4 text-center text-sm">Loading…</div>
         {:else if loadError}
-          <div class="py-4 text-center text-sm text-destructive">
+          <div class="text-destructive py-4 text-center text-sm">
             {loadError}
           </div>
         {:else}

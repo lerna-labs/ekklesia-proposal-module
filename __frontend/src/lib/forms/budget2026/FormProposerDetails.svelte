@@ -20,8 +20,8 @@
 <h3>What's the display name of the proposer?</h3>
 
 <p class="text-muted-foreground">
-  Depending if you are submitting this proposal as an individual or a company,
-  this could either be your name or your company name
+  Depending if you are submitting this proposal as an individual or a company, this could either be
+  your name or your company name
 </p>
 
 <Input

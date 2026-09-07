@@ -125,9 +125,19 @@
 
   const voteSlug = $derived(page.params.voteSlug ?? "");
   const listStateKey = $derived(voteSlug ? `votes.listState.${voteSlug}` : "");
-  const LIST_PARAM_KEYS = ["search", "sort", "direction", "limit", "status", "category", "proposer"];
+  const LIST_PARAM_KEYS = [
+    "search",
+    "sort",
+    "direction",
+    "limit",
+    "status",
+    "category",
+    "proposer",
+  ];
   const voteListPath = $derived(voteSlug ? `/votes/${voteSlug}` : "");
-  const voteProposalPathPattern = $derived(voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null);
+  const voteProposalPathPattern = $derived(
+    voteSlug ? new RegExp(`^/votes/${voteSlug}/[^/]+$`) : null,
+  );
   function isVoteListPath(pathname) {
     return Boolean(voteListPath) && pathname === voteListPath;
   }
@@ -154,7 +164,8 @@
     if (typeof window === "undefined" || !listStateKey) return;
     const fromPath = navigation.from?.url.pathname ?? page.url.pathname;
     const toPath = navigation.to?.url.pathname;
-    const leavingVoteContext = isWithinVoteContext(fromPath) && (!toPath || !isWithinVoteContext(toPath));
+    const leavingVoteContext =
+      isWithinVoteContext(fromPath) && (!toPath || !isWithinVoteContext(toPath));
     if (leavingVoteContext) {
       localStorage.removeItem(listStateKey);
       allowStorageRestore = false;
@@ -243,7 +254,7 @@
   };
 </script>
 
-<div class="container mx-auto max-w-4xl py-8 px-4">
+<div class="container mx-auto max-w-4xl px-4 py-8">
   <!-- Vote/Ballot Info -->
   <div class="mb-8">
     <h1>
@@ -282,13 +293,13 @@
     <div class="mt-4 space-y-2">
       {#if vote.year}
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">Year:</span>
+          <span class="text-muted-foreground text-sm font-medium">Year:</span>
           <span class="text-sm">{vote.year}</span>
         </div>
       {/if}
       {#if vote.totalAmount !== undefined}
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">Total Amount:</span>
+          <span class="text-muted-foreground text-sm font-medium">Total Amount:</span>
           <span class="text-sm font-semibold">
             ${vote.totalAmount?.toLocaleString() || "0"}
           </span>
@@ -296,7 +307,7 @@
       {/if}
       {#if vote.status}
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-muted-foreground">Status:</span>
+          <span class="text-muted-foreground text-sm font-medium">Status:</span>
           <span class="text-sm">{vote.status}</span>
         </div>
       {/if}
@@ -320,16 +331,20 @@
             type="button"
             variant="outline"
             size="sm"
-            class="text-xs h-7 pl-0 pr-2 gap-1 bg-(--mbo-orange) text-white border-(--mbo-orange) hover:bg-(--mbo-dark-orange) hover:text-white hover:border-(--mbo-dark-orange)"
+            class="h-7 gap-1 border-(--mbo-orange) bg-(--mbo-orange) pr-2 pl-0 text-xs text-white hover:border-(--mbo-dark-orange) hover:bg-(--mbo-dark-orange) hover:text-white"
             onclick={clearProposerFilter}
           >
-            <XIcon class="size-3.5 shrink-0 -ml-1" aria-hidden="true" />
+            <XIcon class="-ml-1 size-3.5 shrink-0" aria-hidden="true" />
             Show all
           </Button>
         {/if}
       </h2>
       <div class="flex items-center gap-1">
-        <Search placeholder="Search..." class="w-full sm:w-64" onBeforeClear={clearSearchFromStorage} />
+        <Search
+          placeholder="Search..."
+          class="w-full sm:w-64"
+          onBeforeClear={clearSearchFromStorage}
+        />
         <SearchFilter filterOptions={vote.filterOptions ?? []} {vote} voteId={vote._id} />
         <SearchSort sortOptions={vote?.sortOptions ?? []} bind:sort bind:ascending />
       </div>

@@ -17,10 +17,10 @@
 
 <AlertDialog.Root bind:open>
   <AlertDialog.Content
-    class="fixed! inset-0! top-0! left-0! translate-x-0! translate-y-0! max-w-none! w-full min-w-0 overflow-y-auto overflow-x-hidden flex! flex-col items-center justify-start p-4 py-8 bg-transparent! rounded-none! border-0! shadow-none! pointer-events-none box-border"
+    class="pointer-events-none fixed! inset-0! top-0! left-0! box-border flex! w-full max-w-none! min-w-0 translate-x-0! translate-y-0! flex-col items-center justify-start overflow-x-hidden overflow-y-auto rounded-none! border-0! bg-transparent! p-4 py-8 shadow-none!"
   >
     <div
-      class="relative w-full max-w-2xl mx-auto flex flex-col gap-4 rounded-lg border bg-background shadow-lg p-6 my-auto pointer-events-auto shrink-0"
+      class="bg-background pointer-events-auto relative mx-auto my-auto flex w-full max-w-2xl shrink-0 flex-col gap-4 rounded-lg border p-6 shadow-lg"
     >
       <AlertDialog.Header>
         <AlertDialog.Title>Submit your Budget Proposal</AlertDialog.Title>
@@ -28,47 +28,36 @@
 
       <div class="space-y-6 pr-2 text-sm">
         <p class="text-muted-foreground mb-3">
-          This form is used to submit a proposal to the Cardano Ecosystem Budget
-          Process facilitated by Intersect.
+          This form is used to submit a proposal to the Cardano Ecosystem Budget Process facilitated
+          by Intersect.
         </p>
         <p class="text-muted-foreground mb-3">
-          This budget process, designed by the Cardano Budget Committee and
-          supported by Cardano DReps, provides a
-          <strong>
-            transparent, structured, and strategic way to allocate Treasury
-            funds
-          </strong>
+          This budget process, designed by the Cardano Budget Committee and supported by Cardano
+          DReps, provides a
+          <strong> transparent, structured, and strategic way to allocate Treasury funds </strong>
           to initiatives that contribute to the long-term growth of the Cardano ecosystem.
         </p>
         <p class="text-muted-foreground">
-          Proposals submitted through this form will follow the defined
-          budgeting workflow, which includes
+          Proposals submitted through this form will follow the defined budgeting workflow, which
+          includes
           <strong>
-            DRep feedback, DRep Hydra voting, ahead of the on-chain treasury
-            withdrawals.
+            DRep feedback, DRep Hydra voting, ahead of the on-chain treasury withdrawals.
           </strong>
         </p>
 
-        <Card.Root
-          class="w-full border-2 border-destructive rounded-xl p-4 gap-2"
-        >
-          <Card.Header class="pb-0 pt-2">
+        <Card.Root class="border-destructive w-full gap-2 rounded-xl border-2 p-4">
+          <Card.Header class="pt-2 pb-0">
             <Card.Title class="text-red-600">IMPORTANT</Card.Title>
           </Card.Header>
           <Card.Content class="space-y-4 pt-0 text-black!">
             <p class="mb-3">
-              To reduce potential spam and confirm proposer commitment, you'll
-              need to submit a non-refundable <strong>
-                1,000 ADA donation to the treasury
-              </strong>
+              To reduce potential spam and confirm proposer commitment, you'll need to submit a
+              non-refundable <strong> 1,000 ADA donation to the treasury </strong>
               and be logged in to this portal with
               <strong>the same wallet you used to submit the donation.</strong>
-              In the last step of this process you'll be asked to provide proof for
-              this donation.
+              In the last step of this process you'll be asked to provide proof for this donation.
             </p>
-            <p class="mb-3">
-              A separate donation is required for each proposal.
-            </p>
+            <p class="mb-3">A separate donation is required for each proposal.</p>
             <p class="mb-4">
               Read how to in
               <a
@@ -92,10 +81,8 @@
         </Card.Root>
       </div>
 
-      <AlertDialog.Footer class="flex gap-2 shrink-0 mt-4">
-        <AlertDialog.Cancel onclick={() => onCancel?.()}>
-          Cancel
-        </AlertDialog.Cancel>
+      <AlertDialog.Footer class="mt-4 flex shrink-0 gap-2">
+        <AlertDialog.Cancel onclick={() => onCancel?.()}>Cancel</AlertDialog.Cancel>
         <AlertDialog.Action
           disabled={!acknowledged}
           onclick={() => {

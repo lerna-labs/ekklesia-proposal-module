@@ -35,8 +35,8 @@
   );
 </script>
 
-<div class="bg-white box-shadow-lg shadow-lg">
-  <div class="space-y-6 container mx-auto max-w-4xl py-8 px-4">
+<div class="box-shadow-lg bg-white shadow-lg">
+  <div class="container mx-auto max-w-4xl space-y-6 px-4 py-8">
     {#if !currentVersionHref}
       <div class="mb-6">
         <Button
@@ -44,7 +44,7 @@
           variant="ghost"
           size="sm"
           onclick={goBackToList}
-          class="pl-0! gap-1.5 hover:bg-transparent hover:text-black dark:hover:bg-transparent dark:hover:text-foreground text-muted-foreground"
+          class="dark:hover:text-foreground text-muted-foreground gap-1.5 pl-0! hover:bg-transparent hover:text-black dark:hover:bg-transparent"
         >
           <ArrowLeftIcon class="size-4 shrink-0" aria-hidden="true" />
           Back to {vote?.title ?? vote?.name ?? "vote"}

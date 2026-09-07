@@ -111,7 +111,11 @@
 {#if !receivedPayload}
   <Input type="text" {placeholder} class="w-full" bind:value={signerAddress} />
 
-  <Button class="mt-2 w-full" onclick={requestPayload} disabled={!signType || !signerAddress || loading}>
+  <Button
+    class="mt-2 w-full"
+    onclick={requestPayload}
+    disabled={!signType || !signerAddress || loading}
+  >
     {#if !signType}
       Select how to sign
     {:else if !signerAddress}
@@ -126,11 +130,16 @@
 {/if}
 
 {#if receivedPayload}
-  <SignerCommand {signerAddress} {signType} dataHex={receivedPayload.dataHex} payload={receivedPayload} />
+  <SignerCommand
+    {signerAddress}
+    {signType}
+    dataHex={receivedPayload.dataHex}
+    payload={receivedPayload}
+  />
 
   <Textarea
     placeholder="Paste the JSON payload here"
-    class="mt-2 w-full text-xs max-h-[200px] min-h-[80px] resize-none overflow-y-auto"
+    class="mt-2 max-h-[200px] min-h-[80px] w-full resize-none overflow-y-auto text-xs"
     bind:value={signatureJSON}
     disabled={!signerAddress}
     rows={4}

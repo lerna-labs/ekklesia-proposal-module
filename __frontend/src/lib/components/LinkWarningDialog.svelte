@@ -43,19 +43,19 @@
         You are about to open an external link to:
         {#if pendingLink}
           <div
-            class="my-2 flex w-full items-center rounded-md border border-input shadow-xs overflow-hidden bg-background"
+            class="border-input bg-background my-2 flex w-full items-center overflow-hidden rounded-md border shadow-xs"
           >
             <input
               type="text"
               readonly
               value={pendingLink.href}
-              class="flex-1 min-w-0 border-0 bg-transparent pl-2 px-3 py-2 font-mono text-xs outline-none read-only:cursor-default"
+              class="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 pl-2 font-mono text-xs outline-none read-only:cursor-default"
             />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              class="shrink-0 size-8 cursor-pointer border-0 shadow-none hover:bg-transparent rounded-none"
+              class="size-8 shrink-0 cursor-pointer rounded-none border-0 shadow-none hover:bg-transparent"
               aria-label="Copy link"
               onclick={copyLink}
             >
@@ -63,15 +63,12 @@
             </Button>
           </div>
         {/if}
-        Exercise caution and verify the website's authenticity before sharing personal
-        information. To proceed, click 'Continue' otherwise click 'Cancel'.
+        Exercise caution and verify the website's authenticity before sharing personal information. To
+        proceed, click 'Continue' otherwise click 'Cancel'.
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer class="gap-2">
-      <Dialog.Close
-        type="button"
-        class={buttonVariants({ variant: "outline" })}
-      >
+      <Dialog.Close type="button" class={buttonVariants({ variant: "outline" })}>
         Cancel
       </Dialog.Close>
       <Button onclick={confirmOpenLink}>Continue</Button>

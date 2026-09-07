@@ -4,12 +4,7 @@
   let { class: className = "", strokeWidth: _ignored } = $props();
 </script>
 
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 24 24"
-  class={className}
-  aria-hidden="true"
->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class={className} aria-hidden="true">
   <path d="M0 0h24v24H0z" fill="none" />
   <path
     fill="currentColor"

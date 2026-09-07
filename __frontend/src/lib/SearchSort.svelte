@@ -57,11 +57,7 @@
     const resolvedSort = urlSort && valid.has(urlSort) ? urlSort : DEFAULT_SORT;
     const urlDirection = page.url.searchParams.get("direction") ?? "desc";
     const urlLimit = page.url.searchParams.get("limit") ?? defaultLimit;
-    return (
-      resolvedSort !== DEFAULT_SORT ||
-      urlDirection !== "desc" ||
-      urlLimit !== defaultLimit
-    );
+    return resolvedSort !== DEFAULT_SORT || urlDirection !== "desc" || urlLimit !== defaultLimit;
   });
 
   function apply() {
@@ -101,41 +97,38 @@
         class={buttonVariants({
           variant: "outline",
           size: "icon",
-          class: "cursor-pointer relative",
+          class: "relative cursor-pointer",
         })}
         aria-label="Sort options"
       >
         <ArrowUpDownIcon class="size-4" />
         {#if hasActiveSort}
           <span
-            class="absolute top-1.5 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            class="absolute top-1.5 right-1 size-1.5 animate-pulse rounded-full bg-blue-500"
             aria-hidden="true"
           ></span>
         {/if}
       </Popover.Trigger>
       <Popover.Content
         align="end"
-        class="w-72 min-w-0 max-w-[calc(100vw-1rem)] p-3 overflow-hidden"
+        class="w-72 max-w-[calc(100vw-1rem)] min-w-0 overflow-hidden p-3"
       >
-        <div class="text-sm font-medium mb-2">Sort Options</div>
+        <div class="mb-2 text-sm font-medium">Sort Options</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           <div class="space-y-1">
-            <Label class="text-xs text-muted-foreground">Sort by</Label>
-            <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
+            <Label class="text-muted-foreground text-xs">Sort by</Label>
+            <RadioGroup.Root bind:value={pendingSort} class="mt-0 grid gap-0">
               {#each sortOptions as option (option.value)}
                 <div
-                  class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                  class="hover:bg-accent/50 flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
                 >
                   <RadioGroup.Item
                     value={option.value}
                     id="sort-{option.value}"
-                    class="border border-muted-foreground/80"
+                    class="border-muted-foreground/80 border"
                   />
-                  <Label
-                    for="sort-{option.value}"
-                    class="cursor-pointer font-normal"
-                  >
+                  <Label for="sort-{option.value}" class="cursor-pointer font-normal">
                     {option.label}
                   </Label>
                 </div>
@@ -143,16 +136,16 @@
             </RadioGroup.Root>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 min-w-0 overflow-hidden">
-            <div class="space-y-2 min-w-0 overflow-hidden">
-              <Label class="text-xs text-muted-foreground">Direction</Label>
+          <div class="grid min-w-0 grid-cols-2 gap-3 overflow-hidden">
+            <div class="min-w-0 space-y-2 overflow-hidden">
+              <Label class="text-muted-foreground text-xs">Direction</Label>
               <Select.Root
                 type="single"
                 bind:value={pendingDirection}
                 class="min-w-0 overflow-hidden"
               >
                 <Select.Trigger
-                  class="sort-select-trigger w-full min-w-0 max-w-full justify-between text-sm overflow-hidden pl-2 [&>span]:min-w-0 [&>span]:truncate [&>span]:block"
+                  class="sort-select-trigger w-full max-w-full min-w-0 justify-between overflow-hidden pl-2 text-sm [&>span]:block [&>span]:min-w-0 [&>span]:truncate"
                   aria-label="Sort direction"
                 >
                   <span class="min-w-0 truncate">
@@ -160,26 +153,16 @@
                   </span>
                 </Select.Trigger>
                 <Select.Content>
-                  <Select.Item value="up" label="Ascending">
-                    Ascending
-                  </Select.Item>
-                  <Select.Item value="down" label="Descending">
-                    Descending
-                  </Select.Item>
+                  <Select.Item value="up" label="Ascending">Ascending</Select.Item>
+                  <Select.Item value="down" label="Descending">Descending</Select.Item>
                 </Select.Content>
               </Select.Root>
             </div>
-            <div class="space-y-2 min-w-0 overflow-hidden">
-              <Label class="text-xs text-muted-foreground">
-                Entries per Page
-              </Label>
-              <Select.Root
-                type="single"
-                bind:value={pendingLimit}
-                class="min-w-0 overflow-hidden"
-              >
+            <div class="min-w-0 space-y-2 overflow-hidden">
+              <Label class="text-muted-foreground text-xs">Entries per Page</Label>
+              <Select.Root type="single" bind:value={pendingLimit} class="min-w-0 overflow-hidden">
                 <Select.Trigger
-                  class="sort-select-trigger w-full min-w-0 max-w-full justify-between text-sm overflow-hidden pl-2 [&>span]:min-w-0 [&>span]:truncate [&>span]:block"
+                  class="sort-select-trigger w-full max-w-full min-w-0 justify-between overflow-hidden pl-2 text-sm [&>span]:block [&>span]:min-w-0 [&>span]:truncate"
                   aria-label="Entries per page"
                 >
                   <span class="min-w-0 truncate">{pendingLimit} Entries</span>
@@ -196,7 +179,7 @@
             </div>
           </div>
 
-          <div class="border-t pt-3 flex gap-1">
+          <div class="flex gap-1 border-t pt-3">
             {#if hasActiveSort}
               <Button
                 type="button"

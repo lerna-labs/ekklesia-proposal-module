@@ -29,7 +29,8 @@
   });
   const decentralisedErrors = $derived({
     properties: {
-      decentralisedGovernanceImportance: individualErrors?.properties?.decentralisedGovernanceImportance,
+      decentralisedGovernanceImportance:
+        individualErrors?.properties?.decentralisedGovernanceImportance,
     },
   });
   const constitutionalErrors = $derived({

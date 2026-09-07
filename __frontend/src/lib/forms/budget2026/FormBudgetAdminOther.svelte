@@ -5,8 +5,7 @@
 
   const contractingPartyErrors = $derived({
     properties:
-      validationErrors?.properties?.metaData?.properties?.contractingParty
-        ?.properties ?? {},
+      validationErrors?.properties?.metaData?.properties?.contractingParty?.properties ?? {},
   });
   const otherAdministratorErrors = $derived({
     properties: validationErrors?.properties?.metaData?.properties ?? {},
@@ -21,7 +20,7 @@
   required
   maxLength={4000}
   validationErrors={otherAdministratorErrors}
-  class="mb-8 mt-4"
+  class="mt-4 mb-8"
 />
 
 <h3>Are you applying as a registered company or as an individual?</h3>

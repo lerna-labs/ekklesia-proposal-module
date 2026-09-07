@@ -7,28 +7,30 @@
 
   const links = $derived(
     Array.isArray(proposal?.metaData?.supportingInfoLinks)
-      ? proposal.metaData.supportingInfoLinks.filter((link) => link?.url && typeof link.url === "string")
+      ? proposal.metaData.supportingInfoLinks.filter(
+          (link) => link?.url && typeof link.url === "string",
+        )
       : [],
   );
 </script>
 
 {#if links.length > 0}
-  <section class="text-sm mb-8 mt-12" id="supporting-info">
+  <section class="mt-12 mb-8 text-sm" id="supporting-info">
     <h2 class="mb-4">Other Supporting Information</h2>
-    <ul class="space-y-0.5 list-none p-0">
+    <ul class="list-none space-y-0.5 p-0">
       {#each links as link, i (i)}
         <li>
           <a
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+            class="text-primary inline-flex cursor-pointer items-start gap-1 text-sm hover:underline"
             onclick={(e) => {
               e.preventDefault();
               linkWarningDialog.show(link.url, link.title?.trim() || link.url);
             }}
           >
-            <ExternalLinkIcon class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+            <ExternalLinkIcon class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             <span class="min-w-0 wrap-break-word">
               {link.title?.trim() || link.url}
             </span>

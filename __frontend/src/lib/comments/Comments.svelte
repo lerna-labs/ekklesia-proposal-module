@@ -12,7 +12,10 @@
   import CommentsWithdrawDialog from "./CommentsWithdrawDialog.svelte";
   import CommentsReplyLoading from "./CommentsReplyLoading.svelte";
   import CommentThread from "./CommentThread.svelte";
-  import { feedbackActionsOpen, feedbackWindowActionsDisabledTitle } from "$lib/voteWindowPolicy.js";
+  import {
+    feedbackActionsOpen,
+    feedbackWindowActionsDisabledTitle,
+  } from "$lib/voteWindowPolicy.js";
 
   let { proposalId, proposal, vote, readOnly = false } = $props();
 
@@ -69,10 +72,14 @@
   /** Show comment actions chrome (new / reply / like) for live, non-withdrawn proposal context. */
   const showCommentActionChrome = $derived(proposal?.status === "live" && !readOnly);
 
-  const feedbackOpen = $derived(showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow));
+  const feedbackOpen = $derived(
+    showCommentActionChrome && vote && feedbackActionsOpen(vote, policyNow),
+  );
 
   const feedbackClosedTitle = $derived(
-    vote && showCommentActionChrome && !feedbackOpen ? feedbackWindowActionsDisabledTitle(vote, policyNow) : "",
+    vote && showCommentActionChrome && !feedbackOpen
+      ? feedbackWindowActionsDisabledTitle(vote, policyNow)
+      : "",
   );
 
   const canComment = $derived(currentUserId && feedbackOpen);
@@ -80,7 +87,10 @@
   const canLike = $derived(currentUserId && feedbackOpen);
 
   const isVoteAdmin = $derived(
-    currentUserId && vote?.admins && Array.isArray(vote.admins) && vote.admins.includes(currentUserId),
+    currentUserId &&
+      vote?.admins &&
+      Array.isArray(vote.admins) &&
+      vote.admins.includes(currentUserId),
   );
 
   const hasActiveSort = $derived(sort !== "date" || direction !== "desc");
@@ -122,7 +132,9 @@
     pendingAddAfterLogin = false;
     pendingReplyTo = null;
     const isOwnComment =
-      replyToComment && replyToComment.author?._id != null && replyToComment.author._id === currentUserId;
+      replyToComment &&
+      replyToComment.author?._id != null &&
+      replyToComment.author._id === currentUserId;
     if (isOwnComment) {
       toast.info("You can't reply to your own comment.");
       return;
@@ -145,7 +157,8 @@
       error: null,
     };
     try {
-      const userTypeParam = userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
+      const userTypeParam =
+        userTypeFilter.length > 0 ? `&userType=${userTypeFilter.join(",")}` : "";
       const { ok, status, json } = await fetchJson(
         `/comments?proposal=${proposalId}&sort=${sort}&direction=${direction}&page=${page}&limit=20${userTypeParam}`,
       );
@@ -173,7 +186,12 @@
   });
 
   $effect(() => {
-    if (!hasActiveFilter || commentsState.loading || commentsState.error || commentsState.data.length === 0) {
+    if (
+      !hasActiveFilter ||
+      commentsState.loading ||
+      commentsState.error ||
+      commentsState.data.length === 0
+    ) {
       return;
     }
 
@@ -330,7 +348,9 @@
   function feedbackActionBlockedMessage() {
     const now = new Date(policyNowMs);
     if (!vote) return "Vote is not loaded.";
-    return feedbackWindowActionsDisabledTitle(vote, now) || "Comments and replies are not available.";
+    return (
+      feedbackWindowActionsDisabledTitle(vote, now) || "Comments and replies are not available."
+    );
   }
 
   async function openAddDialog(replyingTo = null) {
@@ -575,9 +595,9 @@
   />
 
   {#if commentsState.loading}
-    <p class="text-sm text-muted-foreground">Loading comments…</p>
+    <p class="text-muted-foreground text-sm">Loading comments…</p>
   {:else if commentsState.error}
-    <p class="text-sm text-destructive">{commentsState.error}</p>
+    <p class="text-destructive text-sm">{commentsState.error}</p>
   {:else}
     <div class="space-y-4">
       {#each commentsState.data as comment (comment._id)}

@@ -23,18 +23,13 @@
       Who will be your administrator for this proposal?
     {/snippet}
     {#snippet popover()}
-      Cardano's Constitution requires each Treasury Withdrawal to specify an
-      Administrator and a third-party auditor. Fields marked with the eye-off
-      icon contain information that will not be publicly visible and will only
-      be used for administration or contracting purposes if the proposal is
-      approved.
+      Cardano's Constitution requires each Treasury Withdrawal to specify an Administrator and a
+      third-party auditor. Fields marked with the eye-off icon contain information that will not be
+      publicly visible and will only be used for administration or contracting purposes if the
+      proposal is approved.
     {/snippet}
-    <Badge
-      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-    >
-      {proposal?.metaData?.administrator === "Intersect"
-        ? "Intersect"
-        : "Other"}
+    <Badge class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white">
+      {proposal?.metaData?.administrator === "Intersect" ? "Intersect" : "Other"}
     </Badge>
 
     {#if proposal?.metaData?.administrator === "Intersect"}
@@ -69,9 +64,7 @@
       Are you applying as a registered company or as an individual?
     {/snippet}
 
-    <Badge
-      class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
-    >
+    <Badge class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white">
       {proposal?.metaData?.contractingParty?.legalEntityType === "company"
         ? "Company"
         : "Individual"}
@@ -90,15 +83,11 @@
       How will independent audits or assurance be handled for this proposal?
     {/snippet}
     {#snippet popover()}
-      Describe whether funds are being set aside for independent audits or
-      third-party assurance, and how oversight of treasury funds will be
-      ensured.
+      Describe whether funds are being set aside for independent audits or third-party assurance,
+      and how oversight of treasury funds will be ensured.
     {/snippet}
     <ItemContainer>
-      <Markdown
-        content={proposal?.metaData?.independentAudits?.trim() || "—"}
-        class="text-sm"
-      />
+      <Markdown content={proposal?.metaData?.independentAudits?.trim() || "—"} class="text-sm" />
     </ItemContainer>
   </CollapsibleCard>
 </section>

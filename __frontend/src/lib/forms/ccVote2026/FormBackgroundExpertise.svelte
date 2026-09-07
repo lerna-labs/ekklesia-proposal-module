@@ -7,7 +7,9 @@
   let { formData = $bindable(), validationErrors, track = "individual" } = $props();
 
   const individualErrors = $derived(validationErrors?.properties?.metaData?.properties?.individual);
-  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
+  const organisationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.organisation,
+  );
 
   const professionalErrors = $derived({
     properties: {
@@ -22,7 +24,8 @@
 
   const organisationalAreasErrors = $derived({
     properties: {
-      organisationalAreasOfExpertise: organisationErrors?.properties?.organisationalAreasOfExpertise,
+      organisationalAreasOfExpertise:
+        organisationErrors?.properties?.organisationalAreasOfExpertise,
     },
   });
   const organisationGovernanceErrors = $derived({

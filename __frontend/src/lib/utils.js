@@ -36,11 +36,7 @@ export function queryStringWithLiteralCommas(searchParams, keys = ["status", "ca
   let qs = searchParams.toString();
   for (const key of keys) {
     const m = qs.match(new RegExp(`\\b${key}=([^&]*)`));
-    if (m)
-      qs = qs.replace(
-        new RegExp(`\\b${key}=[^&]*`),
-        key + "=" + decodeURIComponent(m[1]),
-      );
+    if (m) qs = qs.replace(new RegExp(`\\b${key}=[^&]*`), key + "=" + decodeURIComponent(m[1]));
   }
   return qs;
 }
@@ -50,9 +46,7 @@ export function shortenString(str, maxLength = 20, middle = false) {
   if (!str) return "";
   if (middle) {
     const half = Math.floor(maxLength / 2);
-    return str.length > maxLength
-      ? str.slice(0, half) + "..." + str.slice(-half)
-      : str;
+    return str.length > maxLength ? str.slice(0, half) + "..." + str.slice(-half) : str;
   }
   if (str.length <= maxLength) return str;
   return str.slice(0, maxLength) + "...";

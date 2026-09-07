@@ -9,13 +9,13 @@
  * @returns {string}
  */
 export function formatUtcInstant(value, options = {}) {
-	const { suffixUtc = true, ...intlOptions } = options;
-	if (value == null || value === "") return "—";
-	const d = value instanceof Date ? value : new Date(value);
-	if (Number.isNaN(d.getTime())) return "—";
-	const merged = { timeZone: "UTC", ...intlOptions };
-	const text = new Intl.DateTimeFormat(undefined, merged).format(d);
-	return suffixUtc ? `${text} (UTC)` : text;
+  const { suffixUtc = true, ...intlOptions } = options;
+  if (value == null || value === "") return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  const merged = { timeZone: "UTC", ...intlOptions };
+  const text = new Intl.DateTimeFormat(undefined, merged).format(d);
+  return suffixUtc ? `${text} (UTC)` : text;
 }
 
 /**
@@ -24,12 +24,12 @@ export function formatUtcInstant(value, options = {}) {
  * @returns {string}
  */
 export function formatUtcFullDateTime(value) {
-	return formatUtcInstant(value, {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-		hour12: false,
-	});
+  return formatUtcInstant(value, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }

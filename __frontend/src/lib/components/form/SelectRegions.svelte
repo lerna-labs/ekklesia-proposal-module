@@ -36,17 +36,12 @@
     loadError = null;
     fetch(`${apiUrl}/regions`)
       .then((res) => {
-        if (!res.ok)
-          throw new Error(res.statusText || "Failed to load regions");
+        if (!res.ok) throw new Error(res.statusText || "Failed to load regions");
         return res.json();
       })
       .then((data) => {
         if (cancelled) return;
-        const raw = Array.isArray(data?.data)
-          ? data.data
-          : Array.isArray(data)
-            ? data
-            : [];
+        const raw = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
         const mapped = raw
           .map((r) => {
             const oid = r._id != null ? String(r._id) : "";
@@ -78,14 +73,10 @@
     };
   });
 
-  const selectValue = $derived(
-    value && String(value).length === 24 ? String(value) : NONE,
-  );
+  const selectValue = $derived(value && String(value).length === 24 ? String(value) : NONE);
 
   const selectedLabel = $derived(
-    selectValue === NONE
-      ? ""
-      : (items.find((r) => r.id === selectValue)?.name ?? ""),
+    selectValue === NONE ? "" : (items.find((r) => r.id === selectValue)?.name ?? ""),
   );
 
   let open = $state(false);
@@ -97,11 +88,8 @@
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1 w-full">
-    <Field.Label
-      for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
-    >
+  <div class="flex w-full items-center gap-1">
+    <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
       {label}
       {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
@@ -113,24 +101,19 @@
     {#if descriptionProp}
       <ToolTip content={descriptionProp} fieldLabel={label} />
     {/if}
-    <span class="flex-1 min-w-0" aria-hidden="true"></span>
+    <span class="min-w-0 flex-1" aria-hidden="true"></span>
   </div>
   <div
-    class="rounded-md border border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 rounded-md border aria-invalid:ring-[3px]"
     aria-invalid={schemaError ? true : false}
   >
-    <Select.Root
-      type="single"
-      value={selectValue}
-      onValueChange={onValueChange}
-      bind:open
-    >
+    <Select.Root type="single" value={selectValue} {onValueChange} bind:open>
       <Select.Trigger
         {id}
-        class="w-full h-9 justify-between data-placeholder:text-muted-foreground px-3 py-1 text-base md:text-sm bg-white aria-invalid:border-destructive"
+        class="data-placeholder:text-muted-foreground aria-invalid:border-destructive h-9 w-full justify-between bg-white px-3 py-1 text-base md:text-sm"
         aria-invalid={schemaError ? true : false}
       >
-        <span class="line-clamp-1 text-left truncate">
+        <span class="line-clamp-1 truncate text-left">
           {#if loading}
             Loading…
           {:else if loadError}
@@ -144,9 +127,9 @@
       </Select.Trigger>
       <Select.Content class="max-h-60">
         {#if loading}
-          <div class="py-3 px-2 text-sm text-muted-foreground">Loading…</div>
+          <div class="text-muted-foreground px-2 py-3 text-sm">Loading…</div>
         {:else if loadError}
-          <div class="py-3 px-2 text-sm text-destructive">{loadError}</div>
+          <div class="text-destructive px-2 py-3 text-sm">{loadError}</div>
         {:else}
           <Select.Item value={NONE} label={placeholder}>
             {placeholder}

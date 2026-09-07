@@ -7,9 +7,7 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const consortiumErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.consortium,
-  );
+  const consortiumErrors = $derived(validationErrors?.properties?.metaData?.properties?.consortium);
 
   const consortiumNameErrors = $derived({
     properties: {

@@ -1,30 +1,26 @@
 <script>
-	import { onMount } from 'svelte';
-	import { fly } from 'svelte/transition';
-	import {
-		versionChange,
-		startVersionPolling,
-		stopVersionPolling
-	} from '$stores/versionStore.js';
+  import { onMount } from "svelte";
+  import { fly } from "svelte/transition";
+  import { versionChange, startVersionPolling, stopVersionPolling } from "$stores/versionStore.js";
 
-	onMount(() => {
-		startVersionPolling();
-		return () => stopVersionPolling();
-	});
+  onMount(() => {
+    startVersionPolling();
+    return () => stopVersionPolling();
+  });
 
-	function reload(e) {
-		e.preventDefault();
-		window.location.reload();
-	}
+  function reload(e) {
+    e.preventDefault();
+    window.location.reload();
+  }
 </script>
 
 {#if $versionChange}
-	<div
-		class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center gap-2 bg-orange-500 p-2 text-white"
-		transition:fly={{ y: 100, duration: 600, opacity: 1 }}
-	>
-		<a href="/" onclick={reload} class="text-xs">
-			A new version of the app is available. Please refresh the page.
-		</a>
-	</div>
+  <div
+    class="fixed right-0 bottom-0 left-0 z-50 flex items-center justify-center gap-2 bg-orange-500 p-2 text-white"
+    transition:fly={{ y: 100, duration: 600, opacity: 1 }}
+  >
+    <a href="/" onclick={reload} class="text-xs">
+      A new version of the app is available. Please refresh the page.
+    </a>
+  </div>
 {/if}

@@ -8,7 +8,7 @@
 </script>
 
 <section id="executive-summary">
-  <h2 class="mb-4 mt-8">Proposal Overview</h2>
+  <h2 class="mt-8 mb-4">Proposal Overview</h2>
 
   <CollapsibleCard
     class="mt-4"
@@ -42,10 +42,9 @@
         Why are you the best suited to deliver this work?
       {/snippet}
       {#snippet popover()}
-        Describe what previous experience and expertise you or your team have
-        which is relevant for your proposal. Focus on proven history of
-        delivery, mention previous successful proposals, mainnet deployments, or
-        relevant enterprise experience.
+        Describe what previous experience and expertise you or your team have which is relevant for
+        your proposal. Focus on proven history of delivery, mention previous successful proposals,
+        mainnet deployments, or relevant enterprise experience.
       {/snippet}
       <ItemContainer>
         <Markdown content={proposal?.metaData?.trackRecord} class="text-sm" />

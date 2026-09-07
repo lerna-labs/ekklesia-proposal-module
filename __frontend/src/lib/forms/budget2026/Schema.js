@@ -18,10 +18,7 @@ export const budgetRowInputSchema = z.object({
   costCategory: z.enum(COST_CATEGORIES, {
     error: "Cost category is required",
   }),
-  name: z
-    .string()
-    .min(1, "Item name is required")
-    .max(100),
+  name: z.string().min(1, "Item name is required").max(100),
   description: z
     .string()
     .min(1, "Item description is required")
@@ -29,10 +26,9 @@ export const budgetRowInputSchema = z.object({
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .refine((v) => v > 0, { message: "Quantity must be greater than 0" })
-    .refine(
-      (v) => v === Math.round(v * 100) / 100,
-      { message: "Quantity must have at most 2 decimal places" },
-    ),
+    .refine((v) => v === Math.round(v * 100) / 100, {
+      message: "Quantity must have at most 2 decimal places",
+    }),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
@@ -48,14 +44,13 @@ export const budgetRowSchema = budgetRowInputSchema.transform((row) => ({
 export const milestoneSchema = z.object({
   name: z.string().min(1, "Milestone name is required").max(100),
   deliverables: z.string().min(1, "Deliverables are required").max(4000),
-  acceptanceCriteria: z
-    .string()
-    .min(1, "Acceptance criteria are required")
-    .max(4000),
-  duration: z
-    .coerce.number({
+  acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(4000),
+  duration: z.coerce
+    .number({
       error: (iss) =>
-        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
+        iss.code === "invalid_type" ||
+        iss.code === "invalid_literal" ||
+        String(iss.code).includes("number")
           ? "Duration must be a number"
           : undefined,
     })

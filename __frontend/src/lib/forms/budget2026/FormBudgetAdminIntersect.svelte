@@ -27,15 +27,12 @@
   function hasContractingPartyBranchData(data, entityType) {
     const cp = data?.metaData?.contractingParty;
     if (!cp || typeof cp !== "object") return false;
-    const fields =
-      entityType === "company" ? COMPANY_FIELDS : INDIVIDUAL_FIELDS;
+    const fields = entityType === "company" ? COMPANY_FIELDS : INDIVIDUAL_FIELDS;
     return fields.some((f) => (cp[f] ?? "").toString().trim() !== "");
   }
 
   /** Display value for legal entity type radio; kept in sync with formData when no pending change. */
-  let localLegalEntityType = $state(
-    formData.metaData.contractingParty?.legalEntityType ?? "",
-  );
+  let localLegalEntityType = $state(formData.metaData.contractingParty?.legalEntityType ?? "");
   let openLegalEntityTypeDialog = $state(false);
   let pendingLegalEntityType = $state("");
 
@@ -84,36 +81,29 @@
     openLegalEntityTypeDialog = false;
   }
 
-  const metaErrors = $derived(
-    validationErrors?.properties?.metaData?.properties ?? {},
-  );
+  const metaErrors = $derived(validationErrors?.properties?.metaData?.properties ?? {});
   const feeConsentErrors = $derived({ properties: metaErrors });
   const contractingPartyErrors = $derived({
     properties:
-      validationErrors?.properties?.metaData?.properties?.contractingParty
-        ?.properties ?? {},
+      validationErrors?.properties?.metaData?.properties?.contractingParty?.properties ?? {},
   });
   const primaryContactErrors = $derived({
     properties:
-      validationErrors?.properties?.metaData?.properties?.primaryContact
-        ?.properties ?? {},
+      validationErrors?.properties?.metaData?.properties?.primaryContact?.properties ?? {},
   });
   const signatoryContactErrors = $derived({
     properties:
-      validationErrors?.properties?.metaData?.properties?.signatoryContact
-        ?.properties ?? {},
+      validationErrors?.properties?.metaData?.properties?.signatoryContact?.properties ?? {},
   });
   const kycInfoErrors = $derived({
-    properties:
-      validationErrors?.properties?.metaData?.properties?.kycInfo?.properties ??
-      {},
+    properties: validationErrors?.properties?.metaData?.properties?.kycInfo?.properties ?? {},
   });
 </script>
 
-<p class="text-sm text-muted-foreground mt-4">
-  If Intersect is selected as the Administrator, a 3% administration fee will be
-  applied to the total budget amount. This fee covers treasury administration,
-  contracting, payment execution, and reporting. <a
+<p class="text-muted-foreground mt-4 text-sm">
+  If Intersect is selected as the Administrator, a 3% administration fee will be applied to the
+  total budget amount. This fee covers treasury administration, contracting, payment execution, and
+  reporting. <a
     href="https://admin-services.docs.intersectmbo.org/overview/budget-proposal-administration-for-2026-cycle
 "
     target="_blank"
@@ -132,9 +122,7 @@
   validationErrors={feeConsentErrors}
 />
 
-<h3 class="mt-8">
-  Are you applying as a registered company or as an individual?
-</h3>
+<h3 class="mt-8">Are you applying as a registered company or as an individual?</h3>
 
 <RadioGroup
   id="legalEntityType"
@@ -153,11 +141,10 @@
 {#if formData.metaData.contractingParty?.legalEntityType === "company"}
   <section class="mb-8">
     <h4>Entity Details</h4>
-    <p class="text-sm text-muted-foreground mb-4">
-      This section collects the legal and registration details of the entity
-      that will receive funds if the proposal is approved. The information
-      provided here must match official registration and KYC records and will be
-      used for contracting and payment purposes.
+    <p class="text-muted-foreground mb-4 text-sm">
+      This section collects the legal and registration details of the entity that will receive funds
+      if the proposal is approved. The information provided here must match official registration
+      and KYC records and will be used for contracting and payment purposes.
     </p>
     <Input
       id="legalEntityName"
@@ -174,9 +161,7 @@
     <Input
       id="legalEntityRegistrationNumber"
       label="Registration Number"
-      bind:value={
-        formData.metaData.contractingParty.legalEntityRegistrationNumber
-      }
+      bind:value={formData.metaData.contractingParty.legalEntityRegistrationNumber}
       placeholder="Tax ID / UEN"
       description="The official registration or tax identification number in your jurisdiction."
       required
@@ -234,7 +219,7 @@
 {#if formData.metaData.contractingParty?.legalEntityType === "individual"}
   <section class="mb-8">
     <h4>Identity & Legal Details</h4>
-    <p class="text-sm text-muted-foreground mb-4">
+    <p class="text-muted-foreground mb-4 text-sm">
       This information is used for verification, contracting, and compliance.
     </p>
     <Input
@@ -295,7 +280,7 @@
 {/if}
 
 <h3 class="mt-8">Who's the primary contact for this proposal?</h3>
-<p class="text-sm text-muted-foreground mb-4">
+<p class="text-muted-foreground mb-4 text-sm">
   The main person responsible for day-to-day communication.
 </p>
 <Input
@@ -324,7 +309,7 @@
 />
 
 <h3>Authorized Signatory Details</h3>
-<p class="text-sm text-muted-foreground mb-4">
+<p class="text-muted-foreground mb-4 text-sm">
   For contract execution if the proposal is approved.
 </p>
 <Input
@@ -375,7 +360,7 @@
 />
 
 <h3>KYC/KYB Submission Status</h3>
-<p class="text-sm text-muted-foreground mb-4">
+<p class="text-muted-foreground mb-4 text-sm">
   Have you previously submitted valid KYB/KYC with Intersect?
 </p>
 <RadioGroup
@@ -416,8 +401,8 @@
         {formData.metaData.contractingParty?.legalEntityType === "company"
           ? "company"
           : "individual"}
-        details you entered. You will need to re-enter the information for the new
-        type. Do you want to continue?
+        details you entered. You will need to re-enter the information for the new type. Do you want to
+        continue?
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
@@ -429,10 +414,7 @@
       >
         Cancel
       </Button>
-      <AlertDialog.Action
-        class="cursor-pointer"
-        onclick={confirmLegalEntityTypeSwitch}
-      >
+      <AlertDialog.Action class="cursor-pointer" onclick={confirmLegalEntityTypeSwitch}>
         Continue
       </AlertDialog.Action>
     </AlertDialog.Footer>

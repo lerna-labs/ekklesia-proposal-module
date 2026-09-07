@@ -5,7 +5,9 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const organisationErrors = $derived(validationErrors?.properties?.metaData?.properties?.organisation);
+  const organisationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.organisation,
+  );
 
   const conflictErrors = $derived({
     properties: {
@@ -24,7 +26,8 @@
   });
   const decentralisedErrors = $derived({
     properties: {
-      decentralisedGovernanceImportance: organisationErrors?.properties?.decentralisedGovernanceImportance,
+      decentralisedGovernanceImportance:
+        organisationErrors?.properties?.decentralisedGovernanceImportance,
     },
   });
   const constitutionalErrors = $derived({

@@ -32,8 +32,7 @@ export function normalizeConsortiumMember(raw) {
     briefBiography: m.briefBiography != null ? String(m.briefBiography) : "",
     professionalBackground:
       m.professionalBackground != null ? String(m.professionalBackground) : "",
-    governanceExperience:
-      m.governanceExperience != null ? String(m.governanceExperience) : "",
+    governanceExperience: m.governanceExperience != null ? String(m.governanceExperience) : "",
     poolId: m.poolId != null ? String(m.poolId) : "",
     drepId: m.drepId != null ? String(m.drepId) : "",
     xUsername: m.xUsername != null ? String(m.xUsername) : "",
@@ -41,8 +40,6 @@ export function normalizeConsortiumMember(raw) {
     website: m.website != null ? String(m.website) : "",
     otherLinks: links,
     conflictOfInterestStatement:
-      m.conflictOfInterestStatement != null
-        ? String(m.conflictOfInterestStatement)
-        : "",
+      m.conflictOfInterestStatement != null ? String(m.conflictOfInterestStatement) : "",
   };
 }

@@ -30,9 +30,7 @@
 
   // Count raw stored characters to match backend validation behavior.
   let visibleLength = $derived(String(value ?? "").length);
-  let isOverMaxLength = $derived(
-    maxLength != null && maxLength > 0 && visibleLength > maxLength,
-  );
+  let isOverMaxLength = $derived(maxLength != null && maxLength > 0 && visibleLength > maxLength);
 
   /** Stable id for the visible label when pairing with the Lexical root via aria-labelledby. */
   let labelElementId = $derived(
@@ -44,17 +42,15 @@
       ? undefined
       : String(label ?? "").trim() !== ""
         ? String(label).trim()
-        : (placeholder?.trim() ? placeholder.trim() : "Rich text"),
+        : placeholder?.trim()
+          ? placeholder.trim()
+          : "Rich text",
   );
 </script>
 
 <Field.Field class="gap-2 {className}">
-  <div class="flex items-center gap-1 w-full">
-    <Field.Label
-      id={labelElementId}
-      for={id}
-      class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
-    >
+  <div class="flex w-full items-center gap-1">
+    <Field.Label id={labelElementId} for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
       {label}
       {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
@@ -66,10 +62,10 @@
     {#if descriptionProp}
       <ToolTip content={descriptionProp} fieldLabel={label} />
     {/if}
-    <span class="flex-1 min-w-0" aria-hidden="true"></span>
+    <span class="min-w-0 flex-1" aria-hidden="true"></span>
     {#if maxLength}
       <span
-        class="text-xs shrink-0"
+        class="shrink-0 text-xs"
         class:text-destructive={isOverMaxLength}
         class:text-muted-foreground={!isOverMaxLength}
       >
@@ -78,7 +74,7 @@
     {/if}
   </div>
   <div
-    class="relative w-full rounded-md border border-input bg-background shadow-xs transition-colors focus-within:outline-none focus-within:ring-[3px] focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="border-input bg-background focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 relative w-full rounded-md border shadow-xs transition-colors focus-within:ring-[3px] focus-within:outline-none aria-invalid:ring-[3px]"
     aria-invalid={displayError ? true : false}
   >
     {#if EditorComponent}
@@ -89,15 +85,13 @@
         bind:value
       />
     {:else}
-      <div
-        class="min-h-[120px] flex items-center justify-center text-muted-foreground text-sm p-4"
-      >
+      <div class="text-muted-foreground flex min-h-[120px] items-center justify-center p-4 text-sm">
         Loading editor…
       </div>
     {/if}
     {#if EditorComponent && placeholder && (value == null || String(value).trim() === "")}
       <span
-        class="absolute inset-0 flex items-start pt-13 pl-2 pr-3 text-muted-foreground pointer-events-none text-sm z-10"
+        class="text-muted-foreground pointer-events-none absolute inset-0 z-10 flex items-start pt-13 pr-3 pl-2 text-sm"
         aria-hidden="true"
       >
         {placeholder}
