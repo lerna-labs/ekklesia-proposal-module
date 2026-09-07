@@ -18,6 +18,7 @@ treat `docs/audit/` as contributor onboarding material.
 ## Pull requests
 
 - Keep changes focused; match existing code style.
+- Use the repository pull request template checklist (tests, lint/format, changeset).
 - Update product docs when you change API contracts, schemas, auth, or routes.
 - Prefer clear commit messages that explain *why*.
 

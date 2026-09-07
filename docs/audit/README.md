@@ -14,7 +14,7 @@ This index lists every audit finding (**F-001** through **F-031**) with links to
 | Open | 0 |
 | Open (upstream, partial) | 1 |
 
-Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494).
+Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492).
 
 ---
 
@@ -77,7 +77,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 From [F-013–F-031 § What still needs fixing](medium-low/F-013-through-F-031.md#what-still-needs-fixing):
 
 1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done).
-2. **F-019** — Remaining governance docs (CoC, changelog, issue/PR templates); deferred to Intersect GitHub move.
+2. **F-019** — Remaining: `CODE_OF_CONDUCT.md` (issue/PR templates and changelog present).
 
 ---
 

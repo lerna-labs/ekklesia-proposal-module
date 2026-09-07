@@ -240,17 +240,19 @@ Contributors lack clear contribution, ownership, security disclosure, and releas
 
 Add standard governance files aligned with Intersect open-source expectations.
 
-### Current status (2026-07-23)
+### Current status (2026-09-07)
 
-**Partially resolved.** Present since last re-verify:
+**Partially resolved.** Present:
 
 - `.github/CODEOWNERS` (`* @Crypto2099 @MadOrkestra`)
-- `SECURITY.md` — vulnerability reporting to `security@intersectmbo.org`
-- `CONTRIBUTING.md` — populated with setup, docs pointer, and PR guidance (no longer a stub)
+- `SECURITY.md` — private vulnerability reporting
+- `CONTRIBUTING.md` — setup, docs pointer, PR guidance, changeset instructions
+- `CHANGELOG.md` — maintained via Changesets
+- GitHub issue templates (bug / feature) and `PULL_REQUEST_TEMPLATE.md` (#492) — issues are filed in this repository (no redirect to the docs tracker)
 
-Still missing: `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
+Still missing: `CODE_OF_CONDUCT.md`.
 
-**Note:** This repository is planned to move to the Intersect GitHub organization. Remaining governance docs (and related org templates/policies) are expected to be handled as part of that move rather than fully completed in the current private/client-owned tree.
+**Note:** Remaining governance docs (CoC and org-level policies) may still align with an Intersect GitHub organization move.
 
 ---
 
@@ -625,7 +627,7 @@ Derive the active vote slug from configuration or API data.
 Priority backlog from this set (excluding resolved / accepted items):
 
 1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream.  
-2. **F-019** — Finish remaining governance docs (CoC, changelog, issue/PR templates); CONTRIBUTING/SECURITY/CODEOWNERS present — deferred to Intersect GitHub move  
+2. **F-019** — Remaining: `CODE_OF_CONDUCT.md` (issue/PR templates and changelog present as of #492)  
 
 Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
 Accepted (not fixed): **F-024**, **F-031**.  
