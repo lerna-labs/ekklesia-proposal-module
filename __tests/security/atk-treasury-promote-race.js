@@ -1,11 +1,9 @@
 /**
  * TX-HASH-001 (regression) — treasury-donation hash promote race (CRITICAL)
  *
- * Filed 2026-04-21 as ekklesia-proposal-module#418. The recommended fix
- * (partial unique index on (voteId, metaData.treasuryDonationTxHash) with
- * partialFilterExpression status NOT IN draft/archived) was not landed on
- * v2 — see schema/Proposal.js, no such index. The TOCTOU between
- * validateProposalTreasuryTxHash and proposal.save() is still open.
+ * Filed 2026-04-21 as ekklesia-proposal-module#418. Mitigation: global partial
+ * unique index on metaData.treasuryDonationTxHash (status NOT IN draft/archived)
+ * plus E11000 → 400 "already used" mapping in routes/api/v0/proposals.js.
  *
  * Prereqs (env vars):
  *   API     - http://localhost:3001
@@ -17,7 +15,12 @@
  *                     the same proposer, both with TX_HASH in
  *                     metaData.treasuryDonationTxHash.
  *
- * Pass criteria mirrors atk-cc-cold-promote-race.js.
+ * Pass criteria (mitigated):
+ *   Exactly one PUT returns 200; the other returns 400 with
+ *   "already used by another proposal".
+ *
+ * Fail (still vulnerable):
+ *   Both PUTs return 200.
  */
 const API = process.env.API ?? "http://localhost:3001";
 const COOKIE = process.env.COOKIE ?? "";
@@ -57,6 +60,22 @@ async function promote(proposalId) {
 const [a, b] = await Promise.all([promote(DRAFT_A), promote(DRAFT_B)]);
 console.log(JSON.stringify({ a, b }, null, 2));
 
-const both200 = a.status === 200 && b.status === 200;
-console.log(both200 ? "VULNERABLE: both promotes succeeded" : "Mitigated or partial");
-process.exit(both200 ? 0 : 1);
+const statuses = [a.status, b.status].sort((x, y) => x - y);
+const bodies = [a.body, b.body];
+const oneOkOneConflict =
+  statuses[0] === 200 &&
+  statuses[1] === 400 &&
+  bodies.some((body) => body.includes("already used by another proposal"));
+
+if (a.status === 200 && b.status === 200) {
+  console.log("VULNERABLE: both promotes succeeded");
+  process.exit(1);
+}
+
+if (oneOkOneConflict) {
+  console.log("Mitigated: one SAVED_LIVE and one already-used rejection");
+  process.exit(0);
+}
+
+console.log("Unexpected outcome (neither clean mitigation nor both-200)");
+process.exit(1);

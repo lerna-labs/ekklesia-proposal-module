@@ -32,6 +32,7 @@ import {
   mapTreasuryProviderError,
   alertTreasuryProviderAuthFailure,
 } from "../../../helper/mapTreasuryProviderError.js";
+import { isDuplicateKeyError } from "../../../helper/mongoErrors.js";
 
 /** Build error tree for metaData.treasuryDonationTxHash (matches Zod treeifyError shape for frontend). */
 function treasuryTxHashErrorTree(message) {
@@ -44,6 +45,29 @@ function treasuryTxHashErrorTree(message) {
       },
     },
   };
+}
+
+const TREASURY_TX_HASH_ALREADY_USED =
+  "This transaction hash is already used by another proposal";
+
+/** True when Mongo rejected a write for the treasury-donation unique index (#418). */
+function isTreasuryTxHashDuplicateKeyError(error) {
+  if (!isDuplicateKeyError(error)) return false;
+  const keyPattern =
+    /** @type {{ keyPattern?: Record<string, unknown>, cause?: { keyPattern?: Record<string, unknown> } }} */ (
+      error
+    ).keyPattern ??
+    /** @type {{ cause?: { keyPattern?: Record<string, unknown> } }} */ (error).cause
+      ?.keyPattern;
+  return Boolean(keyPattern?.["metaData.treasuryDonationTxHash"]);
+}
+
+function sendTreasuryTxHashAlreadyUsed(res) {
+  return res.status(400).json({
+    status: "error",
+    message: "Validation failed",
+    errors: treasuryTxHashErrorTree(TREASURY_TX_HASH_ALREADY_USED),
+  });
 }
 
 /** Build error tree for metaData.coldCredentialHash (matches Zod treeifyError shape for frontend). */
@@ -133,7 +157,7 @@ async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, optio
     .lean()
     .exec();
   if (existing) {
-    return { ok: false, error: "This transaction hash is already used by another proposal" };
+    return { ok: false, error: TREASURY_TX_HASH_ALREADY_USED };
   }
 
   let result;
@@ -364,6 +388,9 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     const created = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(201).json(created);
   } catch (error) {
+    if (isTreasuryTxHashDuplicateKeyError(error)) {
+      return sendTreasuryTxHashAlreadyUsed(res);
+    }
     if (error.name === "ValidationError" && error.errors) {
       const fieldErrors = {};
       for (const [path, err] of Object.entries(error.errors)) {
@@ -918,6 +945,9 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
     const updated = proposal.toObject ? proposal.toObject() : proposal;
     return res.status(200).json(updated);
   } catch (error) {
+    if (isTreasuryTxHashDuplicateKeyError(error)) {
+      return sendTreasuryTxHashAlreadyUsed(res);
+    }
     if (error.name === "ValidationError" && error.errors) {
       const fieldErrors = {};
       for (const [path, err] of Object.entries(error.errors)) {

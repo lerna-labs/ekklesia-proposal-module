@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.4.0                                                                  |
+| **Version**        | 1.4.1                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | July 24, 2026                                                      |
+| **Last Revised**   | September 7, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -1571,7 +1571,8 @@ Returned when:
 - `status` is `"live"` and the vote requires a treasury donation, but on-chain
   verification of `metaData.treasuryDonationTxHash` fails a genuine check
   (missing/invalid hash, wrong stake key, insufficient donation, transaction
-  not found on chain, or hash already used by another non-draft proposal).
+  not found on chain, or hash already used by another non-draft / non-archived
+  proposal globally — including under concurrent promote races).
   These responses include an `errors` tree for `metaData.treasuryDonationTxHash`.
 
 ```json
@@ -1769,8 +1770,9 @@ Returned when:
   cannot be updated).
 - Promoting to `status: "live"` when the vote requires a treasury donation and
   on-chain verification of `metaData.treasuryDonationTxHash` fails a genuine
-  check (same cases as `POST /proposals` §5.1). These responses include an
-  `errors` tree for `metaData.treasuryDonationTxHash`.
+  check (same cases as `POST /proposals` §5.1, including concurrent reuse of
+  a hash already claimed by another non-draft / non-archived proposal). These
+  responses include an `errors` tree for `metaData.treasuryDonationTxHash`.
 
 ```json
 {
@@ -2702,6 +2704,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |
 | 1.4.0   | 2026-07-24 | Document `503` on live `POST`/`PUT /proposals` when treasury donation verification cannot reach chain-data providers (fixed retry message; optional `Retry-After`). Clarify genuine verification failures remain `400` with `errors` for `metaData.treasuryDonationTxHash`. Add `503` to §7.2. |
 | 1.3.0   | 2026-07-23 | Live `PUT /proposals/{proposalId}`: optimistic version CAS and `409 Conflict` on concurrent update (F-006). Added §5.9 notification settings endpoints. Documented `409` in §7.2. Aligned proposal withdraw windows with implementation (proposer ≤ `reviewEndDate`; admin before `votingStartDate`). Removed dangling Ekklesia Integration Plan reference. |
 | 1.2.2   | 2026-07-23 | `DELETE /proposals/{proposalId}` success documented as `200 OK` JSON (`status`/`message`), matching implementation (F-027). Removed obsolete 204 No Content convention.                                                                                                                                                                                                                                                                  |
