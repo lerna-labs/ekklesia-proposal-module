@@ -1,5 +1,5 @@
 <script>
-	let { data, children } = $props();
+  let { data, children } = $props();
 </script>
 
 {@render children()}

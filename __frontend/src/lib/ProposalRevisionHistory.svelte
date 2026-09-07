@@ -2,10 +2,7 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import { Button } from "$lib/components/ui/button";
   import { api } from "$stores/sessionManager.js";
-  import {
-    getChangedSectionLabels,
-    getChangedDetails,
-  } from "$lib/proposalRevisionUtils.js";
+  import { getChangedSectionLabels, getChangedDetails } from "$lib/proposalRevisionUtils.js";
   import {
     sectionMapping as budget2026SectionMapping,
     sectionOrder as budget2026SectionOrder,
@@ -63,13 +60,7 @@
 
   /** Fetch full current proposal when drawer is open and we need it for the current-vs-previous diff. */
   async function ensureFullCurrentProposal() {
-    if (
-      !proposalId ||
-      !open ||
-      versions.length === 0 ||
-      fullCurrentProposal != null
-    )
-      return;
+    if (!proposalId || !open || versions.length === 0 || fullCurrentProposal != null) return;
     loadingCurrent = true;
     try {
       const res = await api.fetch(fetch, `/proposals/${proposalId}`);
@@ -104,11 +95,7 @@
   async function ensureFirstArchivedDoc() {
     if (!open || versions.length === 0) return;
     const id = versions[0]._id;
-    if (
-      firstArchivedDoc != null &&
-      (firstArchivedDoc._id ?? firstArchivedDoc.id) === id
-    )
-      return;
+    if (firstArchivedDoc != null && (firstArchivedDoc._id ?? firstArchivedDoc.id) === id) return;
     loadingCurrent = true;
     try {
       const doc = await ensureArchivedDoc(id);
@@ -132,11 +119,7 @@
 
   const currentVersionChangedLabels = $derived.by(() => {
     if (!effectiveCurrentProposal || !firstArchivedDoc) return [];
-    return getChangedSectionLabels(
-      effectiveCurrentProposal,
-      firstArchivedDoc,
-      revisionOptions,
-    );
+    return getChangedSectionLabels(effectiveCurrentProposal, firstArchivedDoc, revisionOptions);
   });
 
   /** Version entries from versions array only (no precomputed changes). */
@@ -190,11 +173,8 @@
 </script>
 
 <Sheet.Root bind:open>
-  <Sheet.Content
-    side="right"
-    class="w-full sm:max-w-md flex flex-col p-0 gap-0"
-  >
-    <Sheet.Header class="p-4 border-b">
+  <Sheet.Content side="right" class="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+    <Sheet.Header class="border-b p-4">
       <Sheet.Title class="flex items-center gap-2">
         <HistoryIcon class="size-4" aria-hidden="true" />
         Revision history
@@ -203,37 +183,33 @@
         List of previous versions with timestamps and changed sections.
       </Sheet.Description>
     </Sheet.Header>
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="flex-1 space-y-4 overflow-y-auto p-4">
       <!-- Current version (reference) -->
-      <div class="rounded-lg border bg-muted/30 p-3 pb-4 pl-4">
+      <div class="bg-muted/30 rounded-lg border p-3 pb-4 pl-4">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-sm font-medium"
-            >Version {currentVersion} (current)</span
-          >
+          <span class="text-sm font-medium">Version {currentVersion} (current)</span>
           <Button
-            href={voteSlug && proposalId
-              ? `/votes/${voteSlug}/${proposalId}`
-              : undefined}
+            href={voteSlug && proposalId ? `/votes/${voteSlug}/${proposalId}` : undefined}
             target="_blank"
             rel="noopener noreferrer"
             variant="outline"
             size="sm"
             aria-label="View current version in new tab"
           >
-            <FileTextIcon class="size-3.5 mr-1" aria-hidden="true" />
+            <FileTextIcon class="mr-1 size-3.5" aria-hidden="true" />
             View
           </Button>
         </div>
         {#if versions.length > 0 && !firstArchivedDoc && loadingCurrent}
-          <p class="text-xs text-muted-foreground pt-1">Loading changes…</p>
+          <p class="text-muted-foreground pt-1 text-xs">Loading changes…</p>
         {:else if firstArchivedDoc}
           {#if currentVersionChangedLabels.length > 0}
             <div class="pt-1">
-              <span class="text-xs font-medium text-muted-foreground"
+              <span class="text-muted-foreground text-xs font-medium"
                 >Changed from v{currentVersion - 1}:</span
               >
               <ul
-                class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3"
+                class="text-muted-foreground mt-0.5 list-inside list-disc space-y-0.5 pl-3 text-xs"
               >
                 {#each currentVersionChangedLabels as label}
                   <li>{label}</li>
@@ -245,14 +221,12 @@
       </div>
 
       {#if versions.length === 0}
-        <p class="text-sm text-muted-foreground">No previous versions.</p>
+        <p class="text-muted-foreground text-sm">No previous versions.</p>
       {:else}
         {#each versionEntries as entry (entry._id)}
-          <div class="rounded-lg border p-3 pb-4 pl-4 space-y-2">
+          <div class="space-y-2 rounded-lg border p-3 pb-4 pl-4">
             <div class="flex items-center justify-between gap-2">
-              <span class="text-sm font-medium"
-                >Version {entry.versionNumber}</span
-              >
+              <span class="text-sm font-medium">Version {entry.versionNumber}</span>
               <Button
                 href={voteSlug ? `/votes/${voteSlug}/${entry._id}` : undefined}
                 target="_blank"
@@ -261,30 +235,25 @@
                 size="sm"
                 aria-label="View version {entry.versionNumber} in new tab"
               >
-                <FileTextIcon class="size-3.5 mr-1" aria-hidden="true" />
+                <FileTextIcon class="mr-1 size-3.5" aria-hidden="true" />
                 View
               </Button>
             </div>
-            <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <ClockIcon
-                class="size-3.5 shrink-0 text-muted-foreground"
-                aria-hidden="true"
-              />
+            <div class="text-muted-foreground flex items-center gap-1 text-xs">
+              <ClockIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
               {formatTimestamp(entry.createdAt)}
             </div>
             {#if entry.index + 1 < versions.length}
               {#if expandedVersionId === entry._id && expandedEntryChanges !== null}
                 {#if expandedEntryChanges.isFirstVersion}
-                  <p class="text-xs text-muted-foreground"
-                    >First version (no previous to compare).</p
-                  >
+                  <p class="text-muted-foreground text-xs">
+                    First version (no previous to compare).
+                  </p>
                 {:else if expandedEntryChanges.labels.length > 0}
                   <div class="pt-1">
-                    <span class="text-xs font-medium text-muted-foreground"
-                      >Changed:</span
-                    >
+                    <span class="text-muted-foreground text-xs font-medium">Changed:</span>
                     <ul
-                      class="text-xs text-muted-foreground list-disc list-inside mt-0.5 space-y-0.5 pl-3"
+                      class="text-muted-foreground mt-0.5 list-inside list-disc space-y-0.5 pl-3 text-xs"
                     >
                       {#each expandedEntryChanges.labels as label}
                         <li>{label}</li>
@@ -296,7 +265,7 @@
               <Button
                 variant="outline"
                 size="sm"
-                class="h-8 text-xs mt-2"
+                class="mt-2 h-8 text-xs"
                 onclick={() => {
                   if (expandedVersionId === entry._id) {
                     expandedVersionId = null;

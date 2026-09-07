@@ -21,7 +21,9 @@ const checks = [
     message: "Missing recipient cooldown lookup in notifications route.",
   },
   {
-    ok: source.includes('category: MAGIC_LINK_CATEGORY') && source.includes("sentAt: { $gte: sentAfter }"),
+    ok:
+      source.includes("category: MAGIC_LINK_CATEGORY") &&
+      source.includes("sentAt: { $gte: sentAfter }"),
     message: "Missing cooldown query constraints for category and time window.",
   },
 ];

@@ -29,10 +29,7 @@ const individualLinkItemSchema = z.object({
   title: z
     .string()
     .min(1, "Title is required")
-    .max(
-      TITLE_MAX_LENGTH,
-      `Title must be at most ${TITLE_MAX_LENGTH} characters`,
-    ),
+    .max(TITLE_MAX_LENGTH, `Title must be at most ${TITLE_MAX_LENGTH} characters`),
   url: z
     .string()
     .min(1, "URL is required")
@@ -89,10 +86,7 @@ const websiteOptional = z.preprocess(
   (v) => (typeof v === "string" ? v.trim() : ""),
   z.union([
     z.literal(""),
-    z
-      .string()
-      .transform(normalizeUrl)
-      .pipe(z.string().url("Enter a valid URL")),
+    z.string().transform(normalizeUrl).pipe(z.string().url("Enter a valid URL")),
   ]),
 );
 
@@ -247,12 +241,7 @@ const individualIdentityLiveSchema = z.object({
   contactEmail: z
     .string()
     .transform((s) => (typeof s === "string" ? s.trim() : ""))
-    .pipe(
-      z
-        .string()
-        .email("Enter a valid email")
-        .max(254, "Email must be at most 254 characters"),
-    ),
+    .pipe(z.string().email("Enter a valid email").max(254, "Email must be at most 254 characters")),
   geographicRegion: regionIdOptional,
   poolId: poolIdOptional,
   drepId: drepIdOptional,
@@ -416,12 +405,7 @@ const organisationLiveSchema = z.object({
   contactEmail: z
     .string()
     .transform((s) => (typeof s === "string" ? s.trim() : ""))
-    .pipe(
-      z
-        .string()
-        .email("Enter a valid email")
-        .max(254, "Email must be at most 254 characters"),
-    ),
+    .pipe(z.string().email("Enter a valid email").max(254, "Email must be at most 254 characters")),
   poolId: poolIdOptional,
   drepId: drepIdOptional,
   xUsername: handleOptional,
@@ -560,12 +544,7 @@ const consortiumDetailsLiveSchema = z.object({
   contactEmail: z
     .string()
     .transform((s) => (typeof s === "string" ? s.trim() : ""))
-    .pipe(
-      z
-        .string()
-        .email("Enter a valid email")
-        .max(254, "Email must be at most 254 characters"),
-    ),
+    .pipe(z.string().email("Enter a valid email").max(254, "Email must be at most 254 characters")),
   xUsername: handleOptional,
   linkedinUsername: handleOptional,
   website: websiteOptional,
@@ -767,8 +746,7 @@ function liveProposalBodySchemaForContext(context = {}) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["metaData", "track"],
-          message:
-            "Select a proposal track (Individual, Organisation, or Consortium)",
+          message: "Select a proposal track (Individual, Organisation, or Consortium)",
         });
         return;
       }
@@ -800,17 +778,14 @@ function liveProposalBodySchemaForContext(context = {}) {
         track === "individual"
           ? trimStr(normalizeIndividualInput(md.individual).fullNameOrAlias)
           : track === "organisation"
-            ? trimStr(
-                normalizeOrganisationInput(md.organisation).organisationName,
-              )
+            ? trimStr(normalizeOrganisationInput(md.organisation).organisationName)
             : trimStr(normalizeConsortiumInput(md.consortium).consortiumName);
 
       if (trimStr(data.title) !== expectedTitle) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["title"],
-          message:
-            "Proposal title must match the candidate name for the selected track",
+          message: "Proposal title must match the candidate name for the selected track",
         });
       }
 
@@ -864,9 +839,7 @@ function liveProposalBodySchemaForContext(context = {}) {
             });
           }
         }
-        const membersResult = consortiumMembersArraySchema.safeParse(
-          normalized.members,
-        );
+        const membersResult = consortiumMembersArraySchema.safeParse(normalized.members);
         if (!membersResult.success) {
           for (const issue of membersResult.error.issues) {
             ctx.addIssue({
@@ -888,8 +861,7 @@ function liveProposalBodySchemaForContext(context = {}) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ["metaData", "coldCredentialHash"],
-              message:
-                "Cold credential hash cannot be changed after submission.",
+              message: "Cold credential hash cannot be changed after submission.",
             });
           }
         } else if (!coldHash) {
@@ -918,8 +890,7 @@ function liveProposalBodySchemaForContext(context = {}) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ["metaData", "coldCredentialType"],
-              message:
-                "Credential type cannot be changed after submission.",
+              message: "Credential type cannot be changed after submission.",
             });
           }
         } else {
@@ -968,25 +939,15 @@ function liveProposalBodySchemaForContext(context = {}) {
       if (da?.accuracyPublicVisibilityConsent !== true) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: [
-            "metaData",
-            "declarationAgreement",
-            "accuracyPublicVisibilityConsent",
-          ],
-          message:
-            "You must confirm accuracy and consent to public visibility to submit",
+          path: ["metaData", "declarationAgreement", "accuracyPublicVisibilityConsent"],
+          message: "You must confirm accuracy and consent to public visibility to submit",
         });
       }
       if (da?.termsAndConditionsAgreement !== true) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          path: [
-            "metaData",
-            "declarationAgreement",
-            "termsAndConditionsAgreement",
-          ],
-          message:
-            "You must agree to the Intersect CC Election Terms and Conditions to submit",
+          path: ["metaData", "declarationAgreement", "termsAndConditionsAgreement"],
+          message: "You must agree to the Intersect CC Election Terms and Conditions to submit",
         });
       }
       if (track === "consortium" && da?.memberIdentityVouching !== true) {

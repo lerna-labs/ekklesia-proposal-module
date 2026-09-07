@@ -66,16 +66,13 @@ export async function createTranslator(locale) {
   const chain = fallbackChain(requested);
   const catalogs = await Promise.all(chain.map(loadCatalog));
   const firstAvailable = catalogs.findIndex((c) => c !== null);
-  const chosenLocale =
-    firstAvailable >= 0 ? chain[firstAvailable] : DEFAULT_LOCALE;
+  const chosenLocale = firstAvailable >= 0 ? chain[firstAvailable] : DEFAULT_LOCALE;
 
   const warnedMissing = new Set();
   function warnMissing(key) {
     if (warnedMissing.has(key)) return;
     warnedMissing.add(key);
-    console.warn(
-      `[i18n] missing key "${key}" in catalogs: ${chain.join(" → ")}`,
-    );
+    console.warn(`[i18n] missing key "${key}" in catalogs: ${chain.join(" → ")}`);
   }
 
   function resolve(key) {
@@ -90,7 +87,7 @@ export async function createTranslator(locale) {
     const pattern = resolve(key);
     if (pattern === null) return `[[${key}]]`;
     try {
-      const args = escape ? escapeArgs(vars) : vars ?? {};
+      const args = escape ? escapeArgs(vars) : (vars ?? {});
       return new IntlMessageFormat(pattern, chosenLocale, undefined, {
         ignoreTag: true,
       }).format(args);

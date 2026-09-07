@@ -6,32 +6,25 @@
  * @returns {Record<string, any>}
  */
 export function projectProposalListItem(proposal) {
-  const {
-    metaData,
-    withdrawalReason,
-    signature,
-    userId,
-    commentCount,
-    versions,
-    ...rest
-  } = proposal ?? {};
+  const { metaData, withdrawalReason, signature, userId, commentCount, versions, ...rest } =
+    proposal ?? {};
 
   const shortenedMetaData = metaData
     ? {
-      proposerDetails: metaData.proposerDetails
-        ? { name: metaData.proposerDetails.name }
-        : undefined,
-      contractingParty: metaData.contractingParty
-        ? { legalEntityType: metaData.contractingParty.legalEntityType }
-        : undefined,
-      strategyFramework: metaData.strategyFramework
-        ? { pillars: metaData.strategyFramework.pillars }
-        : undefined,
-      conversionRate:
-        metaData.proposalDetails?.conversionRate ??
-        metaData.financialAndAdministrative?.conversionRate,
-      totalBudget: metaData.totalBudget,
-    }
+        proposerDetails: metaData.proposerDetails
+          ? { name: metaData.proposerDetails.name }
+          : undefined,
+        contractingParty: metaData.contractingParty
+          ? { legalEntityType: metaData.contractingParty.legalEntityType }
+          : undefined,
+        strategyFramework: metaData.strategyFramework
+          ? { pillars: metaData.strategyFramework.pillars }
+          : undefined,
+        conversionRate:
+          metaData.proposalDetails?.conversionRate ??
+          metaData.financialAndAdministrative?.conversionRate,
+        totalBudget: metaData.totalBudget,
+      }
     : null;
 
   return {

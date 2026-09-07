@@ -39,7 +39,6 @@ emailSendLedgerSchema.index({ recipientHash: 1, category: 1, sentAt: -1 });
 emailSendLedgerSchema.index({ sentAt: 1 }, { expireAfterSeconds: LEDGER_TTL_SECONDS });
 
 const EmailSendLedger =
-  mongoose.models.EmailSendLedger ||
-  mongoose.model("EmailSendLedger", emailSendLedgerSchema);
+  mongoose.models.EmailSendLedger || mongoose.model("EmailSendLedger", emailSendLedgerSchema);
 
 export { EmailSendLedger };

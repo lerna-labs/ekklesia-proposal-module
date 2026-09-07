@@ -102,11 +102,10 @@
   function toggleSection(id) {
     expanded = { ...expanded, [id]: !isExpanded(id) };
   }
-
 </script>
 
 {#if sections.length > 0}
-  <div class="text-sm space-y-8 mt-8">
+  <div class="mt-8 space-y-8 text-sm">
     {#each sections as section (section.id)}
       <section id={section.id} class="space-y-3">
         <h2>{section.title}</h2>

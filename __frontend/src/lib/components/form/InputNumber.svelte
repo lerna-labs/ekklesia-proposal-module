@@ -30,9 +30,7 @@
 
   let inputEl = $state(null);
   let schemaError = $derived(
-    id && validationErrors
-      ? validationErrors?.properties?.[id]?.errors?.[0]
-      : undefined,
+    id && validationErrors ? validationErrors?.properties?.[id]?.errors?.[0] : undefined,
   );
   let isInvalid = $derived(invalid || !!schemaError);
 
@@ -70,11 +68,11 @@
   );
 </script>
 
-<Field.Field class="gap-4 mb-4 {className}">
+<Field.Field class="mb-4 gap-4 {className}">
   <div class="flex flex-wrap items-end gap-4">
-    <div class="flex flex-col gap-2 min-w-[200px] w-full max-w-sm {containerClass}">
-      <div class="flex items-center gap-1 w-full">
-        <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+    <div class="flex w-full max-w-sm min-w-[200px] flex-col gap-2 {containerClass}">
+      <div class="flex w-full items-center gap-1">
+        <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
           {label}
           {#if required}
             <span class="text-(--mbo-electric-blue)">*</span>
@@ -83,18 +81,18 @@
         {#if description}
           <ToolTip content={description} fieldLabel={label} />
         {/if}
-        <span class="flex-1 min-w-0" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1" aria-hidden="true"></span>
       </div>
       <div class="flex flex-col gap-0">
         <div
-          class="amount-input flex h-9 w-full items-center rounded-md border border-input bg-transparent shadow-xs transition-colors focus-within:outline-none focus-within:ring-[3px] focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+          class="amount-input border-input focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 flex h-9 w-full items-center rounded-md border bg-transparent shadow-xs transition-colors focus-within:ring-[3px] focus-within:outline-none aria-invalid:ring-[3px]"
           class:opacity-50={disabled}
           class:cursor-not-allowed={disabled}
           aria-invalid={isInvalid || undefined}
         >
           {#if prefix}
             <span
-              class="prefix shrink-0 pl-3 text-muted-foreground text-base md:text-sm font-normal"
+              class="prefix text-muted-foreground shrink-0 pl-3 text-base font-normal md:text-sm"
               aria-hidden="true"
             >
               {prefix}
@@ -108,7 +106,7 @@
             {disabled}
             value={displayValue}
             oninput={onInput}
-            class="value flex-1 min-w-0 border-0 bg-transparent px-0 py-1 text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm focus:outline-none focus:ring-0"
+            class="value text-foreground placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent px-0 py-1 text-base outline-none focus:ring-0 focus:outline-none md:text-sm"
             class:pl-2={!!prefix}
             class:pr-2={!!suffix}
             class:pl-3={!prefix}
@@ -118,7 +116,7 @@
           />
           {#if suffix}
             <span
-              class="suffix shrink-0 pr-3 text-muted-foreground text-base md:text-sm font-normal"
+              class="suffix text-muted-foreground shrink-0 pr-3 text-base font-normal md:text-sm"
               aria-hidden="true"
             >
               {suffix}
@@ -126,11 +124,11 @@
           {/if}
         </div>
         {#if schemaError}
-          <Field.Error class="text-xs mt-2">{schemaError}</Field.Error>
+          <Field.Error class="mt-2 text-xs">{schemaError}</Field.Error>
         {/if}
       </div>
       {#if helperText}
-        <p class="text-xs text-muted-foreground mt-0">{helperText}</p>
+        <p class="text-muted-foreground mt-0 text-xs">{helperText}</p>
       {/if}
     </div>
   </div>

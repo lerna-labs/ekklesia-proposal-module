@@ -54,7 +54,9 @@ function nonEmptyStringQuery() {
 }
 
 function notificationSchedule(userDoc) {
-  const raw = String(userDoc?.notification?.schedule ?? "daily").trim().toLowerCase();
+  const raw = String(userDoc?.notification?.schedule ?? "daily")
+    .trim()
+    .toLowerCase();
   return raw || "daily";
 }
 
@@ -134,8 +136,7 @@ async function sendInstantToUser(userDoc, fixture, category, options = {}) {
   const mergedFixture = {
     ...fixture,
     unsubscribeUrl,
-    preferencesUrl:
-      fixture.preferencesUrl ?? `${getFrontendBaseUrl()}/dashboard`,
+    preferencesUrl: fixture.preferencesUrl ?? `${getFrontendBaseUrl()}/dashboard`,
   };
   const renderInstant =
     notificationDispatchTestHooks.renderInstantDigestFromPayload ?? renderInstantDigestFromPayload;
@@ -205,11 +206,7 @@ export async function sendProposalWithdrawnNotification({
   });
 }
 
-export async function queueCommentNotificationEvent({
-  recipientUserId,
-  proposalId,
-  commentId,
-}) {
+export async function queueCommentNotificationEvent({ recipientUserId, proposalId, commentId }) {
   await CommentNotificationEvent.updateOne(
     { commentId: new mongoose.Types.ObjectId(commentId) },
     {
@@ -220,7 +217,7 @@ export async function queueCommentNotificationEvent({
         status: "pending",
       },
     },
-    { upsert: true }
+    { upsert: true },
   );
   return true;
 }
@@ -313,21 +310,19 @@ export async function runCommentDigestDispatch(now = new Date()) {
     if (lastSentAt) {
       eventQuery.createdAt.$gt = lastSentAt;
     }
-    const events = await CommentNotificationEvent.find(eventQuery)
-      .sort({ createdAt: 1 })
-      .lean();
+    const events = await CommentNotificationEvent.find(eventQuery).sort({ createdAt: 1 }).lean();
 
     if (events.length === 0) continue;
 
     const proposalIds = [...new Set(events.map((e) => String(e.proposalId)))].map(
-      (id) => new mongoose.Types.ObjectId(id)
+      (id) => new mongoose.Types.ObjectId(id),
     );
     const proposals = await Proposal.find({ _id: { $in: proposalIds } })
       .select("_id voteId title")
       .lean();
     const proposalMap = new Map(proposals.map((p) => [String(p._id), p]));
     const voteIds = [...new Set(proposals.map((p) => String(p.voteId)))].map(
-      (id) => new mongoose.Types.ObjectId(id)
+      (id) => new mongoose.Types.ObjectId(id),
     );
     const votes = await Vote.find({ _id: { $in: voteIds } })
       .select("_id title slug")
@@ -364,11 +359,11 @@ export async function runCommentDigestDispatch(now = new Date()) {
       await Promise.all([
         CommentNotificationEvent.updateMany(
           { _id: { $in: eventIds } },
-          { $set: { status: "sent", sentAt: now } }
+          { $set: { status: "sent", sentAt: now } },
         ),
         User.updateOne(
           { _id: userDoc._id },
-          { $set: { "notification.lastCommentDigestSentAt": now } }
+          { $set: { "notification.lastCommentDigestSentAt": now } },
         ),
       ]);
       sentCount += 1;
@@ -430,7 +425,7 @@ async function dispatchVoteMilestone(voteDoc, eventType, now = new Date()) {
       const sent = await sendInstantToUser(
         userDoc,
         fixture,
-        eventType === "voting_opened" ? "voting-opened" : "results-published"
+        eventType === "voting_opened" ? "voting-opened" : "results-published",
       );
       sentAny = sentAny || sent;
       if (sent && fanoutMs > 0) await sleep(fanoutMs);
@@ -461,7 +456,7 @@ export async function runVoteMilestoneDispatch(now = new Date()) {
     await dispatchVoteMilestone(voteDoc, "voting_opened", now);
     await Vote.updateOne(
       { _id: voteDoc._id },
-      { $set: { "notificationDispatch.votingOpenedSentAt": now } }
+      { $set: { "notificationDispatch.votingOpenedSentAt": now } },
     );
     milestoneCount += 1;
   }
@@ -470,7 +465,7 @@ export async function runVoteMilestoneDispatch(now = new Date()) {
     await dispatchVoteMilestone(voteDoc, "results_published", now);
     await Vote.updateOne(
       { _id: voteDoc._id },
-      { $set: { "notificationDispatch.resultsPublishedSentAt": now } }
+      { $set: { "notificationDispatch.resultsPublishedSentAt": now } },
     );
     milestoneCount += 1;
   }

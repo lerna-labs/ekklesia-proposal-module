@@ -20,12 +20,14 @@
   const pillarRationale = $derived(proposal?.metaData?.strategyFramework?.pillarRationale ?? "");
   const kpiAlignment = $derived(proposal?.metaData?.strategyFramework?.kpiAlignment ?? "");
   const hasContent = $derived(
-    selectedPillars.length > 0 || pillarRationale.trim().length > 0 || kpiAlignment.trim().length > 0,
+    selectedPillars.length > 0 ||
+      pillarRationale.trim().length > 0 ||
+      kpiAlignment.trim().length > 0,
   );
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-2 mt-8" id="strategy-framework">
+  <section class="mt-8 space-y-2 text-sm" id="strategy-framework">
     <h2 class="mb-4">Alignment to Cardano 2030 Strategy framework</h2>
 
     {#if selectedPillars.length > 0}
@@ -85,8 +87,8 @@
           Why have you selected those pillars?
         {/snippet}
         {#snippet popover()}
-          Provide a rationale about why those pillars align the most to your proposal and how your proposal supports
-          them. Look also at the <a
+          Provide a rationale about why those pillars align the most to your proposal and how your
+          proposal supports them. Look also at the <a
             href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
             target="_blank"
             class="link"
@@ -121,16 +123,16 @@
             KPIs
           </a>
           provided in the strategy framwork, explain:
-          <ul class="list-disc list-outside pl-4 mb-2 mt-2">
+          <ul class="mt-2 mb-2 list-outside list-disc pl-4">
             <li>if your proposal directly supports any of those and how</li>
             <li>
-              AND / OR propose other additional to the existing list, describe why they are relevant and how your
-              proposal relates to them.
+              AND / OR propose other additional to the existing list, describe why they are relevant
+              and how your proposal relates to them.
             </li>
           </ul>
           <p>
-            For each selected KPI, explain the specific actions, methods, or approaches you will use to drive meaningful
-            impact.
+            For each selected KPI, explain the specific actions, methods, or approaches you will use
+            to drive meaningful impact.
           </p>
         {/snippet}
         <ItemContainer>

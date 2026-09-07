@@ -57,16 +57,16 @@
     bind:value
     {placeholder}
     onkeydown={handleKeydown}
-    class="min-w-0 flex-1 pl-2 pr-8"
+    class="min-w-0 flex-1 pr-8 pl-2"
     aria-label="Search"
   />
-  <div class="absolute right-0 top-0 flex h-full items-center gap-0 pr-0.5">
+  <div class="absolute top-0 right-0 flex h-full items-center gap-0 pr-0.5">
     {#if value.trim()}
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        class="size-8! min-w-0 shrink-0 rounded-none p-0! bg-white hover:bg-white cursor-pointer"
+        class="size-8! min-w-0 shrink-0 cursor-pointer rounded-none bg-white p-0! hover:bg-white"
         onclick={clear}
         aria-label="Clear search"
         title="Clear search"
@@ -78,7 +78,7 @@
       type="button"
       variant="ghost"
       size="icon"
-      class="size-8! min-w-0 shrink-0 rounded-none p-0! -ml-3 hover:bg-transparent cursor-pointer"
+      class="-ml-3 size-8! min-w-0 shrink-0 cursor-pointer rounded-none p-0! hover:bg-transparent"
       onclick={submit}
       aria-label="Search"
       title="Search"

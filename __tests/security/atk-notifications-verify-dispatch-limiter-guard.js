@@ -25,7 +25,9 @@ const checks = [
     message: "Notifications route does not import/use verify dispatch limiter.",
   },
   {
-    ok: notificationsSource.includes("notificationsWriteLimiter,\n  notificationsVerifyDispatchLimiter,"),
+    ok: notificationsSource.includes(
+      "notificationsWriteLimiter,\n  notificationsVerifyDispatchLimiter,",
+    ),
     message: "Verify dispatch limiter is not chained with notifications PUT middleware.",
   },
 ];

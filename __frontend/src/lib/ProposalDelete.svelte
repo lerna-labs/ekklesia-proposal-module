@@ -4,11 +4,7 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import { Button } from "$lib/components/ui/button";
 
-  let {
-    open = $bindable(false),
-    proposal = null,
-    onSuccess = () => {},
-  } = $props();
+  let { open = $bindable(false), proposal = null, onSuccess = () => {} } = $props();
 
   let submitting = $state(false);
 
@@ -41,23 +37,14 @@
       <Dialog.Title>Delete proposal</Dialog.Title>
       <Dialog.Description>
         {#if proposal}
-          This will permanently delete the draft proposal "{proposal.title ?? proposal._id}". This cannot be undone.
+          This will permanently delete the draft proposal "{proposal.title ?? proposal._id}". This
+          cannot be undone.
         {/if}
       </Dialog.Description>
     </Dialog.Header>
     <Dialog.Footer class="gap-2">
-      <Button
-        variant="outline"
-        disabled={submitting}
-        onclick={() => (open = false)}
-      >
-        Cancel
-      </Button>
-      <Button
-        variant="destructive"
-        disabled={submitting}
-        onclick={confirmDelete}
-      >
+      <Button variant="outline" disabled={submitting} onclick={() => (open = false)}>Cancel</Button>
+      <Button variant="destructive" disabled={submitting} onclick={confirmDelete}>
         {submitting ? "Deleting…" : "Delete proposal"}
       </Button>
     </Dialog.Footer>

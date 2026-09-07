@@ -114,9 +114,7 @@ Reports duplicate non-draft/non-archived treasuryDonationTxHash values, then
   try {
     const collisions = await findCollisions();
     if (collisions.length > 0) {
-      console.error(
-        `Found ${collisions.length} colliding treasuryDonationTxHash value(s):`,
-      );
+      console.error(`Found ${collisions.length} colliding treasuryDonationTxHash value(s):`);
       for (const row of collisions) {
         console.error(
           JSON.stringify(
@@ -132,9 +130,7 @@ Reports duplicate non-draft/non-archived treasuryDonationTxHash values, then
           ),
         );
       }
-      console.error(
-        "Resolve collisions before creating the unique index. Aborting.",
-      );
+      console.error("Resolve collisions before creating the unique index. Aborting.");
       process.exit(1);
     }
 

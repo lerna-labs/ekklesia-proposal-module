@@ -10,15 +10,7 @@
 
   let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
 
-  const ProposalCardComponent = $derived(
-    PROPOSAL_CARD_MAP[vote?.form] ?? DefaultProposalCard,
-  );
+  const ProposalCardComponent = $derived(PROPOSAL_CARD_MAP[vote?.form] ?? DefaultProposalCard);
 </script>
 
-<ProposalCardComponent
-  {proposal}
-  {vote}
-  {showLink}
-  {policyNow}
-  class={className}
-/>
+<ProposalCardComponent {proposal} {vote} {showLink} {policyNow} class={className} />

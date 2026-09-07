@@ -22,11 +22,11 @@
 </script>
 
 {#if loading && showSpinner}
-  <div class="ml-6 mb-4">
+  <div class="mb-4 ml-6">
     <Card.Root class="border-muted">
       <Card.Content class="flex items-center justify-center gap-2 py-6">
-        <Loader2Icon class="size-5 animate-spin text-muted-foreground" />
-        <span class="text-sm text-muted-foreground">Loading replies…</span>
+        <Loader2Icon class="text-muted-foreground size-5 animate-spin" />
+        <span class="text-muted-foreground text-sm">Loading replies…</span>
       </Card.Content>
     </Card.Root>
   </div>

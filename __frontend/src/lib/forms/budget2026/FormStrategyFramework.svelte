@@ -5,7 +5,13 @@
   import ToolTip from "$lib/components/form/ToolTip.svelte";
   import FormPillarCard from "./FormPillarCard.svelte";
 
-  let { formData = $bindable(), vote, pillars: pillarOptions = [], proposal, validationErrors } = $props();
+  let {
+    formData = $bindable(),
+    vote,
+    pillars: pillarOptions = [],
+    proposal,
+    validationErrors,
+  } = $props();
 
   let sfErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.strategyFramework ??
@@ -48,8 +54,8 @@
     </p>
   </div>
   <Field.Field class="gap-2">
-    <div class="flex items-center gap-1 w-full">
-      <Field.Label class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+    <div class="flex w-full items-center gap-1">
+      <Field.Label class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
         Strategic Pillars
         <span class="text-(--mbo-electric-blue)">*</span>
       </Field.Label>
@@ -57,7 +63,7 @@
         content="Select the pillars that align most with your proposal. Look at the focus areas provided as example for each pillar."
         fieldLabel="Strategic Pillars"
       />
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      <span class="min-w-0 flex-1" aria-hidden="true"></span>
     </div>
     <div
       class="space-y-2 rounded-md border {pillarsError
@@ -90,8 +96,8 @@
     <h3>Why have you selected those pillars?</h3>
 
     <p class="text-muted-foreground">
-      Provide a rationale about why those pillars align the most to your proposal and how your proposal supports them.
-      Look also at the <a
+      Provide a rationale about why those pillars align the most to your proposal and how your
+      proposal supports them. Look also at the <a
         href="https://product-committee.mypinata.cloud/ipfs/bafkreiewgqs6c25nk7gtzlf5udrqumpiqnbxhix7tu4yvssr2lgxgs3k2m"
         target="_blank"
         class="link"
@@ -113,7 +119,7 @@
     />
   </Field.Field>
 
-  <Field.Field class="gap-2 mb-8">
+  <Field.Field class="mb-8 gap-2">
     <h3>Does your proposal support any of the KPIs of the strategy framework?</h3>
     <p class="text-muted-foreground">
       Looking at the <a
@@ -128,13 +134,13 @@
     <ul class="text-muted-foreground">
       <li>if your proposal directly supports any of those and how</li>
       <li>
-        AND / OR propose other additional to the existing list, describe why they are relevant and how your proposal
-        relates to them.
+        AND / OR propose other additional to the existing list, describe why they are relevant and
+        how your proposal relates to them.
       </li>
     </ul>
     <p class="text-muted-foreground">
-      For each selected KPI, explain the specific actions, methods, or approaches you will use to drive meaningful
-      impact.
+      For each selected KPI, explain the specific actions, methods, or approaches you will use to
+      drive meaningful impact.
     </p>
     <Textarea
       id="kpiAlignment"

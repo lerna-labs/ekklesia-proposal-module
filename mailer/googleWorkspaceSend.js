@@ -13,8 +13,7 @@ const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 
 export function resolveServiceAccountKeyPath() {
   const fromEnv =
-    process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-    process.env.GMAIL_SERVICE_ACCOUNT_KEY_PATH;
+    process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GMAIL_SERVICE_ACCOUNT_KEY_PATH;
   if (fromEnv && String(fromEnv).trim()) {
     return path.resolve(String(fromEnv).trim());
   }
@@ -86,15 +85,9 @@ export async function sendViaGoogleWorkspace({
   try {
     creds = JSON.parse(await readFile(keyPath, "utf8"));
   } catch {
-    throw new Error(
-      `Google Workspace mail: could not read or parse JSON at ${keyPath}`,
-    );
+    throw new Error(`Google Workspace mail: could not read or parse JSON at ${keyPath}`);
   }
-  if (
-    creds.type !== "service_account" ||
-    !creds.client_email ||
-    !creds.private_key
-  ) {
+  if (creds.type !== "service_account" || !creds.client_email || !creds.private_key) {
     throw new Error(
       `Google Workspace mail: ${keyPath} must be a service account JSON with client_email and private_key.`,
     );
@@ -123,7 +116,10 @@ export async function sendViaGoogleWorkspace({
 
   const info = await transport.sendMail({
     from: nodemailerFrom(from),
-    to: to.map((r) => formatAddress(r)).filter(Boolean).join(", "),
+    to: to
+      .map((r) => formatAddress(r))
+      .filter(Boolean)
+      .join(", "),
     subject,
     html,
     text: plain || undefined,
@@ -140,8 +136,7 @@ export async function sendViaGoogleWorkspace({
       requestBody: { raw },
     });
   } catch (err) {
-    const status = /** @type {{ response?: { status?: number } }} */ (err).response
-      ?.status;
+    const status = /** @type {{ response?: { status?: number } }} */ (err).response?.status;
     const e = /** @type {Error & { statusCode?: number }} */ (err);
     if (status != null) e.statusCode = status;
     throw e;

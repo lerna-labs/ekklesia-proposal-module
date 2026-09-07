@@ -39,7 +39,11 @@ export function excludeNonPublicFields(proposal, { isProposer, isAdmin }) {
   }
 
   // Reduce contractingParty to public-safe shape: only legalEntityType.
-  if (result.metaData && result.metaData.contractingParty != null && typeof result.metaData.contractingParty === "object") {
+  if (
+    result.metaData &&
+    result.metaData.contractingParty != null &&
+    typeof result.metaData.contractingParty === "object"
+  ) {
     const cp = result.metaData.contractingParty;
     result.metaData.contractingParty = {
       legalEntityType: cp.legalEntityType ?? "",

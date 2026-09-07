@@ -22,11 +22,9 @@
     if (!open) onClose?.();
   }}
 >
-  <AlertDialog.Content
-    class="sm:max-w-[650px] max-h-[90dvh] flex flex-col min-h-0"
-  >
+  <AlertDialog.Content class="flex max-h-[90dvh] min-h-0 flex-col sm:max-w-[650px]">
     <form
-      class="flex flex-col min-h-0 flex-1"
+      class="flex min-h-0 flex-1 flex-col"
       onsubmit={(e) => {
         e.preventDefault();
         onSubmit?.();
@@ -41,7 +39,7 @@
           {/if}
         </AlertDialog.Title>
       </AlertDialog.Header>
-      <div class="py-4 px-1.5 overflow-y-auto min-h-0 flex-1">
+      <div class="min-h-0 flex-1 overflow-y-auto px-1.5 py-4">
         {#key replyTo ? replyTo._id : "add"}
           <Textarea
             id="comment-content"
@@ -53,16 +51,11 @@
           />
         {/key}
         {#if submitError}
-          <p class="text-sm text-destructive mt-2">{submitError}</p>
+          <p class="text-destructive mt-2 text-sm">{submitError}</p>
         {/if}
       </div>
       <AlertDialog.Footer class="shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onclick={() => onClose?.()}
-        >
+        <Button type="button" variant="outline" size="sm" onclick={() => onClose?.()}>
           Cancel
         </Button>
         <Button type="submit" size="sm" disabled={isSubmitting} class="text-xs">

@@ -163,7 +163,7 @@
   }
 
   .link {
-    @apply text-(--mbo-electric-blue) hover:text-(--mbo-cardano-blue) border-b-1 border-(--mbo-electric-blue) hover:border-(--mbo-cardano-blue) border-dashed;
+    @apply border-b-1 border-dashed border-(--mbo-electric-blue) text-(--mbo-electric-blue) hover:border-(--mbo-cardano-blue) hover:text-(--mbo-cardano-blue);
   }
 
   p strong {
@@ -172,15 +172,15 @@
 
   /* Locked heading scale (see typography plan): element selectors only */
   h1 {
-    @apply font-medium text-foreground;
+    @apply text-foreground font-medium;
     font-size: 2rem;
   }
   h2 {
-    @apply font-medium text-foreground;
+    @apply text-foreground font-medium;
     font-size: 1.5rem;
   }
   h3 {
-    @apply font-medium leading-tight text-foreground;
+    @apply text-foreground leading-tight font-medium;
     font-size: 1.25rem;
   }
   h4 {
@@ -192,13 +192,13 @@
     font-size: 1.125rem;
   }
   h6 {
-    @apply font-medium  text-[#575960];
+    @apply font-medium text-[#575960];
     font-size: 1rem;
   }
 
   /* Comments block title stays smaller than section h2 */
   .comments-section h2 {
-    @apply text-xl font-medium text-foreground;
+    @apply text-foreground text-xl font-medium;
   }
 }
 

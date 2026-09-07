@@ -17,8 +17,7 @@ export async function applyPublicFieldExclusion(proposal, voteDoc, { isProposer,
     return proposal;
   }
 
-  const scriptPath =
-    typeof voteDoc?.excludeScript === "string" ? voteDoc.excludeScript.trim() : "";
+  const scriptPath = typeof voteDoc?.excludeScript === "string" ? voteDoc.excludeScript.trim() : "";
   if (!scriptPath) {
     return proposal;
   }

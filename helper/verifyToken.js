@@ -53,9 +53,7 @@ export async function verifyToken(req) {
       };
     }
 
-    const user = await User.findById(decoded.userId)
-      .select("sessionVersion")
-      .lean();
+    const user = await User.findById(decoded.userId).select("sessionVersion").lean();
     if ((user?.sessionVersion ?? 0) !== decoded.sv) {
       return {
         status: "error",

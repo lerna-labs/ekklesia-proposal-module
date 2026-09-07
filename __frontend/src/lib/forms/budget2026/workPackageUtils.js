@@ -51,9 +51,7 @@ export function normalizeWorkPackage(pkg) {
           duration: (m?.duration ?? "").toString(),
         }))
       : [],
-    budgetBreakdown: Array.isArray(pkg.budgetBreakdown)
-      ? [...pkg.budgetBreakdown]
-      : [],
+    budgetBreakdown: Array.isArray(pkg.budgetBreakdown) ? [...pkg.budgetBreakdown] : [],
     noMilestonesBreakdown: Boolean(pkg.noMilestonesBreakdown),
     milestoneAlternative: (pkg.milestoneAlternative ?? "").toString(),
   };

@@ -22,12 +22,10 @@
   }
 </script>
 
-<div class="container mx-auto max-w-4xl py-8 px-4">
+<div class="container mx-auto max-w-4xl px-4 py-8">
   <div class="mb-8">
     <h1 class="tracking-tight">Votes</h1>
-    <p class="text-muted-foreground mt-1">
-      Browse vote cycles and view proposals.
-    </p>
+    <p class="text-muted-foreground mt-1">Browse vote cycles and view proposals.</p>
   </div>
 
   {#if !votes.length}
@@ -53,9 +51,7 @@
                 {/if}
               </Card.Header>
               <Card.Content class="pt-0">
-                <dl
-                  class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground"
-                >
+                <dl class="text-muted-foreground flex flex-wrap gap-x-6 gap-y-1 text-sm">
                   {#if vote.submissionStartDate || vote.submissionEndDate}
                     <div class="flex gap-1">
                       <dt>Submission:</dt>
@@ -75,9 +71,7 @@
                 </dl>
               </Card.Content>
               <Card.Footer class="border-t pt-4">
-                <Button variant="ghost" size="sm" class="w-fit">
-                  View proposals →
-                </Button>
+                <Button variant="ghost" size="sm" class="w-fit">View proposals →</Button>
               </Card.Footer>
             </a>
           </Card.Root>
@@ -105,10 +99,7 @@
                   </Pagination.Item>
                 {:else}
                   <Pagination.Item>
-                    <Pagination.Link
-                      page={p}
-                      isActive={currentPage === p.value}
-                    >
+                    <Pagination.Link page={p} isActive={currentPage === p.value}>
                       {p.value}
                     </Pagination.Link>
                   </Pagination.Item>

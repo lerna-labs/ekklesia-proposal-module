@@ -6,7 +6,7 @@ export function setFloatingElemPositionForLinkEditor(
   floatingElem,
   anchorElem,
   verticalGap = VERTICAL_GAP,
-  horizontalOffset = HORIZONTAL_OFFSET
+  horizontalOffset = HORIZONTAL_OFFSET,
 ) {
   const scrollerElem = anchorElem?.parentElement;
   if (targetRect === null || !scrollerElem) {

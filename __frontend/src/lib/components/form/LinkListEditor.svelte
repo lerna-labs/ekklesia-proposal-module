@@ -29,10 +29,7 @@
     title: z
       .string()
       .min(1, "Title is required")
-      .max(
-        TITLE_MAX_LENGTH,
-        `Title must be at most ${TITLE_MAX_LENGTH} characters`,
-      ),
+      .max(TITLE_MAX_LENGTH, `Title must be at most ${TITLE_MAX_LENGTH} characters`),
 
     url: z
       .string()
@@ -133,7 +130,7 @@
   {#if label || notPublic || description}
     <div class="flex flex-row items-center gap-1 pb-2">
       {#if label}
-        <span class="text-sm font-medium mb-0">{label}</span>
+        <span class="mb-0 text-sm font-medium">{label}</span>
       {/if}
       {#if notPublic}
         <PrivateFieldIndicator />
@@ -141,21 +138,19 @@
       {#if description}
         <ToolTip content={description} fieldLabel={label} />
       {/if}
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      <span class="min-w-0 flex-1" aria-hidden="true"></span>
     </div>
   {/if}
   <Field.Field class="gap-1">
     {#if links.length > 0}
-      <ul class="link-list-editor-list space-y-2 list-none p-0 m-0 mb-1!">
+      <ul class="link-list-editor-list m-0 mb-1! list-none space-y-2 p-0">
         {#each links as link, index (index)}
           <li>
             <Card.Root class="py-2">
-              <Card.Header
-                class="flex flex-row items-center gap-2 py-0 pl-4 pr-2 text-sm"
-              >
+              <Card.Header class="flex flex-row items-center gap-2 py-0 pr-2 pl-4 text-sm">
                 <button
                   type="button"
-                  class="min-w-0 flex-1 font-medium truncate text-left cursor-pointer focus:outline-none"
+                  class="min-w-0 flex-1 cursor-pointer truncate text-left font-medium focus:outline-none"
                   title={link.title}
                   onclick={() => openAddDialog(index)}
                 >
@@ -165,7 +160,7 @@
                   type="button"
                   variant="outline"
                   size="icon"
-                  class="shrink-0 size-8 cursor-pointer"
+                  class="size-8 shrink-0 cursor-pointer"
                   aria-label="Open link in new window"
                   onclick={() => openLinkUrl(link.url)}
                 >
@@ -175,7 +170,7 @@
                   type="button"
                   variant="outline"
                   size="icon"
-                  class="shrink-0 size-8 cursor-pointer"
+                  class="size-8 shrink-0 cursor-pointer"
                   aria-label="Edit link"
                   onclick={() => openAddDialog(index)}
                 >
@@ -185,7 +180,7 @@
                   type="button"
                   variant="outline"
                   size="icon"
-                  class="shrink-0 size-8 cursor-pointer"
+                  class="size-8 shrink-0 cursor-pointer"
                   aria-label="Remove link"
                   onclick={() => requestDelete(index)}
                 >
@@ -197,7 +192,7 @@
         {/each}
       </ul>
     {:else if emptyMessage}
-      <p class="text-sm text-muted-foreground">{emptyMessage}</p>
+      <p class="text-muted-foreground text-sm">{emptyMessage}</p>
     {/if}
 
     <div class="flex justify-start">
@@ -205,7 +200,7 @@
         type="button"
         variant="outline"
         size="sm"
-        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+        class="add-item-btn w-fit cursor-pointer gap-1 text-xs"
         onclick={openAddDialog}
       >
         <PlusIcon class="size-4" />
@@ -243,9 +238,7 @@
         required
         validationErrors={{
           properties: {
-            "link-list-title": draftErrors.title
-              ? { errors: [draftErrors.title] }
-              : {},
+            "link-list-title": draftErrors.title ? { errors: [draftErrors.title] } : {},
           },
         }}
       />
@@ -259,22 +252,15 @@
         required
         validationErrors={{
           properties: {
-            "link-list-url": draftErrors.url
-              ? { errors: [draftErrors.url] }
-              : {},
+            "link-list-url": draftErrors.url ? { errors: [draftErrors.url] } : {},
           },
         }}
       />
     </div>
-    <AlertDialog.Footer class="flex gap-2 flex-wrap">
+    <AlertDialog.Footer class="flex flex-wrap gap-2">
       {#if editingIndex != null}
-        <Button
-          type="button"
-          variant="destructive"
-          class="mr-auto"
-          onclick={deleteFromDialog}
-        >
-          <TrashIcon class="size-4 mr-1" />
+        <Button type="button" variant="destructive" class="mr-auto" onclick={deleteFromDialog}>
+          <TrashIcon class="mr-1 size-4" />
           Delete
         </Button>
       {/if}
@@ -298,7 +284,7 @@
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmDelete}
       >
         Delete

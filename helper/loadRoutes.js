@@ -45,9 +45,7 @@ export async function loadRoutes(directory, app, baseRoute = "", failures = []) 
   }
 
   if (baseRoute === "" && failures.length > 0) {
-    const summary = failures
-      .map((f) => `${f.path}: ${f.message}`)
-      .join("; ");
+    const summary = failures.map((f) => `${f.path}: ${f.message}`).join("; ");
     throw new Error(`Failed to load ${failures.length} route(s): ${summary}`);
   }
 }

@@ -35,8 +35,7 @@
    * @param {number} nowMs
    */
   function phaseElapsedPercent(t0Ms, t1Ms, nowMs) {
-    if (!Number.isFinite(t0Ms) || !Number.isFinite(t1Ms) || t1Ms <= t0Ms)
-      return 0;
+    if (!Number.isFinite(t0Ms) || !Number.isFinite(t1Ms) || t1Ms <= t0Ms) return 0;
     if (nowMs <= t0Ms) return 0;
     if (nowMs >= t1Ms) return 100;
     const p = ((nowMs - t0Ms) / (t1Ms - t0Ms)) * 100;
@@ -88,11 +87,7 @@
   });
 
   let cardTitlePrefix = $derived.by(() =>
-    activePhaseIndex !== null
-      ? ""
-      : upcomingPhaseIndex !== null
-        ? "Upcoming: "
-        : "",
+    activePhaseIndex !== null ? "" : upcomingPhaseIndex !== null ? "Upcoming: " : "",
   );
 </script>
 
@@ -100,28 +95,25 @@
   {@const startMs = toMs(phase.start)}
   {@const endMs = toMs(phase.end)}
   {@const hasEnd = phaseHasEnd(phase)}
-  {@const timelineState =
-    Number.isNaN(startMs)
-      ? "upcoming"
-      : !hasEnd
-        ? effectiveNowMs >= startMs
+  {@const timelineState = Number.isNaN(startMs)
+    ? "upcoming"
+    : !hasEnd
+      ? effectiveNowMs >= startMs
+        ? "active"
+        : "upcoming"
+      : effectiveNowMs > endMs
+        ? "finished"
+        : effectiveNowMs >= startMs
           ? "active"
-          : "upcoming"
-        : effectiveNowMs > endMs
-          ? "finished"
-          : effectiveNowMs >= startMs
-            ? "active"
-            : "upcoming"}
+          : "upcoming"}
   <div class="grid grid-cols-[auto_minmax(0,1fr)] items-stretch gap-x-3">
     <div class="flex min-h-0 flex-col items-center">
       {#if timelineState === "active"}
         <div
-          class="box-border flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--mbo-electric-blue) bg-background"
+          class="bg-background box-border flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-(--mbo-electric-blue)"
           aria-hidden="true"
         >
-          <span
-            class="size-3 shrink-0 rounded-full bg-(--mbo-electric-blue) animate-pulse"
-          ></span>
+          <span class="size-3 shrink-0 animate-pulse rounded-full bg-(--mbo-electric-blue)"></span>
         </div>
       {:else if timelineState === "finished"}
         <div
@@ -132,27 +124,25 @@
         </div>
       {:else}
         <div
-          class="box-border flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-border bg-background"
+          class="border-border bg-background box-border flex size-5 shrink-0 items-center justify-center rounded-full border-2"
           aria-hidden="true"
         ></div>
       {/if}
       {#if i < phaseCount - 1}
-        {@const railProgressPct = hasEnd
-          ? phaseElapsedPercent(startMs, endMs, effectiveNowMs)
-          : 0}
+        {@const railProgressPct = hasEnd ? phaseElapsedPercent(startMs, endMs, effectiveNowMs) : 0}
         <div
-          class="relative my-1 w-0.5 min-h-4 flex-1 shrink-0 overflow-hidden rounded-full pointer-events-none"
+          class="pointer-events-none relative my-1 min-h-4 w-0.5 flex-1 shrink-0 overflow-hidden rounded-full"
           aria-hidden="true"
         >
-          <div class="absolute inset-0 bg-border"></div>
+          <div class="bg-border absolute inset-0"></div>
           <div
-            class="absolute left-0 top-0 w-full bg-(--mbo-electric-blue)"
+            class="absolute top-0 left-0 w-full bg-(--mbo-electric-blue)"
             style:height="{railProgressPct}%"
           ></div>
         </div>
       {/if}
     </div>
-    <div class="w-full space-y-1.5 pb-6 pt-0.5">
+    <div class="w-full space-y-1.5 pt-0.5 pb-6">
       <div
         class="mb-0 text-sm font-medium {timelineState === 'upcoming'
           ? 'text-muted-foreground'
@@ -161,7 +151,7 @@
         {titlePrefix}{phase.title}
       </div>
       <p class="m-0 mt-1 text-xs leading-relaxed">
-        <span class="italic font-medium text-muted-foreground">from</span>
+        <span class="text-muted-foreground font-medium italic">from</span>
         <span
           class="font-medium {timelineState === 'upcoming'
             ? 'text-muted-foreground'
@@ -172,7 +162,7 @@
       </p>
       {#if hasEnd}
         <p class="m-0 mt-0.5 text-xs leading-relaxed">
-          <span class="italic font-medium text-muted-foreground">to</span>
+          <span class="text-muted-foreground font-medium italic">to</span>
           <span
             class="font-medium {timelineState === 'upcoming'
               ? 'text-muted-foreground'
@@ -189,7 +179,7 @@
             target="_blank"
             rel="noopener noreferrer"
             size="sm"
-            class="w-fit text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue) border border-(--mbo-electric-blue)"
+            class="w-fit border border-(--mbo-electric-blue) bg-(--mbo-electric-blue) text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
           >
             {phase.link.label}
             <ExternalLinkIcon class="size-3" aria-hidden="true" />
@@ -200,13 +190,11 @@
   </div>
 {/snippet}
 
-<Card.Root class="min-h-0 min-w-0 h-full gap-3">
+<Card.Root class="h-full min-h-0 min-w-0 gap-3">
   <Card.Header class="pb-0">
     <Card.Title>Timeline</Card.Title>
   </Card.Header>
-  <Card.Content
-    class="flex w-full min-w-0 flex-col items-stretch text-left text-xs pt-0!"
-  >
+  <Card.Content class="flex w-full min-w-0 flex-col items-stretch pt-0! text-left text-xs">
     {#if cardPhaseIndex !== null}
       {@render phaseTimelineRow(
         phases[cardPhaseIndex],
@@ -215,7 +203,7 @@
         cardTitlePrefix,
       )}
     {:else}
-      <p class="m-0 text-xs text-muted-foreground">No phases to show.</p>
+      <p class="text-muted-foreground m-0 text-xs">No phases to show.</p>
     {/if}
   </Card.Content>
   <Card.Footer>
@@ -232,14 +220,10 @@
 </Card.Root>
 
 <Dialog.Root bind:open={dialogOpen}>
-  <Dialog.Content
-    class="flex max-h-[85vh] flex-col gap-4 overflow-hidden sm:max-w-lg"
-  >
+  <Dialog.Content class="flex max-h-[85vh] flex-col gap-4 overflow-hidden sm:max-w-lg">
     <Dialog.Header class="pb-[12px]">
       <Dialog.Title>Timeline</Dialog.Title>
-      <Dialog.Description>
-        Full list of phases and dates in UTC.
-      </Dialog.Description>
+      <Dialog.Description>Full list of phases and dates in UTC.</Dialog.Description>
     </Dialog.Header>
 
     <div class="min-h-0 flex-1 overflow-y-auto pr-1">
@@ -249,10 +233,7 @@
     </div>
 
     <Dialog.Footer class="gap-2">
-      <Dialog.Close
-        type="button"
-        class={buttonVariants({ variant: "outline" })}
-      >
+      <Dialog.Close type="button" class={buttonVariants({ variant: "outline" })}>
         Close
       </Dialog.Close>
     </Dialog.Footer>

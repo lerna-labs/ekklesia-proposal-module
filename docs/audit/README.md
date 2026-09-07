@@ -8,13 +8,13 @@ This index lists every audit finding (**F-001** through **F-031**) with links to
 
 | Status | Count |
 |--------|------:|
-| Resolved | 23 |
+| Resolved | 24 |
 | Accepted (by design) | 5 |
 | Partially resolved | 1 |
-| Open | 1 |
+| Open | 0 |
 | Open (upstream, partial) | 1 |
 
-Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**.
+Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494).
 
 ---
 
@@ -62,7 +62,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 | F-022 | Notification unsubscribe secret cleared on PUT | Resolved | [§ F-022](medium-low/F-013-through-F-031.md#f-022-notification-unsubscribe-secret-cleared-on-put) | [Resolution](resolutions/F-022-resolution.md) |
 | F-023 | Logout does not revoke JWTs | Resolved | [§ F-023](medium-low/F-013-through-F-031.md#f-023-logout-does-not-revoke-jwts) | [Resolution](resolutions/F-023-resolution.md) |
 | F-024 | Direct `console.*` logging | Accepted | [§ F-024](medium-low/F-013-through-F-031.md#f-024-direct-console-logging) | [Resolution](resolutions/F-024-resolution.md) |
-| F-025 | Missing editor / formatter config | Open | [§ F-025](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) | [Inline status](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) |
+| F-025 | Missing editor / formatter config | Resolved | [§ F-025](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) | [Inline status](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) |
 | F-026 | HTTP server not drained on shutdown | Resolved | [§ F-026](medium-low/F-013-through-F-031.md#f-026-http-server-not-drained-on-shutdown) | [Resolution](resolutions/F-026-resolution.md) |
 | F-027 | Proposal delete docs say 204, API returns 200 | Resolved | [§ F-027](medium-low/F-013-through-F-031.md#f-027-proposal-delete-docs-say-204-api-returns-200) | [Resolution](resolutions/F-027-resolution.md) |
 | F-028 | Login redirect runs in `onMount` | Resolved | [§ F-028](medium-low/F-013-through-F-031.md#f-028-login-redirect-runs-in-onmount) | [Resolution](resolutions/F-028-resolution.md) |
@@ -78,7 +78,6 @@ From [F-013–F-031 § What still needs fixing](medium-low/F-013-through-F-031.m
 
 1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done).
 2. **F-019** — Remaining governance docs (CoC, changelog, issue/PR templates); deferred to Intersect GitHub move.
-3. **F-025** — `.editorconfig`; deferred to Intersect GitHub move.
 
 ---
 

@@ -64,7 +64,8 @@
           toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
         }
         await invalidateAll();
-        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
+        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
+          goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";

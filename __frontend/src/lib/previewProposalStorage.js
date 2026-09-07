@@ -23,10 +23,7 @@ export function clearPreviewStorage() {
 export function writePreviewPayload(proposalId, proposal) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
-      PREVIEW_STORAGE_KEY,
-      JSON.stringify({ proposalId, proposal }),
-    );
+    window.localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify({ proposalId, proposal }));
   } catch (_) {}
 }
 

@@ -3,10 +3,7 @@ import jwt from "jsonwebtoken";
 import { User } from "../schema/User.js";
 
 function getFrontendBaseUrl() {
-  return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(
-    /\/+$/,
-    "",
-  );
+  return String(process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 }
 
 /**

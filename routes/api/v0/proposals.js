@@ -10,7 +10,11 @@ import { Comment } from "../../../schema/Comment.js";
 // helper imports
 import mongoose from "mongoose";
 import { z } from "zod";
-import { isAuthenticated, rejectDuplicateParams, parsePagination } from "../../../helper/middleWare.js";
+import {
+  isAuthenticated,
+  rejectDuplicateParams,
+  parsePagination,
+} from "../../../helper/middleWare.js";
 import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
@@ -47,8 +51,7 @@ function treasuryTxHashErrorTree(message) {
   };
 }
 
-const TREASURY_TX_HASH_ALREADY_USED =
-  "This transaction hash is already used by another proposal";
+const TREASURY_TX_HASH_ALREADY_USED = "This transaction hash is already used by another proposal";
 
 /** True when Mongo rejected a write for the treasury-donation unique index (#418). */
 function isTreasuryTxHashDuplicateKeyError(error) {
@@ -57,8 +60,7 @@ function isTreasuryTxHashDuplicateKeyError(error) {
     /** @type {{ keyPattern?: Record<string, unknown>, cause?: { keyPattern?: Record<string, unknown> } }} */ (
       error
     ).keyPattern ??
-    /** @type {{ cause?: { keyPattern?: Record<string, unknown> } }} */ (error).cause
-      ?.keyPattern;
+    /** @type {{ cause?: { keyPattern?: Record<string, unknown> } }} */ (error).cause?.keyPattern;
   return Boolean(keyPattern?.["metaData.treasuryDonationTxHash"]);
 }
 
@@ -85,7 +87,9 @@ function coldCredentialHashErrorTree(message) {
 
 /** Normalize CC cold credential hash for validation/lookup/storage. */
 function normalizeCcColdCredentialHash(value) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 function requiresTreasuryDonationValidation(voteDoc) {
@@ -106,10 +110,7 @@ function sendTreasuryValidationFailure(res, validationResult) {
       validationResult.retryAfterSeconds != null &&
       Number.isFinite(validationResult.retryAfterSeconds)
     ) {
-      res.set(
-        "Retry-After",
-        String(Math.ceil(validationResult.retryAfterSeconds)),
-      );
+      res.set("Retry-After", String(Math.ceil(validationResult.retryAfterSeconds)));
     }
     return res.status(503).json({
       status: "error",
@@ -136,7 +137,9 @@ function sendTreasuryValidationFailure(res, validationResult) {
  * >}
  */
 async function validateProposalTreasuryTxHash(txHash, proposerId, voteDoc, options = {}) {
-  const normalizedHash = String(txHash ?? "").trim().toLowerCase();
+  const normalizedHash = String(txHash ?? "")
+    .trim()
+    .toLowerCase();
   if (!normalizedHash) {
     return { ok: false, error: "Treasury donation verification hash is required to submit" };
   }
@@ -236,7 +239,11 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     const proposerId = req.userId;
 
     const rawVoteId = req.body?.voteId;
-    if (!rawVoteId || !mongoose.Types.ObjectId.isValid(rawVoteId) || String(rawVoteId).length !== 24) {
+    if (
+      !rawVoteId ||
+      !mongoose.Types.ObjectId.isValid(rawVoteId) ||
+      String(rawVoteId).length !== 24
+    ) {
       return res.status(400).json({
         status: "error",
         message: "Invalid voteId. Must be a valid ObjectId.",
@@ -301,10 +308,10 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
     const defaultDraftMetaData =
       status === "draft"
         ? {
-          trackRecord: "",
-          keyPerformanceIndicators: [],
-          proposalDetails: { conversionRate: "", workPackages: [] },
-        }
+            trackRecord: "",
+            keyPerformanceIndicators: [],
+            proposalDetails: { conversionRate: "", workPackages: [] },
+          }
         : null;
 
     let rawMetaData = defaultDraftMetaData ? { ...defaultDraftMetaData, ...metaData } : metaData;
@@ -321,7 +328,9 @@ router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) =>
         return res.status(400).json({
           status: "error",
           message: "Validation failed",
-          errors: treasuryTxHashErrorTree("Treasury donation verification hash is required to submit"),
+          errors: treasuryTxHashErrorTree(
+            "Treasury donation verification hash is required to submit",
+          ),
         });
       }
       const validationResult = await validateProposalTreasuryTxHash(
@@ -428,143 +437,141 @@ const WITHDRAWAL_CATEGORIES = [
  * @returns {Object} 403 - Not the proposer or a vote admin
  * @returns {Object} 404 - Proposal not found
  */
-router.put("/:proposalId/withdraw", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { proposalId } = req.params;
-    const { category, comment } = req.body ?? {};
+router.put(
+  "/:proposalId/withdraw",
+  isAuthenticated,
+  authenticatedWriteLimiter,
+  async (req, res) => {
+    try {
+      const userId = req.userId;
+      const { proposalId } = req.params;
+      const { category, comment } = req.body ?? {};
 
-    if (
-      !mongoose.Types.ObjectId.isValid(proposalId) ||
-      proposalId.length !== 24
-    ) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid proposalId. Must be a valid ObjectId.",
-      });
-    }
-
-    if (!category || !WITHDRAWAL_CATEGORIES.includes(category)) {
-      return res.status(400).json({
-        status: "error",
-        message: `category is required and must be one of: ${WITHDRAWAL_CATEGORIES.join(", ")}`,
-      });
-    }
-
-    const commentStr =
-      typeof comment === "string" ? comment.trim() : "";
-    if (!commentStr) {
-      return res.status(400).json({
-        status: "error",
-        message: "comment is required and must be a non-empty string.",
-      });
-    }
-    if (commentStr.length > 1000) {
-      return res.status(400).json({
-        status: "error",
-        message: "comment must be at most 1000 characters.",
-      });
-    }
-
-    const proposal = await Proposal.findById(proposalId);
-    if (!proposal) {
-      return res.status(404).json({
-        status: "error",
-        message: "Proposal not found",
-      });
-    }
-
-    if (proposal.status !== "live") {
-      return res.status(400).json({
-        status: "error",
-        message: "Only live proposals can be withdrawn. Draft proposals can be deleted.",
-      });
-    }
-
-    const voteDoc = await Vote.findById(proposal.voteId).lean();
-    if (!voteDoc) {
-      return res.status(400).json({
-        status: "error",
-        message: "Proposal vote not found.",
-      });
-    }
-
-    // Require: authenticated user must be the proposer or a vote admin
-    const authUserId = String(userId ?? "").trim();
-    const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
-    const isProposer = proposerIdStr && authUserId && proposerIdStr === authUserId;
-    const isVoteAdmin =
-      Array.isArray(voteDoc.admins) &&
-      voteDoc.admins.some((id) => String(id).trim() === authUserId);
-
-    if (!isProposer && !isVoteAdmin) {
-      return res.status(403).json({
-        status: "error",
-        message: "Only the proposer or a vote admin can withdraw this proposal.",
-      });
-    }
-
-    const now = new Date();
-    // Date limits apply only to live proposals
-    if (proposal.status === "live") {
-      if (isProposer && voteDoc.reviewEndDate && now > new Date(voteDoc.reviewEndDate)) {
+      if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
         return res.status(400).json({
           status: "error",
-          message: "Proposer withdrawal is not allowed after the vote review period has ended (reviewEndDate).",
+          message: "Invalid proposalId. Must be a valid ObjectId.",
         });
       }
-      if (
-        isVoteAdmin &&
-        voteDoc.votingStartDate &&
-        now >= new Date(voteDoc.votingStartDate)
-      ) {
+
+      if (!category || !WITHDRAWAL_CATEGORIES.includes(category)) {
         return res.status(400).json({
           status: "error",
-          message: "Admin withdrawal is only allowed before voting starts (votingStartDate).",
+          message: `category is required and must be one of: ${WITHDRAWAL_CATEGORIES.join(", ")}`,
         });
       }
-    }
 
-    proposal.status = isProposer ? "withdrawnByProposer" : "withdrawnByAdmin";
-    proposal.withdrawalDetails = {
-      category,
-      userId,
-      comment: commentStr,
-      date: now,
-    };
-    await proposal.save();
-
-    if (!isProposer) {
-      try {
-        await sendProposalWithdrawnNotification({
-          proposerId: proposerIdStr,
-          vote: {
-            slug: voteDoc.slug,
-            title: voteDoc.title,
-          },
-          proposal: {
-            id: proposal._id,
-            title: proposal.title,
-          },
-          reason: category,
-          comment: commentStr,
-          timestamp: now,
+      const commentStr = typeof comment === "string" ? comment.trim() : "";
+      if (!commentStr) {
+        return res.status(400).json({
+          status: "error",
+          message: "comment is required and must be a non-empty string.",
         });
-      } catch (error) {
-        console.error("Failed to send admin withdrawal notification:", error);
       }
-    }
+      if (commentStr.length > 1000) {
+        return res.status(400).json({
+          status: "error",
+          message: "comment must be at most 1000 characters.",
+        });
+      }
 
-    const updated = proposal.toObject ? proposal.toObject() : proposal;
-    return res.status(200).json(updated);
-  } catch (error) {
-    console.error("Error withdrawing proposal:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-});
+      const proposal = await Proposal.findById(proposalId);
+      if (!proposal) {
+        return res.status(404).json({
+          status: "error",
+          message: "Proposal not found",
+        });
+      }
+
+      if (proposal.status !== "live") {
+        return res.status(400).json({
+          status: "error",
+          message: "Only live proposals can be withdrawn. Draft proposals can be deleted.",
+        });
+      }
+
+      const voteDoc = await Vote.findById(proposal.voteId).lean();
+      if (!voteDoc) {
+        return res.status(400).json({
+          status: "error",
+          message: "Proposal vote not found.",
+        });
+      }
+
+      // Require: authenticated user must be the proposer or a vote admin
+      const authUserId = String(userId ?? "").trim();
+      const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
+      const isProposer = proposerIdStr && authUserId && proposerIdStr === authUserId;
+      const isVoteAdmin =
+        Array.isArray(voteDoc.admins) &&
+        voteDoc.admins.some((id) => String(id).trim() === authUserId);
+
+      if (!isProposer && !isVoteAdmin) {
+        return res.status(403).json({
+          status: "error",
+          message: "Only the proposer or a vote admin can withdraw this proposal.",
+        });
+      }
+
+      const now = new Date();
+      // Date limits apply only to live proposals
+      if (proposal.status === "live") {
+        if (isProposer && voteDoc.reviewEndDate && now > new Date(voteDoc.reviewEndDate)) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "Proposer withdrawal is not allowed after the vote review period has ended (reviewEndDate).",
+          });
+        }
+        if (isVoteAdmin && voteDoc.votingStartDate && now >= new Date(voteDoc.votingStartDate)) {
+          return res.status(400).json({
+            status: "error",
+            message: "Admin withdrawal is only allowed before voting starts (votingStartDate).",
+          });
+        }
+      }
+
+      proposal.status = isProposer ? "withdrawnByProposer" : "withdrawnByAdmin";
+      proposal.withdrawalDetails = {
+        category,
+        userId,
+        comment: commentStr,
+        date: now,
+      };
+      await proposal.save();
+
+      if (!isProposer) {
+        try {
+          await sendProposalWithdrawnNotification({
+            proposerId: proposerIdStr,
+            vote: {
+              slug: voteDoc.slug,
+              title: voteDoc.title,
+            },
+            proposal: {
+              id: proposal._id,
+              title: proposal.title,
+            },
+            reason: category,
+            comment: commentStr,
+            timestamp: now,
+          });
+        } catch (error) {
+          console.error("Failed to send admin withdrawal notification:", error);
+        }
+      }
+
+      const updated = proposal.toObject ? proposal.toObject() : proposal;
+      return res.status(200).json(updated);
+    } catch (error) {
+      console.error("Error withdrawing proposal:", error);
+      return res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  },
+);
 
 /**
  * @route DELETE /api/v0/proposals/:proposalId
@@ -661,9 +668,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       });
     }
 
-    const voteDoc = proposal.voteId
-      ? await Vote.findById(proposal.voteId).lean()
-      : null;
+    const voteDoc = proposal.voteId ? await Vote.findById(proposal.voteId).lean() : null;
 
     let validation;
     if (!voteDoc) {
@@ -705,10 +710,7 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
         String(rawBodyVoteId).length === 24
           ? String(rawBodyVoteId)
           : String(proposal.voteId);
-      const excludeProposalIds = [
-        proposal._id,
-        ...(proposal.versions ?? []).map((v) => v._id),
-      ];
+      const excludeProposalIds = [proposal._id, ...(proposal.versions ?? []).map((v) => v._id)];
       coldCredentialHashDuplicate = await isDuplicateCcColdCredentialHash(
         req.body?.metaData?.coldCredentialHash,
         voteIdForCcColdDup,
@@ -790,7 +792,8 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       if (voteDoc?.reviewEndDate && new Date() > new Date(voteDoc.reviewEndDate)) {
         return res.status(400).json({
           status: "error",
-          message: "Proposal cannot be updated after the vote review period has ended (reviewEndDate).",
+          message:
+            "Proposal cannot be updated after the vote review period has ended (reviewEndDate).",
         });
       }
       expectedVersion = proposal.version ?? 1;
@@ -807,22 +810,18 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
     if (proposal.status === "live") {
       sanitizedMetaData.treasuryDonationTxHash =
         proposal.metaData?.treasuryDonationTxHash ?? sanitizedMetaData.treasuryDonationTxHash;
-    } else if (
-      status === "live" &&
-      requiresTreasuryDonationValidation(targetVoteDoc)
-    ) {
+    } else if (status === "live" && requiresTreasuryDonationValidation(targetVoteDoc)) {
       const txHash = metaData?.treasuryDonationTxHash;
       if ((txHash ?? "").toString().trim() === "") {
         return res.status(400).json({
           status: "error",
           message: "Validation failed",
-          errors: treasuryTxHashErrorTree("Treasury donation verification hash is required to submit"),
+          errors: treasuryTxHashErrorTree(
+            "Treasury donation verification hash is required to submit",
+          ),
         });
       }
-      const excludeProposalIds = [
-        proposal._id,
-        ...(proposal.versions ?? []).map((v) => v._id),
-      ];
+      const excludeProposalIds = [proposal._id, ...(proposal.versions ?? []).map((v) => v._id)];
       const validationResult = await validateProposalTreasuryTxHash(
         txHash,
         // Requester identity is already resolved by isAuthenticated -> req.userId.
@@ -836,14 +835,8 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       sanitizedMetaData.treasuryDonationTxHash = validationResult.normalizedHash;
     }
 
-    if (
-      status === "live" &&
-      targetVoteDoc.validationScript === "cc-vote2026/validationScript.js"
-    ) {
-      const excludeProposalIds = [
-        proposal._id,
-        ...(proposal.versions ?? []).map((v) => v._id),
-      ];
+    if (status === "live" && targetVoteDoc.validationScript === "cc-vote2026/validationScript.js") {
+      const excludeProposalIds = [proposal._id, ...(proposal.versions ?? []).map((v) => v._id)];
       const hasDuplicateColdCredential = await isDuplicateCcColdCredentialHash(
         metaData?.coldCredentialHash,
         voteId,
@@ -984,10 +977,7 @@ router.get("/:proposalId", async (req, res) => {
     const { proposalId } = req.params;
 
     // Validate proposalId format
-    if (
-      !mongoose.Types.ObjectId.isValid(proposalId) ||
-      proposalId.length !== 24
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {
       return res.status(400).json({
         status: "error",
         message: "Invalid proposalId parameter. Must be a valid ObjectId.",
@@ -1004,9 +994,7 @@ router.get("/:proposalId", async (req, res) => {
 
     const status = proposal.status;
     const isLiveOrWithdrawn =
-      status === "live" ||
-      status === "withdrawnByProposer" ||
-      status === "withdrawnByAdmin";
+      status === "live" || status === "withdrawnByProposer" || status === "withdrawnByAdmin";
     const isArchived = status === "archived";
     const isPubliclyVisible = isLiveOrWithdrawn || isArchived;
 
@@ -1017,26 +1005,14 @@ router.get("/:proposalId", async (req, res) => {
       authenticatedUserId = String(tokenResult.userId ?? "").trim();
     }
 
-    const proposerIdStr = proposal.proposerId
-      ? String(proposal.proposerId).trim()
-      : "";
+    const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
     const isProposer =
-      authenticatedUserId &&
-      proposerIdStr &&
-      proposerIdStr === authenticatedUserId;
+      authenticatedUserId && proposerIdStr && proposerIdStr === authenticatedUserId;
 
-    let voteDoc = proposal.voteId
-      ? await Vote.findById(proposal.voteId).lean()
-      : null;
+    let voteDoc = proposal.voteId ? await Vote.findById(proposal.voteId).lean() : null;
     let isVoteAdmin = false;
-    if (
-      authenticatedUserId &&
-      voteDoc?.admins &&
-      Array.isArray(voteDoc.admins)
-    ) {
-      isVoteAdmin = voteDoc.admins.some(
-        (id) => String(id).trim() === authenticatedUserId
-      );
+    if (authenticatedUserId && voteDoc?.admins && Array.isArray(voteDoc.admins)) {
+      isVoteAdmin = voteDoc.admins.some((id) => String(id).trim() === authenticatedUserId);
     }
 
     // Only draft is restricted; live, withdrawn, and archived are visible to anyone
@@ -1045,8 +1021,7 @@ router.get("/:proposalId", async (req, res) => {
       if (!allowed) {
         return res.status(403).json({
           status: "error",
-          message:
-            "You do not have permission to view or edit this proposal.",
+          message: "You do not have permission to view or edit this proposal.",
         });
       }
     }
@@ -1097,459 +1072,431 @@ router.get("/:proposalId", async (req, res) => {
  * @returns {Object} 400 - Error if query parameters are invalid
  * @returns {Object} 404 - Vote not found
  */
-router.get("/", rejectDuplicateParams("search", "vote", "proposer", "status", "sort", "direction"), parsePagination, async (req, res) => {
-  try {
-    const {
-      search,
-      vote: voteParam,
-      proposer,
-      status: statusParam,
-      sort: sortParam,
-      direction = "desc",
-    } = req.query;
-    const { page, limit } = req.pagination;
+router.get(
+  "/",
+  rejectDuplicateParams("search", "vote", "proposer", "status", "sort", "direction"),
+  parsePagination,
+  async (req, res) => {
+    try {
+      const {
+        search,
+        vote: voteParam,
+        proposer,
+        status: statusParam,
+        sort: sortParam,
+        direction = "desc",
+      } = req.query;
+      const { page, limit } = req.pagination;
 
-    // Require vote parameter
-    if (!voteParam) {
-      return res.status(400).json({
-        status: "error",
-        message: "The vote query parameter is required.",
-      });
-    }
+      // Require vote parameter
+      if (!voteParam) {
+        return res.status(400).json({
+          status: "error",
+          message: "The vote query parameter is required.",
+        });
+      }
 
-    const voteTerm = voteParam.trim();
-    if (
-      !mongoose.Types.ObjectId.isValid(voteTerm) ||
-      voteTerm.length !== 24
-    ) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid vote parameter. Must be a valid ObjectId.",
-      });
-    }
+      const voteTerm = voteParam.trim();
+      if (!mongoose.Types.ObjectId.isValid(voteTerm) || voteTerm.length !== 24) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid vote parameter. Must be a valid ObjectId.",
+        });
+      }
 
-    const voteDoc = await Vote.findById(voteTerm).lean();
-    if (!voteDoc) {
-      return res.status(404).json({
-        status: "error",
-        message: "Vote not found",
-      });
-    }
+      const voteDoc = await Vote.findById(voteTerm).lean();
+      if (!voteDoc) {
+        return res.status(404).json({
+          status: "error",
+          message: "Vote not found",
+        });
+      }
 
-    const resolvedFilterOptions =
-      voteDoc.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
-    const resolvedSearchOptions =
-      voteDoc.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
-    const filterParamSet = new Set(
-      resolvedFilterOptions.map((o) => o.param)
-    );
+      const resolvedFilterOptions =
+        voteDoc.filterOptions ?? Vote.schema.path("filterOptions").options.default?.() ?? [];
+      const resolvedSearchOptions =
+        voteDoc.searchOptions ?? Vote.schema.path("searchOptions").options.default?.() ?? [];
+      const filterParamSet = new Set(resolvedFilterOptions.map((o) => o.param));
 
-    // Check authentication (optional - don't fail if token is missing).
-    // Use same normalized comparison as GET single for consistent exclude/auth behavior.
-    let authenticatedUserId = null;
-    const tokenResult = await verifyToken(req);
-    if (tokenResult.status === "success" && tokenResult.userId) {
-      authenticatedUserId = String(tokenResult.userId ?? "").trim();
-    }
+      // Check authentication (optional - don't fail if token is missing).
+      // Use same normalized comparison as GET single for consistent exclude/auth behavior.
+      let authenticatedUserId = null;
+      const tokenResult = await verifyToken(req);
+      if (tokenResult.status === "success" && tokenResult.userId) {
+        authenticatedUserId = String(tokenResult.userId ?? "").trim();
+      }
 
-    // Check if authenticated user is an admin of this vote (same logic as GET single: .some with trim).
-    let isVoteAdmin = false;
-    if (
-      authenticatedUserId &&
-      voteDoc.admins &&
-      Array.isArray(voteDoc.admins)
-    ) {
-      isVoteAdmin = voteDoc.admins.some(
-        (id) => String(id).trim() === authenticatedUserId
-      );
-    }
+      // Check if authenticated user is an admin of this vote (same logic as GET single: .some with trim).
+      let isVoteAdmin = false;
+      if (authenticatedUserId && voteDoc.admins && Array.isArray(voteDoc.admins)) {
+        isVoteAdmin = voteDoc.admins.some((id) => String(id).trim() === authenticatedUserId);
+      }
 
-    // Check if authenticated user is querying their own proposals
-    const isAuthenticatedUserQueryingOwnProposals =
-      authenticatedUserId &&
-      proposer &&
-      proposer.trim() === authenticatedUserId;
+      // Check if authenticated user is querying their own proposals
+      const isAuthenticatedUserQueryingOwnProposals =
+        authenticatedUserId && proposer && proposer.trim() === authenticatedUserId;
 
-    // Build search query - default to Live proposals, or filter by status
-    let query = { voteId: new mongoose.Types.ObjectId(voteTerm) };
+      // Build search query - default to Live proposals, or filter by status
+      let query = { voteId: new mongoose.Types.ObjectId(voteTerm) };
 
-    // Handle status filter only if vote's filterOptions include status (same permission logic as before).
-    // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
-    // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
-    const statusOption = resolvedFilterOptions.find((o) => o.param === "status");
-    const statusStr = statusParam ?? "";
-    if (filterParamSet.has("status") && statusOption) {
-      if (statusStr) {
-        const statusTerms = statusStr
-          .split(",")
-          .map((s) => s.trim().toLowerCase())
-          .filter(Boolean);
-        const allowedSet = new Set(
-          (statusOption.allowedValues || []).map((s) => s.toLowerCase())
-        );
-        const invalidTerms = statusTerms.filter((t) => !allowedSet.has(t));
-        if (invalidTerms.length > 0) {
-          return res.status(400).json({
-            status: "error",
-            message: `Invalid status parameter. Allowed: ${(statusOption.allowedValues || []).join(", ")}.`,
-          });
+      // Handle status filter only if vote's filterOptions include status (same permission logic as before).
+      // Draft may only be requested by: (1) admins on the given vote, or (2) authenticated users
+      // querying their own proposals (proposer=userId). Everyone else gets 400 if they include draft.
+      const statusOption = resolvedFilterOptions.find((o) => o.param === "status");
+      const statusStr = statusParam ?? "";
+      if (filterParamSet.has("status") && statusOption) {
+        if (statusStr) {
+          const statusTerms = statusStr
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean);
+          const allowedSet = new Set(
+            (statusOption.allowedValues || []).map((s) => s.toLowerCase()),
+          );
+          const invalidTerms = statusTerms.filter((t) => !allowedSet.has(t));
+          if (invalidTerms.length > 0) {
+            return res.status(400).json({
+              status: "error",
+              message: `Invalid status parameter. Allowed: ${(statusOption.allowedValues || []).join(", ")}.`,
+            });
+          }
+          const hasLive = statusTerms.includes("live");
+          const hasWithdrawn = statusTerms.includes("withdrawn");
+          const hasDraft = statusTerms.includes("draft");
+          const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
+          if (hasDraft && !mayRequestDraft) {
+            return res.status(400).json({
+              status: "error",
+              message:
+                "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
+            });
+          }
+          const statusIn = [];
+          if (hasLive) statusIn.push("live");
+          if (hasWithdrawn) {
+            statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
+          }
+          if (hasDraft && mayRequestDraft) {
+            statusIn.push("draft");
+          }
+          if (statusIn.length === 1) {
+            query.status = statusIn[0];
+          } else if (statusIn.length > 1) {
+            query.status = { $in: [...new Set(statusIn)] };
+          }
+        } else {
+          if (!isAuthenticatedUserQueryingOwnProposals) {
+            query.status = "live";
+          }
         }
-        const hasLive = statusTerms.includes("live");
-        const hasWithdrawn = statusTerms.includes("withdrawn");
-        const hasDraft = statusTerms.includes("draft");
-        const mayRequestDraft = isVoteAdmin || isAuthenticatedUserQueryingOwnProposals;
-        if (hasDraft && !mayRequestDraft) {
-          return res.status(400).json({
-            status: "error",
-            message:
-              "Invalid status parameter. Draft proposals are only accessible to vote admins or the proposal owner.",
-          });
+      } else if (!filterParamSet.has("status")) {
+        if (!isAuthenticatedUserQueryingOwnProposals) {
+          query.status = "live";
         }
-        const statusIn = [];
-        if (hasLive) statusIn.push("live");
-        if (hasWithdrawn) {
-          statusIn.push("withdrawnByProposer", "withdrawnByAdmin");
-        }
-        if (hasDraft && mayRequestDraft) {
-          statusIn.push("draft");
-        }
-        if (statusIn.length === 1) {
-          query.status = statusIn[0];
-        } else if (statusIn.length > 1) {
-          query.status = { $in: [...new Set(statusIn)] };
-        }
-      } else {
+      } else if (!statusStr) {
         if (!isAuthenticatedUserQueryingOwnProposals) {
           query.status = "live";
         }
       }
-    } else if (!filterParamSet.has("status")) {
-      if (!isAuthenticatedUserQueryingOwnProposals) {
-        query.status = "live";
-      }
-    } else if (!statusStr) {
-      if (!isAuthenticatedUserQueryingOwnProposals) {
-        query.status = "live";
-      }
-    }
 
-    // Add generic non-status filters defined on the vote.
-    for (const option of resolvedFilterOptions) {
-      if (option.param === "status" || option.param === "proposer") continue;
-      const paramValue = req.query[option.param];
-      if (!paramValue || typeof paramValue !== "string") continue;
+      // Add generic non-status filters defined on the vote.
+      for (const option of resolvedFilterOptions) {
+        if (option.param === "status" || option.param === "proposer") continue;
+        const paramValue = req.query[option.param];
+        if (!paramValue || typeof paramValue !== "string") continue;
 
-      const values = paramValue
-        .split(",")
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0);
+        const values = paramValue
+          .split(",")
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0);
 
-      if (values.length === 0) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${option.param} parameter. Must provide at least one value.`,
-        });
-      }
-
-      if (!option.multiple && values.length > 1) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${option.param} parameter. Multiple values are not allowed.`,
-        });
-      }
-
-      let validValues = new Set();
-      if (option.optionsPath) {
-        const optionList = getByPath(voteDoc, option.optionsPath);
-        if (!Array.isArray(optionList) || optionList.length === 0) {
+        if (values.length === 0) {
           return res.status(400).json({
             status: "error",
-            message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
+            message: `Invalid ${option.param} parameter. Must provide at least one value.`,
           });
         }
 
-        const valueKey = option.optionValueKey ?? "_id";
-        validValues = new Set(
-          optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean)
-        );
-      } else if (Array.isArray(option.allowedValues) && option.allowedValues.length > 0) {
-        validValues = new Set(option.allowedValues.map((value) => String(value)));
-      } else {
-        // No optionsPath and no allowedValues means this filter is misconfigured.
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${option.param} filter configuration. Expected optionsPath or allowedValues.`,
-        });
-      }
+        if (!option.multiple && values.length > 1) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid ${option.param} parameter. Multiple values are not allowed.`,
+          });
+        }
 
-      const invalidValues = values.filter((value) => !validValues.has(value));
-      if (invalidValues.length > 0) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid ${option.param} parameter. Allowed values: ${Array.from(validValues).join(", ")}.`,
-        });
-      }
-
-      const condition = {
-        [option.field]: option.multiple ? { $in: values } : values[0],
-      };
-      if (query.$or) {
-        const existingOr = query.$or;
-        delete query.$or;
-        query.$and = query.$and || [];
-        query.$and.push({ $or: existingOr }, condition);
-      } else {
-        query.$and = query.$and || [];
-        query.$and.push(condition);
-      }
-    }
-
-    // Apply proposer filter whenever proposer param is present (security: never return other users' drafts).
-    // Supports both public "proposals by X" (live/withdrawn) and dashboard "my proposals" (incl. own drafts).
-    // Does not depend on vote's filterOptions.
-    if (proposer) {
-      const proposerTerm = proposer.trim();
-      // Validate bech32 address format - try stake first, then drep
-      const stakeValidation = validateAddress(proposerTerm, "stake");
-      const drepValidation = validateAddress(proposerTerm, "drep");
-
-      let validatedAddress = null;
-      if (!stakeValidation.error) {
-        validatedAddress = proposerTerm; // stake address is valid as-is
-      } else if (drepValidation && !drepValidation.error && drepValidation.cip129) {
-        validatedAddress = drepValidation.cip129; // use CIP-129 format for drep
-      }
-
-      if (!validatedAddress) {
-        return res.status(400).json({
-          status: "error",
-          message: "Invalid proposer parameter. Must be a valid bech32 address (stake1... or drep1...).",
-        });
-      }
-
-      query.proposerId = validatedAddress;
-    }
-
-    // Add search from vote's searchOptions (like / exact / objectId)
-    if (search) {
-      const searchTerm = search.trim();
-      if (searchTerm && resolvedSearchOptions.length > 0) {
-        const searchConditions = [];
-        const escapedTerm = escapeRegex(searchTerm);
-        const isValidObjectId =
-          mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24;
-        for (const option of resolvedSearchOptions) {
-          if (option.matchType === "like") {
-            const opts = option.caseSensitive ? "" : "i";
-            searchConditions.push({
-              [option.field]: { $regex: escapedTerm, $options: opts },
+        let validValues = new Set();
+        if (option.optionsPath) {
+          const optionList = getByPath(voteDoc, option.optionsPath);
+          if (!Array.isArray(optionList) || optionList.length === 0) {
+            return res.status(400).json({
+              status: "error",
+              message: `Invalid ${option.param} parameter. This vote has no options defined at ${option.optionsPath}.`,
             });
-          } else if (option.matchType === "exact") {
-            searchConditions.push({ [option.field]: searchTerm });
-          } else if (option.matchType === "objectId" && isValidObjectId) {
-            searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
           }
+
+          const valueKey = option.optionValueKey ?? "_id";
+          validValues = new Set(
+            optionList.map((item) => String(item[valueKey] ?? "")).filter(Boolean),
+          );
+        } else if (Array.isArray(option.allowedValues) && option.allowedValues.length > 0) {
+          validValues = new Set(option.allowedValues.map((value) => String(value)));
+        } else {
+          // No optionsPath and no allowedValues means this filter is misconfigured.
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid ${option.param} filter configuration. Expected optionsPath or allowedValues.`,
+          });
         }
-        if (searchConditions.length > 0) {
-          if (query.$or) {
-            const existingOr = query.$or;
-            delete query.$or;
-            query.$and = query.$and || [];
-            query.$and.push({ $or: existingOr }, { $or: searchConditions });
-          } else {
-            query.$or = searchConditions;
+
+        const invalidValues = values.filter((value) => !validValues.has(value));
+        if (invalidValues.length > 0) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid ${option.param} parameter. Allowed values: ${Array.from(validValues).join(", ")}.`,
+          });
+        }
+
+        const condition = {
+          [option.field]: option.multiple ? { $in: values } : values[0],
+        };
+        if (query.$or) {
+          const existingOr = query.$or;
+          delete query.$or;
+          query.$and = query.$and || [];
+          query.$and.push({ $or: existingOr }, condition);
+        } else {
+          query.$and = query.$and || [];
+          query.$and.push(condition);
+        }
+      }
+
+      // Apply proposer filter whenever proposer param is present (security: never return other users' drafts).
+      // Supports both public "proposals by X" (live/withdrawn) and dashboard "my proposals" (incl. own drafts).
+      // Does not depend on vote's filterOptions.
+      if (proposer) {
+        const proposerTerm = proposer.trim();
+        // Validate bech32 address format - try stake first, then drep
+        const stakeValidation = validateAddress(proposerTerm, "stake");
+        const drepValidation = validateAddress(proposerTerm, "drep");
+
+        let validatedAddress = null;
+        if (!stakeValidation.error) {
+          validatedAddress = proposerTerm; // stake address is valid as-is
+        } else if (drepValidation && !drepValidation.error && drepValidation.cip129) {
+          validatedAddress = drepValidation.cip129; // use CIP-129 format for drep
+        }
+
+        if (!validatedAddress) {
+          return res.status(400).json({
+            status: "error",
+            message:
+              "Invalid proposer parameter. Must be a valid bech32 address (stake1... or drep1...).",
+          });
+        }
+
+        query.proposerId = validatedAddress;
+      }
+
+      // Add search from vote's searchOptions (like / exact / objectId)
+      if (search) {
+        const searchTerm = search.trim();
+        if (searchTerm && resolvedSearchOptions.length > 0) {
+          const searchConditions = [];
+          const escapedTerm = escapeRegex(searchTerm);
+          const isValidObjectId =
+            mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24;
+          for (const option of resolvedSearchOptions) {
+            if (option.matchType === "like") {
+              const opts = option.caseSensitive ? "" : "i";
+              searchConditions.push({
+                [option.field]: { $regex: escapedTerm, $options: opts },
+              });
+            } else if (option.matchType === "exact") {
+              searchConditions.push({ [option.field]: searchTerm });
+            } else if (option.matchType === "objectId" && isValidObjectId) {
+              searchConditions.push({ _id: new mongoose.Types.ObjectId(searchTerm) });
+            }
+          }
+          if (searchConditions.length > 0) {
+            if (query.$or) {
+              const existingOr = query.$or;
+              delete query.$or;
+              query.$and = query.$and || [];
+              query.$and.push({ $or: existingOr }, { $or: searchConditions });
+            } else {
+              query.$or = searchConditions;
+            }
           }
         }
       }
-    }
 
-    const resolvedSortOptions = voteDoc.sortOptions ?? [];
+      const resolvedSortOptions = voteDoc.sortOptions ?? [];
 
-    // Validate direction parameter
-    const directionNorm = String(direction).trim().toLowerCase();
-    if (directionNorm !== "asc" && directionNorm !== "desc") {
-      return res.status(400).json({
+      // Validate direction parameter
+      const directionNorm = String(direction).trim().toLowerCase();
+      if (directionNorm !== "asc" && directionNorm !== "desc") {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid direction parameter. Must be asc or desc.",
+        });
+      }
+
+      const sortDirection = directionNorm === "asc" ? 1 : -1;
+      let sortField;
+
+      if (!sortParam || String(sortParam).trim() === "") {
+        // Default sort is always submittedAt desc, regardless of sortOptions
+        sortField = "submittedAt";
+      } else {
+        const sortValue = String(sortParam).trim();
+        const sortOptionDef = resolvedSortOptions.find((o) => o.value === sortValue);
+        if (!sortOptionDef) {
+          return res.status(400).json({
+            status: "error",
+            message: `Invalid sort parameter. Must be one of: ${resolvedSortOptions.map((o) => o.value).join(", ")}.`,
+          });
+        }
+        sortField = sortOptionDef.field;
+      }
+
+      const sortOption = { [sortField]: sortDirection };
+
+      const skip = (page - 1) * limit;
+      const totalItems = await Proposal.countDocuments(query);
+
+      let proposals;
+      if (sortField === "commentCount") {
+        const pipeline = [
+          { $match: query },
+          {
+            $lookup: {
+              from: "comments",
+              let: { pid: "$_id" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: { $eq: ["$proposalId", "$$pid"] },
+                    status: "live",
+                  },
+                },
+                { $count: "count" },
+              ],
+              as: "commentCountArr",
+            },
+          },
+          {
+            $addFields: {
+              commentCount: {
+                $ifNull: [{ $arrayElemAt: ["$commentCountArr.count", 0] }, 0],
+              },
+            },
+          },
+          { $sort: { commentCount: sortDirection } },
+          { $skip: skip },
+          { $limit: limit },
+        ];
+        proposals = await Proposal.aggregate(pipeline);
+        proposals = proposals.map((p) => ({ ...p, commentCount: p.commentCount ?? 0 }));
+      } else {
+        proposals = await Proposal.find(query).sort(sortOption).skip(skip).limit(limit).lean();
+        const proposalIds = proposals.map((p) => p._id).filter(Boolean);
+        let commentCountsById = new Map();
+        if (proposalIds.length > 0) {
+          const commentCounts = await Comment.aggregate([
+            {
+              $match: {
+                proposalId: { $in: proposalIds },
+                status: "live",
+              },
+            },
+            {
+              $group: {
+                _id: "$proposalId",
+                count: { $sum: 1 },
+              },
+            },
+          ]);
+          commentCountsById = new Map(
+            commentCounts.map((doc) => [String(doc._id), doc.count ?? 0]),
+          );
+        }
+        proposals = proposals.map((p) => ({
+          ...p,
+          commentCount: commentCountsById.get(String(p._id)) ?? 0,
+        }));
+      }
+
+      // Apply exclude script: remove non-public fields unless proposer or vote admin (same as GET single).
+      proposals = await Promise.all(
+        proposals.map(async (proposal) => {
+          const isProposer = String(proposal.proposerId ?? "").trim() === authenticatedUserId;
+          return applyPublicFieldExclusion(proposal, voteDoc, {
+            isProposer,
+            isAdmin: isVoteAdmin,
+          });
+        }),
+      );
+
+      let projectProposalListItem = null;
+      if (voteDoc.listProjectionScript) {
+        const projectionMod = await loadListProjectionScript(voteDoc.listProjectionScript);
+        if (projectionMod?.projectProposalListItem) {
+          projectProposalListItem = projectionMod.projectProposalListItem;
+        }
+      }
+
+      const fallbackProjection = (proposal) => {
+        const { metaData, withdrawalReason, signature, userId, commentCount, versions, ...rest } =
+          proposal ?? {};
+        return {
+          ...rest,
+          metaData: metaData ?? null,
+          versions,
+          commentCount: commentCount ?? 0,
+        };
+      };
+
+      const formattedProposals = proposals.map((proposal) => {
+        const isProposer = String(proposal?.proposerId ?? "").trim() === authenticatedUserId;
+        if (!projectProposalListItem) {
+          return fallbackProjection(proposal);
+        }
+        try {
+          return projectProposalListItem(proposal, {
+            vote: voteDoc,
+            isProposer,
+            isAdmin: isVoteAdmin,
+          });
+        } catch (err) {
+          console.warn("list projection failed for proposal", proposal?._id, err?.message ?? err);
+          return fallbackProjection(proposal);
+        }
+      });
+
+      // Calculate pagination metadata
+      const totalPages = Math.ceil(totalItems / limit);
+      const hasNextPage = page < totalPages;
+      const hasPreviousPage = page > 1;
+
+      return res.status(200).json({
+        data: formattedProposals,
+        meta: {
+          page: page,
+          limit: limit,
+          total: totalItems,
+          totalPages,
+          hasNextPage,
+          hasPreviousPage,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching proposals:", error);
+      return res.status(500).json({
         status: "error",
-        message: "Invalid direction parameter. Must be asc or desc.",
+        message: "Internal server error",
       });
     }
-
-    const sortDirection = directionNorm === "asc" ? 1 : -1;
-    let sortField;
-
-    if (!sortParam || String(sortParam).trim() === "") {
-      // Default sort is always submittedAt desc, regardless of sortOptions
-      sortField = "submittedAt";
-    } else {
-      const sortValue = String(sortParam).trim();
-      const sortOptionDef = resolvedSortOptions.find(
-        (o) => o.value === sortValue
-      );
-      if (!sortOptionDef) {
-        return res.status(400).json({
-          status: "error",
-          message: `Invalid sort parameter. Must be one of: ${resolvedSortOptions.map((o) => o.value).join(", ")}.`,
-        });
-      }
-      sortField = sortOptionDef.field;
-    }
-
-    const sortOption = { [sortField]: sortDirection };
-
-    const skip = (page - 1) * limit;
-    const totalItems = await Proposal.countDocuments(query);
-
-    let proposals;
-    if (sortField === "commentCount") {
-      const pipeline = [
-        { $match: query },
-        {
-          $lookup: {
-            from: "comments",
-            let: { pid: "$_id" },
-            pipeline: [
-              {
-                $match: {
-                  $expr: { $eq: ["$proposalId", "$$pid"] },
-                  status: "live",
-                },
-              },
-              { $count: "count" },
-            ],
-            as: "commentCountArr",
-          },
-        },
-        {
-          $addFields: {
-            commentCount: {
-              $ifNull: [{ $arrayElemAt: ["$commentCountArr.count", 0] }, 0],
-            },
-          },
-        },
-        { $sort: { commentCount: sortDirection } },
-        { $skip: skip },
-        { $limit: limit },
-      ];
-      proposals = await Proposal.aggregate(pipeline);
-      proposals = proposals.map((p) => ({ ...p, commentCount: p.commentCount ?? 0 }));
-    } else {
-      proposals = await Proposal.find(query)
-        .sort(sortOption)
-        .skip(skip)
-        .limit(limit)
-        .lean();
-      const proposalIds = proposals.map((p) => p._id).filter(Boolean);
-      let commentCountsById = new Map();
-      if (proposalIds.length > 0) {
-        const commentCounts = await Comment.aggregate([
-          {
-            $match: {
-              proposalId: { $in: proposalIds },
-              status: "live",
-            },
-          },
-          {
-            $group: {
-              _id: "$proposalId",
-              count: { $sum: 1 },
-            },
-          },
-        ]);
-        commentCountsById = new Map(
-          commentCounts.map((doc) => [String(doc._id), doc.count ?? 0]),
-        );
-      }
-      proposals = proposals.map((p) => ({
-        ...p,
-        commentCount: commentCountsById.get(String(p._id)) ?? 0,
-      }));
-    }
-
-    // Apply exclude script: remove non-public fields unless proposer or vote admin (same as GET single).
-    proposals = await Promise.all(
-      proposals.map(async (proposal) => {
-        const isProposer =
-          String(proposal.proposerId ?? "").trim() === authenticatedUserId;
-        return applyPublicFieldExclusion(proposal, voteDoc, {
-          isProposer,
-          isAdmin: isVoteAdmin,
-        });
-      }),
-    );
-
-    let projectProposalListItem = null;
-    if (voteDoc.listProjectionScript) {
-      const projectionMod = await loadListProjectionScript(
-        voteDoc.listProjectionScript,
-      );
-      if (projectionMod?.projectProposalListItem) {
-        projectProposalListItem = projectionMod.projectProposalListItem;
-      }
-    }
-
-    const fallbackProjection = (proposal) => {
-      const {
-        metaData,
-        withdrawalReason,
-        signature,
-        userId,
-        commentCount,
-        versions,
-        ...rest
-      } = proposal ?? {};
-      return {
-        ...rest,
-        metaData: metaData ?? null,
-        versions,
-        commentCount: commentCount ?? 0,
-      };
-    };
-
-    const formattedProposals = proposals.map((proposal) => {
-      const isProposer =
-        String(proposal?.proposerId ?? "").trim() === authenticatedUserId;
-      if (!projectProposalListItem) {
-        return fallbackProjection(proposal);
-      }
-      try {
-        return projectProposalListItem(proposal, {
-          vote: voteDoc,
-          isProposer,
-          isAdmin: isVoteAdmin,
-        });
-      } catch (err) {
-        console.warn(
-          "list projection failed for proposal",
-          proposal?._id,
-          err?.message ?? err,
-        );
-        return fallbackProjection(proposal);
-      }
-    });
-
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(totalItems / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
-
-    return res.status(200).json({
-      data: formattedProposals,
-      meta: {
-        page: page,
-        limit: limit,
-        total: totalItems,
-        totalPages,
-        hasNextPage,
-        hasPreviousPage,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching proposals:", error);
-    return res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
-});
+  },
+);
 
 export default router;

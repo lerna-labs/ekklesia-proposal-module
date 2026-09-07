@@ -74,11 +74,7 @@
 }
 
 /* Buttons wrapper: same gap as toolbar icons (0.125rem), center with input */
-.svelte-lexical
-  .link-editor-toolbar-slot
-  .link-editor.custom-link-editor
-  .link-input
-  + div {
+.svelte-lexical .link-editor-toolbar-slot .link-editor.custom-link-editor .link-input + div {
   order: 2;
   flex-shrink: 0;
   position: static !important;

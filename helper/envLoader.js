@@ -12,9 +12,7 @@ export function loadEnvironmentVariables(rootDir) {
   // If rootDir is not provided, use the directory of the calling file
   if (!rootDir) {
     // Get the module URL that imported this function
-    const callerURL = new Error().stack
-      .split("\n")[2]
-      .match(/at\s+.+\s+\((.+):\d+:\d+\)/)?.[1];
+    const callerURL = new Error().stack.split("\n")[2].match(/at\s+.+\s+\((.+):\d+:\d+\)/)?.[1];
 
     if (callerURL) {
       const callerPath = fileURLToPath(callerURL);

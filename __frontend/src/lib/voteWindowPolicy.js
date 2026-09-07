@@ -10,8 +10,8 @@
  * @param {Date} [now]
  */
 export function draftSubmissionOpen(vote, now = new Date()) {
-	if (!vote?.submissionEndDate) return true;
-	return now.getTime() <= new Date(vote.submissionEndDate).getTime();
+  if (!vote?.submissionEndDate) return true;
+  return now.getTime() <= new Date(vote.submissionEndDate).getTime();
 }
 
 /**
@@ -20,8 +20,8 @@ export function draftSubmissionOpen(vote, now = new Date()) {
  * @param {Date} [now]
  */
 export function liveResubmitOpen(vote, now = new Date()) {
-	if (!vote?.reviewEndDate) return true;
-	return now.getTime() <= new Date(vote.reviewEndDate).getTime();
+  if (!vote?.reviewEndDate) return true;
+  return now.getTime() <= new Date(vote.reviewEndDate).getTime();
 }
 
 /** Same cutoff as live re-submit for proposer withdrawal. */
@@ -34,13 +34,13 @@ export const proposerWithdrawOpen = liveResubmitOpen;
  * @returns {"before_start" | "after_end" | null}
  */
 export function getFeedbackWindowBlockPhase(vote, now = new Date()) {
-	if (vote?.feedbackStartDate && now < new Date(vote.feedbackStartDate)) {
-		return "before_start";
-	}
-	if (vote?.feedbackEndDate && now > new Date(vote.feedbackEndDate)) {
-		return "after_end";
-	}
-	return null;
+  if (vote?.feedbackStartDate && now < new Date(vote.feedbackStartDate)) {
+    return "before_start";
+  }
+  if (vote?.feedbackEndDate && now > new Date(vote.feedbackEndDate)) {
+    return "after_end";
+  }
+  return null;
 }
 
 /**
@@ -49,7 +49,7 @@ export function getFeedbackWindowBlockPhase(vote, now = new Date()) {
  * @param {Date} [now]
  */
 export function feedbackActionsOpen(vote, now = new Date()) {
-	return getFeedbackWindowBlockPhase(vote, now) == null;
+  return getFeedbackWindowBlockPhase(vote, now) == null;
 }
 
 /**
@@ -58,14 +58,14 @@ export function feedbackActionsOpen(vote, now = new Date()) {
  * @param {Date} [now]
  */
 export function feedbackWindowActionsDisabledTitle(vote, now = new Date()) {
-	const phase = getFeedbackWindowBlockPhase(vote, now);
-	if (phase === "before_start") {
-		return "The vote feedback period has not started yet (feedback start date in UTC).";
-	}
-	if (phase === "after_end") {
-		return "The vote feedback period has ended (feedback end date in UTC). Comments, replies, and likes are not available.";
-	}
-	return "";
+  const phase = getFeedbackWindowBlockPhase(vote, now);
+  if (phase === "before_start") {
+    return "The vote feedback period has not started yet (feedback start date in UTC).";
+  }
+  if (phase === "after_end") {
+    return "The vote feedback period has ended (feedback end date in UTC). Comments, replies, and likes are not available.";
+  }
+  return "";
 }
 
 /**
@@ -74,10 +74,10 @@ export function feedbackWindowActionsDisabledTitle(vote, now = new Date()) {
  * @param {unknown[]} votes
  */
 export function voteForProposalRow(proposal, votes) {
-	const vid = proposal?.voteId;
-	if (vid == null || !Array.isArray(votes)) return null;
-	const s = String(vid);
-	return votes.find((v) => v && String(v._id) === s) ?? null;
+  const vid = proposal?.voteId;
+  if (vid == null || !Array.isArray(votes)) return null;
+  const s = String(vid);
+  return votes.find((v) => v && String(v._id) === s) ?? null;
 }
 
 /**
@@ -86,11 +86,11 @@ export function voteForProposalRow(proposal, votes) {
  * @param {Date} [now]
  */
 export function votingWindowOpen(vote, now = new Date()) {
-	if (!vote?.votingStartDate || !vote?.votingEndDate) return false;
-	const t = now.getTime();
-	const start = new Date(vote.votingStartDate).getTime();
-	const end = new Date(vote.votingEndDate).getTime();
-	return t >= start && t <= end;
+  if (!vote?.votingStartDate || !vote?.votingEndDate) return false;
+  const t = now.getTime();
+  const start = new Date(vote.votingStartDate).getTime();
+  const end = new Date(vote.votingEndDate).getTime();
+  return t >= start && t <= end;
 }
 
 /**
@@ -99,9 +99,9 @@ export function votingWindowOpen(vote, now = new Date()) {
  * @param {Date} [now]
  */
 export function canShowVotingUi(vote, now = new Date()) {
-	if (!votingWindowOpen(vote, now)) return false;
-	const url = vote?.votingUrl;
-	return typeof url === "string" && url.trim().length > 0;
+  if (!votingWindowOpen(vote, now)) return false;
+  const url = vote?.votingUrl;
+  return typeof url === "string" && url.trim().length > 0;
 }
 
 /**
@@ -110,8 +110,8 @@ export function canShowVotingUi(vote, now = new Date()) {
  * @returns {string | null}
  */
 export function buildVoteVotingUrl(vote) {
-	const base = vote?.votingUrl?.trim();
-	return base || null;
+  const base = vote?.votingUrl?.trim();
+  return base || null;
 }
 
 /**
@@ -121,8 +121,8 @@ export function buildVoteVotingUrl(vote) {
  * @returns {string | null}
  */
 export function buildProposalVotingUrl(vote, proposalId) {
-	const base = vote?.votingUrl?.trim();
-	if (!base || proposalId == null || proposalId === "") return null;
-	const id = String(proposalId);
-	return `${base.replace(/\/$/, "")}/proposals/${id}`;
+  const base = vote?.votingUrl?.trim();
+  if (!base || proposalId == null || proposalId === "") return null;
+  const id = String(proposalId);
+  return `${base.replace(/\/$/, "")}/proposals/${id}`;
 }

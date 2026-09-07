@@ -20,9 +20,9 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[500px] max-h-[90dvh] flex flex-col min-h-0">
+  <Dialog.Content class="flex max-h-[90dvh] min-h-0 flex-col sm:max-w-[500px]">
     <form
-      class="flex flex-col min-h-0 flex-1"
+      class="flex min-h-0 flex-1 flex-col"
       onsubmit={(e) => {
         e.preventDefault();
         onSave?.();
@@ -31,7 +31,7 @@
       <Dialog.Header class="shrink-0">
         <Dialog.Title>Edit Comment</Dialog.Title>
       </Dialog.Header>
-      <div class="py-4 px-1.5 overflow-y-auto min-h-0 flex-1">
+      <div class="min-h-0 flex-1 overflow-y-auto px-1.5 py-4">
         <Textarea
           id="edit-content"
           label="Comment"
@@ -41,12 +41,7 @@
         />
       </div>
       <Dialog.Footer class="shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onclick={() => onClose?.()}
-        >
+        <Button type="button" variant="outline" size="sm" onclick={() => onClose?.()}>
           Cancel
         </Button>
         <Button type="submit" size="sm">Save</Button>

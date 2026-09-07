@@ -43,7 +43,7 @@
 </script>
 
 <div
-  class="comments-section sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 pb-3 pt-3 mb-2 bg-slate-100 outline outline-2 outline-slate-100"
+  class="comments-section sticky top-0 z-10 mb-2 flex flex-wrap items-center justify-between gap-2 bg-slate-100 pt-3 pb-3 outline outline-2 outline-slate-100"
 >
   <h2>
     {#if total != null && total > 0}
@@ -52,13 +52,13 @@
       No Comments yet
     {/if}
   </h2>
-  <div class="flex items-center gap-1 ml-auto">
+  <div class="ml-auto flex items-center gap-1">
     {#if onAddComment}
       <Button
         type="button"
         variant="outline"
         size="sm"
-        class="add-item-btn text-xs h-8 gap-1 text-white {addCommentDisabled
+        class="add-item-btn h-8 gap-1 text-xs text-white {addCommentDisabled
           ? 'cursor-not-allowed opacity-60'
           : 'cursor-pointer'}"
         disabled={addCommentDisabled}
@@ -81,42 +81,42 @@
         class={buttonVariants({
           variant: "outline",
           size: "icon",
-          class: "cursor-pointer relative size-8",
+          class: "relative size-8 cursor-pointer",
         })}
         aria-label="Filter comments by user type"
       >
         <FilterIcon class="size-4" />
         {#if hasActiveFilter}
           <span
-            class="absolute top-1 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            class="absolute top-1 right-1 size-1.5 animate-pulse rounded-full bg-blue-500"
             aria-hidden="true"
           ></span>
         {/if}
       </Popover.Trigger>
       <Popover.Content align="start" class="w-56 p-3">
-        <div class="text-sm font-medium mb-2">Filter</div>
+        <div class="mb-2 text-sm font-medium">Filter</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Author Type</Label>
+            <Label class="text-muted-foreground text-xs">Author Type</Label>
             <div class="flex flex-col gap-0">
               <label
                 for="comment-filter-proposer"
-                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
               >
                 <Checkbox id="comment-filter-proposer" bind:checked={pendingProposer} />
                 <span class="font-normal">Proposer</span>
               </label>
               <label
                 for="comment-filter-drep"
-                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
               >
                 <Checkbox id="comment-filter-drep" bind:checked={pendingDrep} />
                 <span class="font-normal">DRep</span>
               </label>
               <label
                 for="comment-filter-admin"
-                class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
               >
                 <Checkbox id="comment-filter-admin" bind:checked={pendingAdmin} />
                 <span class="font-normal">Admin</span>
@@ -124,7 +124,7 @@
             </div>
           </div>
         </div>
-        <div class="border-t pt-3 flex gap-1 mt-3">
+        <div class="mt-3 flex gap-1 border-t pt-3">
           {#if hasActiveFilter}
             <Button
               type="button"
@@ -138,7 +138,13 @@
               Reset
             </Button>
           {/if}
-          <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplyFilter}>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            class="flex-1 text-xs"
+            onclick={onApplyFilter}
+          >
             <CheckIcon class="size-4" />
             Apply
           </Button>
@@ -150,27 +156,29 @@
         class={buttonVariants({
           variant: "outline",
           size: "icon",
-          class: "cursor-pointer relative size-8",
+          class: "relative size-8 cursor-pointer",
         })}
         aria-label="Sort comments"
       >
         <ArrowUpDownIcon class="size-4" />
         {#if hasActiveSort}
           <span
-            class="absolute top-1 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            class="absolute top-1 right-1 size-1.5 animate-pulse rounded-full bg-blue-500"
             aria-hidden="true"
           ></span>
         {/if}
       </Popover.Trigger>
       <Popover.Content align="start" class="w-56 p-3">
-        <div class="text-sm font-medium mb-2">Sort</div>
+        <div class="mb-2 text-sm font-medium">Sort</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Sort by</Label>
-            <RadioGroup.Root bind:value={pendingSort} class="grid gap-0 mt-0">
+            <Label class="text-muted-foreground text-xs">Sort by</Label>
+            <RadioGroup.Root bind:value={pendingSort} class="mt-0 grid gap-0">
               {#each SORT_OPTIONS as option (option.value)}
-                <div class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50">
+                <div
+                  class="hover:bg-accent/50 flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                >
                   <RadioGroup.Item value={option.value} id="comment-sort-{option.value}" />
                   <Label for="comment-sort-{option.value}" class="cursor-pointer font-normal">
                     {option.label}
@@ -180,7 +188,7 @@
             </RadioGroup.Root>
           </div>
           <div class="space-y-2">
-            <Label class="text-xs text-muted-foreground">Direction</Label>
+            <Label class="text-muted-foreground text-xs">Direction</Label>
             <div class="flex items-center gap-2">
               <Switch id="comment-sort-dir" bind:checked={pendingDescending} />
               <Label for="comment-sort-dir" class="cursor-pointer text-sm font-normal">
@@ -188,7 +196,7 @@
               </Label>
             </div>
           </div>
-          <div class="border-t pt-3 flex gap-1">
+          <div class="flex gap-1 border-t pt-3">
             {#if hasActiveSort}
               <Button
                 type="button"
@@ -202,7 +210,13 @@
                 Reset
               </Button>
             {/if}
-            <Button type="button" variant="default" size="sm" class="flex-1 text-xs" onclick={onApplySort}>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              class="flex-1 text-xs"
+              onclick={onApplySort}
+            >
               <CheckIcon class="size-4" />
               Apply
             </Button>

@@ -23,27 +23,16 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { log } from "$lib/WalletSigner/logger.js";
   import { onMount } from "svelte";
-  let {
-    ballot = false,
-    mode,
-    dark,
-    tx,
-    buttonText = "Submit Votes",
-  } = $props();
+  let { ballot = false, mode, dark, tx, buttonText = "Submit Votes" } = $props();
   let open = $state(false);
   let selected = $state("wallet");
   let noWallets = $state(false);
   let walletLoading = $state(false);
   const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
-  const allowedTypes = (
-    import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake"
-  ).split(",");
-  const defaultFromEnv =
-    import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const allowedTypes = (import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake").split(",");
+  const defaultFromEnv = import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
   const storedSignType =
-    typeof window !== "undefined"
-      ? localStorage.getItem(SIGNTYPE_STORAGE_KEY)
-      : null;
+    typeof window !== "undefined" ? localStorage.getItem(SIGNTYPE_STORAGE_KEY) : null;
   const initialSignType =
     storedSignType && allowedTypes.includes(storedSignType)
       ? storedSignType
@@ -76,8 +65,7 @@
 
   const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
   const userTypes = USER_TYPES.split(",");
-  const multisigEnabledByEnv =
-    import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+  const multisigEnabledByEnv = import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
 
   $effect(() => {
     if (!multisigEnabledByEnv) multiSig = false;
@@ -128,10 +116,7 @@
     } else {
       await invalidateAll();
       // If we're on /login, go to dashboard so we don't stay on the login page
-      if (
-        typeof window !== "undefined" &&
-        window.location.pathname === "/login"
-      ) {
+      if (typeof window !== "undefined" && window.location.pathname === "/login") {
         await goto("/dashboard");
       }
     }
@@ -154,16 +139,13 @@
 
 <AlertDialog.Root bind:open on:openChange={close}>
   <AlertDialog.Trigger>
-    <Button
-      size="sm"
-      class={dark ? "bg-white text-black hover:bg-gray-200 text-xs" : "text-xs"}
-    >
+    <Button size="sm" class={dark ? "bg-white text-xs text-black hover:bg-gray-200" : "text-xs"}>
       <WalletMinimalIcon class="size-4 shrink-0" aria-hidden="true" />
       {mode == "login" ? "Connect Wallet" : buttonText}
     </Button>
   </AlertDialog.Trigger>
   <AlertDialog.Content
-    class="max-h-[85vh] max-w-[320px] flex flex-col overflow-hidden p-4"
+    class="flex max-h-[85vh] max-w-[320px] flex-col overflow-hidden p-4"
     interactOutsideBehavior="close"
   >
     <AlertDialog.Header class="mb-1 shrink-0">
@@ -183,34 +165,24 @@
       </AlertDialog.Title>
       <AlertDialog.Description>
         Use your CIP-95 compatible wallet or the
-        <a
-          href="https://github.com/gitmachtl/cardano-signer"
-          target="_blank"
-          class="link"
-        >
+        <a href="https://github.com/gitmachtl/cardano-signer" target="_blank" class="link">
           CardanoSigner
         </a>
         to sign.
       </AlertDialog.Description>
     </AlertDialog.Header>
 
-    <div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+    <div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
       <Tabs.Root class="w-full" bind:value={selected}>
         <Tabs.List class="flex w-full justify-evenly">
-          <Tabs.Trigger value="wallet" disabled={noWallets}>
-            Connect Wallet
-          </Tabs.Trigger>
+          <Tabs.Trigger value="wallet" disabled={noWallets}>Connect Wallet</Tabs.Trigger>
           <Tabs.Trigger value="signer">Use CardanoSigner</Tabs.Trigger>
         </Tabs.List>
 
         {#if multiSig}
           {#if !$loggedIn}
             <!-- MULTISIG ADDRESS -->
-            <Input
-              type="text"
-              bind:value={scriptAddress}
-              placeholder="Enter MultiSig DRep-ID"
-            />
+            <Input type="text" bind:value={scriptAddress} placeholder="Enter MultiSig DRep-ID" />
             <!-- SELECT SIGNTYPE -->
             <SelectSignType
               value={signType}

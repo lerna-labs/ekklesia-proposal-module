@@ -17,7 +17,9 @@
       : null,
   );
   const apiUrl =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL ? import.meta.env.VITE_API_URL : "/api/v0";
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+      ? import.meta.env.VITE_API_URL
+      : "/api/v0";
   let regionsById = $state({});
 
   $effect(() => {
@@ -192,7 +194,7 @@
 </script>
 
 {#if hasContent}
-  <div class="text-sm space-y-8 mt-8">
+  <div class="mt-8 space-y-8 text-sm">
     {#if governanceFields.length > 0}
       <section id="consortium-governance-statement" class="space-y-3">
         <h2>Consortium Governance Statement</h2>
@@ -221,7 +223,7 @@
     {#if members.length > 0}
       <section id="consortium-members" class="space-y-3">
         <h2>Consortium Members</h2>
-        <ul class="space-y-2 list-none p-0 m-0 mt-2">
+        <ul class="m-0 mt-2 list-none space-y-2 p-0">
           {#each members as member (member.key)}
             <li>
               <CollapsibleCard
@@ -238,7 +240,7 @@
                 {#snippet title()}
                   {member.name}
                 {/snippet}
-                <div class="space-y-4 mt-2">
+                <div class="mt-2 space-y-4">
                   {#if member.geographicRegion}
                     <section>
                       <h4 class="mb-2">Geographic region</h4>
@@ -250,7 +252,7 @@
 
                   {#if member.poolId || member.drepId}
                     <section>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                         {#if member.poolId}
                           <div>
                             <h4 class="mb-2">Pool ID</h4>
@@ -261,7 +263,7 @@
                                 </p>
                                 <button
                                   type="button"
-                                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                  class="text-muted-foreground hover:text-foreground inline-flex shrink-0 cursor-pointer items-center justify-center rounded border p-1"
                                   title="Copy Pool ID"
                                   aria-label="Copy Pool ID"
                                   onclick={() => copyToClipboard("Pool ID", member.poolId)}
@@ -282,7 +284,7 @@
                                 </p>
                                 <button
                                   type="button"
-                                  class="shrink-0 inline-flex items-center justify-center rounded border p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                  class="text-muted-foreground hover:text-foreground inline-flex shrink-0 cursor-pointer items-center justify-center rounded border p-1"
                                   title="Copy DRep ID"
                                   aria-label="Copy DRep ID"
                                   onclick={() => copyToClipboard("DRep ID", member.drepId)}
@@ -301,20 +303,23 @@
                     <section>
                       <h4 class="mb-2">Social & Profile links</h4>
                       <ItemContainer>
-                        <ul class="space-y-1 list-none p-0 m-0">
+                        <ul class="m-0 list-none space-y-1 p-0">
                           {#each member.links as link (link.key)}
                             <li>
                               <a
                                 href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+                                class="text-primary inline-flex cursor-pointer items-start gap-1 text-sm hover:underline"
                                 onclick={(e) => {
                                   e.preventDefault();
                                   linkWarningDialog.show(link.url, link.label);
                                 }}
                               >
-                                <ExternalLinkIcon class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+                                <ExternalLinkIcon
+                                  class="mt-0.5 size-3.5 shrink-0"
+                                  aria-hidden="true"
+                                />
                                 {link.label}
                               </a>
                             </li>

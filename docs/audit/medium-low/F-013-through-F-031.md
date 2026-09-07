@@ -19,7 +19,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
 | F-023 | Medium | Session lifecycle / logout | **Resolved** |
 | F-024 | Low | Logging | Accepted |
-| F-025 | Low | Repository formatting | Open |
+| F-025 | Low | Repository formatting | **Resolved** |
 | F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | **Resolved** |
@@ -27,7 +27,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
 | F-031 | Low | Frontend maintainability | Accepted (by design) |
 
-**Tally:** 14 resolved · 1 partially resolved · 1 open upstream · 1 open · 2 accepted
+**Tally:** 15 resolved · 1 partially resolved · 1 open upstream · 0 open · 2 accepted
 
 ---
 
@@ -410,7 +410,7 @@ Replace with structured logging that supports levels and environment-specific ou
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Repository formatting |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
@@ -428,11 +428,9 @@ Contributors using different editors may produce inconsistent indentation or lin
 
 Add `.editorconfig` with the repository’s indentation, charset, and line-ending expectations.
 
-### Current status (2026-07-23)
+### Current status (2026-09-07)
 
-Open. No `.editorconfig` or `.prettierrc*` present at repo root or under `__frontend`.
-
-**Note:** This repository is planned to move to the Intersect GitHub organization. Client-specific editor / formatter settings should be aligned with Intersect org conventions as part of that move rather than inventing a one-off config in the current tree.
+**Resolved** (#494). Added root `.editorconfig`, Prettier, and ESLint; `__frontend` has Svelte-aware Prettier (`prettier-plugin-svelte`, `prettier-plugin-tailwindcss`) and `eslint-plugin-svelte`. CI runs `format:check` and `lint` for both packages.
 
 ---
 
@@ -628,8 +626,7 @@ Priority backlog from this set (excluding resolved / accepted items):
 
 1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream.  
 2. **F-019** — Finish remaining governance docs (CoC, changelog, issue/PR templates); CONTRIBUTING/SECURITY/CODEOWNERS present — deferred to Intersect GitHub move  
-3. **F-025** — Add `.editorconfig` — deferred to Intersect GitHub move (client/org editor settings)  
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
 Accepted (not fixed): **F-024**, **F-031**.  
 Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback + app maps treasury `ProviderError`→503; Koios/Blockfrost fetches still lack timeouts).

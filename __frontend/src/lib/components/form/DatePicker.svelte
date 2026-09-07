@@ -24,18 +24,15 @@
 
   const schemaError = $derived(
     errorPath?.length
-      ? errorPath.reduce(
-          (node, key) => node?.properties?.[key],
-          validationErrors,
-        )?.errors?.[0]
+      ? errorPath.reduce((node, key) => node?.properties?.[key], validationErrors)?.errors?.[0]
       : validationErrors?.properties?.[id]?.errors?.[0],
   );
 </script>
 
 <Field.Field class="w-fit gap-1">
-  <div class="flex flex-col items-start w-fit gap-1">
-    <div class="flex items-center gap-1 w-full">
-      <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+  <div class="flex w-fit flex-col items-start gap-1">
+    <div class="flex w-full items-center gap-1">
+      <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
         {label}
         {#if required}
           <span class="text-(--mbo-electric-blue)">*</span>
@@ -44,10 +41,10 @@
       {#if notPublic}
         <PrivateFieldIndicator />
       {/if}
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      <span class="min-w-0 flex-1" aria-hidden="true"></span>
     </div>
     <Field.Content>
-      <Popover.Root bind:open class="border border-black w-48">
+      <Popover.Root bind:open class="w-48 border border-black">
         <Popover.Trigger {id}>
           <Button
             variant="outline"
@@ -56,9 +53,7 @@
               : ''}"
             aria-invalid={schemaError ? true : false}
           >
-            {value
-              ? value.toDate(getLocalTimeZone()).toLocaleDateString()
-              : "Select date"}
+            {value ? value.toDate(getLocalTimeZone()).toLocaleDateString() : "Select date"}
             <ChevronDownIcon />
           </Button>
         </Popover.Trigger>

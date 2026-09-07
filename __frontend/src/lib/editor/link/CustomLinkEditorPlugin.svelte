@@ -125,7 +125,7 @@
           }
           return false;
         },
-        COMMAND_PRIORITY_HIGH
+        COMMAND_PRIORITY_HIGH,
       ),
       editor.registerUpdateListener(({ editorState }) => {
         if (justClosedByUser) return;
@@ -153,7 +153,7 @@
             lastRect = null;
           }
         });
-      })
+      }),
     );
   });
 

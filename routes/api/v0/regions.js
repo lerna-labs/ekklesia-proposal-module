@@ -11,10 +11,7 @@ import { Region } from "../../../schema/Region.js";
  */
 router.get("/", async (req, res) => {
   try {
-    const regions = await Region.find({})
-      .sort({ name: 1 })
-      .select("name _id")
-      .lean();
+    const regions = await Region.find({}).sort({ name: 1 }).select("name _id").lean();
 
     return res.status(200).json({
       data: regions,

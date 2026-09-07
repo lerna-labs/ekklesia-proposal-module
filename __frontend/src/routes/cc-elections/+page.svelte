@@ -8,23 +8,23 @@
   // const timelineTestNow = "2026-07-29T12:00:00.000Z";
 </script>
 
-<section class="container mx-auto max-w-4xl py-8 px-4">
+<section class="container mx-auto max-w-4xl px-4 py-8">
   <div>
     <h1 class="mb-6">Cardano Constitutional Committee Elections 2026</h1>
     <p class="mb-4">
-      In 2026, the Cardano ecosystem will elect new members to the Constitutional Committee (CC), a core governance body
-      responsible for interpreting and upholding the Constitution.
+      In 2026, the Cardano ecosystem will elect new members to the Constitutional Committee (CC), a
+      core governance body responsible for interpreting and upholding the Constitution.
     </p>
 
     <p class="mb-4">
-      This election provides ada holders, through Delegated Representatives (DReps), with the ability to select
-      candidates who will play a critical role in safeguarding the constitutional integrity of Cardano’s governance
-      system.
+      This election provides ada holders, through Delegated Representatives (DReps), with the
+      ability to select candidates who will play a critical role in safeguarding the constitutional
+      integrity of Cardano’s governance system.
     </p>
 
     <p class="mb-4">
-      The process is facilitated by Intersect using its Hydra-based voting platform and is designed to ensure
-      transparency, fairness, and informed participation across the ecosystem.
+      The process is facilitated by Intersect using its Hydra-based voting platform and is designed
+      to ensure transparency, fairness, and informed participation across the ecosystem.
     </p>
   </div>
 
@@ -33,7 +33,7 @@
       <BudgetProcessTimeline phases={budgetPhases} />
     </div>
 
-    <Card.Root class="min-h-0 min-w-0 h-full gap-3">
+    <Card.Root class="h-full min-h-0 min-w-0 gap-3">
       <Card.Header>
         <Card.Title>Candidates</Card.Title>
         <!-- prettier-ignore -->
@@ -43,11 +43,11 @@
           on Candidates.
         </Card.Description>
       </Card.Header>
-      <Card.Footer class="h-full flex items-end">
+      <Card.Footer class="flex h-full items-end">
         <Button
           href="/votes/cc-vote-2026"
           size="sm"
-          class="w-full text-xs bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+          class="w-full bg-(--mbo-electric-blue) text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
         >
           View Candidates
         </Button>

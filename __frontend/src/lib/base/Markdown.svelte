@@ -17,10 +17,7 @@
     const anchor = event.target.closest("a");
     if (!anchor || !anchor.href) return;
     event.preventDefault();
-    linkWarningDialog.show(
-      anchor.href,
-      anchor.title || anchor.textContent?.trim() || anchor.href,
-    );
+    linkWarningDialog.show(anchor.href, anchor.title || anchor.textContent?.trim() || anchor.href);
   }
 
   function handleContainerKeydown(e) {

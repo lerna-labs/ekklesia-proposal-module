@@ -14,20 +14,11 @@
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import TreasuryDonationAcknowledgmentModal from "./TreasuryDonationAcknowledgmentModal.svelte";
   import { normalizeWorkPackage } from "./workPackageUtils.js";
-  let {
-    vote,
-    proposal,
-    onSave,
-    validationErrors,
-    formRef = $bindable(),
-    onCancel,
-  } = $props();
+  let { vote, proposal, onSave, validationErrors, formRef = $bindable(), onCancel } = $props();
 
   const pillars = $derived(vote?.metaData?.strategyFramework?.pillars ?? []);
   const formTitle = $derived(proposal?._id ? "Edit Proposal" : "New Proposal");
-  const showTreasuryModal = $derived(
-    vote?.form === "budget2026" && !proposal?._id,
-  );
+  const showTreasuryModal = $derived(vote?.form === "budget2026" && !proposal?._id);
   let treasuryAcknowledged = $state(false);
   let openTreasuryModal = $state(false);
 
@@ -258,11 +249,10 @@
         };
       }
       if (Array.isArray(p.metaData.supportingInfoLinks)) {
-        formData.metaData.supportingInfoLinks =
-          p.metaData.supportingInfoLinks.map((link) => ({
-            title: link?.title ?? "",
-            url: link?.url ?? "",
-          }));
+        formData.metaData.supportingInfoLinks = p.metaData.supportingInfoLinks.map((link) => ({
+          title: link?.title ?? "",
+          url: link?.url ?? "",
+        }));
       }
       if (
         p.metaData.proposalDetails?.conversionRate != null &&
@@ -270,15 +260,10 @@
       )
         formData.metaData.proposalDetails.conversionRate =
           p.metaData.proposalDetails.conversionRate;
-      if (
-        p.metaData.conversionRate != null &&
-        p.metaData.conversionRate !== undefined
-      )
-        formData.metaData.proposalDetails.conversionRate =
-          p.metaData.conversionRate;
+      if (p.metaData.conversionRate != null && p.metaData.conversionRate !== undefined)
+        formData.metaData.proposalDetails.conversionRate = p.metaData.conversionRate;
       if (p.metaData.treasuryRepayment != null)
-        formData.metaData.treasuryRepayment =
-          p.metaData.treasuryRepayment ?? "";
+        formData.metaData.treasuryRepayment = p.metaData.treasuryRepayment ?? "";
       if (p.metaData.treasuryRepaymentCircumstances != null)
         formData.metaData.treasuryRepaymentCircumstances =
           p.metaData.treasuryRepaymentCircumstances ?? "";
@@ -303,36 +288,25 @@
       if (cp != null) {
         if (typeof cp === "string") {
           const raw = (cp ?? "").trim().toLowerCase();
-          const legalEntityType =
-            raw === "company" || raw === "individual" ? raw : "";
+          const legalEntityType = raw === "company" || raw === "individual" ? raw : "";
           Object.assign(formContractingParty, initialContractingParty);
           formContractingParty.legalEntityType = legalEntityType;
         } else if (typeof cp === "object") {
-          const raw = (cp.legalEntityType ?? "")
-            .toString()
-            .trim()
-            .toLowerCase();
-          const legalEntityType =
-            raw === "company" || raw === "individual" ? raw : "";
+          const raw = (cp.legalEntityType ?? "").toString().trim().toLowerCase();
+          const legalEntityType = raw === "company" || raw === "individual" ? raw : "";
           formContractingParty.legalEntityType = legalEntityType;
           formContractingParty.legalEntityName = cp.legalEntityName ?? "";
           formContractingParty.legalEntityRegistrationNumber =
             cp.legalEntityRegistrationNumber ?? "";
           formContractingParty.legalEntityCountry = cp.legalEntityCountry ?? "";
-          formContractingParty.legalEntityAddressLine1 =
-            cp.legalEntityAddressLine1 ?? "";
-          formContractingParty.legalEntityAddressLine2 =
-            cp.legalEntityAddressLine2 ?? "";
-          formContractingParty.legalEntityAddressLine3 =
-            cp.legalEntityAddressLine3 ?? "";
+          formContractingParty.legalEntityAddressLine1 = cp.legalEntityAddressLine1 ?? "";
+          formContractingParty.legalEntityAddressLine2 = cp.legalEntityAddressLine2 ?? "";
+          formContractingParty.legalEntityAddressLine3 = cp.legalEntityAddressLine3 ?? "";
           formContractingParty.govtIssuedIdNumber = cp.govtIssuedIdNumber ?? "";
           formContractingParty.countryOfResidence = cp.countryOfResidence ?? "";
-          formContractingParty.residentialAddressLine1 =
-            cp.residentialAddressLine1 ?? "";
-          formContractingParty.residentialAddressLine2 =
-            cp.residentialAddressLine2 ?? "";
-          formContractingParty.residentialAddressLine3 =
-            cp.residentialAddressLine3 ?? "";
+          formContractingParty.residentialAddressLine1 = cp.residentialAddressLine1 ?? "";
+          formContractingParty.residentialAddressLine2 = cp.residentialAddressLine2 ?? "";
+          formContractingParty.residentialAddressLine3 = cp.residentialAddressLine3 ?? "";
         }
       }
       const pc = p.metaData.primaryContact;
@@ -361,15 +335,12 @@
       const adm = p.metaData.administrator;
       if (adm !== undefined && adm !== null) {
         const v = String(adm).trim();
-        if (v === "Yes" || v === "Intersect")
-          formData.metaData.administrator = "Intersect";
-        else if (v === "No" || v === "Other")
-          formData.metaData.administrator = "Other";
+        if (v === "Yes" || v === "Intersect") formData.metaData.administrator = "Intersect";
+        else if (v === "No" || v === "Other") formData.metaData.administrator = "Other";
         else formData.metaData.administrator = v || "";
       }
       if (p.metaData.independentAudits != null) {
-        formData.metaData.independentAudits =
-          p.metaData.independentAudits ?? "";
+        formData.metaData.independentAudits = p.metaData.independentAudits ?? "";
       }
       const pd = p.metaData.proposerDetails;
       if (pd && typeof pd === "object") {
@@ -384,10 +355,7 @@
             : [],
         };
       }
-      if (
-        p.metaData.proposalDetails &&
-        Array.isArray(p.metaData.proposalDetails.workPackages)
-      ) {
+      if (p.metaData.proposalDetails && Array.isArray(p.metaData.proposalDetails.workPackages)) {
         formData.metaData.proposalDetails = {
           ...formData.metaData.proposalDetails,
           workPackages: p.metaData.proposalDetails.workPackages.map((wp) =>
@@ -432,9 +400,7 @@
       }
     }
     const isIntersect = formData.metaData?.administrator === "Intersect";
-    const totalBudget = isIntersect
-      ? Math.round(grandTotalAda * 1.03)
-      : Math.round(grandTotalAda);
+    const totalBudget = isIntersect ? Math.round(grandTotalAda * 1.03) : Math.round(grandTotalAda);
     const payload = { ...formData, status };
     payload.metaData = { ...payload.metaData, totalBudget };
     return payload;
@@ -456,18 +422,18 @@
     onCancel={() => onCancel?.()}
   />
 {:else}
-  <div class="container mx-auto max-w-4xl py-8 px-4 pb-0">
+  <div class="container mx-auto max-w-4xl px-4 py-8 pb-0">
     <h1 class="mb-4">{formTitle}</h1>
   </div>
   <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
     <Accordion.Root
       type="multiple"
-      class="max-w-4xl mx-auto px-4 w-full"
+      class="mx-auto w-full max-w-4xl px-4"
       bind:value={accordionValue}
     >
       <Accordion.Item value="section-1" id="project-definition">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             1. Proposal Overview
             {#if sectionErrorCounts["section-1"] > 0}
               <Badge variant="destructive">
@@ -476,19 +442,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormProjectDefinition
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormProjectDefinition bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-2" id="strategy-framework">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             2. Alignment to Strategy framework
             {#if sectionErrorCounts["section-2"] > 0}
               <Badge variant="destructive">
@@ -497,20 +458,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormStrategyFramework
-            bind:formData
-            {vote}
-            {pillars}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormStrategyFramework bind:formData {vote} {pillars} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-5" id="proposer-details">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             3. Proposer
             {#if sectionErrorCounts["section-5"] > 0}
               <Badge variant="destructive">
@@ -519,19 +474,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormProposerDetails
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormProposerDetails bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-3" id="proposal-details">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             4. Proposal Details
             {#if sectionErrorCounts["section-3"] > 0}
               <Badge variant="destructive">
@@ -540,19 +490,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormProposalDetails
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormProposalDetails bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-6" id="budget-administration">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             5. Budget Administration
             {#if sectionErrorCounts["section-6"] > 0}
               <Badge variant="destructive">
@@ -561,14 +506,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
+        <Accordion.Content class="px-[3px] pt-[3px]">
           <FormBudgetAdmin bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-4" id="budget-summary">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             6. Budget Summary
             {#if sectionErrorCounts["section-4"] > 0}
               <Badge variant="destructive">
@@ -577,19 +522,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormBudgetSummary
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormBudgetSummary bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
       <Accordion.Item value="section-7" id="other-info">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             7. Other Supporting Info
             {#if sectionErrorCounts["section-7"] > 0}
               <Badge variant="destructive">
@@ -598,23 +538,14 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormAdditionalInfo
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormAdditionalInfo bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
 
-      <Accordion.Item
-        value="section-8"
-        id="treasury-donation"
-        class="last:border-b"
-      >
+      <Accordion.Item value="section-8" id="treasury-donation" class="last:border-b">
         <Accordion.Trigger level={2} class="section-title">
-          <span class="flex items-center gap-2 mb-0">
+          <span class="mb-0 flex items-center gap-2">
             8. Treasury Donation Verification
             {#if sectionErrorCounts["section-8"] > 0}
               <Badge variant="destructive">
@@ -623,23 +554,15 @@
             {/if}
           </span>
         </Accordion.Trigger>
-        <Accordion.Content class="pt-[3px] px-[3px]">
-          <FormTreasuryDonation
-            bind:formData
-            {vote}
-            {proposal}
-            {validationErrors}
-          />
+        <Accordion.Content class="px-[3px] pt-[3px]">
+          <FormTreasuryDonation bind:formData {vote} {proposal} {validationErrors} />
         </Accordion.Content>
       </Accordion.Item>
     </Accordion.Root>
 
-    <div
-      id="legal-declarations"
-      class="max-w-4xl mx-auto px-4 w-full pt-4"
-    >
+    <div id="legal-declarations" class="mx-auto w-full max-w-4xl px-4 pt-4">
       <div class="section-title pb-4">
-        <h2 class="flex items-center gap-2 mb-0">
+        <h2 class="mb-0 flex items-center gap-2">
           9. Legal declarations
           {#if sectionErrorCounts["section-9"] > 0}
             <Badge variant="destructive">
@@ -648,22 +571,14 @@
           {/if}
         </h2>
       </div>
-      <div class="pt-[3px] px-[3px] pb-12">
+      <div class="px-[3px] pt-[3px] pb-12">
         <FormLegalDeclarations
           bind:value={formData.metaData.legalDeclarations}
-          validationErrors={validationErrors?.properties?.metaData?.properties
-            ?.legalDeclarations}
+          validationErrors={validationErrors?.properties?.metaData?.properties?.legalDeclarations}
         />
       </div>
     </div>
 
-    <FormControls
-      bind:this={formControlsRef}
-      {formData}
-      {getPayload}
-      {onSave}
-      {proposal}
-      {vote}
-    />
+    <FormControls bind:this={formControlsRef} {formData} {getPayload} {onSave} {proposal} {vote} />
   </form>
 {/if}

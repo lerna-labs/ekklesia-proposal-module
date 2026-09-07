@@ -8,7 +8,7 @@
 </script>
 
 <footer class="bg-(--mbo-tangy-blue) text-white">
-  <div class="container mx-auto max-w-4xl py-8 px-4">
+  <div class="container mx-auto max-w-4xl px-4 py-8">
     <div class="space-y-2">
       <div class="flex items-center justify-between gap-4">
         <svg width="135" height="47" fill="none">
@@ -20,7 +20,7 @@
         <button
           type="button"
           onclick={scrollToTop}
-          class="flex h-[47px] w-10 shrink-0 -mr-3 cursor-pointer items-center justify-center rounded text-white"
+          class="-mr-3 flex h-[47px] w-10 shrink-0 cursor-pointer items-center justify-center rounded text-white"
           title="Scroll to top"
           aria-label="Scroll to top"
         >
@@ -29,7 +29,7 @@
       </div>
       <div class="text-xs">&copy; 2026. Intersect. All Rights Reserved.</div>
     </div>
-    <div class="text-xs mt-4 flex items-center justify-between gap-4">
+    <div class="mt-4 flex items-center justify-between gap-4 text-xs">
       <ul class="flex items-center gap-2">
         <li>
           <a
@@ -63,7 +63,7 @@
         </li>
       </ul>
       {#if $versionInfo.version}
-        <span class="text-white/75 shrink-0">
+        <span class="shrink-0 text-white/75">
           Version {$versionInfo.version}
         </span>
       {/if}

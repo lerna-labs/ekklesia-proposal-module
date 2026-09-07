@@ -2,6 +2,6 @@
   let { children } = $props();
 </script>
 
-<div class="bg-white rounded-md p-3 outline outline-border">
+<div class="outline-border rounded-md bg-white p-3 outline">
   {@render children?.()}
 </div>

@@ -25,11 +25,7 @@ function minVersionFromRange(range) {
     .trim()
     .match(/^>=\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
   if (!match) return null;
-  return [
-    Number(match[1]),
-    Number(match[2] ?? 0),
-    Number(match[3] ?? 0),
-  ];
+  return [Number(match[1]), Number(match[2] ?? 0), Number(match[3] ?? 0)];
 }
 
 /**
@@ -58,9 +54,7 @@ for (const manifestPath of manifests) {
 
   const minVersion = minVersionFromRange(nodeRange);
   if (minVersion === null) {
-    failures.push(
-      `${rel}: engines.node must be a ">=N" range (got ${JSON.stringify(nodeRange)})`,
-    );
+    failures.push(`${rel}: engines.node must be a ">=N" range (got ${JSON.stringify(nodeRange)})`);
   } else if (!gte(minVersion, MIN_VERSION)) {
     failures.push(
       `${rel}: engines.node floor is ${minVersion.join(".")}; must be >= ${MIN_VERSION.join(".")} (got ${JSON.stringify(nodeRange)})`,

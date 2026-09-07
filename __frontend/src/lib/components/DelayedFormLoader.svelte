@@ -21,9 +21,7 @@
 </script>
 
 {#if visible}
-  <div
-    class="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
-  >
+  <div class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
     <FormLoader />
   </div>
 {/if}

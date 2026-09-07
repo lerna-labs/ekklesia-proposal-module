@@ -25,7 +25,9 @@
     isLastMember = false,
   } = $props();
 
-  const displayName = $derived((member?.fullNameOrAlias ?? "").toString().trim() || `Member ${index + 1}`);
+  const displayName = $derived(
+    (member?.fullNameOrAlias ?? "").toString().trim() || `Member ${index + 1}`,
+  );
 
   const hasAnyErrors = $derived(countErrorsInTree(validationErrors) > 0);
   const cardRingClass = $derived(hasAnyErrors ? "ring-2 ring-destructive rounded-md" : "");
@@ -95,7 +97,7 @@
   contentClass={isLastMember ? "pb-2" : ""}
 >
   {#snippet title()}
-    <div class="flex min-w-0 w-full items-center gap-2">
+    <div class="flex w-full min-w-0 items-center gap-2">
       <UsersRoundIcon class="size-5 shrink-0" aria-hidden="true" />
       <span class="min-w-0 flex-1 truncate">{displayName}</span>
     </div>
@@ -105,7 +107,7 @@
       type="button"
       variant="outline"
       size="icon"
-      class="shrink-0 size-8 cursor-pointer"
+      class="size-8 shrink-0 cursor-pointer"
       title="Remove member"
       aria-label="Remove member"
       onclick={handleDeleteClick}
@@ -114,8 +116,8 @@
     </Button>
   {/snippet}
 
-  <div class="consortium-member-fields flex flex-col gap-6 mt-2">
-    <div class="md:grid md:grid-cols-2 gap-6">
+  <div class="consortium-member-fields mt-2 flex flex-col gap-6">
+    <div class="gap-6 md:grid md:grid-cols-2">
       <section class="space-y-1.5">
         <h4>What is the member's name or alias?</h4>
         <Input
@@ -146,7 +148,7 @@
       </section>
     </div>
 
-    <div class="md:grid md:grid-cols-2 gap-6">
+    <div class="gap-6 md:grid md:grid-cols-2">
       <section class="space-y-1.5">
         <h4>What is your Pool ID? (if applicable)</h4>
         <Input
@@ -266,7 +268,7 @@
       />
     </section>
 
-    <section class="space-y-1.5 mb-6">
+    <section class="mb-6 space-y-1.5">
       <h4>Do you have any conflicts of interest to disclose?</h4>
       <Textarea
         id="member-{index}-conflictOfInterestStatement"

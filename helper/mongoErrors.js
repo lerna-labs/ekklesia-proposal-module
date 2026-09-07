@@ -5,7 +5,8 @@
  */
 export function isDuplicateKeyError(error) {
   if (!error || typeof error !== "object") return false;
-  const code = /** @type {{ code?: number, cause?: { code?: number } }} */ (error).code
-    ?? /** @type {{ cause?: { code?: number } }} */ (error).cause?.code;
+  const code =
+    /** @type {{ code?: number, cause?: { code?: number } }} */ (error).code ??
+    /** @type {{ cause?: { code?: number } }} */ (error).cause?.code;
   return code === 11000;
 }

@@ -2,11 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Handlebars from "handlebars";
-import {
-  buildSubject,
-  buildPreheader,
-  VOTE_SUBJECT_EVENTS,
-} from "./subject.js";
+import { buildSubject, buildPreheader, VOTE_SUBJECT_EVENTS } from "./subject.js";
 import { createTranslator } from "./i18n.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,8 +73,7 @@ function stripHtmlComments(html) {
 }
 
 function localizeEvent(t, event) {
-  const normalizedType =
-    event.type === "profile_withdrawn" ? "proposal_withdrawn" : event.type;
+  const normalizedType = event.type === "profile_withdrawn" ? "proposal_withdrawn" : event.type;
   const typeKey = `body.event.${normalizedType}`;
   const localized = {
     ...event,
@@ -181,16 +176,12 @@ export function hydrate(fixture, t) {
     (sum, vote) =>
       sum +
       vote.events.length +
-      vote.proposals.reduce(
-        (innerSum, proposal) => innerSum + proposal.events.length,
-        0,
-      ),
+      vote.proposals.reduce((innerSum, proposal) => innerSum + proposal.events.length, 0),
     0,
   );
 
   const period = fixture.period ?? "6h";
-  const periodVerbose =
-    fixture.periodVerbose ?? t.raw(`body.periodVerbose.${period}`);
+  const periodVerbose = fixture.periodVerbose ?? t.raw(`body.periodVerbose.${period}`);
 
   const summary = {
     period,
@@ -205,10 +196,8 @@ export function hydrate(fixture, t) {
   const data = {
     summary,
     votes,
-    preferencesUrl:
-      fixture.preferencesUrl ?? "https://ekklesia.example/preferences",
-    unsubscribeUrl:
-      fixture.unsubscribeUrl ?? "https://ekklesia.example/unsubscribe",
+    preferencesUrl: fixture.preferencesUrl ?? "https://ekklesia.example/preferences",
+    unsubscribeUrl: fixture.unsubscribeUrl ?? "https://ekklesia.example/unsubscribe",
     preheader: fixture.preheader,
   };
 
@@ -364,7 +353,7 @@ export async function renderTransactional(options = {}) {
       preferencesUrl,
       unsubscribeUrl,
       showUnsubscribe,
-    })
+    }),
   );
   return { html, brand };
 }

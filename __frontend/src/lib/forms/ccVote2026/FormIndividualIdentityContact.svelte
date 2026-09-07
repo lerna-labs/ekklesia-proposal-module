@@ -8,9 +8,7 @@
 
   let { formData = $bindable(), validationErrors } = $props();
 
-  const individualErrors = $derived(
-    validationErrors?.properties?.metaData?.properties?.individual,
-  );
+  const individualErrors = $derived(validationErrors?.properties?.metaData?.properties?.individual);
 
   const fullNameErrors = $derived({
     properties: {

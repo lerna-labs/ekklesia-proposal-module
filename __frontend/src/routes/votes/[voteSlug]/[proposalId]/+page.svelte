@@ -29,7 +29,10 @@
     if (!preview || typeof window === "undefined") return;
     previewLoadAttempted = true;
     const parsed = readPreviewPayload();
-    if (parsed != null && String(parsed.proposalId ?? "") === String(page.params.proposalId ?? "")) {
+    if (
+      parsed != null &&
+      String(parsed.proposalId ?? "") === String(page.params.proposalId ?? "")
+    ) {
       previewProposal = parsed.proposal;
     }
   });
@@ -64,10 +67,14 @@
   const voteUrl = $derived(backToVoteUrl || (voteSlug ? `/votes/${voteSlug}` : "/votes"));
   const isArchived = $derived(proposal?.status === "archived");
   const currentVersionHref = $derived(
-    isArchived && proposal?.currentProposalId && voteSlug ? `/votes/${voteSlug}/${proposal.currentProposalId}` : null,
+    isArchived && proposal?.currentProposalId && voteSlug
+      ? `/votes/${voteSlug}/${proposal.currentProposalId}`
+      : null,
   );
 
-  const isWithdrawn = $derived(proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer");
+  const isWithdrawn = $derived(
+    proposal?.status === "withdrawnByAdmin" || proposal?.status === "withdrawnByProposer",
+  );
   const withdrawalDetails = $derived(proposal?.withdrawalDetails ?? null);
   const withdrawalDate = $derived.by(() => {
     const d = withdrawalDetails?.date;
@@ -84,7 +91,9 @@
         ? "by the proposer"
         : "",
   );
-  const showComments = $derived(proposal && proposal.status !== "draft" && proposal.status !== "archived");
+  const showComments = $derived(
+    proposal && proposal.status !== "draft" && proposal.status !== "archived",
+  );
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
   const ProposalPageComponent = $derived(PROPOSAL_PAGE_MAP[vote?.form] ?? DefaultProposalPage);
@@ -105,7 +114,9 @@
     if (vote?.form === "ccVote2026") {
       const track = String(proposal?.metaData?.track ?? "").trim();
       const motivation = String(proposal?.metaData?.[track]?.motivation ?? "").trim();
-      const candidateName = String(proposal?.metaData?.[track]?.applicantName ?? proposalTitle).trim();
+      const candidateName = String(
+        proposal?.metaData?.[track]?.applicantName ?? proposalTitle,
+      ).trim();
       return {
         title: withPrefix("CC Elections 2026", candidateName),
         description: motivation,
@@ -139,7 +150,7 @@
   {/if}
   {#if preview}
     <div
-      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-white text-sm font-medium"
+      class="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-sm font-medium text-white"
       role="banner"
       aria-label="Preview mode"
     >
@@ -147,7 +158,7 @@
     </div>
   {:else if isUnpublishedDraft}
     <div
-      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-white text-sm font-medium"
+      class="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] flex w-screen max-w-none items-center justify-center bg-(--mbo-orange) py-2 text-sm font-medium text-white"
       role="banner"
       aria-label="Draft proposal"
     >
@@ -155,24 +166,27 @@
     </div>
   {/if}
   {#if preview && !previewLoadAttempted}
-    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">Loading preview…</div>
+    <div class="text-muted-foreground container mx-auto max-w-4xl px-4 py-8 text-center">
+      Loading preview…
+    </div>
   {:else if preview && !proposal}
-    <div class="container mx-auto max-w-4xl py-8 px-4 text-center text-muted-foreground">
+    <div class="text-muted-foreground container mx-auto max-w-4xl px-4 py-8 text-center">
       Preview data not found. Close this window and click Preview again from the form.
     </div>
   {:else if currentVersionHref}
     <a
       href={currentVersionHref}
-      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center bg-(--mbo-orange) py-3 text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-(--mbo-orange)"
+      class="relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] flex w-screen max-w-none items-center bg-(--mbo-orange) py-3 text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-(--mbo-orange) focus:outline-none"
     >
       <div class="container mx-auto flex max-w-4xl items-center gap-1.5 px-4 font-medium">
-        You are looking at an outdated version of this proposal, click here to see the current version
+        You are looking at an outdated version of this proposal, click here to see the current
+        version
         <ArrowRightIcon class="size-4 shrink-0" aria-hidden="true" />
       </div>
     </a>
   {:else if isWithdrawn}
     <div
-      class="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex w-screen max-w-none items-center bg-destructive py-4 text-destructive-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:ring-offset-destructive"
+      class="bg-destructive text-destructive-foreground focus-within:ring-offset-destructive relative right-1/2 left-1/2 -mr-[50vw] -ml-[50vw] flex w-screen max-w-none items-center py-4 focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:outline-none"
       role="banner"
       aria-label="Proposal withdrawn"
     >
@@ -181,14 +195,16 @@
           This proposal has been withdrawn {withdrawnByLabel}
           {#if withdrawalDate}
             on {withdrawalDate}
-            <Badge class="bg-white text-destructive border-0 -top-0.5 ml-0.5">
+            <Badge class="text-destructive -top-0.5 ml-0.5 border-0 bg-white">
               {withdrawalDetails.category}
             </Badge>
           {/if}
         </span>
         {#if withdrawalDetails?.comment}
-          <div class="text-xs border-b-2 border-white pb-0.5 inline w-fit mt-2 mb-2">Comment:</div>
-          <div class="text-sm opacity-90 max-w-3xl **:first:mt-0 **:last:mb-0 prose prose-sm prose-invert">
+          <div class="mt-2 mb-2 inline w-fit border-b-2 border-white pb-0.5 text-xs">Comment:</div>
+          <div
+            class="prose prose-sm prose-invert max-w-3xl text-sm opacity-90 **:first:mt-0 **:last:mb-0"
+          >
             <Markdown content={withdrawalDetails.comment} />
           </div>
         {/if}

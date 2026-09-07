@@ -3,13 +3,15 @@
 
   let { formData = $bindable(), validationErrors, consortiumExtraCheckbox = false } = $props();
 
-  let declarationErrors = $derived(validationErrors?.properties?.metaData?.properties?.declarationAgreement);
+  let declarationErrors = $derived(
+    validationErrors?.properties?.metaData?.properties?.declarationAgreement,
+  );
 </script>
 
 <div class="pr-2">
-  <p class="text-sm text-muted-foreground mb-3">
-    Confirm the declarations below before submitting your proposal. These must be confirmed on every submit or
-    re-submit.
+  <p class="text-muted-foreground mb-3 text-sm">
+    Confirm the declarations below before submitting your proposal. These must be confirmed on every
+    submit or re-submit.
   </p>
   <div class="space-y-6">
     <section>
@@ -42,7 +44,7 @@
 
     <section>
       <h3>Terms &amp; Conditions Agreement</h3>
-      <p class="text-sm text-muted-foreground mb-2 mt-2">
+      <p class="text-muted-foreground mt-2 mb-2 text-sm">
         The candidate agrees to the
         <a
           class="link font-medium"

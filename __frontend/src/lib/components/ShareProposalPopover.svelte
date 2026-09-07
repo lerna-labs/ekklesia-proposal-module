@@ -9,11 +9,7 @@
   import LinkedInBrandIcon from "$lib/components/form/icons/LinkedInBrandIcon.svelte";
   import FacebookBrandIcon from "$lib/components/form/icons/FacebookBrandIcon.svelte";
 
-  let {
-    buttonLabel = "Share Proposal",
-    defaultText = "",
-    shareUrl = "",
-  } = $props();
+  let { buttonLabel = "Share Proposal", defaultText = "", shareUrl = "" } = $props();
 
   const resolvedShareUrl = $derived.by(() => {
     const explicit = String(shareUrl ?? "").trim();
@@ -54,11 +50,7 @@
     encodeURIComponent(defaultText || "Check out this proposal"),
   );
   const encodedEmailBody = $derived(
-    encodeURIComponent(
-      defaultText
-        ? `${defaultText}\n\n${socialShareUrl}`
-        : socialShareUrl,
-    ),
+    encodeURIComponent(defaultText ? `${defaultText}\n\n${socialShareUrl}` : socialShareUrl),
   );
 
   const shareLinks = $derived.by(() => {
@@ -112,7 +104,7 @@
               href={link.href}
               target={link.id === "email" ? undefined : "_blank"}
               rel={link.id === "email" ? undefined : "noopener noreferrer"}
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md border hover:bg-muted"
+              class="hover:bg-muted inline-flex h-9 w-9 items-center justify-center rounded-md border"
               aria-label={link.label}
               title={link.label}
             >
@@ -129,7 +121,7 @@
           {/each}
           <button
             type="button"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-md border hover:bg-muted cursor-pointer"
+            class="hover:bg-muted inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border"
             aria-label="Copy link"
             title="Copy link"
             onclick={copyLink}
@@ -138,9 +130,7 @@
           </button>
         </div>
       {:else}
-        <p class="px-2 py-1.5 text-xs text-muted-foreground">
-          Share URL unavailable.
-        </p>
+        <p class="text-muted-foreground px-2 py-1.5 text-xs">Share URL unavailable.</p>
       {/if}
     </div>
   </Popover.Content>

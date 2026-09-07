@@ -71,7 +71,8 @@
           toast.success(payload.status === "live" ? "Proposal submitted." : "Draft saved.");
         }
         await invalidateAll();
-        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
+        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
+          goto("/dashboard");
         return json;
       } else {
         if (json?.errors) validationErrors = json.errors;

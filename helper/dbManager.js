@@ -92,18 +92,11 @@ export async function connectToDatabase(isReconnectAttempt = false) {
     connection.on("disconnected", () => {
       // Only attempt reconnection if it wasn't an intentional disconnect
       // and we haven't reached max attempts
-      if (
-        !isIntentionalDisconnect &&
-        reconnectAttempts < MAX_RECONNECT_ATTEMPTS
-      ) {
+      if (!isIntentionalDisconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         console.warn("MongoDB disconnected");
 
         reconnectAttempts++;
-        console.info(
-          `Scheduling reconnection attempt in ${
-            RECONNECT_INTERVAL / 1000
-          } seconds...`
-        );
+        console.info(`Scheduling reconnection attempt in ${RECONNECT_INTERVAL / 1000} seconds...`);
 
         // Schedule reconnection attempt
         setTimeout(() => {
@@ -115,7 +108,7 @@ export async function connectToDatabase(isReconnectAttempt = false) {
         // console.info("Intentional disconnect - not attempting to reconnect");
       } else {
         console.error(
-          `Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`
+          `Maximum reconnection attempts (${MAX_RECONNECT_ATTEMPTS}) reached. Giving up.`,
         );
         connection = null;
       }
@@ -135,11 +128,7 @@ export async function connectToDatabase(isReconnectAttempt = false) {
     // If this was not already a reconnection attempt, try to reconnect
     if (!isReconnectAttempt && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       reconnectAttempts++;
-      console.info(
-        `Scheduling reconnection attempt in ${
-          RECONNECT_INTERVAL / 1000
-        } seconds...`
-      );
+      console.info(`Scheduling reconnection attempt in ${RECONNECT_INTERVAL / 1000} seconds...`);
 
       // Schedule reconnection
       setTimeout(() => {

@@ -186,18 +186,33 @@ async function main() {
     }
 
     const proposals = await Proposal.find({ voteId: vote._id, status: "live" })
-      .select("title metaData.administrator metaData.proposerDetails.name metaData.proposerDetails.email")
+      .select(
+        "title metaData.administrator metaData.proposerDetails.name metaData.proposerDetails.email",
+      )
       .sort({ submittedAt: -1, _id: -1 })
       .lean();
 
-    const header = ["_id", "title", "administrator", "contact name", "contact email", "proposal_url"];
+    const header = [
+      "_id",
+      "title",
+      "administrator",
+      "contact name",
+      "contact email",
+      "proposal_url",
+    ];
     const lines = [header.map(csvCell).join(",")];
 
     for (const p of proposals) {
       const id = p._id?.toString?.() ?? String(p._id);
       const title = stringField(p.title);
-      const meta = p.metaData && typeof p.metaData === "object" && !Array.isArray(p.metaData) ? p.metaData : {};
-      const pd = meta.proposerDetails && typeof meta.proposerDetails === "object" ? meta.proposerDetails : {};
+      const meta =
+        p.metaData && typeof p.metaData === "object" && !Array.isArray(p.metaData)
+          ? p.metaData
+          : {};
+      const pd =
+        meta.proposerDetails && typeof meta.proposerDetails === "object"
+          ? meta.proposerDetails
+          : {};
       const contactName = stringField(pd.name);
       const contactEmail = stringField(pd.email);
       const administrator = administratorExportLabel(meta);

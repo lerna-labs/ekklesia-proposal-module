@@ -37,11 +37,14 @@
   /** Single instant for all policy checks (UTC timeline via Date). */
   let policyNow = $derived(new Date(data.policyNowMs ?? Date.now()));
 
-  const closedSubmissionTitle = "The submission period for this vote has ended (submission end date in UTC).";
+  const closedSubmissionTitle =
+    "The submission period for this vote has ended (submission end date in UTC).";
   const closedReviewTitle =
     "The review period for this vote has ended; editing is not available (review end date in UTC).";
-  const closedWithdrawTitle = "Proposer withdrawal is not allowed after the vote review period has ended.";
-  const missingVoteSlugTitle = "Cannot create a new proposal: this vote has no URL slug (contact an administrator).";
+  const closedWithdrawTitle =
+    "Proposer withdrawal is not allowed after the vote review period has ended.";
+  const missingVoteSlugTitle =
+    "Cannot create a new proposal: this vote has no URL slug (contact an administrator).";
 
   let deleteDialogOpen = $state(false);
   let deleteProposal = $state(null);
@@ -96,7 +99,7 @@
   }
 </script>
 
-<div class="container mx-auto max-w-4xl py-8 px-4">
+<div class="container mx-auto max-w-4xl px-4 py-8">
   <h1 class="mb-6">Dashboard</h1>
 
   <div class="space-y-6">
@@ -108,16 +111,16 @@
           </Card.Header>
           <Card.Content class="space-y-6">
             <div class="flex flex-col gap-2">
-            {#if user.name}
+              {#if user.name}
+                <p class="text-sm">
+                  <span class="text-muted-foreground">Name/Handle:</span>
+                  <span class="ml-2 font-medium">{user.name}</span>
+                </p>
+              {/if}
               <p class="text-sm">
-                <span class="text-muted-foreground">Name/Handle:</span>
-                <span class="ml-2 font-medium">{user.name}</span>
+                <span class="text-muted-foreground">User ID:</span>
+                <span class="ml-2 font-mono text-xs break-all">{user.userId}</span>
               </p>
-            {/if}
-            <p class="text-sm">
-              <span class="text-muted-foreground">User ID:</span>
-              <span class="ml-2 font-mono text-xs break-all">{user.userId}</span>
-            </p>
             </div>
             <div class="border-t pt-6">
               <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
@@ -129,7 +132,8 @@
 
     {#if showMyProposals}
       {#each voteSections as { vote: sectionVote, proposals } (sectionVote._id)}
-        {@const createActionLabel = sectionVote.form === "ccVote2026" ? "New Application" : "New Proposal"}
+        {@const createActionLabel =
+          sectionVote.form === "ccVote2026" ? "New Application" : "New Proposal"}
         {@const votingHref = buildVoteVotingUrl(sectionVote)}
         {@const showViewVoting = canShowVotingUi(sectionVote, policyNow) && votingHref}
         <Card.Root>
@@ -150,7 +154,7 @@
                 aria-label="View Voting"
                 size="sm"
               >
-                <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+                <VoteIcon class="mr-1 size-4" aria-hidden="true" />
                 View Voting
               </Button>
             {:else if sectionVote.slug && draftSubmissionOpen(sectionVote, policyNow)}
@@ -192,19 +196,25 @@
           </Card.Header>
           <Card.Content>
             {#if proposals.length === 0}
-              <p class="text-left text-sm text-muted-foreground">
+              <p class="text-muted-foreground text-left text-sm">
                 You have not created any proposals for this vote yet.
               </p>
             {:else}
               <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                   <thead>
-                    <tr class="border-b border-border">
-                      <th class="text-left font-medium py-3 pl-0 pr-4 align-middle min-w-0">Title</th>
-                      <th class="text-left font-medium py-3 px-4 w-[1%] whitespace-nowrap align-middle">
+                    <tr class="border-border border-b">
+                      <th class="min-w-0 py-3 pr-4 pl-0 text-left align-middle font-medium"
+                        >Title</th
+                      >
+                      <th
+                        class="w-[1%] px-4 py-3 text-left align-middle font-medium whitespace-nowrap"
+                      >
                         Last updated
                       </th>
-                      <th class="text-right font-medium py-3 pr-0 pl-4 w-[1%] whitespace-nowrap align-middle">
+                      <th
+                        class="w-[1%] py-3 pr-0 pl-4 text-right align-middle font-medium whitespace-nowrap"
+                      >
                         Actions
                       </th>
                     </tr>
@@ -215,7 +225,8 @@
                       {@const editHref = slug ? `/dashboard/${slug}/${proposal._id}` : null}
                       {@const rowVote = voteForProposalRow(proposal, [sectionVote])}
                       {@const isWithdrawn =
-                        proposal.status === "withdrawnByProposer" || proposal.status === "withdrawnByAdmin"}
+                        proposal.status === "withdrawnByProposer" ||
+                        proposal.status === "withdrawnByAdmin"}
                       {@const canEdit =
                         !isWithdrawn &&
                         editHref &&
@@ -226,23 +237,33 @@
                             ? liveResubmitOpen(rowVote, policyNow)
                             : false)}
                       {@const canWithdrawLive =
-                        proposal.status === "live" && rowVote && proposerWithdrawOpen(rowVote, policyNow)}
-                      {@const editLockedTitle = proposal.status === "draft" ? closedSubmissionTitle : closedReviewTitle}
+                        proposal.status === "live" &&
+                        rowVote &&
+                        proposerWithdrawOpen(rowVote, policyNow)}
+                      {@const editLockedTitle =
+                        proposal.status === "draft" ? closedSubmissionTitle : closedReviewTitle}
                       {@const viewUrl = viewHref(proposal, sectionVote)}
                       {@const isLastRow = i === proposals.length - 1}
-                      <tr class="border-b hover:bg-muted/50 {isLastRow ? 'border-border' : 'border-border/50'}">
-                        <td class="py-3 pl-0 pr-4 text-left align-middle min-w-0">
+                      <tr
+                        class="hover:bg-muted/50 border-b {isLastRow
+                          ? 'border-border'
+                          : 'border-border/50'}"
+                      >
+                        <td class="min-w-0 py-3 pr-4 pl-0 text-left align-middle">
                           <div class="flex flex-wrap items-center gap-2">
                             {#if isWithdrawn}
                               <span class="font-medium">
                                 {displayTitle(proposal)}
                               </span>
                             {:else if canEdit && editHref}
-                              <a href={editHref} class="text-primary hover:underline font-medium">
+                              <a href={editHref} class="text-primary font-medium hover:underline">
                                 {displayTitle(proposal)}
                               </a>
                             {:else if editHref}
-                              <span class="font-medium text-muted-foreground" title={editLockedTitle}>
+                              <span
+                                class="text-muted-foreground font-medium"
+                                title={editLockedTitle}
+                              >
                                 {displayTitle(proposal)}
                               </span>
                             {:else}
@@ -253,11 +274,13 @@
                             {#if isWithdrawn}
                               <button
                                 type="button"
-                                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-destructive text-white cursor-pointer hover:bg-destructive/90"
+                                class="bg-destructive hover:bg-destructive/90 inline-flex cursor-pointer items-center rounded-md px-2 py-0.5 text-xs font-medium text-white"
                                 aria-label="View withdrawal details"
                                 onclick={() => openWithdrawalDetailsDialog(proposal)}
                               >
-                                {proposal.status === "withdrawnByAdmin" ? "Withdrawn by Admin" : "Withdrawn"}
+                                {proposal.status === "withdrawnByAdmin"
+                                  ? "Withdrawn by Admin"
+                                  : "Withdrawn"}
                               </button>
                             {:else}
                               <span
@@ -271,10 +294,12 @@
                             {/if}
                           </div>
                         </td>
-                        <td class="py-3 px-4 w-[1%] text-muted-foreground whitespace-nowrap align-middle">
+                        <td
+                          class="text-muted-foreground w-[1%] px-4 py-3 align-middle whitespace-nowrap"
+                        >
                           {formatUpdatedAt(proposal.updatedAt)}
                         </td>
-                        <td class="py-3 pr-0 pl-4 w-[1%] whitespace-nowrap text-right align-middle">
+                        <td class="w-[1%] py-3 pr-0 pl-4 text-right align-middle whitespace-nowrap">
                           <div class="inline-flex items-center justify-end gap-1">
                             {#if isWithdrawn}
                               <Button
@@ -405,7 +430,7 @@
       {/each}
 
       {#if votePagination && votePagination.totalPages > 1}
-        <div class="px-2 pb-2 pt-2">
+        <div class="px-2 pt-2 pb-2">
           <Pagination.Root
             count={votePagination.totalItems}
             page={votePagination.currentPage}
@@ -442,7 +467,18 @@
   </div>
 </div>
 
-<ProposalDelete bind:open={deleteDialogOpen} proposal={deleteProposal} onSuccess={() => invalidateAll()} />
-<ProposalWithdrawal bind:open={withdrawDialogOpen} proposal={withdrawProposal} onSuccess={() => invalidateAll()} />
+<ProposalDelete
+  bind:open={deleteDialogOpen}
+  proposal={deleteProposal}
+  onSuccess={() => invalidateAll()}
+/>
+<ProposalWithdrawal
+  bind:open={withdrawDialogOpen}
+  proposal={withdrawProposal}
+  onSuccess={() => invalidateAll()}
+/>
 
-<ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} proposal={withdrawalDetailsDialogProposal} />
+<ProposalWithdrawn
+  bind:open={withdrawalDetailsDialogOpen}
+  proposal={withdrawalDetailsDialogProposal}
+/>

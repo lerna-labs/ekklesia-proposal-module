@@ -61,8 +61,7 @@
   const draftItemAda = $derived.by(() => {
     const q = Number(draft.quantity);
     const p = Number(draft.unitPrice);
-    if (!Number.isFinite(q) || !Number.isFinite(p) || q < 0 || p < 0)
-      return null;
+    if (!Number.isFinite(q) || !Number.isFinite(p) || q < 0 || p < 0) return null;
     return Math.round(q * p * 1000) / 1000;
   });
 
@@ -165,42 +164,34 @@
 <div class={[className, "gap-2"].filter(Boolean).join(" ")}>
   <Field.Field class="gap-1">
     {#if rows.length > 0}
-      <div class="rounded-md border overflow-x-auto mb-2 bg-white">
-        <table class="w-full caption-bottom text-xs border-collapse">
+      <div class="mb-2 overflow-x-auto rounded-md border bg-white">
+        <table class="w-full caption-bottom border-collapse text-xs">
           <thead>
-            <tr class="border-b transition-colors hover:bg-muted/50">
-              <th
-                class="h-9 px-3 text-left align-middle font-medium w-[min(120px,15%)]"
-              >
+            <tr class="hover:bg-muted/50 border-b transition-colors">
+              <th class="h-9 w-[min(120px,15%)] px-3 text-left align-middle font-medium">
                 Category
               </th>
-              <th
-                class="h-9 px-3 text-left align-middle font-medium w-[min(160px,20%)]"
-              >
+              <th class="h-9 w-[min(160px,20%)] px-3 text-left align-middle font-medium">
                 Item Name
               </th>
-              <th
-                class="h-9 px-3 text-left align-middle font-medium max-w-[180px]"
-              >
+              <th class="h-9 max-w-[180px] px-3 text-left align-middle font-medium">
                 Description
               </th>
-              <th
-                class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[56px]"
-              >
+              <th class="h-9 w-[56px] px-3 text-right align-middle font-medium tabular-nums">
                 Qty
               </th>
               <th
-                class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[72px] whitespace-nowrap"
+                class="h-9 w-[72px] px-3 text-right align-middle font-medium whitespace-nowrap tabular-nums"
               >
                 Unit Price
               </th>
               <th
-                class="h-9 px-3 text-right align-middle font-medium tabular-nums w-[80px] whitespace-nowrap"
+                class="h-9 w-[80px] px-3 text-right align-middle font-medium whitespace-nowrap tabular-nums"
               >
                 Total
               </th>
               <th
-                class="h-9 px-3 text-right align-middle font-medium w-[72px]"
+                class="h-9 w-[72px] px-3 text-right align-middle font-medium"
                 aria-label="Actions"
               >
               </th>
@@ -208,9 +199,8 @@
           </thead>
           <tbody>
             {#each rows as row, index (index)}
-              {@const totalAda =
-                row.total ?? Number(row.quantity) * Number(row.unitPrice)}
-              <tr class="border-b transition-colors hover:bg-muted/50">
+              {@const totalAda = row.total ?? Number(row.quantity) * Number(row.unitPrice)}
+              <tr class="hover:bg-muted/50 border-b transition-colors">
                 <td class="p-3 align-top text-black">
                   {row.costCategory ?? "—"}
                 </td>
@@ -218,34 +208,29 @@
                   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
                   <button
                     type="button"
-                    class="text-left cursor-pointer focus:outline-none hover:underline"
+                    class="cursor-pointer text-left hover:underline focus:outline-none"
                     onclick={() => openDialog(index)}
                   >
                     {(row.name ?? row.itemName) || row.costCategory || "—"}
                   </button>
                 </td>
-                <td class="p-3 align-top text-muted-foreground max-w-[180px]">
-                  <div
-                    class="line-clamp-2 overflow-hidden [&_.markdown]:!text-inherit"
-                  >
-                    <Markdown
-                      content={row.description ?? ""}
-                      class="text-xs!"
-                    />
+                <td class="text-muted-foreground max-w-[180px] p-3 align-top">
+                  <div class="line-clamp-2 overflow-hidden [&_.markdown]:!text-inherit">
+                    <Markdown content={row.description ?? ""} class="text-xs!" />
                   </div>
                 </td>
                 <td class="p-3 text-right align-top tabular-nums">
                   {row.quantity ?? "—"}
                 </td>
-                <td class="p-3 text-right align-top tabular-nums text-nowrap">
+                <td class="p-3 text-right align-top text-nowrap tabular-nums">
                   {formatAda(row.unitPrice)} ADA<br />
-                  <span class="text-xs text-muted-foreground">
+                  <span class="text-muted-foreground text-xs">
                     ${formatUsd(row.unitPrice * conversionRateNum)} USD
                   </span>
                 </td>
                 <td class="p-3 text-right align-top tabular-nums">
                   {formatAda(totalAda)} ADA<br />
-                  <span class="text-xs text-muted-foreground">
+                  <span class="text-muted-foreground text-xs">
                     ${formatUsd(totalAda * conversionRateNum)}
                   </span>
                 </td>
@@ -255,7 +240,7 @@
                       type="button"
                       variant="outline"
                       size="icon"
-                      class="shrink-0 size-8 cursor-pointer"
+                      class="size-8 shrink-0 cursor-pointer"
                       aria-label="Edit budget item"
                       onclick={() => openDialog(index)}
                     >
@@ -265,7 +250,7 @@
                       type="button"
                       variant="outline"
                       size="icon"
-                      class="shrink-0 size-8 cursor-pointer"
+                      class="size-8 shrink-0 cursor-pointer"
                       aria-label="Remove budget item"
                       onclick={() => requestDelete(index)}
                     >
@@ -277,12 +262,12 @@
             {/each}
           </tbody>
           <tfoot>
-            <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
+            <tr class="bg-(--mbo-cardano-blue) font-medium text-white">
               <td colspan="5" class="p-3 text-right text-nowrap"
                 >Total ADA<br />
                 <span class="text-xs text-white/50"> Total USD </span>
               </td>
-              <td class="p-3 text-right tabular-nums text-nowrap">
+              <td class="p-3 text-right text-nowrap tabular-nums">
                 {formatAda(totalPackageAda)} ADA<br />
                 <span class="text-xs text-white/50">
                   ${formatUsd(totalPackageAda * conversionRateNum)}
@@ -300,7 +285,7 @@
         type="button"
         variant="outline"
         size="sm"
-        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+        class="add-item-btn w-fit cursor-pointer gap-1 text-xs"
         onclick={() => openDialog()}
       >
         <PlusIcon class="size-4" />
@@ -316,17 +301,13 @@
 
 <!-- Add / Edit budget item -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content
-    class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0"
-  >
-    <AlertDialog.Header
-      class="text-left flex flex-row items-center justify-between gap-4 shrink-0"
-    >
+  <AlertDialog.Content class="flex max-h-[90vh] min-h-0 flex-col sm:max-w-xl">
+    <AlertDialog.Header class="flex shrink-0 flex-row items-center justify-between gap-4 text-left">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Budget Item" : "Add Budget Item"}
       </AlertDialog.Title>
     </AlertDialog.Header>
-    <div class="grid gap-4 pb-4 pt-2 overflow-y-auto min-h-0 flex-1 px-2">
+    <div class="grid min-h-0 flex-1 gap-4 overflow-y-auto px-2 pt-2 pb-4">
       <Input
         id="name"
         label="Item Name"
@@ -339,34 +320,21 @@
       />
 
       <Field.Field class="gap-2">
-        <Field.Label
-          for="costCategory"
-          class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit"
-        >
+        <Field.Label for="costCategory" class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
           Cost Category
-          <span class="text-(--mbo-electric-blue) mr-1">*</span>
+          <span class="mr-1 text-(--mbo-electric-blue)">*</span>
           <ToolTip
             content="Select the category that best describes this cost (e.g. Labor, Development, Infrastructure, Security, Operations, Governance)."
             fieldLabel="Cost Category"
           />
         </Field.Label>
-        <Select.Root
-          type="single"
-          bind:value={draft.costCategory}
-          bind:open={selectOpen}
-        >
-          <Select.Trigger
-            class="w-full justify-between data-placeholder:text-muted-foreground"
-          >
+        <Select.Root type="single" bind:value={draft.costCategory} bind:open={selectOpen}>
+          <Select.Trigger class="data-placeholder:text-muted-foreground w-full justify-between">
             {draft.costCategory || "Select category…"}
           </Select.Trigger>
           <Select.Content>
             {#each COST_CATEGORIES_LIST as cat (cat.name)}
-              <Select.Item
-                value={cat.name}
-                label={cat.name}
-                title={cat.description || undefined}
-              >
+              <Select.Item value={cat.name} label={cat.name} title={cat.description || undefined}>
                 {cat.name}
               </Select.Item>
             {/each}
@@ -419,7 +387,7 @@
           />
 
           {#if draftItemAda != null && draftItemAda > 0}
-            <p class="text-xs text-muted-foreground mt-2">
+            <p class="text-muted-foreground mt-2 text-xs">
               Total: {formatAda(draftItemAda)} ADA
               {#if draftItemUsd != null}
                 <span class="opacity-90">/ {formatUsd(draftItemUsd)} USD</span>
@@ -429,7 +397,7 @@
         </div>
       </div>
     </div>
-    <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
+    <AlertDialog.Footer class="flex shrink-0 flex-wrap gap-2">
       {#if editingIndex != null}
         <Button
           type="button"
@@ -437,7 +405,7 @@
           class="mr-auto cursor-pointer"
           onclick={deleteFromDialog}
         >
-          <TrashIcon class="size-4 mr-1" />
+          <TrashIcon class="mr-1 size-4" />
           Delete
         </Button>
       {/if}
@@ -461,7 +429,7 @@
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmDelete}
       >
         Delete
