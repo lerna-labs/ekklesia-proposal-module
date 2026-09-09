@@ -27,4 +27,4 @@ Add a unique index on `slug`, handle duplicate-key errors, and run a migration o
 
 ## Current Status
 
-**Resolved.** Unique index on `Vote.slug` in `schema/Vote.js`; duplicate-key handling via `helper/mongoErrors.js`. See `docs/audit/resolutions/F-005-resolution.md`.
+**Resolved.** Unique index on `Vote.slug` in `schema/Vote.js`; duplicate-key handling via `helper/mongoErrors.js` in vote setup scripts; deploy preflight `__scripts/admin/ensure-vote-slug-unique-index.mjs`. See `docs/audit/resolutions/F-005-resolution.md`.

@@ -17,6 +17,7 @@ import { loadEnvironmentVariables } from "../helper/envLoader.js";
 loadEnvironmentVariables(path.join(__dirname, ".."));
 
 import { connectToDatabase, disconnectFromDatabase } from "../helper/dbManager.js";
+import { isDuplicateKeyError } from "../helper/mongoErrors.js";
 import { Vote } from "../schema/Vote.js";
 
 const SLUG = "cc-vote-2026";
@@ -152,6 +153,11 @@ async function main() {
       `   voting:     ${dates.votingStartDate.toISOString()} → ${dates.votingEndDate.toISOString()}`,
     );
   } catch (e) {
+    if (isDuplicateKeyError(e)) {
+      console.error(
+        `Duplicate Vote.slug conflict while upserting "${SLUG}". Resolve existing duplicates, then retry.`,
+      );
+    }
     console.error(e);
     exitCode = 1;
   } finally {

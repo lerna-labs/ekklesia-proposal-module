@@ -29,10 +29,13 @@ node __scripts/setup-cc-vote2026.js
 | Script | Purpose |
 |--------|---------|
 | `admin/ensure-treasury-tx-hash-unique-index.mjs` | Reports colliding non-draft/non-archived `metaData.treasuryDonationTxHash` values, then runs `Proposal.syncIndexes()` for the #418 global partial unique index. Loads `.env` then `.env.production` when present. Use `--check-only` to skip index sync. |
+| `admin/ensure-vote-slug-unique-index.mjs` | Reports duplicate `Vote.slug` values, then runs `Vote.syncIndexes()` for the F-005 unique index. Loads `.env` then `.env.production` when present. Use `--check-only` to skip index sync. |
 
 ```bash
 node __scripts/admin/ensure-treasury-tx-hash-unique-index.mjs --check-only
 node __scripts/admin/ensure-treasury-tx-hash-unique-index.mjs
+node __scripts/admin/ensure-vote-slug-unique-index.mjs --check-only
+node __scripts/admin/ensure-vote-slug-unique-index.mjs
 ```
 
 ## Data files
