@@ -33,8 +33,7 @@ const checks = [
     message: "ensure-vote-slug-unique-index.mjs must report duplicates and syncIndexes (F-005).",
   },
   {
-    ok:
-      budgetSource.includes("isDuplicateKeyError") && ccSource.includes("isDuplicateKeyError"),
+    ok: budgetSource.includes("isDuplicateKeyError") && ccSource.includes("isDuplicateKeyError"),
     message: "Vote setup scripts must handle duplicate-key errors on slug upsert (F-005).",
   },
 ];
