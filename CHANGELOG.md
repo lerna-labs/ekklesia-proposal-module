@@ -1,5 +1,11 @@
 # proposal-module-server
 
+## 1.6.3
+
+### Patch Changes
+
+- c86a21d: Bump @lerna-labs/ekklesia-helpers to ^2.0.1 for Koios AbortController timeouts (F-014). This module’s documented config is Koios-only; Blockfrost is unused.
+
 ## 1.6.2
 
 ### Patch Changes
