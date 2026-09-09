@@ -10,11 +10,11 @@ This index lists every audit finding (**F-001** through **F-031**) with links to
 |--------|------:|
 | Resolved | 25 |
 | Accepted (by design) | 5 |
-| Partially resolved | 0 |
+| Partially resolved | 1 |
 | Open | 0 |
-| Open (upstream, partial) | 1 |
+| Open (upstream, partial) | 0 |
 
-Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492); `CODE_OF_CONDUCT.md` **2026-09-09**.
+Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**; helpers **2.0.1** Koios timeouts validated **2026-09-09**. F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492); `CODE_OF_CONDUCT.md` **2026-09-09**.
 
 ---
 
@@ -51,7 +51,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 | ID | Title | Status | Finding | Resolution |
 |----|-------|--------|---------|------------|
 | F-013 | COSE validation precedence and error handling | Resolved | [§ F-013](medium-low/F-013-through-F-031.md#f-013-cose-validation-precedence-and-error-handling) | [Inline status](medium-low/F-013-through-F-031.md#f-013-cose-validation-precedence-and-error-handling) |
-| F-014 | External dependency resilience (Koios) | Open (upstream, partial) | [§ F-014](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) | [Inline status](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) |
+| F-014 | External dependency resilience (Koios) | Partially resolved (Koios done; Blockfrost residual) | [§ F-014](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) | [Resolution](resolutions/F-014-resolution.md) |
 | F-015 | Inconsistent API error envelope | Resolved | [§ F-015](medium-low/F-013-through-F-031.md#f-015-inconsistent-api-error-envelope) | [Resolution](resolutions/F-015-resolution.md) |
 | F-016 | Comment reply-count sorting ignores visibility | Resolved | [§ F-016](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) | [Inline status](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) |
 | F-017 | Empty `og:url` in app shell | Resolved | [§ F-017](medium-low/F-013-through-F-031.md#f-017-empty-ogurl-in-app-shell) | [Resolution](resolutions/F-017-resolution.md) |
@@ -76,7 +76,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 
 From [F-013–F-031 § What still needs fixing](medium-low/F-013-through-F-031.md#what-still-needs-fixing):
 
-1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done). Remains open until `@lerna-labs/ekklesia-helpers` owners ship timeouts.
+1. **F-014 (residual)** — `BlockfrostProvider` still lacks `AbortController` timeouts in helpers `2.0.1`. Koios/Handle.me are bounded; app maps treasury `ProviderError`→503.
 
 ---
 
