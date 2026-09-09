@@ -8,13 +8,13 @@ This index lists every audit finding (**F-001** through **F-031**) with links to
 
 | Status | Count |
 |--------|------:|
-| Resolved | 24 |
+| Resolved | 25 |
 | Accepted (by design) | 5 |
-| Partially resolved | 1 |
+| Partially resolved | 0 |
 | Open | 0 |
 | Open (upstream, partial) | 1 |
 
-Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492).
+Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**. F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492); `CODE_OF_CONDUCT.md` **2026-09-09**.
 
 ---
 
@@ -56,7 +56,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 | F-016 | Comment reply-count sorting ignores visibility | Resolved | [§ F-016](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) | [Inline status](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) |
 | F-017 | Empty `og:url` in app shell | Resolved | [§ F-017](medium-low/F-013-through-F-031.md#f-017-empty-ogurl-in-app-shell) | [Resolution](resolutions/F-017-resolution.md) |
 | F-018 | Autosave debug logging left on | Resolved | [§ F-018](medium-low/F-013-through-F-031.md#f-018-autosave-debug-logging-left-on) | [Inline status](medium-low/F-013-through-F-031.md#f-018-autosave-debug-logging-left-on) |
-| F-019 | Missing open-source governance docs | Partially resolved | [§ F-019](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) | [Inline status](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) |
+| F-019 | Missing open-source governance docs | Resolved | [§ F-019](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) | [Inline status](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) |
 | F-020 | Dependabot covers only root manifest | Resolved | [§ F-020](medium-low/F-013-through-F-031.md#f-020-dependabot-covers-only-root-manifest) | [Resolution](resolutions/F-020-resolution.md) |
 | F-021 | JWT secret in frontend env example | Resolved | [§ F-021](medium-low/F-013-through-F-031.md#f-021-jwt-secret-in-frontend-env-example) | [Inline status](medium-low/F-013-through-F-031.md#f-021-jwt-secret-in-frontend-env-example) |
 | F-022 | Notification unsubscribe secret cleared on PUT | Resolved | [§ F-022](medium-low/F-013-through-F-031.md#f-022-notification-unsubscribe-secret-cleared-on-put) | [Resolution](resolutions/F-022-resolution.md) |
@@ -76,8 +76,7 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 
 From [F-013–F-031 § What still needs fixing](medium-low/F-013-through-F-031.md#what-still-needs-fixing):
 
-1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done).
-2. **F-019** — Remaining: `CODE_OF_CONDUCT.md` (issue/PR templates and changelog present).
+1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done). Remains open until `@lerna-labs/ekklesia-helpers` owners ship timeouts.
 
 ---
 

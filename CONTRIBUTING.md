@@ -2,6 +2,8 @@
 
 Thanks for contributing to the Ekklesia Proposal Module.
 
+By participating, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Setup
 
 1. Copy `.env.example` to `.env` and fill in required variables (see root [README.md](README.md)).
@@ -14,6 +16,8 @@ Thanks for contributing to the Ekklesia Proposal Module.
 
 Product docs live under [`docs/`](docs/) (indexed from the root README). Do not
 treat `docs/audit/` as contributor onboarding material.
+
+Security disclosures: see [SECURITY.md](SECURITY.md).
 
 ## Pull requests
 
