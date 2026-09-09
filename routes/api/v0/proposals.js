@@ -863,43 +863,56 @@ router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (re
       currentState.versions = [];
       currentState.currentProposalId = proposal._id;
       const archivedDoc = new Proposal(currentState);
-      await archivedDoc.save();
+      let archivePersisted = false;
+      try {
+        await archivedDoc.save();
+        archivePersisted = true;
 
-      const updated = await Proposal.findOneAndUpdate(
-        {
-          _id: proposal._id,
-          status: "live",
-          version: expectedVersion,
-        },
-        {
-          $set: {
-            voteId: new mongoose.Types.ObjectId(voteId),
-            title,
-            summary: summary ?? "",
+        const updated = await Proposal.findOneAndUpdate(
+          {
+            _id: proposal._id,
             status: "live",
-            metaData: sanitizedMetaData,
-            submittedAt: proposal.submittedAt || new Date(),
+            version: expectedVersion,
           },
-          $inc: { version: 1 },
-          $push: {
-            versions: {
-              _id: archivedDoc._id,
-              createdAt: archivedDoc.createdAt,
+          {
+            $set: {
+              voteId: new mongoose.Types.ObjectId(voteId),
+              title,
+              summary: summary ?? "",
+              status: "live",
+              metaData: sanitizedMetaData,
+              submittedAt: proposal.submittedAt || new Date(),
+            },
+            $inc: { version: 1 },
+            $push: {
+              versions: {
+                _id: archivedDoc._id,
+                createdAt: archivedDoc.createdAt,
+              },
             },
           },
-        },
-        { new: true },
-      );
+          { new: true },
+        );
 
-      if (!updated) {
-        await Proposal.deleteOne({ _id: archivedDoc._id });
-        return res.status(409).json({
-          status: "error",
-          message: "Proposal was modified concurrently. Please retry.",
-        });
+        if (!updated) {
+          await Proposal.deleteOne({ _id: archivedDoc._id });
+          return res.status(409).json({
+            status: "error",
+            message: "Proposal was modified concurrently. Please retry.",
+          });
+        }
+
+        return res.status(200).json(updated.toObject ? updated.toObject() : updated);
+      } catch (error) {
+        if (archivePersisted) {
+          try {
+            await Proposal.deleteOne({ _id: archivedDoc._id });
+          } catch (cleanupError) {
+            console.error("Failed to delete orphan archive after live update error:", cleanupError);
+          }
+        }
+        throw error;
       }
-
-      return res.status(200).json(updated.toObject ? updated.toObject() : updated);
     }
 
     proposal.voteId = new mongoose.Types.ObjectId(voteId);

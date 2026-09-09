@@ -33,6 +33,13 @@ const checks = [
       source.includes("status(409)"),
     message: "CAS miss must delete orphan archive and return 409 (F-006).",
   },
+  {
+    ok:
+      source.includes("archivePersisted") &&
+      source.includes("Failed to delete orphan archive after live update error"),
+    message:
+      "Live update must delete the orphan archive on any exception after archive save (F-006).",
+  },
 ];
 
 for (const check of checks) {
