@@ -370,9 +370,9 @@ A stolen or copied token can remain usable after logout until it expires.
 
 Add JWT revocation, session-version validation, or short-lived access tokens with server-side refresh/session rotation.
 
-### Current status (2026-07-23)
+### Current status (2026-09-09)
 
-**Resolved.** `User.sessionVersion` is embedded in JWTs as `sv`; logout `$inc`s it; `verifyToken` rejects mismatched or missing `sv`. See `docs/audit/resolutions/F-023-resolution.md`.
+**Resolved.** `User.sessionVersion` is embedded in JWTs as `sv`; logout `$inc`s it; `verifyToken` rejects mismatched or missing `sv`, and **rejects missing user documents** (no `sessionVersion → 0` fallback for absent users). See `docs/audit/resolutions/F-023-resolution.md`.
 
 ---
 

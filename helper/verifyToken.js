@@ -54,7 +54,15 @@ export async function verifyToken(req) {
     }
 
     const user = await User.findById(decoded.userId).select("sessionVersion").lean();
-    if ((user?.sessionVersion ?? 0) !== decoded.sv) {
+    // Missing user must fail closed — do not treat absent docs as sessionVersion 0 (F-023).
+    if (!user) {
+      return {
+        status: "error",
+        message: "Invalid token",
+        code: 401,
+      };
+    }
+    if ((user.sessionVersion ?? 0) !== decoded.sv) {
       return {
         status: "error",
         message: "Invalid token",
