@@ -450,7 +450,11 @@ router.delete("/", deleteSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
 
   try {
-    await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+    const result = await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+    if (result.matchedCount === 0) {
+      // Should be unreachable once verifyToken rejects missing users; still clear cookie.
+      console.warn("Logout sessionVersion bump matched no user:", userId);
+    }
   } catch (error) {
     console.error("Error incrementing sessionVersion on logout:", error);
     return res.status(500).json({
