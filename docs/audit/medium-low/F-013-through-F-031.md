@@ -13,7 +13,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-016 | Medium | Comment API correctness | **Resolved** |
 | F-017 | Medium | Frontend metadata / SEO | **Resolved** |
 | F-018 | Medium | Debug logging | **Resolved** |
-| F-019 | Medium | Open-source governance docs | Partially resolved |
+| F-019 | Medium | Open-source governance docs | **Resolved** |
 | F-020 | Medium | Dependency monitoring | **Resolved** |
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
 | F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
@@ -27,7 +27,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
 | F-031 | Low | Frontend maintainability | Accepted (by design) |
 
-**Tally:** 15 resolved · 1 partially resolved · 1 open upstream · 0 open · 2 accepted
+**Tally:** 16 resolved · 0 partially resolved · 1 open upstream · 0 open · 2 accepted
 
 ---
 
@@ -225,7 +225,7 @@ Gate behind `import.meta.env.DEV` or an explicit debug flag that defaults off.
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Open-source governance docs |
-| **Status** | Partially resolved |
+| **Status** | **Resolved** |
 
 ### Affected files / expected artifacts
 
@@ -240,19 +240,16 @@ Contributors lack clear contribution, ownership, security disclosure, and releas
 
 Add standard governance files aligned with Intersect open-source expectations.
 
-### Current status (2026-09-07)
+### Current status (2026-09-09)
 
-**Partially resolved.** Present:
+**Resolved.** Present:
 
 - `.github/CODEOWNERS` (`* @Crypto2099 @MadOrkestra`)
 - `SECURITY.md` — private vulnerability reporting
-- `CONTRIBUTING.md` — setup, docs pointer, PR guidance, changeset instructions
+- `CONTRIBUTING.md` — setup, docs pointer, PR guidance, changeset instructions; links Code of Conduct
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1 (enforcement contacts aligned with SECURITY.md)
 - `CHANGELOG.md` — maintained via Changesets
-- GitHub issue templates (bug / feature) and `PULL_REQUEST_TEMPLATE.md` (#492) — issues are filed in this repository (no redirect to the docs tracker)
-
-Still missing: `CODE_OF_CONDUCT.md`.
-
-**Note:** Remaining governance docs (CoC and org-level policies) may still align with an Intersect GitHub organization move.
+- GitHub issue templates (bug / feature) and `PULL_REQUEST_TEMPLATE.md` (#492)
 
 ---
 
@@ -626,9 +623,8 @@ Derive the active vote slug from configuration or API data.
 
 Priority backlog from this set (excluding resolved / accepted items):
 
-1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream.  
-2. **F-019** — Remaining: `CODE_OF_CONDUCT.md` (issue/PR templates and changelog present as of #492)  
+1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream. Left open until the helpers library owners ship a release with timeouts.
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
+Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-019**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
 Accepted (not fixed): **F-024**, **F-031**.  
 Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback + app maps treasury `ProviderError`→503; Koios/Blockfrost fetches still lack timeouts).
