@@ -1,6 +1,6 @@
 {
   "name": "proposal-module-server",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Proposal Module Server",
   "main": "server.js",
   "directories": {
