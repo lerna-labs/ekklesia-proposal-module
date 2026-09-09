@@ -2,7 +2,8 @@
  * F-014 ratchet — installed @lerna-labs/ekklesia-helpers must bound Koios fetches.
  *
  * Helpers ≥2.0.1 wrap Koios/Handle.me HTTP in AbortController timeouts + retry.
- * This guard fails if the dependency or installed dist regresses to bare fetch.
+ * This module’s documented config is Koios-only (API_URL / API_TOKEN); Blockfrost
+ * is optional in helpers and unused here unless BLOCKFROST_* is set.
  */
 import fs from "fs/promises";
 import path from "path";
@@ -62,12 +63,7 @@ const koiosPath = path.join(
   root,
   "node_modules/@lerna-labs/ekklesia-helpers/dist/cardano/koiosProvider.js",
 );
-const blockfrostPath = path.join(
-  root,
-  "node_modules/@lerna-labs/ekklesia-helpers/dist/cardano/blockfrostProvider.js",
-);
 const koiosSource = await fs.readFile(koiosPath, "utf8");
-const blockfrostSource = await fs.readFile(blockfrostPath, "utf8");
 
 const checks = [
   {
@@ -95,14 +91,6 @@ for (const check of checks) {
   }
 }
 
-const blockfrostHasTimeout =
-  blockfrostSource.includes("AbortController") || blockfrostSource.includes("fetchWithRetry");
-
 console.log(
   `Helpers Koios timeout guard passed (F-014): declared ${declared}, installed ${installedVersion}.`,
 );
-if (!blockfrostHasTimeout) {
-  console.log(
-    "Note: BlockfrostProvider still uses bare fetch (upstream residual; not required to pass this guard).",
-  );
-}

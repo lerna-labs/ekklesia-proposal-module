@@ -8,7 +8,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | ID | Severity | Category | Status |
 |----|----------|----------|--------|
 | F-013 | Medium | COSE validation | **Resolved** |
-| F-014 | Medium | External dependency resilience | Partially resolved (Koios done; Blockfrost residual) |
+| F-014 | Medium | External dependency resilience | **Resolved** |
 | F-015 | Medium | API contract / error shape | **Resolved** |
 | F-016 | Medium | Comment API correctness | **Resolved** |
 | F-017 | Medium | Frontend metadata / SEO | **Resolved** |
@@ -27,7 +27,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
 | F-031 | Low | Frontend maintainability | Accepted (by design) |
 
-**Tally:** 16 resolved · 1 partially resolved · 0 open upstream-only · 0 open · 2 accepted
+**Tally:** 17 resolved · 0 partially resolved · 0 open upstream · 0 open · 2 accepted
 
 ---
 
@@ -68,7 +68,7 @@ Fix the precedence check and normalize validator return/throw behavior.
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | External dependency resilience |
-| **Status** | Partially resolved (Koios done; Blockfrost residual) |
+| **Status** | **Resolved** |
 
 ### Affected files
 
@@ -91,17 +91,18 @@ Add `AbortController` timeouts, explicit timeout handling, and bounded retry or 
 
 ### Current status (2026-09-09)
 
-**Partially resolved via `@lerna-labs/ekklesia-helpers@2.0.1`.** Validated against installed `2.0.1`:
+**Resolved for this module via `@lerna-labs/ekklesia-helpers@2.0.1`.**
 
-- **KoiosProvider / `fetchHandleMe`:** each attempt uses a 10s `AbortController` timeout via `fetchWithRetry`, with one retry (`MAX_ATTEMPTS = 2`). Satisfies the original Koios hung-fetch concern.
-- **BlockfrostProvider:** still uses bare `fetch()` with no timeout (helpers changelog for 2.0.1 only mentions Koios + Handle.me). Residual availability risk remains on Blockfrost fallback paths.
+- **KoiosProvider / `fetchHandleMe`:** each attempt uses a 10s `AbortController` timeout via `fetchWithRetry`, with one retry (`MAX_ATTEMPTS = 2`).
+- **This app’s provider path:** documented env ([`.env.example`](../../../.env.example)) configures only Koios (`API_URL` / `API_TOKEN`). The app does not document or require `BLOCKFROST_*` or `PRIMARY_PROVIDER`. Helpers construct `BlockfrostProvider` only when those vars are set; otherwise secondary stays `null`. Session/proposal call sites (`verifyDeposit`, `validateDrep`, `fetchName`) therefore use Koios only.
+- Helpers’ optional `BlockfrostProvider` still uses bare `fetch()` upstream; that code path is unused under this module’s documented configuration.
 - Pool-metadata recovery in `cardanoApi.js` already had a tight `AbortController`.
 
 **App-side (done, 2026-07-24):** Live proposal treasury donation verification maps `ProviderError` → **503** via `helper/mapTreasuryProviderError.js`. Ratchet: `__tests/security/atk-treasury-verify-unavailable-guard.js`.
 
 **Dependency ratchet:** `__tests/security/atk-helpers-koios-timeout-guard.js` requires helpers ≥2.0.1 and asserts Koios timeout/retry symbols in the installed dist.
 
-This app now depends on `@lerna-labs/ekklesia-helpers@^2.0.1`.
+This app depends on `@lerna-labs/ekklesia-helpers@^2.0.1`. See `docs/audit/resolutions/F-014-resolution.md`.
 
 ---
 
@@ -629,10 +630,9 @@ Derive the active vote slug from configuration or API data.
 
 ## What still needs fixing
 
-Priority backlog from this set (excluding resolved / accepted items):
+None for F-013–F-031 in this module. All findings are resolved or accepted by design.
 
-1. **F-014 (residual)** — `BlockfrostProvider` in `@lerna-labs/ekklesia-helpers@2.0.1` still uses bare `fetch()` without timeouts. Koios/Handle.me timeouts + app-side treasury `ProviderError`→503 are done.
+Resolved / no further work: **F-013**, **F-014**, **F-015**, **F-016**, **F-017**, **F-018**, **F-019**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
+Accepted (not fixed): **F-024**, **F-031**.
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-019**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
-Accepted (not fixed): **F-024**, **F-031**.  
-Upstream residual: **F-014** Blockfrost timeouts only (Koios bounded in helpers `2.0.1`).
+**Note:** Helpers’ optional `BlockfrostProvider` still lacks timeouts upstream, but this module’s documented config does not enable Blockfrost (Koios-only via `API_URL` / `API_TOKEN`).
