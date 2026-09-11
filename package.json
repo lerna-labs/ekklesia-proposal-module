@@ -9,7 +9,8 @@
   "scripts": {
     "test:guards": "node __tests/run-guards.js",
     "test:mailer": "node --test mailer/tests/*.test.js",
-    "test": "npm run test:guards && npm run test:mailer",
+    "test:helper": "node --test helper/__tests__/*.test.js",
+    "test": "npm run test:guards && npm run test:mailer && npm run test:helper",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
