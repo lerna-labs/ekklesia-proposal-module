@@ -8,6 +8,7 @@ export default [
     ignores: [
       "node_modules/**",
       "__frontend/**",
+      "docs-site/**",
       "public/**",
       "backup/data/**",
       "logs/**",
