@@ -40,6 +40,26 @@ jobs:
       - run: npm run check
       - run: npm run build
 
+  docs-site:
+    name: Documentation site checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+      - run: npm ci
+      - run: npm run fmt:check
+      - run: npm run lint:specs
+      - run: npm audit --omit=dev --audit-level=critical
+      - name: Build the Postman collection
+        run: npm run postman
+
   changelog:
     # Require a changeset on feature PRs into development. The Release Manager's
     # own backport PRs (main -> development) carry no changeset and are exempt,

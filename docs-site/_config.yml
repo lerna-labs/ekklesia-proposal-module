@@ -1,0 +1,46 @@
+title: Ekklesia Proposal Module
+description:
+  "Proposal submission, feedback and review for Cardano governance votes."
+url: "https://proposals.docs.ekklesia.vote"
+baseurl: ""
+
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+collections:
+  downloads:
+    output: false
+
+# Jekyll excludes any path whose name starts with "_" from the build.
+# The downloadable collections live in downloads/_files/, so force-include it
+# (matched by basename) to keep the /downloads/_files/ URLs working.
+include:
+  - _files
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
+  - package.json
+  - package-lock.json
+  - .prettierrc
+  - .prettierignore
+  - redocly.yaml
+  - scripts
