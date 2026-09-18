@@ -36,6 +36,8 @@ Requires **Node.js 22.12+**.
 - **`npm run dev`** — Vite dev server (default port, or set in vite config)
 - **`npm run build`** — production build → `../public`
 - **`npm run preview`** — preview the static build
+- **`npm run check`** — `svelte-kit sync` + `svelte-check`, type checking only; there is no automated test suite
+- **`npm run lint`** / **`npm run format:check`** — ESLint and Prettier
 
 ## Environment
 
