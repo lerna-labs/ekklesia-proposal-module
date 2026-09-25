@@ -8,7 +8,8 @@ will create / mutate documents in the connected MongoDB.
 | Script | Finding | Target |
 |---|---|---|
 | `atk-cc-cold-promote-race.js` | CC-COLD-001 (CRITICAL) | `PUT /api/v0/proposals/:id` (status=live) on a `cc-vote2026` form |
-| `atk-treasury-promote-race.js` | TX-HASH-001 regression (CRITICAL) | `PUT /api/v0/proposals/:id` (status=live) on a `budget2026` form |
+| `atk-treasury-promote-race.js` | TX-HASH-001 / #418 (CRITICAL) | `PUT /api/v0/proposals/:id` (status=live) on a `budget2026` form |
+| `atk-treasury-promote-race-guard.js` | #418 ratchet (offline) | Schema unique index + E11000 mapping in proposals route |
 | `atk-mail-relay-abuse.js` | NOTIFY-ABUSE-001 (HIGH) | `PUT /api/v0/notifications` |
 | `atk-mail-deps-blackout.js` | MAIL-DEPS-001 (HIGH) | server boot, route mount diagnostic |
 

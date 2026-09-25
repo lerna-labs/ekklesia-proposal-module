@@ -12,16 +12,11 @@
   let now = $state(Date.now());
   let tick;
 
-  const remainingMs = $derived(
-    $sessionExpiresAt ? Math.max(0, $sessionExpiresAt - now) : 0,
-  );
+  const remainingMs = $derived($sessionExpiresAt ? Math.max(0, $sessionExpiresAt - now) : 0);
   const remainingSeconds = $derived(Math.floor(remainingMs / 1000));
   const shouldShow = $derived(
     Boolean(
-      $loggedIn &&
-      $sessionExpiresAt &&
-      remainingMs > 0 &&
-      remainingSeconds <= warningSeconds,
+      $loggedIn && $sessionExpiresAt && remainingMs > 0 && remainingSeconds <= warningSeconds,
     ),
   );
   const isWarning = $derived(remainingSeconds <= warningSeconds);
@@ -65,10 +60,8 @@
   <div
     in:fly={{ y: -16, duration: 220 }}
     out:fly={{ y: -16, duration: 180 }}
-    class={`pointer-events-none w-full text-center text-[10px] sm:text-xs px-2 py-1 ${
-      isWarning
-        ? "bg-destructive text-white"
-        : "bg-secondary text-secondary-foreground"
+    class={`pointer-events-none w-full px-2 py-1 text-center text-[10px] sm:text-xs ${
+      isWarning ? "bg-destructive text-white" : "bg-secondary text-secondary-foreground"
     }`}
     title="Session time remaining"
   >

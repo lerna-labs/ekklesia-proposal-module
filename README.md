@@ -10,11 +10,26 @@ challenge with their Cardano wallet (Ed25519/CIP-30 signatures).
 
 ## Getting Started
 
-Requires **Node.js 22.12+**.
+Requires **Node.js 24.5+**.
 
 1. Copy `.env.example` to `.env` and fill in required variables
 2. `npm install`
 3. `npm start`
+
+### Frontend
+
+The SvelteKit frontend lives in `__frontend/` and installs and runs separately:
+
+```bash
+cd __frontend
+npm install
+npm run dev
+```
+
+It builds to `../public`, which the Express backend serves in production, so
+run `npm run build` there before `npm start` will serve current frontend
+assets. See [`__frontend/README.md`](__frontend/README.md) for its structure,
+scripts, and environment variables.
 
 ### Vote setup (database)
 
@@ -35,7 +50,27 @@ node __scripts/setup-cc-vote2026.js
 See [System Architecture](docs/system-architecture.md) for a full overview of
 components and deployment.
 
+## Testing and checks
+
+```bash
+npm test            # runs test:guards, test:mailer, and test:helper
+npm run lint
+npm run format:check
+```
+
+The frontend has no automated test suite. From `__frontend/`:
+
+```bash
+npm run check        # svelte-kit sync + svelte-check, type checking only
+npm run lint
+npm run format:check
+```
+
 ## Documentation
+
+Update the relevant document below when a change affects an API contract,
+schema, auth flow, or route. `docs/audit/` holds audit records, not
+contributor onboarding material.
 
 | Document                                               | Description                                                                              |
 |--------------------------------------------------------|------------------------------------------------------------------------------------------|

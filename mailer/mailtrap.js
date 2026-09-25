@@ -16,16 +16,7 @@ const SANDBOX_ENDPOINT = "https://sandbox.api.mailtrap.io/api/send";
  * @param {string} [args.text] - optional plain-text alternative
  * @returns {Promise<object>} Mailtrap API response JSON
  */
-export async function sendToMailtrap({
-  subject,
-  html,
-  to,
-  from,
-  inboxId,
-  token,
-  category,
-  text,
-}) {
+export async function sendToMailtrap({ subject, html, to, from, inboxId, token, category, text }) {
   if (!inboxId) throw new Error("sendToMailtrap: inboxId is required");
   if (!token) throw new Error("sendToMailtrap: token is required");
 
@@ -57,8 +48,7 @@ export async function sendToMailtrap({
   }
 
   if (!res.ok) {
-    const detail =
-      parsed?.errors?.join("; ") ?? parsed?.message ?? raw ?? "unknown error";
+    const detail = parsed?.errors?.join("; ") ?? parsed?.message ?? raw ?? "unknown error";
     const err = new Error(`Mailtrap send failed (${res.status}): ${detail}`);
     err.statusCode = res.status;
     throw err;

@@ -18,7 +18,6 @@
   let { data } = $props();
   let proposal = $derived(data.proposal);
   let vote = $derived(data.vote);
-  let saving = $state(false);
   let validationErrors = $state(null);
   let formRef = $state({});
   const formKey = $derived(vote?.form ?? "default");
@@ -48,7 +47,6 @@
       toast.error("Proposal vote is missing.");
       return;
     }
-    saving = true;
     validationErrors = null;
     try {
       const body = { ...payload, voteId: proposal.voteId };
@@ -64,7 +62,8 @@
           toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
         }
         await invalidateAll();
-        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
+        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
+          goto("/dashboard");
       } else {
         if (json?.errors) validationErrors = json.errors;
         const msg = json?.message ?? "Failed to save proposal.";
@@ -79,8 +78,6 @@
           : (err?.body?.message ?? err?.message ?? "Failed to save proposal.");
       toast.error(msg);
       throw err;
-    } finally {
-      saving = false;
     }
   }
 </script>

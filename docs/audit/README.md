@@ -8,13 +8,13 @@ This index lists every audit finding (**F-001** through **F-031**) with links to
 
 | Status | Count |
 |--------|------:|
-| Resolved | 23 |
+| Resolved | 26 |
 | Accepted (by design) | 5 |
-| Partially resolved | 1 |
-| Open | 1 |
-| Open (upstream, partial) | 1 |
+| Partially resolved | 0 |
+| Open | 0 |
+| Open (upstream, partial) | 0 |
 
-Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**.
+Last consolidated re-verify of medium/low findings: **2026-07-23** ([F-013–F-031](medium-low/F-013-through-F-031.md)). F-014 app-side note updated **2026-07-24**; helpers **2.0.1** Koios timeouts validated **2026-09-09** (Blockfrost unused under this module’s documented Koios-only config). F-025 resolved **2026-09-07** (#494). F-019 issue/PR templates landed **2026-09-07** (#492); `CODE_OF_CONDUCT.md` **2026-09-09**.
 
 ---
 
@@ -51,18 +51,18 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 | ID | Title | Status | Finding | Resolution |
 |----|-------|--------|---------|------------|
 | F-013 | COSE validation precedence and error handling | Resolved | [§ F-013](medium-low/F-013-through-F-031.md#f-013-cose-validation-precedence-and-error-handling) | [Inline status](medium-low/F-013-through-F-031.md#f-013-cose-validation-precedence-and-error-handling) |
-| F-014 | External dependency resilience (Koios) | Open (upstream, partial) | [§ F-014](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) | [Inline status](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) |
+| F-014 | External dependency resilience (Koios) | Resolved | [§ F-014](medium-low/F-013-through-F-031.md#f-014-external-dependency-resilience-koios) | [Resolution](resolutions/F-014-resolution.md) |
 | F-015 | Inconsistent API error envelope | Resolved | [§ F-015](medium-low/F-013-through-F-031.md#f-015-inconsistent-api-error-envelope) | [Resolution](resolutions/F-015-resolution.md) |
 | F-016 | Comment reply-count sorting ignores visibility | Resolved | [§ F-016](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) | [Inline status](medium-low/F-013-through-F-031.md#f-016-comment-reply-count-sorting-ignores-visibility) |
 | F-017 | Empty `og:url` in app shell | Resolved | [§ F-017](medium-low/F-013-through-F-031.md#f-017-empty-ogurl-in-app-shell) | [Resolution](resolutions/F-017-resolution.md) |
 | F-018 | Autosave debug logging left on | Resolved | [§ F-018](medium-low/F-013-through-F-031.md#f-018-autosave-debug-logging-left-on) | [Inline status](medium-low/F-013-through-F-031.md#f-018-autosave-debug-logging-left-on) |
-| F-019 | Missing open-source governance docs | Partially resolved | [§ F-019](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) | [Inline status](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) |
+| F-019 | Missing open-source governance docs | Resolved | [§ F-019](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) | [Inline status](medium-low/F-013-through-F-031.md#f-019-missing-open-source-governance-docs) |
 | F-020 | Dependabot covers only root manifest | Resolved | [§ F-020](medium-low/F-013-through-F-031.md#f-020-dependabot-covers-only-root-manifest) | [Resolution](resolutions/F-020-resolution.md) |
 | F-021 | JWT secret in frontend env example | Resolved | [§ F-021](medium-low/F-013-through-F-031.md#f-021-jwt-secret-in-frontend-env-example) | [Inline status](medium-low/F-013-through-F-031.md#f-021-jwt-secret-in-frontend-env-example) |
 | F-022 | Notification unsubscribe secret cleared on PUT | Resolved | [§ F-022](medium-low/F-013-through-F-031.md#f-022-notification-unsubscribe-secret-cleared-on-put) | [Resolution](resolutions/F-022-resolution.md) |
 | F-023 | Logout does not revoke JWTs | Resolved | [§ F-023](medium-low/F-013-through-F-031.md#f-023-logout-does-not-revoke-jwts) | [Resolution](resolutions/F-023-resolution.md) |
 | F-024 | Direct `console.*` logging | Accepted | [§ F-024](medium-low/F-013-through-F-031.md#f-024-direct-console-logging) | [Resolution](resolutions/F-024-resolution.md) |
-| F-025 | Missing editor / formatter config | Open | [§ F-025](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) | [Inline status](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) |
+| F-025 | Missing editor / formatter config | Resolved | [§ F-025](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) | [Inline status](medium-low/F-013-through-F-031.md#f-025-missing-editor--formatter-config) |
 | F-026 | HTTP server not drained on shutdown | Resolved | [§ F-026](medium-low/F-013-through-F-031.md#f-026-http-server-not-drained-on-shutdown) | [Resolution](resolutions/F-026-resolution.md) |
 | F-027 | Proposal delete docs say 204, API returns 200 | Resolved | [§ F-027](medium-low/F-013-through-F-031.md#f-027-proposal-delete-docs-say-204-api-returns-200) | [Resolution](resolutions/F-027-resolution.md) |
 | F-028 | Login redirect runs in `onMount` | Resolved | [§ F-028](medium-low/F-013-through-F-031.md#f-028-login-redirect-runs-in-onmount) | [Resolution](resolutions/F-028-resolution.md) |
@@ -74,11 +74,9 @@ Findings **F-013** through **F-031** are documented in a single consolidated fil
 
 ## Open backlog
 
-From [F-013–F-031 § What still needs fixing](medium-low/F-013-through-F-031.md#what-still-needs-fixing):
+None. All audit findings F-001–F-031 are resolved or accepted by design for this module.
 
-1. **F-014** — Upstream `AbortController` timeouts on Koios/Blockfrost providers (app-side treasury-verify outage→503 mapping is done).
-2. **F-019** — Remaining governance docs (CoC, changelog, issue/PR templates); deferred to Intersect GitHub move.
-3. **F-025** — `.editorconfig`; deferred to Intersect GitHub move.
+**Note:** Helpers still ship an optional `BlockfrostProvider` without request timeouts; this app’s documented configuration does not enable it (Koios-only).
 
 ---
 

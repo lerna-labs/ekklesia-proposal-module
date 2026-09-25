@@ -8,18 +8,18 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | ID | Severity | Category | Status |
 |----|----------|----------|--------|
 | F-013 | Medium | COSE validation | **Resolved** |
-| F-014 | Medium | External dependency resilience | Open (upstream, partial) |
+| F-014 | Medium | External dependency resilience | **Resolved** |
 | F-015 | Medium | API contract / error shape | **Resolved** |
 | F-016 | Medium | Comment API correctness | **Resolved** |
 | F-017 | Medium | Frontend metadata / SEO | **Resolved** |
 | F-018 | Medium | Debug logging | **Resolved** |
-| F-019 | Medium | Open-source governance docs | Partially resolved |
+| F-019 | Medium | Open-source governance docs | **Resolved** |
 | F-020 | Medium | Dependency monitoring | **Resolved** |
 | F-021 | Medium | Frontend configuration hygiene | **Resolved** |
 | F-022 | Medium | Notification unsubscribe token lifecycle | **Resolved** |
 | F-023 | Medium | Session lifecycle / logout | **Resolved** |
 | F-024 | Low | Logging | Accepted |
-| F-025 | Low | Repository formatting | Open |
+| F-025 | Low | Repository formatting | **Resolved** |
 | F-026 | Low | Graceful shutdown | **Resolved** |
 | F-027 | Low | Documentation drift | **Resolved** |
 | F-028 | Low | Frontend UX | **Resolved** |
@@ -27,7 +27,7 @@ Re-verified against the current working tree on **2026-07-23**. F-014 app-side t
 | F-030 | Low | Frontend lifecycle cleanup | **Resolved** |
 | F-031 | Low | Frontend maintainability | Accepted (by design) |
 
-**Tally:** 14 resolved · 1 partially resolved · 1 open upstream · 1 open · 2 accepted
+**Tally:** 17 resolved · 0 partially resolved · 0 open upstream · 0 open · 2 accepted
 
 ---
 
@@ -68,7 +68,7 @@ Fix the precedence check and normalize validator return/throw behavior.
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | External dependency resilience |
-| **Status** | Open (upstream, partial) |
+| **Status** | **Resolved** |
 
 ### Affected files
 
@@ -89,11 +89,20 @@ Slow external APIs can hold backend requests open and degrade availability. Sepa
 
 Add `AbortController` timeouts, explicit timeout handling, and bounded retry or caching behavior (in the shared helpers package, or wrap call sites here if helpers cannot change soon). At call sites, map `ProviderError` (and subclasses) to an “unable to verify / retry” response rather than a client validation error.
 
-### Current status (2026-07-24)
+### Current status (2026-09-09)
 
-**Open (upstream, partial).** This app depends on `@lerna-labs/ekklesia-helpers@^2.0.0`. Helpers `2.0.0` improves provider error taxonomy (`ProviderError` / `ProviderAuthError` / `ProviderRateLimitError` with `retryAfterSeconds`) and keeps primary/secondary Koios↔Blockfrost fallback. It still does **not** put `AbortController` timeouts on `KoiosProvider` / `BlockfrostProvider` `get`/`post` (those remain bare `fetch()`). A 3s `AbortController` exists only for pool-metadata recovery in `cardanoApi.js`. Availability risk from hung provider calls remains; fix site is still upstream helpers.
+**Resolved for this module via `@lerna-labs/ekklesia-helpers@2.0.1`.**
 
-**App-side (done, 2026-07-24):** Live proposal treasury donation verification in `routes/api/v0/proposals.js` catches `ProviderError` via `helper/mapTreasuryProviderError.js` and returns **503** with a fixed retry message (optional `Retry-After` from rate-limit; operational `console.error` on credential rejection). Genuine `verifyDeposit` `{ error }` results stay **400**. Ratchet: `__tests/security/atk-treasury-verify-unavailable-guard.js`. Provider error text is not forwarded to clients.
+- **KoiosProvider / `fetchHandleMe`:** each attempt uses a 10s `AbortController` timeout via `fetchWithRetry`, with one retry (`MAX_ATTEMPTS = 2`).
+- **This app’s provider path:** documented env ([`.env.example`](../../../.env.example)) configures only Koios (`API_URL` / `API_TOKEN`). The app does not document or require `BLOCKFROST_*` or `PRIMARY_PROVIDER`. Helpers construct `BlockfrostProvider` only when those vars are set; otherwise secondary stays `null`. Session/proposal call sites (`verifyDeposit`, `validateDrep`, `fetchName`) therefore use Koios only.
+- Helpers’ optional `BlockfrostProvider` still uses bare `fetch()` upstream; that code path is unused under this module’s documented configuration.
+- Pool-metadata recovery in `cardanoApi.js` already had a tight `AbortController`.
+
+**App-side (done, 2026-07-24):** Live proposal treasury donation verification maps `ProviderError` → **503** via `helper/mapTreasuryProviderError.js`. Ratchet: `__tests/security/atk-treasury-verify-unavailable-guard.js`.
+
+**Dependency ratchet:** `__tests/security/atk-helpers-koios-timeout-guard.js` requires helpers ≥2.0.1 and asserts Koios timeout/retry symbols in the installed dist.
+
+This app depends on `@lerna-labs/ekklesia-helpers@^2.0.1`. See `docs/audit/resolutions/F-014-resolution.md`.
 
 ---
 
@@ -225,7 +234,7 @@ Gate behind `import.meta.env.DEV` or an explicit debug flag that defaults off.
 |-------|-------|
 | **Severity** | Medium |
 | **Category** | Open-source governance docs |
-| **Status** | Partially resolved |
+| **Status** | **Resolved** |
 
 ### Affected files / expected artifacts
 
@@ -240,17 +249,16 @@ Contributors lack clear contribution, ownership, security disclosure, and releas
 
 Add standard governance files aligned with Intersect open-source expectations.
 
-### Current status (2026-07-23)
+### Current status (2026-09-09)
 
-**Partially resolved.** Present since last re-verify:
+**Resolved.** Present:
 
 - `.github/CODEOWNERS` (`* @Crypto2099 @MadOrkestra`)
-- `SECURITY.md` — vulnerability reporting to `security@intersectmbo.org`
-- `CONTRIBUTING.md` — populated with setup, docs pointer, and PR guidance (no longer a stub)
-
-Still missing: `CODE_OF_CONDUCT.md`, changelog, and GitHub issue/PR templates.
-
-**Note:** This repository is planned to move to the Intersect GitHub organization. Remaining governance docs (and related org templates/policies) are expected to be handled as part of that move rather than fully completed in the current private/client-owned tree.
+- `SECURITY.md` — private vulnerability reporting
+- `CONTRIBUTING.md` — setup, docs pointer, PR guidance, changeset instructions; links Code of Conduct
+- `CODE_OF_CONDUCT.md` — Contributor Covenant 2.1 (enforcement contacts aligned with SECURITY.md)
+- `CHANGELOG.md` — maintained via Changesets
+- GitHub issue templates (bug / feature) and `PULL_REQUEST_TEMPLATE.md` (#492)
 
 ---
 
@@ -368,9 +376,9 @@ A stolen or copied token can remain usable after logout until it expires.
 
 Add JWT revocation, session-version validation, or short-lived access tokens with server-side refresh/session rotation.
 
-### Current status (2026-07-23)
+### Current status (2026-09-09)
 
-**Resolved.** `User.sessionVersion` is embedded in JWTs as `sv`; logout `$inc`s it; `verifyToken` rejects mismatched or missing `sv`. See `docs/audit/resolutions/F-023-resolution.md`.
+**Resolved.** `User.sessionVersion` is embedded in JWTs as `sv`; logout `$inc`s it; `verifyToken` rejects mismatched or missing `sv`, and **rejects missing user documents** (no `sessionVersion → 0` fallback for absent users). See `docs/audit/resolutions/F-023-resolution.md`.
 
 ---
 
@@ -410,7 +418,7 @@ Replace with structured logging that supports levels and environment-specific ou
 |-------|-------|
 | **Severity** | Low |
 | **Category** | Repository formatting |
-| **Status** | Open |
+| **Status** | **Resolved** |
 
 ### Affected files
 
@@ -428,11 +436,9 @@ Contributors using different editors may produce inconsistent indentation or lin
 
 Add `.editorconfig` with the repository’s indentation, charset, and line-ending expectations.
 
-### Current status (2026-07-23)
+### Current status (2026-09-07)
 
-Open. No `.editorconfig` or `.prettierrc*` present at repo root or under `__frontend`.
-
-**Note:** This repository is planned to move to the Intersect GitHub organization. Client-specific editor / formatter settings should be aligned with Intersect org conventions as part of that move rather than inventing a one-off config in the current tree.
+**Resolved** (#494). Added root `.editorconfig`, Prettier, and ESLint; `__frontend` has Svelte-aware Prettier (`prettier-plugin-svelte`, `prettier-plugin-tailwindcss`) and `eslint-plugin-svelte`. CI runs `format:check` and `lint` for both packages.
 
 ---
 
@@ -624,12 +630,9 @@ Derive the active vote slug from configuration or API data.
 
 ## What still needs fixing
 
-Priority backlog from this set (excluding resolved / accepted items):
+None for F-013–F-031 in this module. All findings are resolved or accepted by design.
 
-1. **F-014** — Provider `AbortController` timeouts (and bounded retries) still missing in `@lerna-labs/ekklesia-helpers` `KoiosProvider`/`BlockfrostProvider` despite 2.0.0 error/fallback improvements. App-side treasury-verify outage→503 mapping is done; hung fetches without timeouts remain upstream.  
-2. **F-019** — Finish remaining governance docs (CoC, changelog, issue/PR templates); CONTRIBUTING/SECURITY/CODEOWNERS present — deferred to Intersect GitHub move  
-3. **F-025** — Add `.editorconfig` — deferred to Intersect GitHub move (client/org editor settings)  
+Resolved / no further work: **F-013**, **F-014**, **F-015**, **F-016**, **F-017**, **F-018**, **F-019**, **F-020**, **F-021**, **F-022**, **F-023**, **F-025**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
+Accepted (not fixed): **F-024**, **F-031**.
 
-Resolved / no further work for this finding: **F-013**, **F-015**, **F-016**, **F-017**, **F-018**, **F-020**, **F-021**, **F-022**, **F-023**, **F-026**, **F-027**, **F-028**, **F-029**, **F-030**.  
-Accepted (not fixed): **F-024**, **F-031**.  
-Upstream residual: **F-014** (helpers `2.0.0`: better errors/fallback + app maps treasury `ProviderError`→503; Koios/Blockfrost fetches still lack timeouts).
+**Note:** Helpers’ optional `BlockfrostProvider` still lacks timeouts upstream, but this module’s documented config does not enable Blockfrost (Koios-only via `API_URL` / `API_TOKEN`).

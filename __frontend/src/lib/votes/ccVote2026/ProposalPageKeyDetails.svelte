@@ -14,7 +14,8 @@
 
   import { formatUtcInstant } from "$lib/formatUtc.js";
   import { shortenString } from "$lib/utils.js";
-  import { buildSocialRows, hasText, toText } from "./proposalPageUtils.js";
+  import Markdown from "$lib/base/Markdown.svelte";
+  import { buildSocialRows, toText } from "./proposalPageUtils.js";
 
   let { proposal, vote } = $props();
 
@@ -35,9 +36,13 @@
     consortium: "Consortium",
   };
 
-  const track = $derived(typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "");
+  const track = $derived(
+    typeof proposal?.metaData?.track === "string" ? proposal.metaData.track : "",
+  );
   const apiUrl =
-    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL ? import.meta.env.VITE_API_URL : "/api/v0";
+    typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+      ? import.meta.env.VITE_API_URL
+      : "/api/v0";
   let regionsById = $state({});
 
   $effect(() => {
@@ -117,7 +122,9 @@
     if (track !== "individual" && track !== "organisation") return "";
     return toText(trackPayload?.drepId);
   });
-  const hasApplicantCredentialIds = $derived(applicantPoolId.length > 0 || applicantDrepId.length > 0);
+  const hasApplicantCredentialIds = $derived(
+    applicantPoolId.length > 0 || applicantDrepId.length > 0,
+  );
   const coldCredentialHash = $derived(toText(proposal?.metaData?.coldCredentialHash));
   const coldCredentialTypeLabel = $derived.by(() =>
     toText(
@@ -128,7 +135,9 @@
           : "",
     ),
   );
-  const hasColdCredential = $derived(coldCredentialHash.length > 0 || coldCredentialTypeLabel.length > 0);
+  const hasColdCredential = $derived(
+    coldCredentialHash.length > 0 || coldCredentialTypeLabel.length > 0,
+  );
 
   const firstSectionCards = $derived.by(() => {
     return [];
@@ -142,11 +151,13 @@
 
   /** Application ID + dates: desktop row 2 under name; mobile below type card. */
   const hasMetadataBlock = $derived(
-    (proposal?._id ?? proposal?.id) != null || (showVersionBadge && updatedAt != null) || submittedAt != null,
+    (proposal?._id ?? proposal?.id) != null ||
+      (showVersionBadge && updatedAt != null) ||
+      submittedAt != null,
   );
 </script>
 
-<Card.Root class="bg-slate-50 gap-3" id="key-details">
+<Card.Root class="gap-3 bg-slate-50" id="key-details">
   <Card.Header class="py-0 pb-0">
     <h2 id="key-details-heading" class="sr-only">Key Details</h2>
     <div class="flex items-center justify-between gap-2">
@@ -157,14 +168,14 @@
       />
     </div>
   </Card.Header>
-  <Card.Content class="grid grid-cols-1 md:grid-cols-2 gap-2 md:grid-rows-[auto_auto]">
-    <div class="space-y-2 text-xs md:row-start-1 md:col-start-1 md:self-start">
-      <div class="rounded-lg border bg-card text-card-foreground overflow-hidden">
-        <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-          <UserIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
+  <Card.Content class="grid grid-cols-1 gap-2 md:grid-cols-2 md:grid-rows-[auto_auto]">
+    <div class="space-y-2 text-xs md:col-start-1 md:row-start-1 md:self-start">
+      <div class="bg-card text-card-foreground overflow-hidden rounded-lg border">
+        <div class="flex min-w-0 gap-1.5 pt-4 pr-4 pb-2 pl-4">
+          <UserIcon class="text-muted-foreground mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           <div class="min-w-0">
-            <p class="text-xs font-medium text-muted-foreground mb-1">Applicant name</p>
-            <p class="text-lg font-medium text-foreground tracking-tight wrap-break-word">
+            <p class="text-muted-foreground mb-1 text-xs font-medium">Applicant name</p>
+            <p class="text-foreground text-lg font-medium tracking-tight wrap-break-word">
               {#if applicantDisplayName.trim()}
                 {#if proposerHref}
                   <a href={proposerHref} class="hover:underline">{applicantDisplayName}</a>
@@ -172,7 +183,7 @@
                   {applicantDisplayName}
                 {/if}
               {:else}
-                <span class="text-muted-foreground font-medium text-base">—</span>
+                <span class="text-muted-foreground text-base font-medium">—</span>
               {/if}
             </p>
           </div>
@@ -180,16 +191,16 @@
       </div>
       {#if hasApplicantCredentialIds}
         <div
-          class="rounded-lg border bg-card text-card-foreground grid grid-cols-2 divide-x divide-border overflow-hidden"
+          class="bg-card text-card-foreground divide-border grid grid-cols-2 divide-x overflow-hidden rounded-lg border"
         >
-          <div class="p-4 min-w-0 flex gap-1.5">
+          <div class="flex min-w-0 gap-1.5 p-4">
             <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1">Pool ID</p>
+              <p class="text-muted-foreground mb-1 text-xs font-medium">Pool ID</p>
               <p class="font-medium wrap-break-word">
                 {#if applicantPoolId}
                   <button
                     type="button"
-                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+                    class="text-foreground font-inherit cursor-pointer border-0 bg-transparent p-0 text-left hover:underline"
                     title="Copy Pool ID"
                     onclick={() => {
                       navigator.clipboard.writeText(applicantPoolId).then(
@@ -206,14 +217,14 @@
               </p>
             </div>
           </div>
-          <div class="p-4 min-w-0 flex gap-1.5">
+          <div class="flex min-w-0 gap-1.5 p-4">
             <div class="min-w-0">
-              <p class="text-xs font-medium text-muted-foreground mb-1">DRep ID</p>
+              <p class="text-muted-foreground mb-1 text-xs font-medium">DRep ID</p>
               <p class="font-medium wrap-break-word">
                 {#if applicantDrepId}
                   <button
                     type="button"
-                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+                    class="text-foreground font-inherit cursor-pointer border-0 bg-transparent p-0 text-left hover:underline"
                     title="Copy DRep ID"
                     onclick={() => {
                       navigator.clipboard.writeText(applicantDrepId).then(
@@ -233,13 +244,13 @@
         </div>
       {/if}
       {#if hasColdCredential}
-        <div class="rounded-lg border bg-card text-card-foreground overflow-hidden">
-          <div class="p-4 min-w-0">
-            <div class="flex items-center gap-1.5 mb-2">
-              <p class="text-xs font-medium text-muted-foreground">Cold credential hash</p>
+        <div class="bg-card text-card-foreground overflow-hidden rounded-lg border">
+          <div class="min-w-0 p-4">
+            <div class="mb-2 flex items-center gap-1.5">
+              <p class="text-muted-foreground text-xs font-medium">Cold credential hash</p>
               {#if coldCredentialTypeLabel}
                 <Badge
-                  class="shrink-0 font-normal text-[10px] leading-4 px-1.5 py-0 bg-(--mbo-cardano-blue) text-white border-0"
+                  class="shrink-0 border-0 bg-(--mbo-cardano-blue) px-1.5 py-0 text-[10px] leading-4 font-normal text-white"
                 >
                   {coldCredentialTypeLabel}
                 </Badge>
@@ -250,7 +261,7 @@
                 <div>
                   <button
                     type="button"
-                    class="text-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit min-w-0 max-w-full block truncate"
+                    class="text-foreground font-inherit block max-w-full min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left hover:underline"
                     title="Copy cold credential hash"
                     onclick={() => {
                       navigator.clipboard.writeText(coldCredentialHash).then(
@@ -270,15 +281,15 @@
     </div>
 
     <div
-      class="rounded-lg border bg-white text-card-foreground overflow-hidden md:col-start-2 md:row-start-1 md:self-stretch {hasMetadataBlock
+      class="text-card-foreground overflow-hidden rounded-lg border bg-white md:col-start-2 md:row-start-1 md:self-stretch {hasMetadataBlock
         ? 'md:row-span-2'
         : ''}"
     >
-      <div class="pt-4 pr-4 pl-4 pb-2 min-w-0 flex gap-1.5">
-        <FileTextIcon class="size-3.5 shrink-0 mt-0.5 text-muted-foreground" aria-hidden="true" />
+      <div class="flex min-w-0 gap-1.5 pt-4 pr-4 pb-2 pl-4">
+        <FileTextIcon class="text-muted-foreground mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
         <div class="min-w-0">
-          <p class="text-xs font-medium text-muted-foreground mb-1">Applicant type</p>
-          <p class="font-medium text-foreground">
+          <p class="text-muted-foreground mb-1 text-xs font-medium">Applicant type</p>
+          <p class="text-foreground font-medium">
             {#if trackLabel}
               {trackLabel}
             {:else}
@@ -287,36 +298,42 @@
           </p>
         </div>
       </div>
-      <div class="px-4 pb-4 space-y-3 text-xs">
+      <div class="space-y-3 px-4 pb-4 text-xs">
         {#if geographicRegionLabel}
           <div class="border-t pt-3">
-            <div class="flex items-center gap-1.5 mb-1">
-              <MapPinIcon class="size-3.5 shrink-0 -mt-1 text-muted-foreground" aria-hidden="true" />
-              <p class="text-xs font-medium text-muted-foreground mb-1">Geographic region</p>
+            <div class="mb-1 flex items-center gap-1.5">
+              <MapPinIcon
+                class="text-muted-foreground -mt-1 size-3.5 shrink-0"
+                aria-hidden="true"
+              />
+              <p class="text-muted-foreground mb-1 text-xs font-medium">Geographic region</p>
             </div>
             <p class="text-foreground ml-6 wrap-break-word">{geographicRegionLabel}</p>
           </div>
         {/if}
         {#if socialRows.length > 0}
           <div class="border-t pt-3">
-            <div class="flex items-center gap-1.5 mb-1">
-              <ExternalLinkIcon class="size-3.5 shrink-0 -mt-1 text-muted-foreground" aria-hidden="true" />
-              <p class="text-xs font-medium text-muted-foreground mb-1">Social Links</p>
+            <div class="mb-1 flex items-center gap-1.5">
+              <ExternalLinkIcon
+                class="text-muted-foreground -mt-1 size-3.5 shrink-0"
+                aria-hidden="true"
+              />
+              <p class="text-muted-foreground mb-1 text-xs font-medium">Social Links</p>
             </div>
-            <ul class="space-y-2 list-none p-0">
+            <ul class="list-none space-y-2 p-0">
               {#each socialRows as row (row.key)}
                 <li>
                   <a
                     href={row.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-primary underline hover:underline inline-flex items-start gap-1 text-xs cursor-pointer"
+                    class="text-primary inline-flex cursor-pointer items-start gap-1 text-xs underline hover:underline"
                     onclick={(e) => {
                       e.preventDefault();
                       linkWarningDialog.show(row.url, row.label);
                     }}
                   >
-                    <span class="min-w-0 wrap-break-word ml-6 line-clamp-1">
+                    <span class="ml-6 line-clamp-1 min-w-0 wrap-break-word">
                       {row.label}
                     </span>
                   </a>
@@ -328,13 +345,13 @@
         {#if firstSectionCards.length > 0}
           {#each firstSectionCards as card (card.id)}
             <div class="border-t pt-3">
-              <p class="text-xs font-medium text-muted-foreground mb-2">{card.title}</p>
+              <p class="text-muted-foreground mb-2 text-xs font-medium">{card.title}</p>
               {#if card.rows?.length > 0}
-                <dl class="space-y-2 ml-6">
+                <dl class="ml-6 space-y-2">
                   {#each card.rows as row (row.id)}
                     <div>
-                      <dt class="text-xs text-muted-foreground">{row.label}</dt>
-                      <dd class="text-xs text-foreground wrap-break-word">{toText(row.value)}</dd>
+                      <dt class="text-muted-foreground text-xs">{row.label}</dt>
+                      <dd class="text-foreground text-xs wrap-break-word">{toText(row.value)}</dd>
                     </div>
                   {/each}
                 </dl>
@@ -353,16 +370,18 @@
     </div>
 
     {#if hasMetadataBlock}
-      <div class="hidden md:flex md:flex-col md:row-start-2 md:col-start-1 md:self-stretch min-h-0 text-xs md:mt-0">
+      <div
+        class="hidden min-h-0 text-xs md:col-start-1 md:row-start-2 md:mt-0 md:flex md:flex-col md:self-stretch"
+      >
         <div class="mt-auto space-y-2">
           {#if (proposal?._id ?? proposal?.id) != null}
             {@const applicationIdStr = String(proposal._id ?? proposal.id)}
-            <div class="flex items-center gap-1 text-xs text-muted-foreground">
-              <HashIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <div class="text-muted-foreground flex items-center gap-1 text-xs">
+              <HashIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
               <span class={labelClass}>Application ID:</span>
               <button
                 type="button"
-                class="text-muted-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+                class="text-muted-foreground font-inherit cursor-pointer border-0 bg-transparent p-0 text-left hover:underline"
                 title="Copy application ID"
                 onclick={() => {
                   navigator.clipboard.writeText(applicationIdStr).then(
@@ -376,24 +395,24 @@
             </div>
           {/if}
           {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
-            <div class="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
-              <ClockIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <div class="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
+              <ClockIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
               {#if showVersionBadge && updatedAt != null}
                 <span class={labelClass}>Last updated:</span>
                 <Popover.Root>
                   <Popover.Trigger
                     type="button"
-                    class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                    class="text-muted-foreground focus-visible:ring-ring cursor-pointer rounded outline-none hover:underline focus-visible:ring-2"
                     title="Click to see submitted date"
                     aria-label="Show submitted date"
                   >
                     {formatUtcInstant(updatedAt, dateOptions)}
                   </Popover.Trigger>
                   <Popover.Content class="w-auto p-3" align="start">
-                    <div class="text-xs space-y-1">
+                    <div class="space-y-1 text-xs">
                       {#if submittedAt != null}
                         <p>
-                          <span class="font-medium text-muted-foreground">Submitted:</span>
+                          <span class="text-muted-foreground font-medium">Submitted:</span>
                           {formatUtcInstant(submittedAt, dateOptions)}
                         </p>
                       {:else}
@@ -416,12 +435,12 @@
       <div class="mt-4 space-y-2 text-xs md:hidden">
         {#if (proposal?._id ?? proposal?.id) != null}
           {@const applicationIdStrMobile = String(proposal._id ?? proposal.id)}
-          <div class="flex items-center gap-1 text-muted-foreground">
-            <HashIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div class="text-muted-foreground flex items-center gap-1">
+            <HashIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
             <span class={labelClass}>Application ID:</span>
             <button
               type="button"
-              class="text-muted-foreground hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit"
+              class="text-muted-foreground font-inherit cursor-pointer border-0 bg-transparent p-0 text-left hover:underline"
               title="Copy application ID"
               onclick={() => {
                 navigator.clipboard.writeText(applicationIdStrMobile).then(
@@ -435,24 +454,24 @@
           </div>
         {/if}
         {#if (showVersionBadge && updatedAt != null) || submittedAt != null}
-          <div class="flex items-center gap-1 text-muted-foreground flex-wrap">
-            <ClockIcon class="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <div class="text-muted-foreground flex flex-wrap items-center gap-1">
+            <ClockIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
             {#if showVersionBadge && updatedAt != null}
               <span class={labelClass}>Last updated:</span>
               <Popover.Root>
                 <Popover.Trigger
                   type="button"
-                  class="text-muted-foreground hover:underline cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  class="text-muted-foreground focus-visible:ring-ring cursor-pointer rounded outline-none hover:underline focus-visible:ring-2"
                   title="Click to see submitted date"
                   aria-label="Show submitted date"
                 >
                   {formatUtcInstant(updatedAt, dateOptions)}
                 </Popover.Trigger>
                 <Popover.Content class="w-auto p-3" align="start">
-                  <div class="text-xs space-y-1">
+                  <div class="space-y-1 text-xs">
                     {#if submittedAt != null}
                       <p>
-                        <span class="font-medium text-muted-foreground">Submitted:</span>
+                        <span class="text-muted-foreground font-medium">Submitted:</span>
                         {formatUtcInstant(submittedAt, dateOptions)}
                       </p>
                     {:else}

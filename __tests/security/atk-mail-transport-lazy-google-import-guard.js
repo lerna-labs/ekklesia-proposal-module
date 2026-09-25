@@ -7,12 +7,11 @@ const __dirname = path.dirname(__filename);
 const transportPath = path.resolve(__dirname, "../../mailer/transport.js");
 const source = await fs.readFile(transportPath, "utf8");
 
-const hasStaticGoogleImport = /import\s+\{\s*sendViaGoogleWorkspace\s*\}\s+from\s+["']\.\/googleWorkspaceSend\.js["']/.test(
-  source,
-);
-const hasDynamicGoogleImport = /await\s+import\(["']\.\/googleWorkspaceSend\.js["']\)/.test(
-  source,
-);
+const hasStaticGoogleImport =
+  /import\s+\{\s*sendViaGoogleWorkspace\s*\}\s+from\s+["']\.\/googleWorkspaceSend\.js["']/.test(
+    source,
+  );
+const hasDynamicGoogleImport = /await\s+import\(["']\.\/googleWorkspaceSend\.js["']\)/.test(source);
 
 if (hasStaticGoogleImport) {
   console.error("transport.js still eagerly imports googleWorkspaceSend.js at module load.");

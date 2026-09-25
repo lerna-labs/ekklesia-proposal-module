@@ -38,7 +38,7 @@
 <div class="flex flex-col gap-6">
   <div>
     <p
-      class="rounded-lg bg-[#ECEBFA] px-4 py-3 text-sm text-foreground dark:bg-violet-950/40 dark:text-violet-50 mb-6!"
+      class="text-foreground mb-6! rounded-lg bg-[#ECEBFA] px-4 py-3 text-sm dark:bg-violet-950/40 dark:text-violet-50"
     >
       CC members must generate cold keys before taking office. Review the
       <a
@@ -68,12 +68,15 @@
 
   <div class="space-y-3">
     <h3>Which credential type are you using?</h3>
-    <div class="text-sm font-medium text-foreground">
+    <div class="text-foreground text-sm font-medium">
       Credential Type
       <span class="text-(--mbo-electric-blue)">*</span>
     </div>
     <div
-      class={cn("flex flex-col gap-2 rounded-md", coldTypeError ? "ring-[3px] ring-destructive/20" : "")}
+      class={cn(
+        "flex flex-col gap-2 rounded-md",
+        coldTypeError ? "ring-destructive/20 ring-[3px]" : "",
+      )}
       role="radiogroup"
       aria-label="Credential type"
       aria-invalid={coldTypeError ? true : undefined}
@@ -86,7 +89,7 @@
           disabled={liveLocked}
           class={cn(
             "flex flex-col items-stretch gap-1 rounded-lg border p-4 text-left transition-colors",
-            liveLocked ? "opacity-80 cursor-not-allowed" : "cursor-pointer",
+            liveLocked ? "cursor-not-allowed opacity-80" : "cursor-pointer",
             formData.metaData.coldCredentialType === opt.id
               ? "border-(--mbo-electric-blue) bg-(--mbo-light-blue) ring-2 ring-(--mbo-sky-blue)/70 dark:border-(--mbo-electric-blue) dark:bg-(--mbo-primary-surface) dark:ring-(--mbo-tangy-blue)/40"
               : "border-border hover:bg-muted/50",
@@ -96,8 +99,8 @@
             formData.metaData.coldCredentialType = opt.id;
           }}
         >
-          <span class="font-semibold text-foreground">{opt.title}</span>
-          <span class="text-sm text-muted-foreground">{opt.description}</span>
+          <span class="text-foreground font-semibold">{opt.title}</span>
+          <span class="text-muted-foreground text-sm">{opt.description}</span>
         </button>
       {/each}
     </div>

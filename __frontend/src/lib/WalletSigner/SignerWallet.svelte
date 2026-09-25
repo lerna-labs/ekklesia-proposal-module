@@ -4,11 +4,7 @@
   import { getSignerAddress } from "./WalletConnect.js";
   import { Button, buttonVariants } from "$lib/components/ui/button";
   import { toast } from "svelte-sonner";
-  import {
-    getPayload,
-    signData,
-    submitSignature,
-  } from "$lib/WalletSigner/WalletSigner.js";
+  import { getPayload, signData, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
 
   const dispatch = createEventDispatcher();
   let {
@@ -65,12 +61,7 @@
       connectedWallet.address = poolId;
     }
 
-    const payload = await getPayload(
-      url,
-      connectedWallet.address,
-      signType,
-      scriptAddress,
-    );
+    const payload = await getPayload(url, connectedWallet.address, signType, scriptAddress);
     if (payload?.error) {
       toast.error(payload.error);
       loading = false;
@@ -92,12 +83,7 @@
       connectedWallet.address = poolId;
     }
     try {
-      payload = await getPayload(
-        url,
-        connectedWallet.address,
-        signType,
-        scriptAddress,
-      );
+      payload = await getPayload(url, connectedWallet.address, signType, scriptAddress);
       if (payload?.error) {
         toast.error(payload.error);
         loading = false;
@@ -128,8 +114,7 @@
       loading = false;
       return;
     }
-    let url =
-      mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
+    let url = mode === "login" ? "/session" : "/dashboard/" + ballot._id + "/checkout";
     if (mode !== "login" && multiSigCheck) {
       url += "/multisig";
     }
@@ -197,10 +182,6 @@
   {/if}
 </Button>
 
-<Button
-  onclick={cancel}
-  class="mt-1 w-full bg-red-500"
-  variant={buttonVariants.outline}
->
+<Button onclick={cancel} class="mt-1 w-full bg-red-500" variant={buttonVariants.outline}>
   Cancel
 </Button>

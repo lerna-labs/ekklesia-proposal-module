@@ -43,11 +43,7 @@
     const m = data?.metaData;
     if (!m) return false;
     if (m.intersectAdministratorFeeConsent === true) return true;
-    if (
-      typeof m.otherAdministrator === "string" &&
-      m.otherAdministrator.trim() !== ""
-    )
-      return true;
+    if (typeof m.otherAdministrator === "string" && m.otherAdministrator.trim() !== "") return true;
     const cp = m.contractingParty;
     if (cp && typeof cp === "object") {
       if ((cp.legalEntityType ?? "").toString().trim() !== "") return true;
@@ -59,8 +55,7 @@
         cp.legalEntityAddressLine2,
         cp.legalEntityAddressLine3,
       ];
-      if (companyFields.some((f) => (f ?? "").toString().trim() !== ""))
-        return true;
+      if (companyFields.some((f) => (f ?? "").toString().trim() !== "")) return true;
       const individualFields = [
         cp.govtIssuedIdNumber,
         cp.countryOfResidence,
@@ -68,15 +63,11 @@
         cp.residentialAddressLine2,
         cp.residentialAddressLine3,
       ];
-      if (individualFields.some((f) => (f ?? "").toString().trim() !== ""))
-        return true;
+      if (individualFields.some((f) => (f ?? "").toString().trim() !== "")) return true;
     }
     const pc = m.primaryContact;
     if (pc && typeof pc === "object") {
-      if (
-        (pc.name ?? "").toString().trim() !== "" ||
-        (pc.email ?? "").toString().trim() !== ""
-      )
+      if ((pc.name ?? "").toString().trim() !== "" || (pc.email ?? "").toString().trim() !== "")
         return true;
     }
     const sc = m.signatoryContact;
@@ -145,8 +136,7 @@
 
   function confirmReset() {
     const initial = getInitialAdminSection();
-    formData.metaData.intersectAdministratorFeeConsent =
-      initial.intersectAdministratorFeeConsent;
+    formData.metaData.intersectAdministratorFeeConsent = initial.intersectAdministratorFeeConsent;
     formData.metaData.otherAdministrator = initial.otherAdministrator;
     Object.assign(formData.metaData.contractingParty, initial.contractingParty);
     Object.assign(formData.metaData.primaryContact, initial.primaryContact);
@@ -162,10 +152,10 @@
 <h3>Who will be the Administrator for this budget proposal if approved?</h3>
 
 <p class="text-muted-foreground">
-  Cardano's Constitution requires each Treasury Withdrawal to specify an
-  Administrator and a third-party auditor. Fields marked with the eye-off icon
-  contain information that will not be publicly visible and will only be used
-  for administration or contracting purposes if the proposal is approved.
+  Cardano's Constitution requires each Treasury Withdrawal to specify an Administrator and a
+  third-party auditor. Fields marked with the eye-off icon contain information that will not be
+  publicly visible and will only be used for administration or contracting purposes if the proposal
+  is approved.
 </p>
 
 <RadioGroup
@@ -182,27 +172,19 @@
 />
 
 {#if formData.metaData.administrator === "Intersect"}
-  <FormBudgetAdministrationIntersect
-    bind:formData
-    {vote}
-    {proposal}
-    {validationErrors}
-  />
+  <FormBudgetAdministrationIntersect bind:formData {vote} {proposal} {validationErrors} />
 {/if}
 
 {#if formData.metaData.administrator === "Other"}
   <FormBudgetAdminOther bind:formData {vote} {proposal} {validationErrors} />
 {/if}
 
-<h3 class="mt-8">
-  How will independent audits or assurance be handled for this proposal?
-</h3>
+<h3 class="mt-8">How will independent audits or assurance be handled for this proposal?</h3>
 
-<p class="text-sm text-muted-foreground mb-4">
-  Cardano's Constitution requires Treasury Withdrawal Actions to allocate funds
-  for periodic independent audits and oversight metrics. Describe whether funds
-  are being set aside for independent audits or third-party assurance, and how
-  oversight of treasury funds will be ensured.
+<p class="text-muted-foreground mb-4 text-sm">
+  Cardano's Constitution requires Treasury Withdrawal Actions to allocate funds for periodic
+  independent audits and oversight metrics. Describe whether funds are being set aside for
+  independent audits or third-party assurance, and how oversight of treasury funds will be ensured.
 </p>
 
 <Textarea
@@ -222,18 +204,12 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Change administrator?</AlertDialog.Title>
       <AlertDialog.Description>
-        Changing the administrator will reset all data in this section
-        (contracting party, contact, signatory, and KYC). You will need to
-        re-enter the information. Do you want to continue?
+        Changing the administrator will reset all data in this section (contracting party, contact,
+        signatory, and KYC). You will need to re-enter the information. Do you want to continue?
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        class="cursor-pointer"
-        onclick={cancelReset}
-      >
+      <Button type="button" variant="outline" class="cursor-pointer" onclick={cancelReset}>
         Cancel
       </Button>
       <AlertDialog.Action class="cursor-pointer" onclick={confirmReset}>

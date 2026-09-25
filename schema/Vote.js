@@ -7,7 +7,7 @@ const sortOptionSchema = new Schema(
     label: { type: String, required: true },
     field: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const filterOptionSchema = new Schema(
@@ -25,7 +25,7 @@ const filterOptionSchema = new Schema(
     /** When optionsPath is set: property on each item used as the display label (default "title"). */
     optionLabelKey: { type: String, required: false, default: "title" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const searchOptionSchema = new Schema(
@@ -34,7 +34,7 @@ const searchOptionSchema = new Schema(
     matchType: { type: String, required: true, enum: ["like", "exact", "objectId"] },
     caseSensitive: { type: Boolean, required: false, default: false },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const voteSchema = new Schema(
@@ -200,7 +200,7 @@ const voteSchema = new Schema(
     timestamps: true,
     versionKey: false,
     collection: "votes",
-  }
+  },
 );
 
 /** Lookup key for GET /votes/:slug and frontend routes; must be unique. */

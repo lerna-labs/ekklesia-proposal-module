@@ -17,13 +17,7 @@
   import { toast } from "svelte-sonner";
   import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
 
-  let {
-    proposal,
-    vote,
-    showLink = true,
-    class: className,
-    policyNow = new Date(),
-  } = $props();
+  let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
 
   let revisionDrawerOpen = $state(false);
   let withdrawalDetailsDialogOpen = $state(false);
@@ -41,18 +35,14 @@
       $user.adminVoteIds.includes(String(vote._id)),
   );
 
-  const canWithdraw = $derived(
-    (isOwnProposal || isVoteAdmin) && proposal?.status === "live",
-  );
+  const canWithdraw = $derived((isOwnProposal || isVoteAdmin) && proposal?.status === "live");
 
   const proposalHref = $derived(
     vote && (proposal._id || proposal.id)
       ? `/votes/${vote.slug}/${proposal._id || proposal.id}`
       : null,
   );
-  const commentsHref = $derived(
-    proposalHref ? `${proposalHref}#comments` : null,
-  );
+  const commentsHref = $derived(proposalHref ? `${proposalHref}#comments` : null);
   const commentCount = $derived(
     proposal?.commentCount != null ? Number(proposal.commentCount) : null,
   );
@@ -77,18 +67,15 @@
 </script>
 
 <Card.Root
-  class="hover:shadow-md transition-shadow gap-y-3 py-4 sm:py-6 {className ||
-    ''} {proposal?.status === 'withdrawnByProposer' ||
-  proposal?.status === 'withdrawnByAdmin'
+  class="gap-y-3 py-4 transition-shadow hover:shadow-md sm:py-6 {className ||
+    ''} {proposal?.status === 'withdrawnByProposer' || proposal?.status === 'withdrawnByAdmin'
     ? 'bg-red-100/50'
     : ''}"
 >
-  <Card.Header class="relative pb-0 px-4 sm:px-6">
-    <Card.Title
-      class="text-lg font-medium flex flex-wrap items-center gap-1 min-w-0"
-    >
+  <Card.Header class="relative px-4 pb-0 sm:px-6">
+    <Card.Title class="flex min-w-0 flex-wrap items-center gap-1 text-lg font-medium">
       <span class="inline min-w-0">
-        <a href={proposalHref} class="hover:underline cursor-pointer"
+        <a href={proposalHref} class="cursor-pointer hover:underline"
           >{proposal.title || proposal.name || "Untitled Proposal"}</a
         >
         {#if showVersionBadge}
@@ -99,7 +86,7 @@
               e.stopPropagation();
               revisionDrawerOpen = true;
             }}
-            class="inline-flex items-center rounded-md border border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2 py-0.5 text-xs font-normal shrink-0 cursor-pointer transition-colors ml-0 align-baseline"
+            class="bg-secondary text-secondary-foreground hover:bg-secondary/80 ml-0 inline-flex shrink-0 cursor-pointer items-center rounded-md border border-transparent px-2 py-0.5 align-baseline text-xs font-normal transition-colors"
             aria-label="View revision history"
             title="View revision history"
           >
@@ -110,13 +97,11 @@
       {#if proposal.status === "withdrawnByAdmin" || proposal.status === "withdrawnByProposer"}
         <button
           type="button"
-          class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium uppercase bg-destructive text-white cursor-pointer hover:bg-destructive/90 border-0 h-5 shrink-0"
+          class="bg-destructive hover:bg-destructive/90 inline-flex h-5 shrink-0 cursor-pointer items-center rounded-md border-0 px-2 py-0.5 text-xs font-medium text-white uppercase"
           aria-label="View withdrawal details"
           onclick={() => (withdrawalDetailsDialogOpen = true)}
         >
-          {proposal.status === "withdrawnByAdmin"
-            ? "Withdrawn by Admin"
-            : "Withdrawn"}
+          {proposal.status === "withdrawnByAdmin" ? "Withdrawn by Admin" : "Withdrawn"}
         </button>
       {/if}
     </Card.Title>
@@ -125,15 +110,12 @@
     <div class="space-y-2 leading-tight">
       {#if (proposal?._id ?? proposal?.id) != null}
         {@const proposalIdStr = String(proposal._id ?? proposal.id)}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <HashIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+        <div class="text-muted-foreground flex items-center gap-1 text-xs">
+          <HashIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
           <span class={labelClass}>Proposal ID:</span>
           <button
             type="button"
-            class="hover:underline cursor-pointer bg-transparent border-0 p-0 text-left font-inherit text-inherit"
+            class="font-inherit cursor-pointer border-0 bg-transparent p-0 text-left text-inherit hover:underline"
             title="Copy proposal ID"
             onclick={() => {
               navigator.clipboard.writeText(proposalIdStr).then(
@@ -148,16 +130,13 @@
       {/if}
       {#if proposal?.proposerId != null && String(proposal.proposerId).trim() !== ""}
         {@const proposerIdStr = String(proposal.proposerId).trim()}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <UserIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+        <div class="text-muted-foreground flex items-center gap-1 text-xs">
+          <UserIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
           <span class={labelClass}>Proposer:</span>
           {#if proposerHref}
             <a
               href={proposerHref}
-              class="text-muted-foreground hover:underline cursor-pointer"
+              class="text-muted-foreground cursor-pointer hover:underline"
               title="Show all proposals by this proposer"
             >
               {proposerIdStr}
@@ -168,11 +147,8 @@
         </div>
       {/if}
       {#if (showVersionBadge && proposal.updatedAt != null) || proposal.submittedAt != null}
-        <div class="flex items-center gap-1 text-xs text-muted-foreground">
-          <ClockIcon
-            class="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+        <div class="text-muted-foreground flex items-center gap-1 text-xs">
+          <ClockIcon class="text-muted-foreground size-3.5 shrink-0" aria-hidden="true" />
           {#if showVersionBadge && proposal.updatedAt != null}
             <span class={labelClass}>Last updated:</span>
             <span>
@@ -195,7 +171,7 @@
     </div>
 
     {#if proposal.summary}
-      <div class="text-sm line-clamp-10 ++:first:mt-0 pt-4">
+      <div class="++:first:mt-0 line-clamp-10 pt-4 text-sm">
         <Markdown content={proposal.summary} />
       </div>
     {/if}
@@ -208,7 +184,7 @@
             timeStyle: "short",
           })
         : "—"}
-      <Card.Root class="bg-white mt-8">
+      <Card.Root class="mt-8 bg-white">
         <Card.Header>
           <Card.Title>
             {proposal.status === "withdrawnByAdmin"
@@ -216,7 +192,7 @@
               : "Proposal Withdrawn by Proposer"}
             {#if wd?.category}
               <span
-                class="ml-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+                class="ml-1 inline-flex items-center rounded-md bg-black px-2 py-0.5 text-xs font-medium text-white"
               >
                 {wd.category}
               </span>
@@ -229,8 +205,8 @@
         <Card.Content class="space-y-1 text-sm">
           {#if wd?.comment}
             <div>
-              <span class="font-medium text-muted-foreground">Comment:</span>
-              <Markdown content={wd.comment} class="text-sm mt-0.5" />
+              <span class="text-muted-foreground font-medium">Comment:</span>
+              <Markdown content={wd.comment} class="mt-0.5 text-sm" />
             </div>
           {/if}
         </Card.Content>
@@ -238,17 +214,12 @@
     {/if}
   </Card.Content>
   {#if (showLink && proposalHref) || canWithdraw || commentsHref || voteNowHref}
-    <Card.Footer class="flex flex-col items-start gap-3 pt-4 px-4 sm:px-6">
+    <Card.Footer class="flex flex-col items-start gap-3 px-4 pt-4 sm:px-6">
       {#if commentsHref || (showLink && proposalHref) || voteNowHref}
-        <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex flex-wrap items-center gap-2">
           {#if showLink && proposalHref}
-            <Button
-              href={proposalHref}
-              variant="secondary"
-              size="sm"
-              class="text-xs shrink-0"
-            >
-              <FileTextIcon class="size-4 mr-1" />
+            <Button href={proposalHref} variant="secondary" size="sm" class="shrink-0 text-xs">
+              <FileTextIcon class="mr-1 size-4" />
               Read Proposal
             </Button>
           {/if}
@@ -259,9 +230,9 @@
               rel="noopener noreferrer"
               variant="secondary"
               size="sm"
-              class="text-xs shrink-0 animate-pulse bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue)"
+              class="shrink-0 animate-pulse bg-(--mbo-electric-blue) text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
             >
-              <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+              <VoteIcon class="mr-1 size-4" aria-hidden="true" />
               Vote Now!
             </Button>
           {/if}
@@ -270,12 +241,12 @@
               href={commentsHref}
               variant="outline"
               size="sm"
-              class="text-xs shrink-0"
+              class="shrink-0 text-xs"
               aria-label={commentCount != null
                 ? `${commentCount} ${commentCount === 1 ? "Comment" : "Comments"}`
                 : "View comments"}
             >
-              <MessageSquareIcon class="size-4 mr-1" />
+              <MessageSquareIcon class="mr-1 size-4" />
               {commentCount != null ? commentCount : "—"}
               {commentCount === 1 ? "Comment" : "Comments"}
             </Button>
@@ -299,8 +270,4 @@
   <ProposalWithdrawn bind:open={withdrawalDetailsDialogOpen} {proposal} />
 {/if}
 
-<ProposalRevisionHistory
-  {proposal}
-  {vote}
-  bind:open={revisionDrawerOpen}
-/>
+<ProposalRevisionHistory {proposal} {vote} bind:open={revisionDrawerOpen} />

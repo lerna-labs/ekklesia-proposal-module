@@ -14,15 +14,10 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
 
-  let {
-    value = $bindable([]),
-    validationErrors,
-    class: className = "",
-  } = $props();
+  let { value = $bindable([]), validationErrors, class: className = "" } = $props();
 
   const label = "Core Objectives";
-  const description =
-    "List the main objectives this work package is intended to achieve.";
+  const description = "List the main objectives this work package is intended to achieve.";
   const addButtonLabel = "Add Core Objective";
   const maxLength = 1000;
 
@@ -36,9 +31,7 @@
   const objectives = $derived(Array.isArray(value) ? value : []);
   const schemaError = $derived(validationErrors?.errors?.[0]);
   const sectionOutlineClass = $derived(
-    schemaError
-      ? "rounded-md border border-destructive ring-[3px] ring-destructive/20 p-3"
-      : "",
+    schemaError ? "rounded-md border border-destructive ring-[3px] ring-destructive/20 p-3" : "",
   );
 
   function openAddDialog(index = null) {
@@ -63,10 +56,7 @@
     const result = schema.safeParse(draftText.trim());
     if (!result.success) {
       const tree = z.treeifyError(result.error);
-      draftError =
-        tree.errors?.[0] ??
-        tree.properties?._errors?.[0] ??
-        "Invalid objective";
+      draftError = tree.errors?.[0] ?? tree.properties?._errors?.[0] ?? "Invalid objective";
       return;
     }
     draftError = "";
@@ -108,7 +98,7 @@
     {#if label || description}
       <div class="flex flex-row items-center gap-1 pb-2">
         {#if label}
-          <span class="text-sm font-medium mb-0">
+          <span class="mb-0 text-sm font-medium">
             {label}
             <span class="text-(--mbo-electric-blue)">*</span>
           </span>
@@ -116,21 +106,18 @@
         {#if description}
           <ToolTip content={description} fieldLabel={label} />
         {/if}
-        <span class="flex-1 min-w-0" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1" aria-hidden="true"></span>
       </div>
     {/if}
     <Field.Field class="gap-1">
       {#if objectives.length > 0}
-        <ul class="objective-list-editor-list space-y-2 list-none p-0 m-0 mb-1">
+        <ul class="objective-list-editor-list m-0 mb-1 list-none space-y-2 p-0">
           {#each objectives as objective, index (index)}
             <li>
               <Card.Root class="py-2">
-                <Card.Header
-                  class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm"
-                >
-                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+                <Card.Header class="flex flex-row items-start gap-2 py-0 pr-2 pl-3 text-sm">
                   <div
-                    class="objective-text min-w-0 flex-1 min-h-8 flex items-center text-left cursor-pointer focus:outline-none line-clamp-3 overflow-hidden"
+                    class="objective-text line-clamp-3 flex min-h-8 min-w-0 flex-1 cursor-pointer items-center overflow-hidden text-left focus:outline-none"
                     role="button"
                     tabindex="0"
                     title={typeof objective === "string" ? objective : ""}
@@ -144,12 +131,12 @@
                   >
                     <Markdown content={objective ?? ""} class="text-inherit" />
                   </div>
-                  <div class="flex flex-row gap-1 shrink-0">
+                  <div class="flex shrink-0 flex-row gap-1">
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      class="size-8 text-black cursor-pointer"
+                      class="size-8 cursor-pointer text-black"
                       aria-label="Edit objective"
                       onclick={() => openAddDialog(index)}
                     >
@@ -159,7 +146,7 @@
                       type="button"
                       variant="outline"
                       size="icon"
-                      class="size-8 text-black cursor-pointer"
+                      class="size-8 cursor-pointer text-black"
                       aria-label="Remove objective"
                       onclick={() => requestDelete(index)}
                     >
@@ -178,7 +165,7 @@
           type="button"
           variant="outline"
           size="sm"
-          class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+          class="add-item-btn w-fit cursor-pointer gap-1 text-xs"
           onclick={openAddDialog}
         >
           <PlusIcon class="size-4" />
@@ -188,14 +175,14 @@
     </Field.Field>
   </div>
   {#if schemaError}
-    <Field.Error class="text-xs mt-1.5">{schemaError}</Field.Error>
+    <Field.Error class="mt-1.5 text-xs">{schemaError}</Field.Error>
   {/if}
 </div>
 
 <!-- Add / Edit objective (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content class="sm:max-w-lg max-h-[90dvh] flex flex-col min-h-0">
-    <AlertDialog.Header class="text-left shrink-0">
+  <AlertDialog.Content class="flex max-h-[90dvh] min-h-0 flex-col sm:max-w-lg">
+    <AlertDialog.Header class="shrink-0 text-left">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Core Objective" : "Add Core Objective"}
       </AlertDialog.Title>
@@ -205,7 +192,7 @@
           : `Enter the Core Objective (max ${maxLength} characters).`}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-4 py-2 overflow-y-auto min-h-0 flex-1">
+    <div class="grid min-h-0 flex-1 gap-4 overflow-y-auto py-2">
       <Textarea
         id="objective-list-editor-text"
         label="Core Objective"
@@ -223,7 +210,7 @@
           : null}
       />
     </div>
-    <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
+    <AlertDialog.Footer class="flex shrink-0 flex-wrap gap-2">
       {#if editingIndex != null}
         <Button
           type="button"
@@ -231,7 +218,7 @@
           class="mr-auto cursor-pointer"
           onclick={deleteFromDialog}
         >
-          <TrashIcon class="size-4 mr-1" />
+          <TrashIcon class="mr-1 size-4" />
           Delete
         </Button>
       {/if}
@@ -255,7 +242,7 @@
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmDelete}
       >
         Delete

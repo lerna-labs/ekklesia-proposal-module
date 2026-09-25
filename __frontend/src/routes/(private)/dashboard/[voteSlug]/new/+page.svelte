@@ -17,7 +17,6 @@
 
   let { data } = $props();
   let vote = $derived(data.vote);
-  let saving = $state(false);
   let validationErrors = $state(null);
   let formRef = $state({});
   /** Set after first successful create (manual or auto-save) so the form can show Preview. */
@@ -49,7 +48,6 @@
 
   async function runSave(payload, options) {
     if (!vote?._id) return;
-    saving = true;
     validationErrors = null;
     try {
       const body = { ...payload, voteId: vote._id };
@@ -71,7 +69,8 @@
           toast.success(payload.status === "live" ? "Proposal submitted." : "Draft saved.");
         }
         await invalidateAll();
-        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto)) goto("/dashboard");
+        if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
+          goto("/dashboard");
         return json;
       } else {
         if (json?.errors) validationErrors = json.errors;
@@ -87,8 +86,6 @@
           : (err?.body?.message ?? err?.message ?? "Failed to create proposal.");
       toast.error(msg);
       throw err;
-    } finally {
-      saving = false;
     }
   }
 

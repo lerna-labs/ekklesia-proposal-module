@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a bug in the Ekklesia Proposal Module
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill out the sections below.
+        Security vulnerabilities must follow the [Security Policy](https://github.com/lerna-labs/ekklesia-proposal-module/security/policy) — do not file them here.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear, short description of the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps someone else can follow.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Backend vs frontend, Node version, browser, vote slug, deploy environment if known.
+      placeholder: |
+        - Area: backend / frontend / both
+        - Node:
+        - Browser (if UI):
+        - Vote / env (if applicable):
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Optional. Paste relevant logs or attach screenshots.
+    validations:
+      required: false

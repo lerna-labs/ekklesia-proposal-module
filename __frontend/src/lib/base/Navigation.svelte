@@ -69,7 +69,7 @@
             title="My Dashboard"
             aria-label="My Dashboard"
             size="sm"
-            class="bg-white text-black hover:bg-gray-200 text-xs"
+            class="bg-white text-xs text-black hover:bg-gray-200"
           >
             <User />
             <div class="hidden sm:block">My Dashboard</div>
@@ -78,7 +78,7 @@
             size="sm"
             variant="destructive"
             title="Log out"
-            class="text-white text-xs cursor-point"
+            class="cursor-point text-xs text-white"
             onclick={() => logout()}
             aria-label="Log out"
           >
@@ -114,19 +114,27 @@
     Top matches Header: h-8 + logo row + pb-4 (smaller logo h-12 → 6rem; sm:h-18 → 7.5rem).
     max-md: clip wrapper is viewport minus header; aside fills it (full height minus header).
   -->
-  <div class="pointer-events-none fixed inset-x-0 bottom-0 z-50 overflow-hidden top-[6rem] sm:top-[7.5rem]">
+  <div
+    class="pointer-events-none fixed inset-x-0 top-[6rem] bottom-0 z-50 overflow-hidden sm:top-[7.5rem]"
+  >
     <aside
       id={asideId}
-      class="pointer-events-auto absolute top-0 left-0 flex w-full flex-col gap-5 bg-(--mbo-tangy-blue) py-5 text-white shadow-2xl border-b border-white/15 max-md:right-auto max-md:w-max max-md:max-w-[calc(100vw-1rem)] max-md:bottom-0 max-md:overflow-y-auto md:right-0 md:bottom-auto md:pt-6 md:pb-10"
+      class="pointer-events-auto absolute top-0 left-0 flex w-full flex-col gap-5 border-b border-white/15 bg-(--mbo-tangy-blue) py-5 text-white shadow-2xl max-md:right-auto max-md:bottom-0 max-md:w-max max-md:max-w-[calc(100vw-1rem)] max-md:overflow-y-auto md:right-0 md:bottom-auto md:pt-6 md:pb-10"
       class:nav-aside-fly-enter={!menuExiting}
       class:nav-aside-fly-exit={menuExiting}
       aria-label="Site navigation"
       onanimationend={onAsideAnimationEnd}
     >
       <!-- Same wrapper as Header (container, max-w-4xl, px-4) for alignment with the logo -->
-      <div class="px-4 w-full max-md:w-max md:container md:mx-auto md:max-w-4xl">
-        <nav class="flex w-full flex-col gap-8 max-md:w-max md:w-full md:flex-row md:gap-0" aria-label="Site sections">
-          <section class="min-w-0 w-full max-md:flex-none md:flex-1" aria-labelledby="nav-heading-budget">
+      <div class="w-full px-4 max-md:w-max md:container md:mx-auto md:max-w-4xl">
+        <nav
+          class="flex w-full flex-col gap-8 max-md:w-max md:w-full md:flex-row md:gap-0"
+          aria-label="Site sections"
+        >
+          <section
+            class="w-full min-w-0 max-md:flex-none md:flex-1"
+            aria-labelledby="nav-heading-budget"
+          >
             <h2 id="nav-heading-budget" class="mb-3 text-sm font-semibold text-white/90">
               <a
                 href="/budget-process"
@@ -140,7 +148,7 @@
               <li>
                 <a
                   href="/votes/cardano-budget-2026"
-                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  class="font-base ml-2 text-sm text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
                   Budget 2026 Proposals
@@ -149,7 +157,7 @@
               <li>
                 <a
                   href="https://intersect.ekklesia.vote/ballots/6a1512d782978c99456fe6de/proposals"
-                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  class="font-base ml-2 text-sm text-white underline-offset-4 hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                   onclick={closeMenu}
@@ -161,7 +169,7 @@
           </section>
 
           <section
-            class="min-w-0 w-full max-md:flex-none border-t border-white/50 pt-8 md:flex-1 md:border-t-0 md:border-l md:border-white/50 md:pt-0 md:pl-10 lg:pl-12"
+            class="w-full min-w-0 border-t border-white/50 pt-8 max-md:flex-none md:flex-1 md:border-t-0 md:border-l md:border-white/50 md:pt-0 md:pl-10 lg:pl-12"
             aria-labelledby="nav-heading-cc"
           >
             <h2 id="nav-heading-cc" class="mb-3 text-sm font-semibold text-white/90">
@@ -177,7 +185,7 @@
               <li>
                 <a
                   href="/votes/cc-vote-2026"
-                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  class="font-base ml-2 text-sm text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
                   CC Vote 2026
@@ -187,17 +195,19 @@
           </section>
 
           <section
-            class="min-w-0 w-full max-md:flex-none border-t border-white/50 pt-8 md:flex-1 md:border-t-0 md:border-l md:border-white/50 md:pt-0 md:pl-10 lg:pl-12"
+            class="w-full min-w-0 border-t border-white/50 pt-8 max-md:flex-none md:flex-1 md:border-t-0 md:border-l md:border-white/50 md:pt-0 md:pl-10 lg:pl-12"
             aria-labelledby="nav-heading-voting"
           >
-            <h2 id="nav-heading-voting" class="mb-3 text-sm font-semibold text-white/90">Voting Events</h2>
+            <h2 id="nav-heading-voting" class="mb-3 text-sm font-semibold text-white/90">
+              Voting Events
+            </h2>
             <ul class="flex flex-col gap-2">
               <li>
                 <a
                   href="https://intersect.ekklesia.vote/ballots"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="ml-2 text-sm font-base text-white underline-offset-4 hover:underline"
+                  class="font-base ml-2 text-sm text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
                   All Voting Events
@@ -208,7 +218,7 @@
                   href={DOCS_HREF}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="ml-2 inline-flex items-center gap-1.5 text-sm font-base text-white underline-offset-4 hover:underline"
+                  class="font-base ml-2 inline-flex items-center gap-1.5 text-sm text-white underline-offset-4 hover:underline"
                   onclick={closeMenu}
                 >
                   Docs

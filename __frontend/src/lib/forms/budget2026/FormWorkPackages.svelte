@@ -49,11 +49,15 @@
   }
 
   function updatePackageMilestones(pkgIndex, newMilestones) {
-    value = packages.map((p, i) => (i === pkgIndex ? { ...p, milestones: newMilestones ?? [] } : p));
+    value = packages.map((p, i) =>
+      i === pkgIndex ? { ...p, milestones: newMilestones ?? [] } : p,
+    );
   }
 
   function updatePackageBudgetBreakdown(pkgIndex, newBudgetBreakdown) {
-    value = packages.map((p, i) => (i === pkgIndex ? { ...p, budgetBreakdown: newBudgetBreakdown ?? [] } : p));
+    value = packages.map((p, i) =>
+      i === pkgIndex ? { ...p, budgetBreakdown: newBudgetBreakdown ?? [] } : p,
+    );
   }
 
   function updatePackageMilestoneOption(pkgIndex, { noMilestonesBreakdown, milestoneAlternative }) {
@@ -75,14 +79,14 @@
     {#if packages.length > 0}
       <div class="flex flex-row items-center gap-1 pb-2">
         {#if label}
-          <span class="text-sm font-medium mb-0">{label}</span>
+          <span class="mb-0 text-sm font-medium">{label}</span>
         {/if}
         {#if description}
           <ToolTip content={description} fieldLabel={label} />
         {/if}
-        <span class="flex-1 min-w-0" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1" aria-hidden="true"></span>
       </div>
-      <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
+      <ul class="work-package-list mb-1! list-none space-y-2 p-0">
         {#each packages as pkg, index (index)}
           <li>
             <FormWorkPackagesCard
@@ -92,7 +96,8 @@
               milestones={pkg.milestones ?? []}
               onMilestonesChange={(milestones) => updatePackageMilestones(index, milestones)}
               budgetBreakdown={pkg.budgetBreakdown ?? []}
-              onBudgetBreakdownChange={(budgetBreakdown) => updatePackageBudgetBreakdown(index, budgetBreakdown)}
+              onBudgetBreakdownChange={(budgetBreakdown) =>
+                updatePackageBudgetBreakdown(index, budgetBreakdown)}
               {conversionRate}
               noMilestonesBreakdown={pkg.noMilestonesBreakdown ?? false}
               milestoneAlternative={pkg.milestoneAlternative ?? ""}
@@ -104,7 +109,7 @@
         {/each}
       </ul>
     {:else if emptyMessage}
-      <p class="text-sm text-muted-foreground">{emptyMessage}</p>
+      <p class="text-muted-foreground text-sm">{emptyMessage}</p>
     {/if}
 
     {#if !hideSectionLevelError && schemaError}
@@ -113,12 +118,12 @@
   </Field.Field>
 </div>
 
-<div class="flex justify-start mt-1 mb-8">
+<div class="mt-1 mb-8 flex justify-start">
   <Button
     type="button"
     variant="outline"
     size="sm"
-    class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+    class="add-item-btn w-fit cursor-pointer gap-1 text-xs"
     onclick={addWorkPackage}
   >
     <PlusIcon class="size-4" />
@@ -138,7 +143,7 @@
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmDelete}
       >
         Delete

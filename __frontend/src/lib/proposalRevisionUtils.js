@@ -7,7 +7,8 @@ import { diff, atomizeChangeset } from "json-diff-ts";
  * @returns {{ title: any, summary: any, metaData: any, totalBudget: any }}
  */
 export function buildProposalPayload(proposal) {
-  if (proposal == null) return { title: undefined, summary: undefined, metaData: undefined, totalBudget: undefined };
+  if (proposal == null)
+    return { title: undefined, summary: undefined, metaData: undefined, totalBudget: undefined };
   return {
     title: proposal.title,
     summary: proposal.summary,
@@ -25,7 +26,9 @@ export function buildProposalPayload(proposal) {
  */
 export function pathToSectionLabel(path, sectionMapping) {
   if (!sectionMapping || typeof path !== "string") return path.split(".").pop() ?? path ?? "";
-  const prefixes = Object.keys(sectionMapping).filter((p) => path === p || path.startsWith(p + "."));
+  const prefixes = Object.keys(sectionMapping).filter(
+    (p) => path === p || path.startsWith(p + "."),
+  );
   if (prefixes.length === 0) return path.split(".").pop() ?? path;
   const longest = prefixes.reduce((a, b) => (a.length >= b.length ? a : b));
   return sectionMapping[longest] ?? path.split(".").pop() ?? path;
@@ -88,10 +91,12 @@ export function getChangedDetails(proposalA, proposalB) {
   const payloadB = buildProposalPayload(proposalB);
   const changeset = diff(payloadB, payloadA);
   const atomic = atomizeChangeset(changeset);
-  return atomic.map((c) => ({
-    path: c.path && typeof c.path === "string" ? c.path.replace(/^\$\.?/, "") : "",
-    type: c.type ?? "",
-    value: c.value,
-    oldValue: c.oldValue,
-  })).filter((c) => c.path);
+  return atomic
+    .map((c) => ({
+      path: c.path && typeof c.path === "string" ? c.path.replace(/^\$\.?/, "") : "",
+      type: c.type ?? "",
+      value: c.value,
+      oldValue: c.oldValue,
+    }))
+    .filter((c) => c.path);
 }

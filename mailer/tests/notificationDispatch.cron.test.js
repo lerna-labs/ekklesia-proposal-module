@@ -118,7 +118,10 @@ function createHarness() {
         ),
       );
     }
-    if (query?.resultsPublishedAt && query?.["notificationDispatch.resultsPublishedSentAt"] === null) {
+    if (
+      query?.resultsPublishedAt &&
+      query?.["notificationDispatch.resultsPublishedSentAt"] === null
+    ) {
       const now = query.resultsPublishedAt.$lte;
       return createQueryChain(
         votes.filter(
@@ -390,7 +393,10 @@ test("results_published milestone dispatches once and uses resultsUrl", async (t
     votingStartDate: new Date("2026-01-01T00:00:00.000Z"),
     resultsPublishedAt: new Date("2026-05-04T00:00:00.000Z"),
     resultsUrl: "https://results.example.test/vote-results",
-    notificationDispatch: { votingOpenedSentAt: new Date("2026-05-01T00:00:00.000Z"), resultsPublishedSentAt: null },
+    notificationDispatch: {
+      votingOpenedSentAt: new Date("2026-05-01T00:00:00.000Z"),
+      resultsPublishedSentAt: null,
+    },
   });
 
   const firstRun = await runVoteMilestoneDispatch(now);

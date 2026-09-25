@@ -111,20 +111,21 @@
 </script>
 
 {#if hasContent}
-  <section class="text-sm space-y-3 mb-2! mt-12" id="proposal-details">
+  <section class="mt-12 mb-2! space-y-3 text-sm" id="proposal-details">
     <h2 class="mb-4">Proposal Details</h2>
 
-    <ul class="work-package-list space-y-2 list-none p-0 mb-1!">
+    <ul class="work-package-list mb-1! list-none space-y-2 p-0">
       {#each workPackages as wp, i}
         {@const name = (wp?.name ?? "").toString().trim() || `Work package ${i + 1}`}
-        {@const totalAda = wpTotals[i] ?? 0}
         {@const isExpanded = expanded[i] === true}
         {@const milestones = Array.isArray(wp?.milestones) ? wp.milestones : []}
         {@const noMilestones = wp?.noMilestonesBreakdown === true}
         {@const milestoneAlt = (wp?.milestoneAlternative ?? "").toString().trim()}
         {@const breakdown = Array.isArray(wp?.budgetBreakdown) ? wp.budgetBreakdown : []}
         {@const coreObjectives = Array.isArray(wp?.coreObjectives) ? wp.coreObjectives : []}
-        {@const supportingDocs = Array.isArray(wp?.supportingDocuments) ? wp.supportingDocuments : []}
+        {@const supportingDocs = Array.isArray(wp?.supportingDocuments)
+          ? wp.supportingDocuments
+          : []}
         <li>
           <CollapsibleCard
             id={`work-package-${i + 1}`}
@@ -148,7 +149,9 @@
             <div class="mt-4">
               {#if (wp?.summary ?? "").toString().trim()}
                 <section class="mb-6">
-                  <h4 class="min-w-0 leading-snug mb-2">Please describe this Work Package at a high level</h4>
+                  <h4 class="mb-2 min-w-0 leading-snug">
+                    Please describe this Work Package at a high level
+                  </h4>
                   <ItemContainer>
                     <Markdown content={wp.summary} />
                   </ItemContainer>
@@ -157,10 +160,12 @@
 
               {#if wp.initiativeType}
                 <section class="mb-2">
-                  <h4 class="min-w-0 leading-snug mb-2">
+                  <h4 class="mb-2 min-w-0 leading-snug">
                     Is this a new initiative or a continuation of existing work?
                   </h4>
-                  <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4">
+                  <Badge
+                    class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white"
+                  >
                     {wp.initiativeType}
                   </Badge>
                 </section>
@@ -168,10 +173,12 @@
 
               {#if wp.proposalType}
                 <section class="mb-2">
-                  <h4 class="min-w-0 leading-snug mb-2">
+                  <h4 class="mb-2 min-w-0 leading-snug">
                     How would you classify the primary nature of this work proposal?
                   </h4>
-                  <Badge class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4">
+                  <Badge
+                    class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white"
+                  >
                     {wp.proposalType}
                   </Badge>
                 </section>
@@ -179,12 +186,16 @@
 
               {#if coreObjectives.length > 0}
                 <section class="mb-6">
-                  <h4 class="min-w-0 leading-snug mb-2">What is this work package intended to achieve?</h4>
+                  <h4 class="mb-2 min-w-0 leading-snug">
+                    What is this work package intended to achieve?
+                  </h4>
                   <ul class="space-y-1">
                     {#each coreObjectives as obj}
                       <li>
                         <ItemContainer>
-                          <strong class="text-sm font-medium inline-block mb-1">Core Objective</strong>
+                          <strong class="mb-1 inline-block text-sm font-medium"
+                            >Core Objective</strong
+                          >
                           <br />
                           {#if typeof obj === "string"}
                             {obj}
@@ -200,7 +211,9 @@
 
               <section class="mb-6">
                 <div class="mb-2 flex max-w-full flex-wrap items-center gap-x-1 gap-y-0.5">
-                  <h4 class="min-w-0 leading-snug">Why does this work matter to Cardano? (Expected Value - ROI)</h4>
+                  <h4 class="min-w-0 leading-snug">
+                    Why does this work matter to Cardano? (Expected Value - ROI)
+                  </h4>
                   <Popover.Root>
                     <Popover.Trigger
                       class={cn(
@@ -208,11 +221,11 @@
                           variant: "ghost",
                           size: "icon-sm",
                         }),
-                        "size-fit shrink-0 p-0 px-0 py-0 h-auto w-auto min-h-0 gap-0",
+                        "size-fit h-auto min-h-0 w-auto shrink-0 gap-0 p-0 px-0 py-0",
                         "-ml-px text-(--mbo-tangy-blue) transition-none",
                         "hover:bg-transparent hover:text-(--mbo-tangy-blue)",
-                        "dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent",
-                        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+                        "active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent",
+                        "focus-visible:ring-ring/40 focus-visible:ring-2 focus-visible:ring-offset-2",
                       )}
                       openOnHover={true}
                       openDelay={150}
@@ -221,11 +234,11 @@
                     >
                       <InfoIcon class="size-3" aria-hidden="true" />
                     </Popover.Trigger>
-                    <Popover.Content class="p-3 text-sm max-w-sm" align="start">
+                    <Popover.Content class="max-w-sm p-3 text-sm" align="start">
                       <div class="font-medium">
                         Describe what will change or improve as a result of this Work Package.
                       </div>
-                      <p class="text-xs mt-2">
+                      <p class="mt-2 text-xs">
                         This may be qualitative or quantitative and does not need to be financial.
                       </p>
                     </Popover.Content>
@@ -246,11 +259,11 @@
                           variant: "ghost",
                           size: "icon-sm",
                         }),
-                        "size-fit shrink-0 p-0 px-0 py-0 h-auto w-auto min-h-0 gap-0",
+                        "size-fit h-auto min-h-0 w-auto shrink-0 gap-0 p-0 px-0 py-0",
                         "-ml-px text-(--mbo-tangy-blue) transition-none",
                         "hover:bg-transparent hover:text-(--mbo-tangy-blue)",
-                        "dark:hover:bg-transparent active:bg-transparent dark:active:bg-transparent",
-                        "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2",
+                        "active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent",
+                        "focus-visible:ring-ring/40 focus-visible:ring-2 focus-visible:ring-offset-2",
                       )}
                       openOnHover={true}
                       openDelay={150}
@@ -259,10 +272,11 @@
                     >
                       <InfoIcon class="size-3" aria-hidden="true" />
                     </Popover.Trigger>
-                    <Popover.Content class="p-3 text-sm max-w-sm" align="start">
+                    <Popover.Content class="max-w-sm p-3 text-sm" align="start">
                       <div class="font-medium">How will success be measured?</div>
-                      <p class="text-xs mt-2">
-                        Provide one or more metrics that demonstrate whether the expected value has been achieved.
+                      <p class="mt-2 text-xs">
+                        Provide one or more metrics that demonstrate whether the expected value has
+                        been achieved.
                       </p>
                     </Popover.Content>
                   </Popover.Root>
@@ -274,9 +288,11 @@
 
               {#if supportingDocs.length > 0}
                 <section class="mb-6">
-                  <h4 class="mb-1.5">Is there any extra material you would like to share about this work package?</h4>
+                  <h4 class="mb-1.5">
+                    Is there any extra material you would like to share about this work package?
+                  </h4>
                   <ItemContainer>
-                    <ul class="space-y-0.5 list-none p-0">
+                    <ul class="list-none space-y-0.5 p-0">
                       {#each supportingDocs as doc}
                         {@const url = (doc?.url ?? "").toString().trim()}
                         {@const title = (doc?.title ?? url ?? "Link").toString().trim()}
@@ -286,13 +302,16 @@
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              class="text-primary hover:underline inline-flex items-start gap-1 text-sm cursor-pointer"
+                              class="text-primary inline-flex cursor-pointer items-start gap-1 text-sm hover:underline"
                               onclick={(e) => {
                                 e.preventDefault();
                                 linkWarningDialog.show(url, title);
                               }}
                             >
-                              <ExternalLinkIcon class="size-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+                              <ExternalLinkIcon
+                                class="mt-0.5 size-3.5 shrink-0"
+                                aria-hidden="true"
+                              />
                               <span class="min-w-0 wrap-break-word">
                                 {title}
                               </span>
@@ -308,21 +327,22 @@
               {#if noMilestones && milestoneAlt}
                 <section>
                   <h4 class="mb-2">Milestone alternative</h4>
-                  <p class="text-sm text-muted-foreground mb-4">
+                  <p class="text-muted-foreground mb-4 text-sm">
                     Progress is described as follows (no milestone breakdown).
                   </p>
-                  <div class="prose prose-sm max-w-none dark:prose-invert **:first:mt-0">
+                  <div class="prose prose-sm dark:prose-invert max-w-none **:first:mt-0">
                     <Markdown content={milestoneAlt} />
                   </div>
                 </section>
               {:else if milestones.length > 0}
                 <section>
                   <h4 class="mb-2">How will this work package be delivered?</h4>
-                  <ul class="milestone-list-editor-list space-y-2 list-none p-0 m-0 mb-1!">
+                  <ul class="milestone-list-editor-list m-0 mb-1! list-none space-y-2 p-0">
                     {#each milestones as m, mi}
                       {@const msExpanded = expandedMilestones[milestoneKey(i, mi)] === true}
                       {@const hasDetails =
-                        (m?.deliverables ?? "").toString().trim() || (m?.acceptanceCriteria ?? "").toString().trim()}
+                        (m?.deliverables ?? "").toString().trim() ||
+                        (m?.acceptanceCriteria ?? "").toString().trim()}
                       <li>
                         <CollapsibleCard
                           expanded={msExpanded}
@@ -338,7 +358,7 @@
                             {m?.name ?? "Unnamed milestone"}
                           {/snippet}
                           {#if (m?.duration ?? "").toString().trim()}
-                            <div class="text-sm mt-0 mb-4">
+                            <div class="mt-0 mb-4 text-sm">
                               <h6>How many weeks will you need to complete this milestone?</h6>
                               <p>
                                 {m.duration} weeks
@@ -346,13 +366,13 @@
                             </div>
                           {/if}
                           {#if (m?.deliverables ?? "").toString().trim()}
-                            <div class="text-sm mt-0 mb-4">
+                            <div class="mt-0 mb-4 text-sm">
                               <h6>What will you deliver in this milestone?</h6>
                               <Markdown content={m.deliverables} class="mt-0.5" />
                             </div>
                           {/if}
                           {#if (m?.acceptanceCriteria ?? "").toString().trim()}
-                            <div class="text-sm mt-4">
+                            <div class="mt-4 text-sm">
                               <h6>How do you know it's "done"?</h6>
                               <Markdown content={m.acceptanceCriteria} class="mt-0.5" />
                             </div>
@@ -367,17 +387,23 @@
               {#if breakdown.length > 0}
                 {@const totalAda = wpTotals[i] ?? 0}
                 {@const totalUsd =
-                  conversionRateNum != null && Number.isFinite(totalAda) ? totalAda * conversionRateNum : null}
+                  conversionRateNum != null && Number.isFinite(totalAda)
+                    ? totalAda * conversionRateNum
+                    : null}
                 <section class={noMilestones || milestones.length > 0 ? "mt-8" : ""}>
                   <section class="space-y-2">
                     <h4 class="mb-2">What's the budget estimated for this Work Package?</h4>
-                    <p class="text-sm text-muted-foreground mb-4">Budget breakdown by category and item.</p>
+                    <p class="text-muted-foreground mb-4 text-sm">
+                      Budget breakdown by category and item.
+                    </p>
 
-                    <ul class="space-y-2 list-none p-0 m-0 mb-1!">
+                    <ul class="m-0 mb-1! list-none space-y-2 p-0">
                       {#each breakdown as row, rowIdx}
                         {@const total = rowTotal(row)}
-                        {@const isBudgetExpanded = expandedBudgetRows[budgetRowKey(i, rowIdx)] === true}
-                        {@const itemName = (row.name ?? row.itemName) || row.costCategory || `Item ${rowIdx + 1}`}
+                        {@const isBudgetExpanded =
+                          expandedBudgetRows[budgetRowKey(i, rowIdx)] === true}
+                        {@const itemName =
+                          (row.name ?? row.itemName) || row.costCategory || `Item ${rowIdx + 1}`}
                         <li>
                           <CollapsibleCard
                             expanded={isBudgetExpanded}
@@ -391,12 +417,12 @@
                             {#snippet title()}
                               {itemName}
                             {/snippet}
-                            <div class="text-sm mt-0 mb-1">
-                              <span class="font-medium text-muted-foreground">Cost category:</span>
+                            <div class="mt-0 mb-1 text-sm">
+                              <span class="text-muted-foreground font-medium">Cost category:</span>
                               <span class="text-foreground">{row.costCategory ?? "—"}</span>
                             </div>
-                            <div class="text-sm mt-3">
-                              <span class="font-medium text-muted-foreground">ADA costs:</span>
+                            <div class="mt-3 text-sm">
+                              <span class="text-muted-foreground font-medium">ADA costs:</span>
                               <span class="text-foreground">
                                 {formatAda(total)} ADA
                                 {#if conversionRateNum != null && Number.isFinite(total)}
@@ -409,8 +435,10 @@
                               </span>
                             </div>
                             {#if (row.description ?? "").trim()}
-                              <div class="text-sm mt-3">
-                                <span class="font-medium text-muted-foreground block mb-1">Item description:</span>
+                              <div class="mt-3 text-sm">
+                                <span class="text-muted-foreground mb-1 block font-medium"
+                                  >Item description:</span
+                                >
                                 <Markdown content={row.description ?? ""} class="mt-0.5" />
                               </div>
                             {/if}
@@ -420,7 +448,7 @@
                     </ul>
 
                     <div
-                      class="flex flex-wrap items-center justify-between gap-2 py-3 px-4 rounded-md border bg-(--mbo-cardano-blue) text-white font-medium mt-2"
+                      class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border bg-(--mbo-cardano-blue) px-4 py-3 font-medium text-white"
                     >
                       <span>Total work package budget</span>
                       <div class="flex items-center gap-4 tabular-nums">

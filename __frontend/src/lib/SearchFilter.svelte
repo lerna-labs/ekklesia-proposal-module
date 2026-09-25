@@ -14,12 +14,7 @@
   import CheckIcon from "@lucide/svelte/icons/check";
 
   /** @type {{ filterOptions?: Array<{ param: string, label: string, field: string, allowedValues?: string[], multiple: boolean, optionsPath?: string, optionValueKey?: string, optionLabelKey?: string }>, vote?: Record<string, unknown>, voteId?: string, class?: string }} */
-  let {
-    filterOptions = [],
-    vote = null,
-    voteId = "",
-    class: className = "",
-  } = $props();
+  let { filterOptions = [], vote = null, voteId = "", class: className = "" } = $props();
 
   function getByPath(obj, path) {
     if (!obj || !path) return undefined;
@@ -41,16 +36,14 @@
     ),
   );
 
-  const statusOption = $derived(
-    filterOptions.find((o) => o.param === "status"),
-  );
+  const statusOption = $derived(filterOptions.find((o) => o.param === "status"));
 
-  const nonStatusFilterOptions = $derived(
-    filterOptions.filter((opt) => opt.param !== "status"),
-  );
+  const nonStatusFilterOptions = $derived(filterOptions.filter((opt) => opt.param !== "status"));
 
   function formatAllowedValueLabel(value) {
-    const normalized = String(value ?? "").trim().toLowerCase();
+    const normalized = String(value ?? "")
+      .trim()
+      .toLowerCase();
     if (!normalized) return "";
     return normalized
       .split(/[\s_-]+/)
@@ -60,8 +53,7 @@
 
   /** Resolve option lists for each filter param from optionsPath or allowedValues. */
   const optionsByParam = $derived.by(() => {
-    const out =
-      /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
+    const out = /** @type {Record<string, Array<{ value: string, label: string }>>} */ ({});
     for (const opt of filterOptions) {
       if (opt.optionsPath && vote) {
         const list = getByPath(vote, opt.optionsPath);
@@ -112,10 +104,7 @@
     }
     if (selectedValues.length === 1) {
       const selectedValue = selectedValues[0];
-      return (
-        optionsList.find((opt) => String(opt.value) === selectedValue)?.label ??
-        selectedValue
-      );
+      return optionsList.find((opt) => String(opt.value) === selectedValue)?.label ?? selectedValue;
     }
     return `${selectedValues.length} selected`;
   }
@@ -153,8 +142,7 @@
       if (pendingLive) statusParts.push("live");
       if (pendingWithdrawn) statusParts.push("withdrawn");
       if (pendingDraft && isVoteAdmin) statusParts.push("draft");
-      const statusValue =
-        statusParts.length === 0 ? "live" : statusParts.join(",");
+      const statusValue = statusParts.length === 0 ? "live" : statusParts.join(",");
       searchParams.set("status", statusValue);
     }
 
@@ -175,9 +163,7 @@
 
   /** Key used by the vote list page to persist list state (filters, sort, etc.). Clear it on reset so the page does not restore old filters from localStorage. */
   const listStateKey = $derived(
-    page.params?.voteSlug
-      ? `votes.listState.${page.params.voteSlug}`
-      : "",
+    page.params?.voteSlug ? `votes.listState.${page.params.voteSlug}` : "",
   );
 
   function resetFilters() {
@@ -189,7 +175,9 @@
     if (typeof window !== "undefined" && listStateKey) {
       try {
         window.localStorage.removeItem(listStateKey);
-      } catch (_) {}
+      } catch (_) {
+        // ignore localStorage errors (private mode / quota)
+      }
     }
     const qs = queryStringWithLiteralCommas(searchParams);
     const url = qs ? `${page.url.pathname}?${qs}` : page.url.pathname;
@@ -212,30 +200,28 @@
         <FilterIcon class="size-4" />
         {#if hasActiveFilters}
           <span
-            class="absolute top-1.5 right-1 size-1.5 rounded-full bg-blue-500 animate-pulse"
+            class="absolute top-1.5 right-1 size-1.5 animate-pulse rounded-full bg-blue-500"
             aria-hidden="true"
           ></span>
         {/if}
       </Popover.Trigger>
       <Popover.Content align="end" class="w-64 p-3">
-        <div class="text-sm font-medium mb-2">Filter Options</div>
+        <div class="mb-2 text-sm font-medium">Filter Options</div>
         <Separator.Root class="mb-3" />
         <div class="space-y-4">
           {#if statusOption}
             <div class="space-y-1">
-              <Label class="text-xs text-muted-foreground"
-                >{statusOption.label}</Label
-              >
+              <Label class="text-muted-foreground text-xs">{statusOption.label}</Label>
               <div class="grid gap-0">
                 {#if statusOption.allowedValues?.includes("live")}
                   <label
                     for="filter-status-live"
-                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                    class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
                   >
                     <Checkbox
                       id="filter-status-live"
                       bind:checked={pendingLive}
-                      class="border border-muted-foreground/80"
+                      class="border-muted-foreground/80 border"
                     />
                     <span class="cursor-pointer font-normal">Live</span>
                   </label>
@@ -243,12 +229,12 @@
                 {#if statusOption.allowedValues?.includes("withdrawn")}
                   <label
                     for="filter-status-withdrawn"
-                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                    class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
                   >
                     <Checkbox
                       id="filter-status-withdrawn"
                       bind:checked={pendingWithdrawn}
-                      class="border border-muted-foreground/80"
+                      class="border-muted-foreground/80 border"
                     />
                     <span class="cursor-pointer font-normal">Withdrawn</span>
                   </label>
@@ -256,12 +242,12 @@
                 {#if isVoteAdmin && statusOption.allowedValues?.includes("draft")}
                   <label
                     for="filter-status-draft"
-                    class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent/50"
+                    class="hover:bg-accent/50 flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
                   >
                     <Checkbox
                       id="filter-status-draft"
                       bind:checked={pendingDraft}
-                      class="border border-muted-foreground/80"
+                      class="border-muted-foreground/80 border"
                     />
                     <span class="cursor-pointer font-normal">Draft</span>
                   </label>
@@ -274,16 +260,13 @@
             {@const selectedValues = pendingSelectionsByParam[option.param] ?? []}
             {#if optionList.length > 0}
               <div class="space-y-2">
-                <Label class="text-xs text-muted-foreground">{option.label}</Label>
-                <Select.Root
-                  type="multiple"
-                  bind:value={pendingSelectionsByParam[option.param]}
-                >
+                <Label class="text-muted-foreground text-xs">{option.label}</Label>
+                <Select.Root type="multiple" bind:value={pendingSelectionsByParam[option.param]}>
                   <Select.Trigger
-                    class="w-full min-w-0 text-foreground data-placeholder:text-foreground"
+                    class="text-foreground data-placeholder:text-foreground w-full min-w-0"
                     aria-label={option.label}
                   >
-                    <span class="truncate block min-w-0">
+                    <span class="block min-w-0 truncate">
                       {getTriggerLabel(option, selectedValues, optionList)}
                     </span>
                   </Select.Trigger>
@@ -300,7 +283,7 @@
               </div>
             {/if}
           {/each}
-          <div class="border-t pt-3 flex gap-1">
+          <div class="flex gap-1 border-t pt-3">
             {#if hasActiveFilters}
               <Button
                 type="button"

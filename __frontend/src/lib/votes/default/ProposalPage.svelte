@@ -6,13 +6,10 @@
   let {
     proposal,
     vote,
-    pillars = [],
-    commentCount,
     backToVoteUrl = "",
     voteUrl = "",
     currentVersionHref = null,
     showComments = false,
-    commentsHref = "",
     isWithdrawn = false,
   } = $props();
 
@@ -28,12 +25,7 @@
 {#if !currentVersionHref}
   <!-- Back to list (above title): history.back() when coming from list, else goto vote -->
   <div class="mb-6">
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onclick={goBackToList}
-    >
+    <Button type="button" variant="ghost" size="sm" onclick={goBackToList}>
       ← Back to {vote?.title ?? vote?.name ?? "vote"}
     </Button>
   </div>

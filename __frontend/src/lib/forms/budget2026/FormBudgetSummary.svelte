@@ -3,11 +3,9 @@
   import RadioGroup from "$lib/components/form/RadioGroup.svelte";
   import Textarea from "$lib/components/form/Textarea.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
-  const workPackages = $derived(
-    formData.metaData?.proposalDetails?.workPackages ?? [],
-  );
+  const workPackages = $derived(formData.metaData?.proposalDetails?.workPackages ?? []);
   const conversionRateNum = $derived.by(() => {
     const v = formData.metaData?.proposalDetails?.conversionRate;
     if (v == null || v === "") return null;
@@ -32,27 +30,18 @@
       };
     });
   });
-  const grandTotalAda = $derived(
-    summaryRows.reduce((sum, r) => sum + r.totalAda, 0),
-  );
-  const grandTotalUsd = $derived(
-    conversionRateNum != null ? grandTotalAda * conversionRateNum : null,
-  );
+  const grandTotalAda = $derived(summaryRows.reduce((sum, r) => sum + r.totalAda, 0));
 
   const administrator = $derived(formData.metaData?.administrator ?? "");
   const isIntersect = $derived(administrator === "Intersect");
   // When Intersect: 3% admin fee and total with fee (whole ADA)
   const adminFeeAda = $derived(Math.round(grandTotalAda * 0.03));
   const totalWithFeeAda = $derived(Math.round(grandTotalAda * 1.03));
-  const adminFeeUsd = $derived(
-    conversionRateNum != null ? adminFeeAda * conversionRateNum : null,
-  );
+  const adminFeeUsd = $derived(conversionRateNum != null ? adminFeeAda * conversionRateNum : null);
   const totalWithFeeUsd = $derived(
     conversionRateNum != null ? totalWithFeeAda * conversionRateNum : null,
   );
-  const totalDisplayAda = $derived(
-    isIntersect ? totalWithFeeAda : Math.round(grandTotalAda),
-  );
+  const totalDisplayAda = $derived(isIntersect ? totalWithFeeAda : Math.round(grandTotalAda));
   const totalDisplayUsd = $derived(
     isIntersect
       ? totalWithFeeUsd
@@ -61,9 +50,7 @@
         : null,
   );
 
-  const metaErrors = $derived(
-    validationErrors?.properties?.metaData?.properties ?? {},
-  );
+  const metaErrors = $derived(validationErrors?.properties?.metaData?.properties ?? {});
   const treasuryRepaymentErrors = $derived({
     properties: { treasuryRepayment: metaErrors.treasuryRepayment },
   });
@@ -78,32 +65,26 @@
 </script>
 
 {#if workPackages.length > 0}
-  <p class="mb-4 text-muted-foreground">
-    Please review if all the details in the summary of your budget are correct
-    before going to the next step.
+  <p class="text-muted-foreground mb-4">
+    Please review if all the details in the summary of your budget are correct before going to the
+    next step.
   </p>
-  <div class="rounded-md border overflow-x-auto mb-8 bg-white">
-    <table class="w-full caption-bottom text-xs border-collapse">
+  <div class="mb-8 overflow-x-auto rounded-md border bg-white">
+    <table class="w-full caption-bottom border-collapse text-xs">
       <thead>
-        <tr class="border-b transition-colors hover:bg-muted/50">
-          <th class="h-9 px-3 text-left align-middle font-medium">
-            Work Package
-          </th>
-          <th
-            class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
-          >
+        <tr class="hover:bg-muted/50 border-b transition-colors">
+          <th class="h-9 px-3 text-left align-middle font-medium"> Work Package </th>
+          <th class="h-9 px-3 text-right align-middle font-medium whitespace-nowrap tabular-nums">
             ADA Cost
           </th>
-          <th
-            class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
-          >
+          <th class="h-9 px-3 text-right align-middle font-medium whitespace-nowrap tabular-nums">
             USD Equiv.
           </th>
         </tr>
       </thead>
       <tbody>
         {#each summaryRows as row, i (i)}
-          <tr class="border-b transition-colors hover:bg-muted/50">
+          <tr class="hover:bg-muted/50 border-b transition-colors">
             <td class="p-3 align-top font-medium">{row.title}</td>
             <td class="p-3 text-right align-top tabular-nums">
               {formatAda(row.totalAda)}
@@ -116,7 +97,7 @@
       </tbody>
       <tfoot>
         {#if isIntersect}
-          <tr class="bg-(--mbo-tangy-blue) text-white font-medium">
+          <tr class="bg-(--mbo-tangy-blue) font-medium text-white">
             <td class="p-3 font-medium">Intersect Budget Administration fee</td>
             <td class="p-3 text-right tabular-nums">
               {formatAda(adminFeeAda)}
@@ -126,7 +107,7 @@
             </td>
           </tr>
         {/if}
-        <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
+        <tr class="bg-(--mbo-cardano-blue) font-medium text-white">
           <td class="p-3 font-medium">Total budget</td>
           <td class="p-3 text-right tabular-nums">
             {formatAda(totalDisplayAda)}
@@ -140,13 +121,11 @@
   </div>
 {/if}
 
-<h3>
-  Will any portion of the requested funds be returned to the Cardano Treasury?
-</h3>
+<h3>Will any portion of the requested funds be returned to the Cardano Treasury?</h3>
 
 <p class="text-muted-foreground">
-  Select whether your proposal includes any form of treasury repayment (for
-  example, unused funds, profit-sharing, or conditional returns).
+  Select whether your proposal includes any form of treasury repayment (for example, unused funds,
+  profit-sharing, or conditional returns).
 </p>
 
 <RadioGroup
@@ -167,9 +146,8 @@
   <h3>Under what circumstances would a repayment occur?</h3>
 
   <p class="text-muted-foreground">
-    Describe the specific conditions or triggers that would result in funds
-    being returned to the Treasury (e.g. surplus funds, revenue thresholds,
-    loan, project cancellation).
+    Describe the specific conditions or triggers that would result in funds being returned to the
+    Treasury (e.g. surplus funds, revenue thresholds, loan, project cancellation).
   </p>
 
   <Textarea
@@ -185,15 +163,11 @@
   />
 {/if}
 
-<h3>
-  Have you previously received funding from Cardano or related ecosystem
-  programs?
-</h3>
+<h3>Have you previously received funding from Cardano or related ecosystem programs?</h3>
 
 <p class="text-muted-foreground">
-  List any prior funding received from Catalyst, Treasury withdrawals, Intersect
-  programs, or other Cardano ecosystem grants. If not applicable, you may enter
-  “N/A”.
+  List any prior funding received from Catalyst, Treasury withdrawals, Intersect programs, or other
+  Cardano ecosystem grants. If not applicable, you may enter “N/A”.
 </p>
 
 <Textarea

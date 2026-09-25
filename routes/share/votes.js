@@ -55,9 +55,7 @@ function pickCcDescription(proposal) {
 }
 
 function buildMeta(vote, proposal) {
-  const proposalTitle = String(
-    proposal?.title ?? proposal?.name ?? "Untitled Proposal",
-  ).trim();
+  const proposalTitle = String(proposal?.title ?? proposal?.name ?? "Untitled Proposal").trim();
   const withPrefix = (prefix, value) => {
     const clean = String(value ?? "").trim();
     return clean ? `${prefix} - ${clean}` : prefix;

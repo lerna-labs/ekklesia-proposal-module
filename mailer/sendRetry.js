@@ -18,8 +18,7 @@ export function isRetryableSendError(err) {
   const status =
     /** @type {{ statusCode?: number; response?: { status?: number }; code?: string | number }} */ (
       err
-    ).statusCode ??
-    /** @type {{ response?: { status?: number } }} */ (err).response?.status;
+    ).statusCode ?? /** @type {{ response?: { status?: number } }} */ (err).response?.status;
 
   if (status === 429 || status === 503) return true;
   if (
@@ -32,8 +31,7 @@ export function isRetryableSendError(err) {
   }
 
   const code = /** @type {{ code?: string }} */ (err).code;
-  if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND")
-    return true;
+  if (code === "ECONNRESET" || code === "ETIMEDOUT" || code === "ENOTFOUND") return true;
   if (
     msg.includes("429") ||
     msg.includes("ratelimit") ||
@@ -71,10 +69,7 @@ export async function sendWithRetry(operation) {
         throw err;
       }
       const cap = 30_000;
-      const exp = Math.min(
-        cap,
-        baseMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 250),
-      );
+      const exp = Math.min(cap, baseMs * 2 ** (attempt - 1) + Math.floor(Math.random() * 250));
       await sleep(exp);
     }
   }

@@ -6,11 +6,23 @@
   import FormTrackOrganisation from "./FormTrackOrganisation.svelte";
   import FormTrackConsortium from "./FormTrackConsortium.svelte";
   import FormControls from "$lib/components/form/FormControls.svelte";
-  import { getDefaultConsortiumMember, normalizeConsortiumMember } from "./consortiumMemberUtils.js";
+  import {
+    getDefaultConsortiumMember,
+    normalizeConsortiumMember,
+  } from "./consortiumMemberUtils.js";
 
-  let { vote, proposal, onSave, validationErrors = $bindable(null), formRef = $bindable(), onCancel } = $props();
+  let {
+    vote,
+    proposal,
+    onSave,
+    validationErrors = $bindable(null),
+    formRef = $bindable(),
+    onCancel,
+  } = $props();
 
-  const formTitle = $derived(proposal?._id ? "Edit Candidate Application" : "New Candidate Application");
+  const formTitle = $derived(
+    proposal?._id ? "Edit Candidate Application" : "New Candidate Application",
+  );
   const showDisclaimerModal = $derived(vote?.form === "ccVote2026" && !proposal?._id);
   let disclaimerAcknowledged = $state(false);
   let openDisclaimerModal = $state(false);
@@ -169,8 +181,10 @@
     };
     formData.metaData.declarationAgreement.accuracyPublicVisibilityConsent =
       daIn?.accuracyPublicVisibilityConsent === true;
-    formData.metaData.declarationAgreement.termsAndConditionsAgreement = daIn?.termsAndConditionsAgreement === true;
-    formData.metaData.declarationAgreement.memberIdentityVouching = daIn?.memberIdentityVouching === true;
+    formData.metaData.declarationAgreement.termsAndConditionsAgreement =
+      daIn?.termsAndConditionsAgreement === true;
+    formData.metaData.declarationAgreement.memberIdentityVouching =
+      daIn?.memberIdentityVouching === true;
     syncProposalTitleFromTrackName();
     queueMicrotask(() => formControlsRef?.resetDirtyBaseline?.());
   });
@@ -201,7 +215,9 @@
     if (typeof v === "string") return v.trim().length > 0;
     if (Array.isArray(v)) return v.some((item) => metaSubtreeHasMeaningfulValues(item));
     if (typeof v === "object") {
-      return Object.values(/** @type {Record<string, unknown>} */ (v)).some((x) => metaSubtreeHasMeaningfulValues(x));
+      return Object.values(/** @type {Record<string, unknown>} */ (v)).some((x) =>
+        metaSubtreeHasMeaningfulValues(x),
+      );
     }
     return false;
   }
@@ -238,12 +254,12 @@
     onCancel={() => onCancel?.()}
   />
 {:else}
-  <div class="container mx-auto max-w-4xl py-8 px-4 pb-0">
+  <div class="container mx-auto max-w-4xl px-4 py-8 pb-0">
     <h1 class="mb-4">{formTitle}</h1>
   </div>
 
   <form onsubmit={handleSubmit} class="flex flex-col" autocomplete="off">
-    <div class="max-w-4xl mx-auto w-full space-y-10 pb-8">
+    <div class="mx-auto w-full max-w-4xl space-y-10 pb-8">
       <div class="px-4">
         <CcVoteTrackSelector
           bind:track={formData.metaData.track}
@@ -263,7 +279,14 @@
     </div>
 
     {#if formData.metaData.track}
-      <FormControls bind:this={formControlsRef} {formData} {getPayload} {onSave} {proposal} {vote} />
+      <FormControls
+        bind:this={formControlsRef}
+        {formData}
+        {getPayload}
+        {onSave}
+        {proposal}
+        {vote}
+      />
     {/if}
   </form>
 {/if}

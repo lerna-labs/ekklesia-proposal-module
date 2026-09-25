@@ -12,7 +12,9 @@ export function clearPreviewStorage() {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(PREVIEW_STORAGE_KEY);
-  } catch (_) {}
+  } catch (_) {
+    // ignore localStorage errors (private mode / quota)
+  }
 }
 
 /**
@@ -23,11 +25,10 @@ export function clearPreviewStorage() {
 export function writePreviewPayload(proposalId, proposal) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(
-      PREVIEW_STORAGE_KEY,
-      JSON.stringify({ proposalId, proposal }),
-    );
-  } catch (_) {}
+    window.localStorage.setItem(PREVIEW_STORAGE_KEY, JSON.stringify({ proposalId, proposal }));
+  } catch (_) {
+    // ignore localStorage errors (private mode / quota)
+  }
 }
 
 /**

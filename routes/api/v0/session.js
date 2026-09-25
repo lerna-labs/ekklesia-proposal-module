@@ -12,10 +12,7 @@ import jwt from "jsonwebtoken";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration.js";
 import { generateNonce } from "@meshsdk/core";
-import {
-  verifySignature,
-  isPartyToScript,
-} from "@lerna-labs/ekklesia-helpers/crypto";
+import { verifySignature, isPartyToScript } from "@lerna-labs/ekklesia-helpers/crypto";
 import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import { validateDrep, fetchName } from "@lerna-labs/ekklesia-helpers/cardano";
 import {
@@ -51,16 +48,24 @@ const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 function computeExpiryDate(expiresIn) {
   if (typeof expiresIn === "string") {
     if (expiresIn.endsWith("d")) {
-      return dayjs().add(parseInt(expiresIn.slice(0, -1)), "day").toDate();
+      return dayjs()
+        .add(parseInt(expiresIn.slice(0, -1)), "day")
+        .toDate();
     }
     if (expiresIn.endsWith("h")) {
-      return dayjs().add(parseInt(expiresIn.slice(0, -1)), "hour").toDate();
+      return dayjs()
+        .add(parseInt(expiresIn.slice(0, -1)), "hour")
+        .toDate();
     }
     if (expiresIn.endsWith("m")) {
-      return dayjs().add(parseInt(expiresIn.slice(0, -1)), "minute").toDate();
+      return dayjs()
+        .add(parseInt(expiresIn.slice(0, -1)), "minute")
+        .toDate();
     }
     if (expiresIn.endsWith("s")) {
-      return dayjs().add(parseInt(expiresIn.slice(0, -1)), "second").toDate();
+      return dayjs()
+        .add(parseInt(expiresIn.slice(0, -1)), "second")
+        .toDate();
     }
     return dayjs().add(parseInt(expiresIn), "second").toDate();
   }
@@ -85,16 +90,13 @@ async function consumeNonce(userId, nonceExpiryTime) {
       createdAt: { $gte: nonceExpiryTime },
     },
     { $set: { nonce: null } },
-    { sort: { createdAt: -1 }, returnDocument: "before" }
+    { sort: { createdAt: -1 }, returnDocument: "before" },
   );
   return nonceData;
 }
 
 async function clearNoncesForUser(userId) {
-  await Session.updateMany(
-    { userId, nonce: { $ne: null } },
-    { $set: { nonce: null } }
-  );
+  await Session.updateMany({ userId, nonce: { $ne: null } }, { $set: { nonce: null } });
   const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
   await Session.deleteMany({
     userId,
@@ -150,9 +152,7 @@ router.get("/", getSessionLimiter, isAuthenticated, async (req, res) => {
   let adminVoteIds = [];
   try {
     const userIdStr = String(userId).trim();
-    const voteDocs = await Vote.find({ admins: userIdStr })
-      .select("_id")
-      .lean();
+    const voteDocs = await Vote.find({ admins: userIdStr }).select("_id").lean();
     adminVoteIds = voteDocs.map((v) => String(v._id));
   } catch (err) {
     console.error("Error fetching admin votes for session:", err);
@@ -251,8 +251,7 @@ router.post("/", nonceRequestLimiter, validateSessionRequest, async (req, res) =
   });
 });
 
-const AUTH_ERROR_MESSAGE =
-  "Authentication failed. Please request a new nonce and try again.";
+const AUTH_ERROR_MESSAGE = "Authentication failed. Please request a new nonce and try again.";
 
 /**
  * @route PUT /api/v0/session
@@ -298,11 +297,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
     // Membership-only by design (F-002): eligible key in script → session OK.
     // Does not enforce native-script threshold/timelock. See system-architecture §8.1.
-    const isParty = await isPartyToScript(
-      nonceData.nonce,
-      validatedScriptAddress,
-      signature
-    );
+    const isParty = await isPartyToScript(nonceData.nonce, validatedScriptAddress, signature);
     if (!isParty || isParty.error) {
       console.error("MS: isPartyToScript failed", signerAddress, validatedScriptAddress);
       return res.status(400).json({
@@ -327,7 +322,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       token = jwt.sign(
         { userId: validatedScriptAddress, signType, multiSig: true, sv },
         process.env.JWT_SECRET,
-        { expiresIn: JWT_MAX_AGE }
+        { expiresIn: JWT_MAX_AGE },
       );
     } catch (error) {
       console.error("Error creating JWT token:", error);
@@ -376,11 +371,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
 
   let signatureVerification;
   try {
-    signatureVerification = await verifySignature(
-      nonceData.nonce,
-      signerAddress,
-      signature
-    );
+    signatureVerification = await verifySignature(nonceData.nonce, signerAddress, signature);
   } catch (error) {
     console.error("Signature verification error", error);
     return res.status(400).json({ status: "error", message: AUTH_ERROR_MESSAGE });
@@ -402,11 +393,9 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
   let token;
   try {
     const sv = await getSessionVersion(addressBech32);
-    token = jwt.sign(
-      { userId: addressBech32, signType, sv },
-      process.env.JWT_SECRET,
-      { expiresIn: JWT_MAX_AGE }
-    );
+    token = jwt.sign({ userId: addressBech32, signType, sv }, process.env.JWT_SECRET, {
+      expiresIn: JWT_MAX_AGE,
+    });
   } catch (error) {
     console.error("Error creating JWT token:", error);
     return res.status(500).json({
@@ -425,7 +414,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
   let userName;
   try {
     userName = await fetchName(addressBech32);
-    if (!userName) userName = '';
+    if (!userName) userName = "";
   } catch (error) {
     console.error("Error fetching user name:", error);
   }
@@ -433,7 +422,7 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
     await User.findOneAndUpdate(
       { _id: addressBech32 },
       { $set: { name: userName, lastLogin: new Date() } },
-      { upsert: true }
+      { upsert: true },
     );
   } catch (error) {
     console.error("Error upserting user:", error);
@@ -461,7 +450,11 @@ router.delete("/", deleteSessionLimiter, isAuthenticated, async (req, res) => {
   const { userId } = req;
 
   try {
-    await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+    const result = await User.updateOne({ _id: userId }, { $inc: { sessionVersion: 1 } });
+    if (result.matchedCount === 0) {
+      // Should be unreachable once verifyToken rejects missing users; still clear cookie.
+      console.warn("Logout sessionVersion bump matched no user:", userId);
+    }
   } catch (error) {
     console.error("Error incrementing sessionVersion on logout:", error);
     return res.status(500).json({

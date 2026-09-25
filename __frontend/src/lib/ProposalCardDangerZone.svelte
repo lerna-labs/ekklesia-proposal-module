@@ -23,12 +23,10 @@
   let withdrawOpen = $state(false);
 </script>
 
-<Card.Root class="w-full border-2 border-destructive rounded-xl p-4 gap-0">
+<Card.Root class="border-destructive w-full gap-0 rounded-xl border-2 p-4">
   <Card.Header class="p-0 pb-2">
     <Card.Title class="text-sm font-semibold">{title}</Card.Title>
-    <Card.Description
-      class="text-sm leading-relaxed text-muted-foreground mt-0.5 mb-2"
-    >
+    <Card.Description class="text-muted-foreground mt-0.5 mb-2 text-sm leading-relaxed">
       {descriptionText}
     </Card.Description>
   </Card.Header>
@@ -36,12 +34,12 @@
     <Button
       variant="destructive"
       size="sm"
-      class="text-xs bg-destructive text-white hover:bg-destructive/90 px-3"
+      class="bg-destructive hover:bg-destructive/90 px-3 text-xs text-white"
       aria-label="Withdraw proposal"
       title="Withdraw proposal"
       onclick={() => (withdrawOpen = true)}
     >
-      <Trash2Icon class="size-4 mr-1" />
+      <Trash2Icon class="mr-1 size-4" />
       Withdraw Proposal
     </Button>
   </Card.Content>

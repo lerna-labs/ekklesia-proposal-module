@@ -35,10 +35,7 @@ export function initializeConsole() {
 
   // Override console.error
   console.error = (...args) => {
-    originalConsoleError(
-      colors.red + colors.bright + "ERROR:" + colors.reset,
-      ...args
-    );
+    originalConsoleError(colors.red + colors.bright + "ERROR:" + colors.reset, ...args);
   };
 
   // Override console.warn

@@ -46,28 +46,18 @@ export function instantEventFixture(type, extra = {}) {
   const base = { timestamp: STAMP, ...extra };
   switch (type) {
     case "submission_confirmed":
-      return fixtureSingleVoteSingleProposal(
-        "Alpha Vote",
-        "alpha",
-        "Proposal Alpha",
-        "p-alpha",
-        [{ type: "submission_confirmed", ...base }],
-      );
+      return fixtureSingleVoteSingleProposal("Alpha Vote", "alpha", "Proposal Alpha", "p-alpha", [
+        { type: "submission_confirmed", ...base },
+      ]);
     case "proposal_withdrawn":
-      return fixtureSingleVoteSingleProposal(
-        "Alpha Vote",
-        "alpha",
-        "Proposal Alpha",
-        "p-alpha",
-        [
-          {
-            type: "proposal_withdrawn",
-            reason: "Policy breach",
-            comment: "Admin withdrawal note for tests.",
-            ...base,
-          },
-        ],
-      );
+      return fixtureSingleVoteSingleProposal("Alpha Vote", "alpha", "Proposal Alpha", "p-alpha", [
+        {
+          type: "proposal_withdrawn",
+          reason: "Policy breach",
+          comment: "Admin withdrawal note for tests.",
+          ...base,
+        },
+      ]);
     case "voting_opened":
       return {
         period: "24h",

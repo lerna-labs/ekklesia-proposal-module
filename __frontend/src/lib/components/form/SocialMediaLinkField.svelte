@@ -47,8 +47,8 @@
 
 <Field.Field class="gap-2 {className}">
   {#if showLabelRow}
-    <div class="flex items-center gap-1 w-full">
-      <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+    <div class="flex w-full items-center gap-1">
+      <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
         {label}
         {#if required}
           <span class="text-(--mbo-electric-blue)">*</span>
@@ -60,9 +60,9 @@
       {#if descriptionProp}
         <ToolTip content={descriptionProp} fieldLabel={label} />
       {/if}
-      <span class="flex-1 min-w-0" aria-hidden="true"></span>
+      <span class="min-w-0 flex-1" aria-hidden="true"></span>
       {#if maxLength != null && variant === "username"}
-        <span class="text-xs text-muted-foreground shrink-0">
+        <span class="text-muted-foreground shrink-0 text-xs">
           {value?.length ?? 0}/{maxLength}
         </span>
       {/if}
@@ -70,11 +70,11 @@
   {/if}
 
   <div
-    class="flex min-h-9 w-full rounded-md border border-input bg-white shadow-xs overflow-hidden aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px]"
+    class="border-input aria-invalid:border-destructive aria-invalid:ring-destructive/20 flex min-h-9 w-full overflow-hidden rounded-md border bg-white shadow-xs aria-invalid:ring-[3px]"
     aria-invalid={displayError ? true : false}
   >
     <div
-      class="flex items-center justify-center px-2.5 border-r border-input bg-muted shrink-0 text-muted-foreground"
+      class="border-input bg-muted text-muted-foreground flex shrink-0 items-center justify-center border-r px-2.5"
       aria-hidden="true"
     >
       {#if variant === "website"}
@@ -85,7 +85,7 @@
     </div>
     {#if variant === "username" && urlPrefix}
       <span
-        class="flex items-center px-2 text-sm text-muted-foreground border-r border-input bg-muted shrink-0 select-none whitespace-nowrap"
+        class="text-muted-foreground border-input bg-muted flex shrink-0 items-center border-r px-2 text-sm whitespace-nowrap select-none"
         >{urlPrefix}</span
       >
     {/if}
@@ -98,7 +98,7 @@
       maxlength={maxLength}
       {onblur}
       aria-invalid={displayError ? true : false}
-      class="min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 h-9 text-base md:text-sm bg-transparent px-3 py-1 aria-invalid:border-0"
+      class="h-9 min-w-0 flex-1 rounded-none border-0 bg-transparent px-3 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 aria-invalid:border-0 md:text-sm"
     />
   </div>
   {#if displayError}

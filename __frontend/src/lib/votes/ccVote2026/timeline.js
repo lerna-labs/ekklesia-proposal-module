@@ -26,6 +26,5 @@ export const budgetPhases = [
   {
     title: "Update Committee governance action — Epoch 648",
     start: "2026-07-28T21:45:00.000Z",
-
   },
 ];

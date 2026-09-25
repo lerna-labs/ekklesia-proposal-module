@@ -40,14 +40,16 @@ const budgetRowInputSchema = z.object({
     error: "Cost category is required",
   }),
   name: z.string().min(1, "Item name is required").max(100),
-  description: z.string().min(1, "Item description is required").max(1000, "Item description must be at most 1000 characters"),
+  description: z
+    .string()
+    .min(1, "Item description is required")
+    .max(1000, "Item description must be at most 1000 characters"),
   quantity: z.coerce
     .number({ invalid_type_error: "Quantity must be a number" })
     .refine((v) => v > 0, { message: "Quantity must be greater than 0" })
-    .refine(
-      (v) => v === Math.round(v * 100) / 100,
-      { message: "Quantity must have at most 2 decimal places" },
-    ),
+    .refine((v) => v === Math.round(v * 100) / 100, {
+      message: "Quantity must have at most 2 decimal places",
+    }),
   unitPrice: z.coerce
     .number({ invalid_type_error: "Unit cost must be a number" })
     .min(0.001, "Unit cost in ADA is required and must be greater than 0"),
@@ -62,10 +64,12 @@ const milestoneSchema = z.object({
   name: z.string().min(1, "Milestone name is required").max(100),
   deliverables: z.string().min(1, "Deliverables are required").max(4000),
   acceptanceCriteria: z.string().min(1, "Acceptance criteria are required").max(4000),
-  duration: z
-    .coerce.number({
+  duration: z.coerce
+    .number({
       error: (iss) =>
-        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
+        iss.code === "invalid_type" ||
+        iss.code === "invalid_literal" ||
+        String(iss.code).includes("number")
           ? "Duration must be a number"
           : undefined,
     })
@@ -151,7 +155,12 @@ const proposerDetailsSchema = z.object({
         return;
       }
       if (val.length > 254) {
-        ctx.addIssue({ code: z.ZodIssueCode.too_big, maximum: 254, type: "string", message: "Email must be at most 254 characters" });
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_big,
+          maximum: 254,
+          type: "string",
+          message: "Email must be at most 254 characters",
+        });
         return;
       }
       const emailSchema = z.string().email("Enter a valid email");
@@ -168,10 +177,9 @@ const proposalDetailsSchema = z.object({
   conversionRate: z.coerce
     .number({ invalid_type_error: "Enter a valid number" })
     .refine((v) => v > 0, { message: "Conversion rate must be a positive number" })
-    .refine(
-      (v) => v === Math.round(v * 100) / 100,
-      { message: "Conversion rate must have at most 2 decimal places" },
-    ),
+    .refine((v) => v === Math.round(v * 100) / 100, {
+      message: "Conversion rate must have at most 2 decimal places",
+    }),
   workPackages: z
     .array(workPackageSchema)
     .min(1, "At least one work package is required")
@@ -180,8 +188,12 @@ const proposalDetailsSchema = z.object({
 });
 
 const legalDeclarationsSchema = z.object({
-  authorizationEntity: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
-  authorizationAttestation: z.boolean().refine((v) => v === true, { message: "You must confirm authorization." }),
+  authorizationEntity: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must confirm authorization." }),
+  authorizationAttestation: z
+    .boolean()
+    .refine((v) => v === true, { message: "You must confirm authorization." }),
   submitterName: z.string().min(1, "Name is required").max(100),
   submitterRole: z.string().min(1, "Role is required").max(100),
   submitterEmail: z
@@ -208,17 +220,11 @@ const strategyFrameworkSchema = z.object({
       z
         .string()
         .length(24, "Please choose at least one pillar")
-        .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId")
+        .regex(/^[a-fA-F0-9]{24}$/, "Must be a valid MongoDB ObjectId"),
     )
     .min(1, "Please choose at least one pillar"),
-  pillarRationale: z
-    .string()
-    .min(1, "Rationale for your selection is required")
-    .max(10000),
-  kpiAlignment: z
-    .string()
-    .min(1, "Alignment to KPIs is required")
-    .max(10000),
+  pillarRationale: z.string().min(1, "Rationale for your selection is required").max(10000),
+  kpiAlignment: z.string().min(1, "Alignment to KPIs is required").max(10000),
 });
 
 /** Admin section: contracting party (company or individual), contact, signatory, KYC. */
@@ -254,181 +260,289 @@ const kycInfoSchema = z.object({
   email: z.string().max(254).optional().default(""),
 });
 
-const metaDataSchema = z.object({
-  trackRecord: z.union([z.literal(""), z.string().min(1).max(5000)]).optional().default(""),
-  estimatedDuration: z
-    .coerce.number({
-      error: (iss) =>
-        iss.code === "invalid_type" || iss.code === "invalid_literal" || String(iss.code).includes("number")
-          ? "Estimated duration must be a number"
-          : undefined,
-    })
-    .min(1, "Estimated duration is required and must be greater than 0").max(60, "Estimated duration must be less than 60 months"),
-  strategyFramework: strategyFrameworkSchema,
-  proposalDetails: proposalDetailsSchema.optional().default({ conversionRate: "", workPackages: [] }),
-  proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
-  /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
-  supportingInfoLinks: z.array(linkSchema).optional().default([]),
-  /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
-  treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
-    if (val === "" || val === undefined) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Treasury repayment is required" });
-      return;
+const metaDataSchema = z
+  .object({
+    trackRecord: z
+      .union([z.literal(""), z.string().min(1).max(5000)])
+      .optional()
+      .default(""),
+    estimatedDuration: z.coerce
+      .number({
+        error: (iss) =>
+          iss.code === "invalid_type" ||
+          iss.code === "invalid_literal" ||
+          String(iss.code).includes("number")
+            ? "Estimated duration must be a number"
+            : undefined,
+      })
+      .min(1, "Estimated duration is required and must be greater than 0")
+      .max(60, "Estimated duration must be less than 60 months"),
+    strategyFramework: strategyFrameworkSchema,
+    proposalDetails: proposalDetailsSchema
+      .optional()
+      .default({ conversionRate: "", workPackages: [] }),
+    proposerDetails: proposerDetailsSchema.optional().default({ name: "", email: "", links: [] }),
+    /** Other Info section (FormAdditionalInfo): supporting links only. Initiative type and proposal type are per work package. */
+    supportingInfoLinks: z.array(linkSchema).optional().default([]),
+    /** Budget Summary section (FormBudgetSummary): treasury repayment, circumstances, prior funding. */
+    treasuryRepayment: z.union([z.string(), z.undefined()]).superRefine((val, ctx) => {
+      if (val === "" || val === undefined) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Treasury repayment is required" });
+        return;
+      }
+      if (val !== "Yes" && val !== "No") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Treasury repayment must be Yes or No",
+        });
+      }
+    }),
+    treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
+    priorFunding: z.string().min(1, "Prior funding is required").max(10000),
+    /** Total budget (ADA); must equal sum of work package budget breakdown rows. Set by frontend. */
+    totalBudget: z.coerce
+      .number({ invalid_type_error: "Total budget must be a number" })
+      .min(0, "Total budget must be ≥ 0"),
+    /** Treasury Donation (FormTreasuryDonation): verification hash and confirmation. */
+    treasuryDonationTxHash: z.string().max(64).optional().default(""),
+    treasuryDonationConfirmed: z.boolean().optional().default(false),
+    /** Budget Admin: independent audits text (FormBudgetAdmin). */
+    independentAudits: z.string().max(1000).optional().default(""),
+    /** Budget Admin: administrator choice, contracting party, primary contact, signatory, KYC. */
+    administrator: z.string().optional().default(""),
+    intersectAdministratorFeeConsent: z.boolean().optional().default(false),
+    otherAdministrator: z.string().max(4000).optional().default(""),
+    contractingParty: contractingPartySchema.optional().default({}),
+    primaryContact: primaryContactSchema.optional().default({}),
+    signatoryContact: signatoryContactSchema.optional().default({}),
+    kycInfo: kycInfoSchema.optional().default({}),
+    legalDeclarations: legalDeclarationsSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.treasuryRepayment === "Yes") {
+      const circumstances = (data.treasuryRepaymentCircumstances ?? "").trim();
+      if (!circumstances) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["treasuryRepaymentCircumstances"],
+          message: "Repayment circumstances are required when treasury repayment is Yes",
+        });
+      }
     }
-    if (val !== "Yes" && val !== "No") {
+    // Admin section: administrator required first; only validate the rest when administrator is selected
+    const admin = (data.administrator ?? "").trim();
+    if (admin !== "Intersect" && admin !== "Other") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Treasury repayment must be Yes or No",
+        path: ["administrator"],
+        message: "Administrator is required (Intersect or Other)",
       });
+      return; // Do not validate contracting party, contact, signatory, KYC until administrator is selected
     }
-  }),
-  treasuryRepaymentCircumstances: z.string().max(10000).optional().default(""),
-  priorFunding: z.string().min(1, "Prior funding is required").max(10000),
-  /** Total budget (ADA); must equal sum of work package budget breakdown rows. Set by frontend. */
-  totalBudget: z.coerce.number({ invalid_type_error: "Total budget must be a number" }).min(0, "Total budget must be ≥ 0"),
-  /** Treasury Donation (FormTreasuryDonation): verification hash and confirmation. */
-  treasuryDonationTxHash: z.string().max(64).optional().default(""),
-  treasuryDonationConfirmed: z.boolean().optional().default(false),
-  /** Budget Admin: independent audits text (FormBudgetAdmin). */
-  independentAudits: z.string().max(1000).optional().default(""),
-  /** Budget Admin: administrator choice, contracting party, primary contact, signatory, KYC. */
-  administrator: z.string().optional().default(""),
-  intersectAdministratorFeeConsent: z.boolean().optional().default(false),
-  otherAdministrator: z.string().max(4000).optional().default(""),
-  contractingParty: contractingPartySchema.optional().default({}),
-  primaryContact: primaryContactSchema.optional().default({}),
-  signatoryContact: signatoryContactSchema.optional().default({}),
-  kycInfo: kycInfoSchema.optional().default({}),
-  legalDeclarations: legalDeclarationsSchema.optional(),
-}).superRefine((data, ctx) => {
-  if (data.treasuryRepayment === "Yes") {
-    const circumstances = (data.treasuryRepaymentCircumstances ?? "").trim();
-    if (!circumstances) {
+    if (admin === "Intersect" && data.intersectAdministratorFeeConsent !== true) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["treasuryRepaymentCircumstances"],
-        message: "Repayment circumstances are required when treasury repayment is Yes",
+        path: ["intersectAdministratorFeeConsent"],
+        message: "You must agree to the Intersect administration fee",
       });
     }
-  }
-  // Admin section: administrator required first; only validate the rest when administrator is selected
-  const admin = (data.administrator ?? "").trim();
-  if (admin !== "Intersect" && admin !== "Other") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["administrator"],
-      message: "Administrator is required (Intersect or Other)",
-    });
-    return; // Do not validate contracting party, contact, signatory, KYC until administrator is selected
-  }
-  if (admin === "Intersect" && data.intersectAdministratorFeeConsent !== true) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["intersectAdministratorFeeConsent"],
-      message: "You must agree to the Intersect administration fee",
-    });
-  }
-  if (admin === "Other") {
-    const other = (data.otherAdministrator ?? "").trim();
-    if (!other) {
+    if (admin === "Other") {
+      const other = (data.otherAdministrator ?? "").trim();
+      if (!other) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["otherAdministrator"],
+          message: "Other administrator details are required when not selecting Intersect",
+        });
+      }
+      // Other: only contracting party type (company or individual) is required
+      const cpOther = data.contractingParty ?? {};
+      const entityTypeOther = (cpOther.legalEntityType ?? "").trim();
+      if (entityTypeOther !== "company" && entityTypeOther !== "individual") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["contractingParty", "legalEntityType"],
+          message: "Please select Company or Individual",
+        });
+      }
+    }
+    if (admin === "Intersect") {
+      // Intersect: full contracting party, primary contact, signatory, KYC required
+      const cp = data.contractingParty ?? {};
+      const entityType = (cp.legalEntityType ?? "").trim();
+      if (entityType !== "company" && entityType !== "individual") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["contractingParty", "legalEntityType"],
+          message: "Please select Company or Individual",
+        });
+      }
+      if (entityType === "company") {
+        if (!(cp.legalEntityName ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "legalEntityName"],
+            message: "Legal entity name is required",
+          });
+        if (!(cp.legalEntityRegistrationNumber ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "legalEntityRegistrationNumber"],
+            message: "Registration number is required",
+          });
+        if (!(cp.legalEntityCountry ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "legalEntityCountry"],
+            message: "Country of incorporation is required",
+          });
+        if (!(cp.legalEntityAddressLine1 ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "legalEntityAddressLine1"],
+            message: "Registered address line 1 is required",
+          });
+      }
+      if (entityType === "individual") {
+        if (!(cp.govtIssuedIdNumber ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "govtIssuedIdNumber"],
+            message: "Government-issued ID number is required",
+          });
+        if (!(cp.countryOfResidence ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "countryOfResidence"],
+            message: "Country of residence is required",
+          });
+        if (!(cp.residentialAddressLine1 ?? "").trim())
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["contractingParty", "residentialAddressLine1"],
+            message: "Residential address line 1 is required",
+          });
+      }
+      const pc = data.primaryContact ?? {};
+      if (!(pc.name ?? "").trim())
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["primaryContact", "name"],
+          message: "Primary contact name is required",
+        });
+      const pcEmail = (pc.email ?? "").trim();
+      if (!pcEmail)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["primaryContact", "email"],
+          message: "Primary contact email is required",
+        });
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pcEmail))
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["primaryContact", "email"],
+          message: "Enter a valid email",
+        });
+      const sc = data.signatoryContact ?? {};
+      if (!(sc.title ?? "").trim())
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["signatoryContact", "title"],
+          message: "Signatory title is required",
+        });
+      if (!(sc.name ?? "").trim())
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["signatoryContact", "name"],
+          message: "Signatory name is required",
+        });
+      const scEmail = (sc.email ?? "").trim();
+      if (!scEmail)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["signatoryContact", "email"],
+          message: "Signatory email is required",
+        });
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scEmail))
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["signatoryContact", "email"],
+          message: "Enter a valid email",
+        });
+      if (sc.authorization !== true)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["signatoryContact", "authorization"],
+          message: "You must confirm signatory authorization",
+        });
+      const kyc = data.kycInfo ?? {};
+      const kycSubmitted = (kyc.submitted ?? "").trim();
+      if (kycSubmitted !== "Yes" && kycSubmitted !== "No") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["kycInfo", "submitted"],
+          message: "KYC/KYB submission status is required (Yes or No)",
+        });
+      }
+      if (kycSubmitted === "No") {
+        const kycEmail = (kyc.email ?? "").trim();
+        if (!kycEmail)
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["kycInfo", "email"],
+            message: "KYC contact email is required when KYC has not been submitted",
+          });
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail))
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["kycInfo", "email"],
+            message: "Enter a valid email",
+          });
+      }
+    }
+    // Third party assurers (independent audits) required when administrator is selected
+    const independentAuditsVal = (data.independentAudits ?? "").trim();
+    if (!independentAuditsVal) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["otherAdministrator"],
-        message: "Other administrator details are required when not selecting Intersect",
+        path: ["independentAudits"],
+        message: "Third party assurers (independent audits) is required",
       });
     }
-    // Other: only contracting party type (company or individual) is required
-    const cpOther = data.contractingParty ?? {};
-    const entityTypeOther = (cpOther.legalEntityType ?? "").trim();
-    if (entityTypeOther !== "company" && entityTypeOther !== "individual") {
+    // Total budget must equal sum of work package budget rows (whole ADA); when Intersect, sum includes 3% admin fee
+    const workPackages = data.proposalDetails?.workPackages ?? [];
+    let sumAda = 0;
+    for (const pkg of workPackages) {
+      const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
+      for (const row of rows) {
+        const ada = Number(
+          row?.total ??
+            (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN),
+        );
+        if (Number.isFinite(ada)) sumAda += ada;
+      }
+    }
+    const adminForTotal = (data.administrator ?? "").trim();
+    const expectedTotal =
+      adminForTotal === "Intersect" ? Math.round(sumAda * 1.03) : Math.round(sumAda);
+    const totalBudgetRounded =
+      typeof data.totalBudget === "number" && Number.isFinite(data.totalBudget)
+        ? Math.round(data.totalBudget)
+        : data.totalBudget;
+    if (
+      Number.isFinite(totalBudgetRounded) &&
+      Math.abs(totalBudgetRounded - expectedTotal) > 1e-9
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["contractingParty", "legalEntityType"],
-        message: "Please select Company or Individual",
+        path: ["totalBudget"],
+        message:
+          adminForTotal === "Intersect"
+            ? "Total budget must equal the sum of all work package budget line items plus 3% Intersect administration fee."
+            : "Total budget must equal the sum of all work package budget line items",
       });
     }
-  }
-  if (admin === "Intersect") {
-    // Intersect: full contracting party, primary contact, signatory, KYC required
-    const cp = data.contractingParty ?? {};
-    const entityType = (cp.legalEntityType ?? "").trim();
-    if (entityType !== "company" && entityType !== "individual") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["contractingParty", "legalEntityType"],
-        message: "Please select Company or Individual",
-      });
-    }
-    if (entityType === "company") {
-      if (!(cp.legalEntityName ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityName"], message: "Legal entity name is required" });
-      if (!(cp.legalEntityRegistrationNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityRegistrationNumber"], message: "Registration number is required" });
-      if (!(cp.legalEntityCountry ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityCountry"], message: "Country of incorporation is required" });
-      if (!(cp.legalEntityAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "legalEntityAddressLine1"], message: "Registered address line 1 is required" });
-    }
-    if (entityType === "individual") {
-      if (!(cp.govtIssuedIdNumber ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "govtIssuedIdNumber"], message: "Government-issued ID number is required" });
-      if (!(cp.countryOfResidence ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "countryOfResidence"], message: "Country of residence is required" });
-      if (!(cp.residentialAddressLine1 ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["contractingParty", "residentialAddressLine1"], message: "Residential address line 1 is required" });
-    }
-    const pc = data.primaryContact ?? {};
-    if (!(pc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "name"], message: "Primary contact name is required" });
-    const pcEmail = (pc.email ?? "").trim();
-    if (!pcEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Primary contact email is required" });
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pcEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["primaryContact", "email"], message: "Enter a valid email" });
-    const sc = data.signatoryContact ?? {};
-    if (!(sc.title ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "title"], message: "Signatory title is required" });
-    if (!(sc.name ?? "").trim()) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "name"], message: "Signatory name is required" });
-    const scEmail = (sc.email ?? "").trim();
-    if (!scEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Signatory email is required" });
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(scEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "email"], message: "Enter a valid email" });
-    if (sc.authorization !== true) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["signatoryContact", "authorization"], message: "You must confirm signatory authorization" });
-    const kyc = data.kycInfo ?? {};
-    const kycSubmitted = (kyc.submitted ?? "").trim();
-    if (kycSubmitted !== "Yes" && kycSubmitted !== "No") {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "submitted"], message: "KYC/KYB submission status is required (Yes or No)" });
-    }
-    if (kycSubmitted === "No") {
-      const kycEmail = (kyc.email ?? "").trim();
-      if (!kycEmail) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "KYC contact email is required when KYC has not been submitted" });
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kycEmail)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["kycInfo", "email"], message: "Enter a valid email" });
-    }
-  }
-  // Third party assurers (independent audits) required when administrator is selected
-  const independentAuditsVal = (data.independentAudits ?? "").trim();
-  if (!independentAuditsVal) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["independentAudits"],
-      message: "Third party assurers (independent audits) is required",
-    });
-  }
-  // Total budget must equal sum of work package budget rows (whole ADA); when Intersect, sum includes 3% admin fee
-  const workPackages = data.proposalDetails?.workPackages ?? [];
-  let sumAda = 0;
-  for (const pkg of workPackages) {
-    const rows = Array.isArray(pkg?.budgetBreakdown) ? pkg.budgetBreakdown : [];
-    for (const row of rows) {
-      const ada = Number(row?.total ?? (row?.quantity != null && row?.unitPrice != null ? row.quantity * row.unitPrice : NaN));
-      if (Number.isFinite(ada)) sumAda += ada;
-    }
-  }
-  const adminForTotal = (data.administrator ?? "").trim();
-  const expectedTotal = adminForTotal === "Intersect"
-    ? Math.round(sumAda * 1.03)
-    : Math.round(sumAda);
-  const totalBudgetRounded = typeof data.totalBudget === "number" && Number.isFinite(data.totalBudget)
-    ? Math.round(data.totalBudget)
-    : data.totalBudget;
-  if (Number.isFinite(totalBudgetRounded) && Math.abs(totalBudgetRounded - expectedTotal) > 1e-9) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["totalBudget"],
-      message: adminForTotal === "Intersect"
-        ? "Total budget must equal the sum of all work package budget line items plus 3% Intersect administration fee."
-        : "Total budget must equal the sum of all work package budget line items",
-    });
-  }
-});
+  });
 
 const formSchema = z
   .object({

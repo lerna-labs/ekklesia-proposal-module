@@ -121,15 +121,14 @@
 <div class={[className, "gap-2"].filter(Boolean).join(" ")}>
   <Field.Field class="gap-1">
     {#if milestones.length > 0}
-      <ul class="milestone-list-editor-list space-y-2 list-none p-0 m-0 mb-1!">
+      <ul class="milestone-list-editor-list m-0 mb-1! list-none space-y-2 p-0">
         {#each milestones as milestone, index (index)}
           {@const m = normalizeMilestone(milestone)}
           <li>
             <Card.Root class="py-2">
-              <Card.Header class="flex flex-row items-start gap-2 py-0 pl-3 pr-2 text-sm">
-                <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+              <Card.Header class="flex flex-row items-start gap-2 py-0 pr-2 pl-3 text-sm">
                 <div
-                  class="min-w-0 flex-1 min-h-8 flex flex-col justify-center text-left cursor-pointer focus:outline-none"
+                  class="flex min-h-8 min-w-0 flex-1 cursor-pointer flex-col justify-center text-left focus:outline-none"
                   role="button"
                   tabindex="0"
                   title={m.name || "Milestone"}
@@ -150,12 +149,12 @@
                     {/if}
                   </span>
                 </div>
-                <div class="flex flex-row gap-1 shrink-0">
+                <div class="flex shrink-0 flex-row gap-1">
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
-                    class="size-8 text-black cursor-pointer"
+                    class="size-8 cursor-pointer text-black"
                     aria-label="Edit milestone"
                     onclick={() => openDialog(index)}
                   >
@@ -165,7 +164,7 @@
                     type="button"
                     variant="outline"
                     size="icon"
-                    class="size-8 text-black cursor-pointer"
+                    class="size-8 cursor-pointer text-black"
                     aria-label="Remove milestone"
                     onclick={() => requestDelete(index)}
                   >
@@ -184,7 +183,7 @@
         type="button"
         variant="outline"
         size="sm"
-        class="add-item-btn text-xs w-fit cursor-pointer gap-1"
+        class="add-item-btn w-fit cursor-pointer gap-1 text-xs"
         onclick={() => openDialog()}
       >
         <PlusIcon class="size-4" />
@@ -200,8 +199,8 @@
 
 <!-- Add / Edit milestone (AlertDialog: doesn't close without user action) -->
 <AlertDialog.Root bind:open={addDialogOpen}>
-  <AlertDialog.Content class="sm:max-w-xl max-h-[90vh] flex flex-col min-h-0">
-    <AlertDialog.Header class="text-left shrink-0">
+  <AlertDialog.Content class="flex max-h-[90vh] min-h-0 flex-col sm:max-w-xl">
+    <AlertDialog.Header class="shrink-0 text-left">
       <AlertDialog.Title>
         {editingIndex != null ? "Edit Milestone" : "Add Milestone"}
       </AlertDialog.Title>
@@ -211,7 +210,7 @@
           : "Add a milestone with name, deliverables, acceptance criteria, and duration (in weeks)."}
       </AlertDialog.Description>
     </AlertDialog.Header>
-    <div class="grid gap-6 py-4 overflow-y-auto min-h-0 flex-1 px-2">
+    <div class="grid min-h-0 flex-1 gap-6 overflow-y-auto px-2 py-4">
       <div class="flex flex-col gap-3">
         <Input
           id="name"
@@ -274,16 +273,21 @@
       </div>
 
       <div>
-        <p class="text-xs text-muted-foreground">
-          If Intersect is chosen and agrees to act as an Administrator, milestones and payments submitted will be
-          adjusted to a monthly cycle for smart contracting.
+        <p class="text-muted-foreground text-xs">
+          If Intersect is chosen and agrees to act as an Administrator, milestones and payments
+          submitted will be adjusted to a monthly cycle for smart contracting.
         </p>
       </div>
     </div>
-    <AlertDialog.Footer class="flex gap-2 shrink-0 flex-wrap">
+    <AlertDialog.Footer class="flex shrink-0 flex-wrap gap-2">
       {#if editingIndex != null}
-        <Button type="button" variant="destructive" class="mr-auto cursor-pointer" onclick={deleteFromDialog}>
-          <TrashIcon class="size-4 mr-1" />
+        <Button
+          type="button"
+          variant="destructive"
+          class="mr-auto cursor-pointer"
+          onclick={deleteFromDialog}
+        >
+          <TrashIcon class="mr-1 size-4" />
           Delete
         </Button>
       {/if}
@@ -307,7 +311,7 @@
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmDelete}
       >
         Delete

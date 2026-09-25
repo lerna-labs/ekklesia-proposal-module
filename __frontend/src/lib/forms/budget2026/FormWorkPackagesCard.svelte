@@ -49,13 +49,9 @@
   ];
   const hasTopLevelErrors = $derived(
     validationErrors?.properties &&
-      topLevelErrorKeys.some(
-        (key) => (validationErrors.properties[key]?.errors?.length ?? 0) > 0,
-      ),
+      topLevelErrorKeys.some((key) => (validationErrors.properties[key]?.errors?.length ?? 0) > 0),
   );
-  const cardRingClass = $derived(
-    hasTopLevelErrors ? "ring-2 ring-destructive rounded-md" : "",
-  );
+  const cardRingClass = $derived(hasTopLevelErrors ? "ring-2 ring-destructive rounded-md" : "");
 
   let expanded = $state(true);
   let confirmRemoveMilestonesOpen = $state(false);
@@ -67,12 +63,10 @@
   });
 
   const hasMilestonesError = $derived(
-    !noMilestonesBreakdown &&
-      validationErrors?.properties?.milestones?.errors?.length > 0,
+    !noMilestonesBreakdown && validationErrors?.properties?.milestones?.errors?.length > 0,
   );
   const hasMilestoneAlternativeError = $derived(
-    noMilestonesBreakdown &&
-      validationErrors?.properties?.milestoneAlternative?.errors?.length > 0,
+    noMilestonesBreakdown && validationErrors?.properties?.milestoneAlternative?.errors?.length > 0,
   );
   const sectionRingClass = $derived(
     hasMilestonesError || hasMilestoneAlternativeError
@@ -105,9 +99,7 @@
   const hasBudgetBreakdownError = $derived(
     (validationErrors?.properties?.budgetBreakdown?.errors?.length ?? 0) > 0,
   );
-  const budgetBreakdownError = $derived(
-    validationErrors?.properties?.budgetBreakdown?.errors?.[0],
-  );
+  const budgetBreakdownError = $derived(validationErrors?.properties?.budgetBreakdown?.errors?.[0]);
   const budgetSectionRingClass = $derived(
     hasBudgetBreakdownError ? "ring-2 ring-destructive rounded-md p-3" : "",
   );
@@ -151,10 +143,7 @@
   }
 
   $effect(() => {
-    if (
-      noMilestonesBreakdown &&
-      localMilestoneAlternative !== (milestoneAlternative ?? "")
-    ) {
+    if (noMilestonesBreakdown && localMilestoneAlternative !== (milestoneAlternative ?? "")) {
       onMilestoneOptionChange?.({
         noMilestonesBreakdown: true,
         milestoneAlternative: localMilestoneAlternative,
@@ -164,9 +153,9 @@
 </script>
 
 <Card.Root class="py-2 {expanded ? 'pb-0' : 'pb-2'} bg-slate-50 {cardRingClass}">
-  <Card.Header class="flex flex-row items-center gap-1 py-1 pl-4 pr-3 text-sm">
+  <Card.Header class="flex flex-row items-center gap-1 py-1 pr-3 pl-4 text-sm">
     <h3
-      class="work-package-card-title min-w-0 flex-1 m-0 p-0 font-[inherit] font-medium truncate text-left text-lg leading-6 flex items-center gap-2"
+      class="work-package-card-title m-0 flex min-w-0 flex-1 items-center gap-2 truncate p-0 text-left font-[inherit] text-lg leading-6 font-medium"
       title={displayName}
     >
       <BoxIcon class="size-5 shrink-0" />
@@ -176,7 +165,7 @@
       type="button"
       variant="outline"
       size="icon"
-      class="shrink-0 size-8 cursor-pointer"
+      class="size-8 shrink-0 cursor-pointer"
       title={expanded ? "Collapse work package" : "Expand work package"}
       aria-label={expanded ? "Collapse work package" : "Expand work package"}
       onclick={() => (expanded = !expanded)}
@@ -191,7 +180,7 @@
       type="button"
       variant="outline"
       size="icon"
-      class="shrink-0 size-8 cursor-pointer"
+      class="size-8 shrink-0 cursor-pointer"
       title="Remove work package"
       aria-label="Remove work package"
       onclick={onDelete}
@@ -212,20 +201,16 @@
       {/if}
       <section>
         <div class={sectionRingClass}>
-          <h4 class="mb-2">
-            How will this work package be delivered?
-          </h4>
-          <p class="text-sm text-muted-foreground">
-            Break this Work Package into milestones or delivery phases. This
-            helps reviewers understand how progress will be structured and
-            validated, and provides a clear basis for contracting and payment if
-            the proposal is approved.
+          <h4 class="mb-2">How will this work package be delivered?</h4>
+          <p class="text-muted-foreground text-sm">
+            Break this Work Package into milestones or delivery phases. This helps reviewers
+            understand how progress will be structured and validated, and provides a clear basis for
+            contracting and payment if the proposal is approved.
           </p>
 
-          <Field.Field class="gap-2 mb-4">
-            <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_noninteractive_element_interactions -->
+          <Field.Field class="mb-4 gap-2">
             <div
-              class="flex items-start gap-2 cursor-pointer"
+              class="flex cursor-pointer items-start gap-2"
               role="button"
               tabindex="0"
               onclick={(e) => {
@@ -243,11 +228,11 @@
               <Checkbox
                 id="noMilestonesBreakdown"
                 checked={noMilestonesBreakdown}
-                class="shrink-0 mt-0.5 pointer-events-none"
+                class="pointer-events-none mt-0.5 shrink-0"
               />
               <Field.Label
                 for="noMilestonesBreakdown"
-                class="text-sm cursor-pointer mb-0 pb-0 pointer-events-none"
+                class="pointer-events-none mb-0 cursor-pointer pb-0 text-sm"
               >
                 I can't break down my work in Milestones
               </Field.Label>
@@ -275,20 +260,16 @@
           {/if}
         </div>
         {#if milestoneSectionError}
-          <Field.Error class="text-xs mt-3">{milestoneSectionError}</Field.Error
-          >
+          <Field.Error class="mt-3 text-xs">{milestoneSectionError}</Field.Error>
         {/if}
       </section>
 
       <section class="mt-8">
         <div class={budgetSectionRingClass}>
-          <h4 class="mb-2">
-            What's the budget estimated for this Work Package?
-          </h4>
-          <p class="text-sm text-muted-foreground">
-            Breakdown your estimated budget into the appropriate categories.
-            Make sure to provide context so DReps can understand why each item
-            is added and how it is calculated.
+          <h4 class="mb-2">What's the budget estimated for this Work Package?</h4>
+          <p class="text-muted-foreground text-sm">
+            Breakdown your estimated budget into the appropriate categories. Make sure to provide
+            context so DReps can understand why each item is added and how it is calculated.
           </p>
 
           <FormWorkPackagesBudget
@@ -298,7 +279,7 @@
           />
         </div>
         {#if budgetBreakdownError}
-          <Field.Error class="text-xs mt-3">{budgetBreakdownError}</Field.Error>
+          <Field.Error class="mt-3 text-xs">{budgetBreakdownError}</Field.Error>
         {/if}
       </section>
     </Card.Content>
@@ -310,14 +291,14 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Remove milestones?</AlertDialog.Title>
       <AlertDialog.Description>
-        All existing milestones in this work package will be deleted if you
-        proceed. This cannot be undone.
+        All existing milestones in this work package will be deleted if you proceed. This cannot be
+        undone.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmRemoveMilestones}
       >
         Proceed
@@ -331,14 +312,13 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Clear milestone alternative?</AlertDialog.Title>
       <AlertDialog.Description>
-        The rationale and alternative text you entered will be removed if you
-        proceed.
+        The rationale and alternative text you entered will be removed if you proceed.
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer class="flex gap-2">
       <AlertDialog.Cancel class="cursor-pointer">Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
-        class="cursor-pointer bg-destructive text-white hover:bg-destructive/90"
+        class="bg-destructive hover:bg-destructive/90 cursor-pointer text-white"
         onclick={confirmClearAlternative}
       >
         Proceed

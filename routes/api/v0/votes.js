@@ -28,10 +28,7 @@ router.get("/:voteId", async (req, res, next) => {
     const { voteId } = req.params;
 
     // Not an ObjectId candidate: let the slug route handle it.
-    if (
-      !mongoose.Types.ObjectId.isValid(voteId) ||
-      voteId.length !== 24
-    ) {
+    if (!mongoose.Types.ObjectId.isValid(voteId) || voteId.length !== 24) {
       return next();
     }
 
@@ -106,10 +103,7 @@ router.get("/", rejectDuplicateParams("search", "slug"), parsePagination, async 
       }
 
       // Check if search term is a valid MongoDB ObjectId (24 hex characters)
-      if (
-        mongoose.Types.ObjectId.isValid(searchTerm) &&
-        searchTerm.length === 24
-      ) {
+      if (mongoose.Types.ObjectId.isValid(searchTerm) && searchTerm.length === 24) {
         // Search by _id (exact match)
         query._id = new mongoose.Types.ObjectId(searchTerm);
       } else if (searchTerm) {

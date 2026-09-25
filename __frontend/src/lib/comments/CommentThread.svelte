@@ -61,15 +61,13 @@
 {#if repliesByParent[comment._id] && !repliesByParent[comment._id].collapsed}
   {@const replyState = repliesByParent[comment._id]}
   {#if replyState.error}
-    <div
-      class="ml-6 mb-4 pl-4 border-l-2 border-muted text-sm text-destructive"
-    >
+    <div class="border-muted text-destructive mb-4 ml-6 border-l-2 pl-4 text-sm">
       {replyState.error}
     </div>
   {:else if replyState.loading}
     <CommentsReplyLoading loading={replyState.loading} />
   {:else if replyState.data?.length}
-    <div class="ml-6 mb-4 space-y-3">
+    <div class="mb-4 ml-6 space-y-3">
       {#each replyState.data as reply (reply._id)}
         <CommentThread
           comment={reply}

@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import {
     Composer,
     ContentEditable,
@@ -17,10 +16,7 @@
   } from "svelte-lexical";
   import { ListNode, ListItemNode, QuoteNode, LinkNode } from "svelte-lexical";
   import { theme } from "svelte-lexical/dist/themes/default";
-  import {
-    TOGGLE_LINK_COMMAND,
-    $isLinkNode as isLinkNode,
-  } from "@lexical/link";
+  import { TOGGLE_LINK_COMMAND, $isLinkNode as isLinkNode } from "@lexical/link";
   import { $findMatchingParent as findMatchingParent } from "@lexical/utils";
   import {
     $getRoot as getRoot,
@@ -111,11 +107,12 @@
 
     function isValidUrl(url) {
       const result = linkUrl.safeParse(url);
-      if (DEBUG_EDITOR) console.log("[Editor] isValidUrl", {
-        url,
-        valid: result.success,
-        issues: result.success ? null : result.error.issues,
-      });
+      if (DEBUG_EDITOR)
+        console.log("[Editor] isValidUrl", {
+          url,
+          valid: result.success,
+          issues: result.success ? null : result.error.issues,
+        });
       return result.success;
     }
 
@@ -133,9 +130,7 @@
           setLinkEditorInvalid(false);
           return false;
         }
-        const isPopoverOpen = !!document.querySelector(
-          ".link-editor .link-input",
-        );
+        const isPopoverOpen = !!document.querySelector(".link-editor .link-input");
         if (payload === "https://" && !isPopoverOpen) {
           if (DEBUG_EDITOR) console.log("[Editor] passthrough (open popover)", payload);
           setLinkEditorInvalid(false);
@@ -157,9 +152,7 @@
             const sel = getSelection();
             if (!isRangeSelection(sel)) return;
             const node = sel.anchor.getNode();
-            const linkNode = isLinkNode(node)
-              ? node
-              : findMatchingParent(node, isLinkNode);
+            const linkNode = isLinkNode(node) ? node : findMatchingParent(node, isLinkNode);
             if (linkNode) {
               const parent = linkNode.getParent();
               if (parent) {
@@ -214,12 +207,7 @@
     <div class="editor-container">
       <div class="editor-scroller" bind:this={editorScroller}>
         <div class="editor">
-          <ContentEditable
-            {id}
-            ariaLabel={ariaLabel}
-            ariaLabelledBy={ariaLabelledBy}
-            ariaMultiline={true}
-          />
+          <ContentEditable {id} {ariaLabel} {ariaLabelledBy} ariaMultiline={true} />
         </div>
       </div>
       <RichTextPlugin />
@@ -227,7 +215,10 @@
       <ListPlugin />
       <LinkPlugin />
       {#if editorScroller}
-        <CustomLinkEditorPlugin anchorElem={editorScroller} toolbarSlotElem={linkEditorToolbarSlot} />
+        <CustomLinkEditorPlugin
+          anchorElem={editorScroller}
+          toolbarSlotElem={linkEditorToolbarSlot}
+        />
         <PreventLinkNavigationPlugin anchorElem={editorScroller} />
       {/if}
       <MarkdownShortcutPlugin transformers={markdownTransformers} />

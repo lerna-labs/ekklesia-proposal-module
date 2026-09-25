@@ -27,10 +27,7 @@ function runNode(file) {
 
 const entries = await readdir(securityDir);
 const scripts = entries
-  .filter(
-    (name) =>
-      name.endsWith("-guard.js") || name === "atk-route-loader-isolation.js",
-  )
+  .filter((name) => name.endsWith("-guard.js") || name === "atk-route-loader-isolation.js")
   .sort()
   .map((name) => path.join(securityDir, name));
 

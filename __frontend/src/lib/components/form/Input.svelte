@@ -14,7 +14,6 @@
     required = false,
     disabled = false,
     maxLength,
-    minLength,
     type = "text",
     min,
     max,
@@ -26,21 +25,15 @@
   let schemaError = $derived(validationErrors?.properties?.[id]?.errors?.[0]);
   let displayError = $derived(schemaError);
   let currentLength = $derived(value?.length ?? 0);
-  let isOverMaxLength = $derived(
-    maxLength != null && maxLength > 0 && currentLength > maxLength,
-  );
+  let isOverMaxLength = $derived(maxLength != null && maxLength > 0 && currentLength > maxLength);
 </script>
 
 <Field.Field class="gap-2 {className}">
   <div
-    class="flex items-center gap-1 w-full"
-    class:hidden={!label &&
-      !descriptionProp &&
-      !notPublic &&
-      !required &&
-      !maxLength}
+    class="flex w-full items-center gap-1"
+    class:hidden={!label && !descriptionProp && !notPublic && !required && !maxLength}
   >
-    <Field.Label for={id} class="flex gap-0 mb-0 pb-0 text-sm shrink-0 w-fit">
+    <Field.Label for={id} class="mb-0 flex w-fit shrink-0 gap-0 pb-0 text-sm">
       {label}
       {#if required}
         <span class="text-(--mbo-electric-blue)">*</span>
@@ -52,10 +45,10 @@
     {#if descriptionProp}
       <ToolTip content={descriptionProp} fieldLabel={label} />
     {/if}
-    <span class="flex-1 min-w-0" aria-hidden="true"></span>
+    <span class="min-w-0 flex-1" aria-hidden="true"></span>
     {#if maxLength}
       <span
-        class="text-xs shrink-0"
+        class="shrink-0 text-xs"
         class:text-destructive={isOverMaxLength}
         class:text-muted-foreground={!isOverMaxLength}
       >
@@ -75,7 +68,7 @@
     {step}
     {onblur}
     aria-invalid={displayError ? true : false}
-    class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-[3px] bg-white"
+    class="aria-invalid:border-destructive aria-invalid:ring-destructive/20 bg-white aria-invalid:ring-[3px]"
   />
   {#if displayError}
     <Field.Error class="text-xs">{displayError}</Field.Error>

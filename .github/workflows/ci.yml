@@ -15,6 +15,8 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
       - run: npm audit --omit=dev --audit-level=critical
       - run: npm test
 
@@ -32,6 +34,32 @@ jobs:
           cache: npm
           cache-dependency-path: __frontend/package-lock.json
       - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
       - run: npm audit --omit=dev --audit-level=critical
       - run: npm run check
       - run: npm run build
+
+  changelog:
+    # Require a changeset on feature PRs into development. The Release Manager's
+    # own backport PRs (main -> development) carry no changeset and are exempt,
+    # as are Dependabot PRs and anything labelled skip-changelog (docs- or CI-only).
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.base_ref == 'development' &&
+      github.event.pull_request.user.login != 'ekklesia-release-manager[bot]' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require a changeset
+        run: |
+          git fetch origin "${{ github.base_ref }}"
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" -- '.changeset/*.md')
+          if [ -z "$changed" ]; then
+            echo "No changeset found. Run 'npx changeset' to add one, or label this PR 'skip-changelog' if it genuinely doesn't need a changelog entry."
+            exit 1
+          fi

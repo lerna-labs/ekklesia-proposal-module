@@ -5,7 +5,6 @@
   import EyeIcon from "@lucide/svelte/icons/eye";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import { writePreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
   const DEBUG_AUTOSAVE = false;
@@ -27,8 +26,6 @@
     /** When true, auto-save interval is paused (e.g. while legal declarations modal is open). */
     autoSavePaused = false,
   } = $props();
-
-  const previewHref = $derived(proposal?._id && vote?.slug ? `/votes/${vote.slug}/${proposal._id}?preview` : null);
 
   async function onPreviewClick() {
     if (!vote?.slug || !getPayload) return;
@@ -270,25 +267,26 @@
       try {
         const p = JSON.parse(payloadJson);
         writePreviewPayload(proposalId, p);
-      } catch (_) {}
+      } catch (_) {
+        // ignore localStorage / JSON errors (private mode / quota)
+      }
     }, PREVIEW_DEBOUNCE_MS);
     return () => clearTimeout(id);
   });
-
-  function formatLastSaved(ts) {
-    return formatUtcInstant(ts, { hour: "2-digit", minute: "2-digit" });
-  }
 </script>
 
-<section class="bg-(--mbo-orange) w-full sticky bottom-0 shadow-lg z-10 shadow-black/50 py-6" id="controls">
-  <div class="container mx-auto max-w-4xl flex flex-col gap-2 py-2 px-4 pb-0">
+<section
+  class="sticky bottom-0 z-10 w-full bg-(--mbo-orange) py-6 shadow-lg shadow-black/50"
+  id="controls"
+>
+  <div class="container mx-auto flex max-w-4xl flex-col gap-2 px-4 py-2 pb-0">
     <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
       {#if formData.status === "draft"}
-        <div class="flex gap-2 w-full sm:w-auto">
+        <div class="flex w-full gap-2 sm:w-auto">
           <Button
             type="button"
             variant="outline"
-            class="flex-1 min-w-0 cursor-pointer sm:flex-none"
+            class="min-w-0 flex-1 cursor-pointer sm:flex-none"
             onclick={() => saveDraft(true)}
           >
             Save & Exit
@@ -296,18 +294,18 @@
           <Button
             type="button"
             variant="outline"
-            class="flex-1 min-w-0 cursor-pointer sm:flex-none"
+            class="min-w-0 flex-1 cursor-pointer sm:flex-none"
             onclick={() => saveDraft(false)}
           >
             Save
           </Button>
         </div>
       {/if}
-      <div class="flex flex-col gap-2 w-full sm:flex-row sm:ml-auto sm:w-auto">
+      <div class="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row">
         <Button
           type="button"
           variant="outline"
-          class="w-full cursor-pointer bg-white text-black hover:bg-gray-100 border border-gray-300 sm:w-auto inline-flex items-center gap-2"
+          class="inline-flex w-full cursor-pointer items-center gap-2 border border-gray-300 bg-white text-black hover:bg-gray-100 sm:w-auto"
           onclick={onPreviewClick}
         >
           <EyeIcon class="size-4 shrink-0" aria-hidden="true" />
@@ -315,7 +313,7 @@
         </Button>
         <Button
           type="button"
-          class="w-full cursor-pointer sm:w-auto inline-flex items-center justify-center gap-2"
+          class="inline-flex w-full cursor-pointer items-center justify-center gap-2 sm:w-auto"
           disabled={submitInFlight}
           aria-busy={submitInFlight}
           onclick={submitLive}
@@ -330,14 +328,14 @@
       </div>
     </div>
     {#if formData.status === "draft"}
-      <p class="text-xs! text-left text-white mb-0!">
+      <p class="mb-0! text-left text-xs! text-white">
         <strong>Auto-saved</strong>
-         every 2 minutes
+        every 2 minutes
       </p>
     {:else}
-      <p class="text-xs! text-right text-white mb-0!">
+      <p class="mb-0! text-right text-xs! text-white">
         <strong>Auto-save</strong>
-         is disabled for live proposals.
+        is disabled for live proposals.
       </p>
     {/if}
   </div>
@@ -346,8 +344,12 @@
 <AlertDialog.Root bind:open={leaveConfirmOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title class="text-destructive">Are you sure you want to leave this form?</AlertDialog.Title>
-      <AlertDialog.Description>You have unsaved changes. Are you sure you want to leave?</AlertDialog.Description>
+      <AlertDialog.Title class="text-destructive"
+        >Are you sure you want to leave this form?</AlertDialog.Title
+      >
+      <AlertDialog.Description
+        >You have unsaved changes. Are you sure you want to leave?</AlertDialog.Description
+      >
     </AlertDialog.Header>
     <AlertDialog.Footer>
       {#if formData.status === "draft"}

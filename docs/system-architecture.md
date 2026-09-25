@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | System Architecture                                                    |
-| **Version**        | 0.1.7                                                                  |
+| **Version**        | 0.1.8                                                                  |
 | **Created**        | February 19, 2026                                                      |
-| **Last Revised**   | July 23, 2026                                                          |
+| **Last Revised**   | September 7, 2026                                                      |
 | **Companion Doc**  | [API Specification](api-specification.md)                              |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -192,7 +192,10 @@ collections reside in a single database instance.
   `userId` for nonce lookup.
 - `CommentLike`: Unique compound index on `(commentId, userId)`.
 - `Proposal`: Index on `(voteId, status)` for filtered list queries; index on
-  `proposerId` for owner queries.
+  `proposerId` for owner queries; partial unique index on
+  `metaData.treasuryDonationTxHash` (global; excludes `draft` / `archived` and
+  empty hashes) so one treasury donation cannot back multiple live proposals
+  (#418).
 - `Comment`: Index on `(proposalId, parentId, status)` for top-level and reply
   fetches.
 
@@ -524,6 +527,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                         |
 |---------|------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0.1.8   | 2026-09-07 | Document Proposal partial unique index on `metaData.treasuryDonationTxHash` (global; excludes draft/archived) for #418. |
 | 0.1.7   | 2026-07-23 | Align FE stack (shadcn-svelte), routes, `vote.admins` vs session `adminVoteIds`, `MONGODB_*` env, httpOnly session store; withdraw windows; drop Integration Plan ref. |
 | 0.1.6   | 2026-07-17 | Document F-002 as accepted risk: multisig session auth is membership-only by design (§8.1).                                                         |
 | 0.1.5   | 2026-02-20 | Terminology update to rename "Budget" to "Vote" to align with future use cases                                                                      |

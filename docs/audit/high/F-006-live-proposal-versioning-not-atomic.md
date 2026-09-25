@@ -25,4 +25,5 @@ Wrap archive and live update in a MongoDB transaction, or use optimistic locking
 
 ## Current Status
 
-Resolved. Live → live updates archive a snapshot, then apply the live change with `Proposal.findOneAndUpdate` filtered on `_id`, `status: "live"`, and the expected `version`. On CAS miss the orphan archive is deleted and the API returns 409.
+**Resolved.** Live → live updates archive a snapshot, then apply the live change with `Proposal.findOneAndUpdate` filtered on `_id`, `status: "live"`, and the expected `version`. On CAS miss the orphan archive is deleted and the API returns 409. Any exception after the archive is persisted also deletes the orphan before the error propagates.
+

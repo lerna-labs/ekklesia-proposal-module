@@ -20,7 +20,7 @@
 <Field.Field class="gap-2 {className}">
   <div
     class="flex items-start gap-2 rounded-md border transition-[border-color,box-shadow] {schemaError
-      ? 'border-destructive ring-[3px] ring-destructive/20'
+      ? 'border-destructive ring-destructive/20 ring-[3px]'
       : 'border-transparent'}"
     aria-invalid={schemaError ? true : false}
   >
@@ -28,28 +28,19 @@
       {id}
       bind:checked={value}
       aria-invalid={schemaError ? true : false}
-      class="shrink-0 mt-0.5 w-4 h-4 border border-muted-foreground/80 aria-invalid:border-muted-foreground/80 aria-invalid:ring-0"
+      class="border-muted-foreground/80 aria-invalid:border-muted-foreground/80 mt-0.5 h-4 w-4 shrink-0 border aria-invalid:ring-0"
     />
     <div class="min-w-0 flex-1 space-y-1">
-      <div class="flex items-start gap-1 w-full min-w-0">
-        <Field.Label
-          for={id}
-          class="mb-0 pb-0 text-sm cursor-pointer min-w-0 flex-1 block"
-        >
+      <div class="flex w-full min-w-0 items-start gap-1">
+        <Field.Label for={id} class="mb-0 block min-w-0 flex-1 cursor-pointer pb-0 text-sm">
           <span class="inline">{label}</span>
-          {#if required}<span class="text-(--mbo-electric-blue)">
-              *
-            </span>{/if}{#if notPublic}
-            <span class="inline-flex align-middle ml-1">
+          {#if required}<span class="text-(--mbo-electric-blue)"> * </span>{/if}{#if notPublic}
+            <span class="ml-1 inline-flex align-middle">
               <PrivateFieldIndicator />
             </span>{/if}
         </Field.Label>
         {#if descriptionProp}
-          <ToolTip
-            content={descriptionProp}
-            class="shrink-0 mt-0.5"
-            fieldLabel={label}
-          />
+          <ToolTip content={descriptionProp} class="mt-0.5 shrink-0" fieldLabel={label} />
         {/if}
       </div>
     </div>

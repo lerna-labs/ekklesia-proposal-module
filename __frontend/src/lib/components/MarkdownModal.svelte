@@ -22,13 +22,10 @@
       </Dialog.Description>
     </Dialog.Header>
     <div class={contentClass}>
-      <Markdown content={content} />
+      <Markdown {content} />
     </div>
     <Dialog.Footer class="gap-2">
-      <Dialog.Close
-        type="button"
-        class={buttonVariants({ variant: "outline" })}
-      >
+      <Dialog.Close type="button" class={buttonVariants({ variant: "outline" })}>
         Close
       </Dialog.Close>
     </Dialog.Footer>

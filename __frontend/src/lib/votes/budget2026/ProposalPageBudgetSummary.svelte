@@ -5,23 +5,18 @@
   import ItemContainer from "./ItemContainer.svelte";
   import Markdown from "$lib/base/Markdown.svelte";
   import { formatAda, formatUsd } from "$lib/utils.js";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
 
   let { proposal } = $props();
   let expandedPriorFunding = $state(true);
   let expandedTreasuryRepayment = $state(true);
 
-  const treasuryRepayment = $derived(
-    proposal?.metaData?.treasuryRepayment ?? "",
-  );
+  const treasuryRepayment = $derived(proposal?.metaData?.treasuryRepayment ?? "");
   const treasuryRepaymentCircumstances = $derived(
     proposal?.metaData?.treasuryRepaymentCircumstances ?? "",
   );
   const priorFunding = $derived(proposal?.metaData?.priorFunding ?? "");
 
-  const workPackages = $derived(
-    proposal?.metaData?.proposalDetails?.workPackages ?? [],
-  );
+  const workPackages = $derived(proposal?.metaData?.proposalDetails?.workPackages ?? []);
 
   /** Per–work package total ADA from budgetBreakdown. */
   const wpTotals = $derived.by(() => {
@@ -30,8 +25,7 @@
       const rows = Array.isArray(wp?.budgetBreakdown) ? wp.budgetBreakdown : [];
       let total = 0;
       for (const row of rows) {
-        const t =
-          row.total ?? Number(row.quantity || 0) * Number(row.unitPrice || 0);
+        const t = row.total ?? Number(row.quantity || 0) * Number(row.unitPrice || 0);
         if (Number.isFinite(t)) total += t;
       }
       return total;
@@ -75,9 +69,7 @@
         const unitPrice = Number(row?.unitPrice || 0);
         const rawTotal =
           row?.total ??
-          (Number.isFinite(quantity) && Number.isFinite(unitPrice)
-            ? quantity * unitPrice
-            : 0);
+          (Number.isFinite(quantity) && Number.isFinite(unitPrice) ? quantity * unitPrice : 0);
         const totalAda = Number.isFinite(rawTotal) ? rawTotal : 0;
         const totalUsd = rate != null ? totalAda * rate : null;
         return {
@@ -97,24 +89,16 @@
 
   const hasContent = $derived(workPackages.length > 0);
 
-  const grandTotalAda = $derived(
-    wpTotals.reduce((sum, t) => sum + (t ?? 0), 0),
-  );
+  const grandTotalAda = $derived(wpTotals.reduce((sum, t) => sum + (t ?? 0), 0));
   const administrator = $derived(proposal?.metaData?.administrator ?? "");
-  const isIntersect = $derived(
-    administrator === "Intersect" || administrator === "Yes",
-  );
+  const isIntersect = $derived(administrator === "Intersect" || administrator === "Yes");
   const adminFeeAda = $derived(Math.round(grandTotalAda * 0.03));
   const totalWithFeeAda = $derived(Math.round(grandTotalAda * 1.03));
-  const adminFeeUsd = $derived(
-    conversionRateNum != null ? adminFeeAda * conversionRateNum : null,
-  );
+  const adminFeeUsd = $derived(conversionRateNum != null ? adminFeeAda * conversionRateNum : null);
   const totalWithFeeUsd = $derived(
     conversionRateNum != null ? totalWithFeeAda * conversionRateNum : null,
   );
-  const totalDisplayAda = $derived(
-    isIntersect ? totalWithFeeAda : Math.round(grandTotalAda),
-  );
+  const totalDisplayAda = $derived(isIntersect ? totalWithFeeAda : Math.round(grandTotalAda));
   const totalDisplayUsd = $derived(
     isIntersect
       ? totalWithFeeUsd
@@ -125,28 +109,22 @@
 </script>
 
 <section id="budget-summary" class="mt-12">
-  <div class="flex items-center gap-2 flex-wrap mb-4">
+  <div class="mb-4 flex flex-wrap items-center gap-2">
     <h2>Budget Summary</h2>
   </div>
   {#if hasContent}
     <Card.Root class="bg-slate-50 py-0">
       <Card.Content class="p-4">
-        <div class="rounded-md border overflow-x-auto bg-white">
-          <table class="w-full caption-bottom text-sm border-collapse">
+        <div class="overflow-x-auto rounded-md border bg-white">
+          <table class="w-full caption-bottom border-collapse text-sm">
             <thead class="text-xs">
-              <tr
-                class="text-muted-foreground transition-colors hover:bg-muted/50"
-              >
-                <th class="h-9 px-3 text-left align-middle font-medium">
-                  Work Package / Item
-                </th>
-                <th
-                  class="h-9 px-3 text-left align-middle font-medium whitespace-nowrap"
-                >
+              <tr class="text-muted-foreground hover:bg-muted/50 transition-colors">
+                <th class="h-9 px-3 text-left align-middle font-medium"> Work Package / Item </th>
+                <th class="h-9 px-3 text-left align-middle font-medium whitespace-nowrap">
                   Cost Category
                 </th>
                 <th
-                  class="h-9 px-3 text-right align-middle font-medium tabular-nums whitespace-nowrap"
+                  class="h-9 px-3 text-right align-middle font-medium whitespace-nowrap tabular-nums"
                 >
                   Total Cost
                 </th>
@@ -155,28 +133,19 @@
             <tbody>
               {#each summaryRows as row, idx}
                 {@const wp = workPackageBudgetItems[idx]}
-                <tr
-                  class="border-b bg-slate-200 border-t-2 border-t-(--mbo-cardano-blue)"
-                >
+                <tr class="border-t-2 border-b border-t-(--mbo-cardano-blue) bg-slate-200">
                   <td class="p-3 align-top font-medium" colspan="2">
-                    <a
-                      href={`#work-package-${idx + 1}`}
-                      class="underline cursor-pointer"
-                    >
+                    <a href={`#work-package-${idx + 1}`} class="cursor-pointer underline">
                       {row.title}
                     </a>
                   </td>
-                  <td
-                    class="p-3 text-right align-top tabular-nums whitespace-nowrap"
-                  >
+                  <td class="p-3 text-right align-top whitespace-nowrap tabular-nums">
                     <span class="font-medium">
                       {formatAda(row.totalAda)} ADA
                     </span>
                     <br />
-                    <span class="text-xs text-muted-foreground">
-                      {row.totalUsd != null
-                        ? "$" + formatUsd(row.totalUsd)
-                        : "—"} (ADA/USD
+                    <span class="text-muted-foreground text-xs">
+                      {row.totalUsd != null ? "$" + formatUsd(row.totalUsd) : "—"} (ADA/USD
                       {conversionRateNum})
                     </span>
                   </td>
@@ -186,11 +155,9 @@
                     <tr class="border-b last:border-b-0">
                       <td class="px-3 py-2 align-top text-xs">
                         <span class="inline-flex items-start gap-1">
-                          <span
-                            class="w-1 h-1 bg-black shrink-0 mt-1.5 mr-0.5"
-                            aria-hidden="true"
+                          <span class="mt-1.5 mr-0.5 h-1 w-1 shrink-0 bg-black" aria-hidden="true"
                           ></span>
-                          <span class="font-medium leading-snug">
+                          <span class="leading-snug font-medium">
                             {item.name}
                           </span>
                         </span>
@@ -198,15 +165,11 @@
                       <td class="px-3 py-2 align-top text-xs">
                         {item.category}
                       </td>
-                      <td
-                        class="px-3 py-2 text-right align-top tabular-nums text-xs"
-                      >
+                      <td class="px-3 py-2 text-right align-top text-xs tabular-nums">
                         {formatAda(item.totalAda)} ADA
                         <br />
-                        <span class="text-[11px] text-muted-foreground">
-                          {item.totalUsd != null
-                            ? "$" + formatUsd(item.totalUsd)
-                            : "—"}
+                        <span class="text-muted-foreground text-[11px]">
+                          {item.totalUsd != null ? "$" + formatUsd(item.totalUsd) : "—"}
                           (ADA/USD
                           {conversionRateNum})
                         </span>
@@ -219,27 +182,23 @@
             <tfoot>
               {#if isIntersect}
                 <tr
-                  class="bg-[#B5C0FF] text-(--mbo-cardano-blue) font-medium border-t-2 border-t-(--mbo-cardano-blue)"
+                  class="border-t-2 border-t-(--mbo-cardano-blue) bg-[#B5C0FF] font-medium text-(--mbo-cardano-blue)"
                 >
                   <td class="p-3" colspan="3">
                     <div class="flex items-baseline justify-between gap-2">
-                      <span class="font-medium">
-                        Intersect Budget Administration fee
-                      </span>
+                      <span class="font-medium"> Intersect Budget Administration fee </span>
                       <span class="text-right tabular-nums">
                         {formatAda(adminFeeAda)} ADA
                         <br />
                         <span class="text-xs text-(--mbo-cardano-blue)/60">
-                          {adminFeeUsd != null
-                            ? "$" + formatUsd(adminFeeUsd)
-                            : "—"} (ADA/USD {conversionRateNum})
+                          {adminFeeUsd != null ? "$" + formatUsd(adminFeeUsd) : "—"} (ADA/USD {conversionRateNum})
                         </span>
                       </span>
                     </div>
                   </td>
                 </tr>
               {/if}
-              <tr class="bg-(--mbo-cardano-blue) text-white font-medium">
+              <tr class="bg-(--mbo-cardano-blue) font-medium text-white">
                 <td class="p-3" colspan="3">
                   <div class="flex items-baseline justify-between gap-2">
                     <span class="font-medium">Total budget</span>
@@ -247,9 +206,7 @@
                       {formatAda(totalDisplayAda)} ADA
                       <br />
                       <span class="text-xs text-white/50">
-                        {totalDisplayUsd != null
-                          ? "$" + formatUsd(totalDisplayUsd)
-                          : "—"} (ADA/USD {conversionRateNum})
+                        {totalDisplayUsd != null ? "$" + formatUsd(totalDisplayUsd) : "—"} (ADA/USD {conversionRateNum})
                       </span>
                     </span>
                   </div>
@@ -271,32 +228,26 @@
       titleHeadingLevel={3}
     >
       {#snippet title()}
-        Will any portion of the requested funds be returned to the Cardano
-        Treasury?
+        Will any portion of the requested funds be returned to the Cardano Treasury?
       {/snippet}
       {#snippet popover()}
-        If yes: Describe the specific conditions or triggers that would result
-        in funds being returned to the Treasury (e.g. surplus funds, revenue
-        thresholds, loan, project cancellation).
+        If yes: Describe the specific conditions or triggers that would result in funds being
+        returned to the Treasury (e.g. surplus funds, revenue thresholds, loan, project
+        cancellation).
       {/snippet}
       {#if treasuryRepayment === "Yes"}
         <Badge
-          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+          class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white"
         >
           Yes
         </Badge>
 
-        <h4 class="mb-4">
-          Under what circumstances would a repayment occur?
-        </h4>
+        <h4 class="mb-4">Under what circumstances would a repayment occur?</h4>
 
-        <Markdown
-          content={treasuryRepaymentCircumstances.trim() || "—"}
-          class="text-sm"
-        />
+        <Markdown content={treasuryRepaymentCircumstances.trim() || "—"} class="text-sm" />
       {:else}
         <Badge
-          class="shrink-0 font-normal text-xs bg-(--mbo-cardano-blue) text-white border-0 mb-4"
+          class="mb-4 shrink-0 border-0 bg-(--mbo-cardano-blue) text-xs font-normal text-white"
         >
           No
         </Badge>
@@ -313,13 +264,11 @@
       titleHeadingLevel={3}
     >
       {#snippet title()}
-        Have you previously received funding from Cardano or related ecosystem
-        programs?
+        Have you previously received funding from Cardano or related ecosystem programs?
       {/snippet}
       {#snippet popover()}
-        List any prior funding received from Catalyst, Treasury withdrawals,
-        Intersect programs, or other Cardano ecosystem grants. If not
-        applicable, you may enter “N/A”.
+        List any prior funding received from Catalyst, Treasury withdrawals, Intersect programs, or
+        other Cardano ecosystem grants. If not applicable, you may enter “N/A”.
       {/snippet}
       <ItemContainer>
         <div class="text-sm">

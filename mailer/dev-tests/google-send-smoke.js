@@ -11,10 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import {
-  resolveServiceAccountKeyPath,
-  sendViaGoogleWorkspace,
-} from "../googleWorkspaceSend.js";
+import { resolveServiceAccountKeyPath, sendViaGoogleWorkspace } from "../googleWorkspaceSend.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "../..");
@@ -28,9 +25,7 @@ const to =
   process.env.GOOGLE_DEV_TEST_EMAIL?.trim();
 
 if (!to) {
-  console.error(
-    "Pass recipient: node mailer/dev-tests/google-send-smoke.js you@example.com",
-  );
+  console.error("Pass recipient: node mailer/dev-tests/google-send-smoke.js you@example.com");
   console.error("Or set MAILTEST_TO_EMAIL / GOOGLE_DEV_TEST_EMAIL.");
   process.exit(1);
 }

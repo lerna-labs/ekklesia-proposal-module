@@ -4,6 +4,7 @@ const router = Router();
 
 // helper
 import { isDatabaseConnected } from "../helper/dbManager.js";
+import { loadFrontendVersion } from "../helper/frontendVersion.js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs/promises";
@@ -12,7 +13,6 @@ import fs from "fs/promises";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageServerPath = join(__dirname, "../package.json");
-const versionFrontendPath = join(__dirname, "../public/version.json");
 
 /**
  * @route   GET /api/v0/status
@@ -33,15 +33,8 @@ router.get("/", async (req, res) => {
     console.error(`Failed to read package.json: ${error.message}`);
   }
 
-  // get frontend version from package.json
-  let frontendVersion = "unknown";
-  try {
-    const packageData = await fs.readFile(versionFrontendPath, "utf8");
-    const packageJson = JSON.parse(packageData);
-    frontendVersion = packageJson || "unknown";
-  } catch (error) {
-    console.error(`Failed to read frontend/package.json: ${error.message}`);
-  }
+  // get frontend version from public/version.json
+  const frontendVersion = await loadFrontendVersion();
 
   // Format uptime in a human-readable way
   const formatUptime = (seconds) => {
@@ -52,7 +45,6 @@ router.get("/", async (req, res) => {
 
     return `${days}d ${hours}h ${minutes}m ${secs}s`;
   };
-
 
   return res.json({
     status: "operational",
@@ -69,12 +61,8 @@ router.get("/", async (req, res) => {
       nodeVersion: process.version,
       memoryUsage: {
         rss: `${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`,
-        heapTotal: `${Math.round(
-          process.memoryUsage().heapTotal / 1024 / 1024
-        )} MB`,
-        heapUsed: `${Math.round(
-          process.memoryUsage().heapUsed / 1024 / 1024
-        )} MB`,
+        heapTotal: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)} MB`,
+        heapUsed: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`,
       },
     },
     frontend: frontendVersion,

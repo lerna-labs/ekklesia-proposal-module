@@ -11,10 +11,7 @@ import { Country } from "../../../schema/Country.js";
  */
 router.get("/", async (req, res) => {
   try {
-    const countries = await Country.find({})
-      .sort({ name: 1 })
-      .select("name code _id")
-      .lean();
+    const countries = await Country.find({}).sort({ name: 1 }).select("name code _id").lean();
 
     return res.status(200).json({
       data: countries,

@@ -125,7 +125,7 @@
           }
           return false;
         },
-        COMMAND_PRIORITY_HIGH
+        COMMAND_PRIORITY_HIGH,
       ),
       editor.registerUpdateListener(({ editorState }) => {
         if (justClosedByUser) return;
@@ -153,7 +153,7 @@
             lastRect = null;
           }
         });
-      })
+      }),
     );
   });
 
@@ -256,7 +256,6 @@
 </script>
 
 {#if isOpen}
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div
     bind:this={editorRef}
     class="link-editor custom-link-editor"

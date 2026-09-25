@@ -66,7 +66,7 @@
 {#if date}
   <Popover.Root>
     <Popover.Trigger
-      class="inline-block cursor-help border-b border-dotted border-muted-foreground/50 hover:border-muted-foreground bg-transparent p-0 text-left font-inherit text-inherit min-w-0 {className}"
+      class="border-muted-foreground/50 hover:border-muted-foreground font-inherit inline-block min-w-0 cursor-help border-b border-dotted bg-transparent p-0 text-left text-inherit {className}"
     >
       {relative}
     </Popover.Trigger>

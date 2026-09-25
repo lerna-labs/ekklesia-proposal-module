@@ -3,21 +3,15 @@
   /** Pre-submission step: Treasury Donation Verification (content aligned with spec). */
   import Input from "$lib/components/form/Input.svelte";
   import Checkbox from "$lib/components/form/Checkbox.svelte";
-  let {
-    formData = $bindable(),
-    vote,
-    proposal,
-    validationErrors,
-  } = $props();
+  let { formData = $bindable(), proposal, validationErrors } = $props();
 
   /** Errors for this section: metaData.treasuryDonation* so Input/Checkbox can resolve by id. */
   let treasuryDonationErrors = $derived(validationErrors?.properties?.metaData);
 </script>
 
-<p class="text-sm text-muted-foreground mb-4">
-  Provide the transaction hash confirming the required 1000 ADA donation to the
-  Cardano Treasury. This serves as proof of wallet control and proposer
-  commitment.
+<p class="text-muted-foreground mb-4 text-sm">
+  Provide the transaction hash confirming the required 1000 ADA donation to the Cardano Treasury.
+  This serves as proof of wallet control and proposer commitment.
 </p>
 
 <Input

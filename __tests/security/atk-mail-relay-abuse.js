@@ -73,6 +73,8 @@ for (const t of TARGETS) {
   await new Promise((res) => setTimeout(res, 7000));
 }
 
-const successes = results.filter((r) => r.status === 200 && r.body?.emailSendFailed === false).length;
+const successes = results.filter(
+  (r) => r.status === 200 && r.body?.emailSendFailed === false,
+).length;
 console.log(`\n${successes}/${results.length} sends succeeded.`);
 process.exit(successes >= 2 ? 0 : 1);

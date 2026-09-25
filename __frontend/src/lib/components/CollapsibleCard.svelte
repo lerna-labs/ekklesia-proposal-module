@@ -61,15 +61,20 @@
   const titleRowClassStart = $derived(titleEyebrow ? "row-start-2" : "row-start-1");
   const trailingColClass = $derived(titleLeading ? "col-start-3" : "col-start-2");
 
-  const rootPbClass = $derived(expanded ? "pb-0" : denseCollapsed ? denseCollapsedPadding : collapsedPadding);
+  const rootPbClass = $derived(
+    expanded ? "pb-0" : denseCollapsed ? denseCollapsedPadding : collapsedPadding,
+  );
 </script>
 
-<Card.Root class="py-2 gap-0 {rootPbClass} bg-slate-50 rounded-md border {className}" {...restProps}>
+<Card.Root
+  class="gap-0 py-2 {rootPbClass} rounded-md border bg-slate-50 {className}"
+  {...restProps}
+>
   <!-- Override card-header defaults: grid-rows-[auto_auto] + gap-1.5 adds dead space below our single child -->
-  <Card.Header class="grid-rows-1 gap-0 py-1 pl-4 pr-3 text-sm min-w-0">
+  <Card.Header class="min-w-0 grid-rows-1 gap-0 py-1 pr-3 pl-4 text-sm">
     <div class="grid w-full min-w-0 items-start gap-x-2 gap-y-0 {mainRowGridClass}">
       {#if titleEyebrow}
-        <div class="min-w-0 row-start-1 {titleColClass} {titleRowClass} pt-1">
+        <div class="row-start-1 min-w-0 {titleColClass} {titleRowClass} pt-1">
           {@render titleEyebrow?.()}
         </div>
       {/if}
@@ -86,7 +91,7 @@
       {#if titleHeadingTag}
         <svelte:element
           this={titleHeadingTag}
-          class="min-w-0 m-0 p-0 font-[inherit] {titleClass} {titleColClass} {titleRowClassStart}"
+          class="m-0 min-w-0 p-0 font-[inherit] {titleClass} {titleColClass} {titleRowClassStart}"
         >
           <button
             type="button"
@@ -99,7 +104,9 @@
             {#if expanded}
               <span class="block w-full pt-1">{@render title?.()}</span>
             {:else}
-              <span class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1">
+              <span
+                class="block w-full min-w-0 truncate pt-1 *:min-w-0 *:truncate *:overflow-hidden"
+              >
                 {@render title?.()}
               </span>
             {/if}
@@ -108,7 +115,7 @@
       {:else}
         <button
           type="button"
-          class="min-w-0 w-full overflow-hidden text-left focus:outline-none {titleClass} {titleColClass} {titleRowClassStart}"
+          class="w-full min-w-0 overflow-hidden text-left focus:outline-none {titleClass} {titleColClass} {titleRowClassStart}"
           onclick={onToggle}
           aria-expanded={expanded}
           aria-label={ariaLabel}
@@ -117,7 +124,7 @@
           {#if expanded}
             <span class="block w-full pt-1">{@render title?.()}</span>
           {:else}
-            <span class="block w-full min-w-0 truncate *:min-w-0 *:truncate *:overflow-hidden pt-1">
+            <span class="block w-full min-w-0 truncate pt-1 *:min-w-0 *:truncate *:overflow-hidden">
               {@render title?.()}
             </span>
           {/if}
@@ -125,7 +132,9 @@
       {/if}
 
       {#if popover || showButton || trailingExtra}
-        <div class="flex shrink-0 flex-row items-center gap-1 justify-self-end {trailingColClass} {titleRowClassStart}">
+        <div
+          class="flex shrink-0 flex-row items-center gap-1 justify-self-end {trailingColClass} {titleRowClassStart}"
+        >
           {#if popover}
             <div class="flex shrink-0 items-center">
               <Popover.Root>
@@ -173,7 +182,7 @@
     </div>
   </Card.Header>
   {#if expanded}
-    <Card.Content class={cn("mt-2 pb-4 pl-4 pr-3 pt-0", contentClass)}>
+    <Card.Content class={cn("mt-2 pt-0 pr-3 pb-4 pl-4", contentClass)}>
       {@render children?.()}
     </Card.Content>
   {/if}

@@ -30,9 +30,9 @@
         <div class="space-y-1 text-sm">
           {#if wd.category}
             <p class="flex items-center gap-2">
-              <span class="font-medium text-muted-foreground">Reason:</span>
+              <span class="text-muted-foreground font-medium">Reason:</span>
               <span
-                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-black text-white"
+                class="inline-flex items-center rounded-md bg-black px-2 py-0.5 text-xs font-medium text-white"
               >
                 {wd.category}
               </span>
@@ -40,8 +40,8 @@
           {/if}
           {#if wd.comment}
             <div>
-              <span class="font-medium text-muted-foreground">Details:</span>
-              <Markdown content={wd.comment} class="text-sm mt-0.5" />
+              <span class="text-muted-foreground font-medium">Details:</span>
+              <Markdown content={wd.comment} class="mt-0.5 text-sm" />
             </div>
           {/if}
         </div>

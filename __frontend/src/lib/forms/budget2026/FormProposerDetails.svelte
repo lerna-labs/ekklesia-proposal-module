@@ -2,7 +2,7 @@
   /** @see __frontend/docs/budget2026/form-proposer-details.md Version: 1.1.0 */
   import Input from "$lib/components/form/Input.svelte";
   import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
-  let { formData = $bindable(), vote, proposal, validationErrors } = $props();
+  let { formData = $bindable(), validationErrors } = $props();
 
   const proposerErrors = $derived(
     validationErrors?.properties?.metaData?.properties?.proposerDetails,
@@ -20,8 +20,8 @@
 <h3>What's the display name of the proposer?</h3>
 
 <p class="text-muted-foreground">
-  Depending if you are submitting this proposal as an individual or a company,
-  this could either be your name or your company name
+  Depending if you are submitting this proposal as an individual or a company, this could either be
+  your name or your company name
 </p>
 
 <Input

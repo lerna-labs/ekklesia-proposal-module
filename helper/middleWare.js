@@ -2,12 +2,12 @@
 import validator from "validator";
 
 // schema imports
-import {Proposal} from "../schema/Proposal.js";
+import { Proposal } from "../schema/Proposal.js";
 
 // helper imports
-import {verifyToken} from "../helper/verifyToken.js";
+import { verifyToken } from "../helper/verifyToken.js";
 import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
-import {PublicKey} from "@emurgo/cardano-serialization-lib-nodejs";
+import { PublicKey } from "@emurgo/cardano-serialization-lib-nodejs";
 
 /**
  * Middleware to verify user authentication token
@@ -82,8 +82,7 @@ export function parsePagination(req, res, next) {
   if (isNaN(limit) || limit < 1 || limit > 100) {
     return res.status(400).json({
       status: "error",
-      message:
-        "Invalid limit parameter. Must be a positive integer between 1 and 100.",
+      message: "Invalid limit parameter. Must be a positive integer between 1 and 100.",
     });
   }
 
@@ -104,7 +103,6 @@ export async function isAuthenticated(req, res, next) {
       req.signType = userToken.signType;
       req.exp = userToken.exp;
       next();
-
     }
   } catch (error) {
     return res.status(500).json({

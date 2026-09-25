@@ -30,9 +30,9 @@
     if (!isOpen) onClose?.();
   }}
 >
-  <Dialog.Content class="sm:max-w-[425px] max-h-[90dvh] flex flex-col min-h-0">
+  <Dialog.Content class="flex max-h-[90dvh] min-h-0 flex-col sm:max-w-[425px]">
     <form
-      class="flex flex-col min-h-0 flex-1"
+      class="flex min-h-0 flex-1 flex-col"
       onsubmit={(e) => {
         e.preventDefault();
         onSubmit?.();
@@ -41,19 +41,18 @@
       <Dialog.Header class="shrink-0">
         <Dialog.Title>Withdraw Comment</Dialog.Title>
         <Dialog.Description>
-          This will withdraw the comment. The author will see the withdrawal
-          reason.
+          This will withdraw the comment. The author will see the withdrawal reason.
         </Dialog.Description>
       </Dialog.Header>
-      <div class="py-4 space-y-4 overflow-y-auto min-h-0 flex-1">
+      <div class="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
         <Select.Root
           type="single"
           value={category || undefined}
           onValueChange={(v) => (category = v != null ? String(v) : "")}
           required
         >
-          <Select.Trigger class="w-full data-placeholder:text-muted-foreground">
-            <span class="truncate block min-w-0">
+          <Select.Trigger class="data-placeholder:text-muted-foreground w-full">
+            <span class="block min-w-0 truncate">
               {category || "Select reason…"}
             </span>
           </Select.Trigger>
@@ -70,16 +69,11 @@
           placeholder="Additional details…"
         />
         {#if error}
-          <p class="text-sm text-destructive">{error}</p>
+          <p class="text-destructive text-sm">{error}</p>
         {/if}
       </div>
       <Dialog.Footer class="shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onclick={() => onClose?.()}
-        >
+        <Button type="button" variant="outline" size="sm" onclick={() => onClose?.()}>
           Cancel
         </Button>
         <Button type="submit" size="sm" variant="destructive">Withdraw</Button>

@@ -33,7 +33,13 @@ const proposalSchema = new Schema(
       type: {
         category: {
           type: String,
-          enum: ["Inappropriate content", "Spam", "Policy violation", "Duplicate submission", "Other"],
+          enum: [
+            "Inappropriate content",
+            "Spam",
+            "Policy violation",
+            "Duplicate submission",
+            "Other",
+          ],
         },
         userId: String,
         comment: String,
@@ -52,7 +58,7 @@ const proposalSchema = new Schema(
     submittedAt: { type: Date, required: false },
     version: { type: Number, default: 1 },
   },
-  { timestamps: true, versionKey: false }
+  { timestamps: true, versionKey: false },
 );
 
 // List by proposer (dashboard "my proposals")
@@ -69,6 +75,20 @@ proposalSchema.index({ voteId: 1, status: 1, submittedAt: -1 });
 proposalSchema.index({ voteId: 1, status: 1, title: 1 });
 // Sort by updatedAt (timestamps)
 proposalSchema.index({ voteId: 1, status: 1, updatedAt: -1 });
+
+// #418: one non-empty treasury donation hash may back at most one non-draft,
+// non-archived proposal globally (any vote). Drafts may share a hash (#415);
+// archived version snapshots keep the same hash beside the live doc.
+proposalSchema.index(
+  { "metaData.treasuryDonationTxHash": 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $nin: ["draft", "archived"] },
+      "metaData.treasuryDonationTxHash": { $type: "string", $ne: "" },
+    },
+  },
+);
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
 export { Proposal };

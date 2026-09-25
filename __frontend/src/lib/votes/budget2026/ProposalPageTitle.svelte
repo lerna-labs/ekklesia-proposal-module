@@ -15,10 +15,6 @@
 
   let revisionDrawerOpen = $state(false);
 
-  const showVersionBadge = $derived(
-    (proposal?.version != null && proposal.version > 1) ||
-      (Array.isArray(proposal?.versions) && proposal.versions.length > 0),
-  );
   const resolvedCommentCount = $derived.by(() => {
     if (commentCount != null) {
       const fromProp = Number(commentCount);
@@ -42,7 +38,7 @@
   {proposal?.title || proposal?.name || "Untitled Proposal"}
 </h1>
 
-<div class="flex items-center gap-2 flex-wrap">
+<div class="flex flex-wrap items-center gap-2">
   {#if voteNowHref}
     <Button
       href={voteNowHref}
@@ -50,9 +46,9 @@
       rel="noopener noreferrer"
       variant="secondary"
       size="sm"
-      class="text-xs shrink-0 animate-pulse bg-(--mbo-electric-blue) text-white hover:bg-(--mbo-cardano-blue) hover:border-(--mbo-cardano-blue) align-baseline ml-0 -top-1 relative"
+      class="relative -top-1 ml-0 shrink-0 animate-pulse bg-(--mbo-electric-blue) align-baseline text-xs text-white hover:border-(--mbo-cardano-blue) hover:bg-(--mbo-cardano-blue)"
     >
-      <VoteIcon class="size-4 mr-1" aria-hidden="true" />
+      <VoteIcon class="mr-1 size-4" aria-hidden="true" />
       Vote Now!
     </Button>
   {/if}
@@ -65,7 +61,7 @@
       e.stopPropagation();
       revisionDrawerOpen = true;
     }}
-    class="text-xs font-normal shrink-0 align-baseline ml-0 -top-1 relative"
+    class="relative -top-1 ml-0 shrink-0 align-baseline text-xs font-normal"
     aria-label="View revision history"
     title="View revision history"
   >
@@ -76,7 +72,7 @@
       variant="outline"
       size="sm"
       href={commentsHref}
-      class="text-xs font-normal shrink-0 align-baseline ml-0 -top-1 relative"
+      class="relative -top-1 ml-0 shrink-0 align-baseline text-xs font-normal"
       aria-label={commentCount != null
         ? `Jump to comments (${resolvedCommentCount ?? commentCount})`
         : "Jump to comments"}
