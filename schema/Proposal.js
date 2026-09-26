@@ -79,10 +79,7 @@ proposalSchema.index({ voteId: 1, status: 1, updatedAt: -1 });
 // #418: one non-empty treasury donation hash may back at most one non-draft,
 // non-archived proposal globally (any vote). Drafts may share a hash (#415);
 // archived version snapshots keep the same hash beside the live doc.
-// MongoDB's partialFilterExpression only supports $eq, $gt, $gte, $lt, $lte,
-// $exists and $type (no $ne, $nin or $not), so the exclusion is written as the
-// status enum minus draft and archived; keep this list in step with the
-// status enum above.
+// Partial filters reject $ne/$nin/$not, so list the statuses; keep in step with the enum.
 proposalSchema.index(
   { "metaData.treasuryDonationTxHash": 1 },
   {
