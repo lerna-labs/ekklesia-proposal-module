@@ -18,6 +18,7 @@
     "backup": "node backup/backup.js",
     "changeset": "changeset",
     "changeset:version": "changeset version",
+    "changeset:tag": "node scripts/tag-release.mjs",
     "changeset:snapshot": "changeset version --snapshot rc"
   },
   "keywords": [],
