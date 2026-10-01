@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   publish:
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +23,33 @@ jobs:
         with:
           node-version: 24
 
+      - name: Check frontend build variables
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_SERVER_STATUS: ${{ vars.VITE_SERVER_STATUS }}
+          VITE_NETWORK_ID: ${{ vars.VITE_NETWORK_ID }}
+          VITE_WALLETSIGNER_USER_TYPES: ${{ vars.VITE_WALLETSIGNER_USER_TYPES }}
+        run: |
+          missing=""
+          for name in VITE_API_URL VITE_SERVER_STATUS VITE_NETWORK_ID VITE_WALLETSIGNER_USER_TYPES; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required frontend variables in the 'production' environment:$missing"
+            exit 1
+          fi
+
       - name: Build frontend
         working-directory: __frontend
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_SERVER_STATUS: ${{ vars.VITE_SERVER_STATUS }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+          VITE_MAINTENANCE_MODE: ${{ vars.VITE_MAINTENANCE_MODE }}
+          VITE_NETWORK_ID: ${{ vars.VITE_NETWORK_ID }}
+          VITE_WALLETSIGNER_USER_TYPES: ${{ vars.VITE_WALLETSIGNER_USER_TYPES }}
+          VITE_WALLETSIGNER_USER_DEFAULT: ${{ vars.VITE_WALLETSIGNER_USER_DEFAULT }}
+          VITE_WALLETSIGNER_MULTISIG: ${{ vars.VITE_WALLETSIGNER_MULTISIG }}
         run: |
           npm ci
           npm run build
