@@ -40,7 +40,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.1",
     "googleapis": "^174.0.0",
-    "handlebars": "^4.7.9",
+    "handlebars": "^4.7.10",
     "intl-messageformat": "^11.2.13",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.4",
