@@ -23,13 +23,13 @@ const TIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 const VERSION_PATTERN = /^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$/;
 
 /** 7 to 40 lowercase hex characters, shortened to 7; anything else is null. */
-export function normalizeSha(value) {
+function normalizeSha(value) {
   if (typeof value !== "string" || !SHA_PATTERN.test(value)) return null;
   return value.slice(0, 7);
 }
 
 /** ISO 8601 UTC timestamp, or null. */
-export function normalizeBuildTime(value) {
+function normalizeBuildTime(value) {
   if (typeof value !== "string" || !TIME_PATTERN.test(value)) return null;
   return Number.isNaN(Date.parse(value)) ? null : value;
 }
@@ -38,10 +38,10 @@ function normalizeVersion(value) {
   return typeof value === "string" && VERSION_PATTERN.test(value) ? value : null;
 }
 
-function readPackageVersion(baseDir, readFileSync) {
+function readPackageVersion(baseDir) {
   try {
     return normalizeVersion(
-      JSON.parse(readFileSync(join(baseDir, "package.json"), "utf8")).version,
+      JSON.parse(fs.readFileSync(join(baseDir, "package.json"), "utf8")).version,
     );
   } catch {
     return null;
@@ -49,16 +49,15 @@ function readPackageVersion(baseDir, readFileSync) {
 }
 
 /**
- * Resolve the build identity without caching. The reader, environment, root
- * directory and logger are injectable for tests.
+ * Resolve the build identity without caching. The environment, root directory
+ * and logger are injectable for tests.
  */
 export function resolveBuildInfo({
   baseDir = rootDir,
   env = process.env,
-  readFileSync = fs.readFileSync,
   log = console.warn,
 } = {}) {
-  const packageVersion = readPackageVersion(baseDir, readFileSync);
+  const packageVersion = readPackageVersion(baseDir);
 
   const fromEnv = {
     gitSha: normalizeSha(env.GIT_SHA),
@@ -68,8 +67,9 @@ export function resolveBuildInfo({
   const envPresent = Boolean(env.GIT_SHA || env.BUILD_TIME || env.APP_VERSION);
 
   let file = null;
+  let unreadable = false;
   try {
-    const parsed = JSON.parse(readFileSync(join(baseDir, "build-info.json"), "utf8"));
+    const parsed = JSON.parse(fs.readFileSync(join(baseDir, "build-info.json"), "utf8"));
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error("not an object");
     }
@@ -80,14 +80,16 @@ export function resolveBuildInfo({
     };
   } catch (error) {
     if (error?.code !== "ENOENT") {
-      log(
-        "build-info.json is present but unreadable or malformed; falling back to the environment",
-      );
+      // The file exists, so the environment does not apply: report no sha or time.
+      unreadable = true;
+      file = { gitSha: null, buildTime: null, version: null };
+      log("build-info.json is present but unreadable or malformed; no build information reported");
     }
   }
 
   if (file) {
     if (
+      !unreadable &&
       envPresent &&
       (fromEnv.gitSha !== file.gitSha ||
         fromEnv.buildTime !== file.buildTime ||

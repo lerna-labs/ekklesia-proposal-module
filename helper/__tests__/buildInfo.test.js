@@ -125,16 +125,40 @@ test("nulls a build time that is not ISO 8601 UTC", () => {
   });
 });
 
-test("a malformed file logs once and falls back to the environment, then null", () => {
+test("a malformed file logs once and reports null sha and time even with environment values set", () => {
   withDir({ "package.json": pkg, "build-info.json": "{not json" }, (opts, logs) => {
-    const info = resolveBuildInfo({ ...opts, env: { GIT_SHA: "2222222" } });
-    assert.equal(info.gitSha, "2222222");
-    assert.equal(info.buildSource, "env");
+    const info = resolveBuildInfo({
+      ...opts,
+      env: { GIT_SHA: "2222222", BUILD_TIME: TIME, APP_VERSION: "9.9.9" },
+    });
+    assert.deepEqual(info, {
+      gitSha: null,
+      buildTime: null,
+      version: "1.6.3",
+      buildSource: "file",
+    });
     assert.equal(logs.length, 1);
-    const none = resolveBuildInfo({ ...opts, env: {} });
-    assert.equal(none.buildSource, "none");
-    assert.equal(none.gitSha, null);
   });
+});
+
+test("an unreadable build-info.json logs once and reports null sha and time", () => {
+  // A directory at the file's path exists but cannot be read as a file (EISDIR).
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "build-info-test-"));
+  try {
+    fs.writeFileSync(path.join(dir, "package.json"), pkg);
+    fs.mkdirSync(path.join(dir, "build-info.json"));
+    const logs = [];
+    const info = resolveBuildInfo({
+      baseDir: dir,
+      env: { GIT_SHA: "2222222" },
+      log: (line) => logs.push(line),
+    });
+    assert.equal(info.gitSha, null);
+    assert.equal(info.buildTime, null);
+    assert.equal(logs.length, 1);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("falls back to 'unknown' when package.json is unreadable", () => {

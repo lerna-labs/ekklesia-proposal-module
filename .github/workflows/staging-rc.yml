@@ -103,8 +103,8 @@ jobs:
           npm run build
 
       - name: Write build information
-        # The snapshot version is computed here and discarded afterwards, so the
-        # package carries it explicitly.
+        # Records the version this build reports: the snapshot version, or
+        # X.Y.Z-staging when no changeset is pending.
         run: |
           printf '{"gitSha":"%s","buildTime":"%s","version":"%s"}\n' "${GITHUB_SHA:0:7}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${{ steps.rc.outputs.version }}" > build-info.json
 
