@@ -1,0 +1,2436 @@
+openapi: 3.0.3
+info:
+  title: Ekklesia Proposal Module API
+  version: 0.2.0
+  description: >
+    The Ekklesia Proposal Module collects governance proposals, opens them to
+    public comment, and holds them through a review period before a vote is
+    run. It supports session-based authentication by Cardano wallet signature,
+    vote cycle configuration, proposal creation and versioning, threaded
+    comments with likes, email notification preferences, and country and
+    region reference data.
+
+
+    Voting itself is not part of this API. Tabulation, voter eligibility and
+    settlement belong to the Ekklesia voting platform.
+  contact:
+    name: Ekklesia API Support
+    url: https://github.com/lerna-labs/ekklesia-proposal-module/issues
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: "{baseUrl}"
+    description: Ekklesia Proposal Module instance
+    variables:
+      baseUrl:
+        default: "https://proposals.example.com"
+        description: Base URL of the Proposal Module instance
+
+tags:
+  - name: Status
+    description: Service health and readiness
+  - name: Session
+    description: Wallet authentication and session management
+  - name: Vote Cycles
+    description: Proposal rounds and the date windows that govern them
+  - name: Proposals
+    description: Proposal creation, listing, versioning and withdrawal
+  - name: Comments
+    description: Comments, replies, likes and moderation
+  - name: Notifications
+    description: Email notification preferences for the signed-in wallet
+  - name: Reference
+    description: Country and region reference data
+  - name: Share
+    description: Link preview pages for social and chat clients
+
+security: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Status
+  #
+  # Status endpoints sit outside the /api/v0 prefix, directly under the host.
+  # ---------------------------------------------------------------------------
+  /health:
+    get:
+      operationId: getServiceStatus
+      tags: [Status]
+      summary: Service status
+      description: >
+        Returns the operational status of the service, the release it is
+        running, and whether the database connection is healthy.
+      responses:
+        "200":
+          description: Status report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceStatus"
+
+  /health/health:
+    get:
+      operationId: getLiveness
+      tags: [Status]
+      summary: Liveness check
+      description: >
+        Always returns 200 while the process is accepting connections. Intended
+        for load balancers and uptime monitoring.
+      responses:
+        "200":
+          description: Service is accepting connections.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                    example: healthy
+
+  /health/db:
+    get:
+      operationId: getDatabaseStatus
+      tags: [Status]
+      summary: Database connection status
+      description: >
+        Reports whether the database connection is currently established. The
+        service reconnects automatically, so a disconnected status is not
+        necessarily terminal.
+      responses:
+        "200":
+          description: Database connection status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, message]
+                properties:
+                  status:
+                    type: string
+                    enum: [connected, disconnected]
+                  message:
+                    type: string
+
+  # ---------------------------------------------------------------------------
+  # Session
+  # ---------------------------------------------------------------------------
+  /api/v0/session:
+    post:
+      operationId: requestNonce
+      tags: [Session]
+      summary: Request an authentication challenge
+      description: >
+        Issues a nonce for the given signer address. The returned dataHex must
+        be signed by the wallet and submitted to PUT /api/v0/session to
+        complete authentication. A nonce is valid for five minutes and is
+        consumed on first use.
+
+
+        Supplying scriptAddress selects the multi-signature flow: the script
+        address becomes the session identity and the signer must be party to
+        the script. Omitting it selects the single-wallet flow, which rejects
+        script addresses.
+
+
+        **Rate limit:** 5 requests per minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NonceRequest"
+      responses:
+        "200":
+          description: Challenge issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NonceResponse"
+        "400":
+          description: >
+            Invalid signer address or sign type, a script address on the
+            single-wallet flow, or a script address that is not CIP-129.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The challenge could not be stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: verifySignature
+      tags: [Session]
+      summary: Verify a signature and open a session
+      description: >
+        Verifies the wallet signature against the outstanding nonce and opens a
+        session. The session token is returned only as an httpOnly cookie named
+        `token`; it is not present in the response body. Outstanding nonces for
+        the identity are cleared on success.
+
+
+        When signType is `drep`, the DRep must be registered on chain at the
+        time of signing.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: >
+            Signature verified. The session cookie is set on this response.
+          headers:
+            Set-Cookie:
+              description: httpOnly session cookie named `token`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          description: >
+            No outstanding nonce, an expired nonce, a signature that does not
+            verify, a signer that is not party to the script, or an
+            unregistered DRep.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: The session token could not be issued.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      operationId: getSession
+      tags: [Session]
+      summary: Current session
+      description: >
+        Returns the identity behind the session cookie, the display name
+        resolved for it where one exists, and the vote cycles on which it holds
+        admin rights.
+
+
+        **Rate limit:** 60 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Current session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      operationId: endSession
+      tags: [Session]
+      summary: Log out
+      description: >
+        Clears the session cookie and invalidates every token already issued to
+        this identity, not only the one presented.
+
+
+        **Rate limit:** 20 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Logged out.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Logout could not be completed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---------------------------------------------------------------------------
+  # Vote Cycles
+  # ---------------------------------------------------------------------------
+  /api/v0/votes:
+    get:
+      operationId: listVoteCycles
+      tags: [Vote Cycles]
+      summary: List vote cycles
+      description: >
+        Returns vote cycles newest first. Search matches the title
+        case-insensitively, or the cycle id exactly when the term is a valid
+        24-character object id. Server-side scripts and the admin list are not
+        included in list responses.
+
+
+        **Rate limit:** 200 requests per minute per IP, shared with the other
+        public read endpoints.
+      parameters:
+        - name: search
+          in: query
+          description: Title substring, or an exact cycle id.
+          schema:
+            type: string
+            maxLength: 100
+        - name: slug
+          in: query
+          description: Exact slug match, case-sensitive.
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of vote cycles.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/VoteCycle"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "400":
+          description: >
+            Invalid pagination, a search term over 100 characters, or a
+            repeated parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: A search or slug was given and matched nothing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/votes/{identifier}:
+    get:
+      operationId: getVoteCycle
+      tags: [Vote Cycles]
+      summary: Get a vote cycle
+      description: >
+        Returns one cycle. The identifier is either the 24-character cycle id
+        or the cycle slug.
+      parameters:
+        - name: identifier
+          in: path
+          required: true
+          description: Cycle id or slug.
+          schema:
+            type: string
+          example: cardano-budget-2026
+      responses:
+        "200":
+          description: The vote cycle.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteCycle"
+        "404":
+          description: No cycle with that id or slug.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---------------------------------------------------------------------------
+  # Proposals
+  # ---------------------------------------------------------------------------
+  /api/v0/proposals:
+    get:
+      operationId: listProposals
+      tags: [Proposals]
+      summary: List proposals
+      description: >
+        Returns proposals for one vote cycle. The `vote` parameter is required.
+        Live proposals are returned by default; a caller querying their own
+        proposals also receives their drafts and archived versions.
+
+
+        Sort keys, filters and searchable fields are declared by the cycle and
+        returned with it, so a client can build its listing UI from the cycle
+        rather than hardcoding them. Any filter the cycle declares is accepted
+        as a query parameter of the same name, and its values are validated
+        against the cycle. The `status` filter accepts `live`, `withdrawn` and,
+        for cycle admins and for a caller querying their own proposals,
+        `draft`.
+
+
+        Fields the cycle marks as non-public are stripped for everyone except
+        the proposal's proposer and the cycle's admins.
+
+
+        **Rate limit:** 200 requests per minute per IP, shared with the other
+        public read endpoints.
+      parameters:
+        - name: vote
+          in: query
+          required: true
+          description: Cycle id, 24 characters.
+          schema:
+            type: string
+          example: 507f1f77bcf86cd799439011
+        - name: proposer
+          in: query
+          description: >
+            Bech32 credential of the proposer, a stake address or a DRep id.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: >
+            Comma-separated statuses. Accepts `live` and `withdrawn`, plus
+            `draft` for cycle admins and for a caller filtering on their own
+            proposer id.
+          schema:
+            type: string
+          example: live,withdrawn
+        - name: search
+          in: query
+          description: >
+            Free-text term, matched against the fields the cycle declares as
+            searchable.
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: >
+            A sort key declared by the cycle, such as `title`, `submittedAt`,
+            `updatedAt` or `commentCount`. Defaults to `submittedAt`.
+          schema:
+            type: string
+        - name: direction
+          in: query
+          description: Sort direction.
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of proposals.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProposalListItem"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "400":
+          description: >
+            Missing or malformed `vote`, an unknown filter value, an unknown
+            sort key, a repeated parameter, or a request for drafts without
+            standing to see them.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No cycle with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      operationId: createProposal
+      tags: [Proposals]
+      summary: Create a proposal
+      description: >
+        Creates a proposal as a draft or submits it live in one step. The body
+        is validated by the cycle's own validation rules, so the accepted
+        shape of `metaData` varies by cycle.
+
+
+        Submitting live requires the submission window to be open. Where the
+        cycle configures a treasury donation, a verified donation transaction
+        hash is required, and one hash can back only one submitted proposal.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalCreateRequest"
+      responses:
+        "201":
+          description: Proposal created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "400":
+          description: >
+            Validation failed, the submission window is closed, or the treasury
+            donation hash is missing, unverifiable or already used.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No cycle with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >
+            The donation could not be verified because chain data was
+            unavailable. Retry after the interval given in `Retry-After`.
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/proposals/{proposalId}:
+    parameters:
+      - $ref: "#/components/parameters/ProposalId"
+    get:
+      operationId: getProposal
+      tags: [Proposals]
+      summary: Get a proposal
+      description: >
+        Returns one proposal in full, with a count of its live comments. Live,
+        withdrawn and archived proposals are public. A draft is visible only to
+        its proposer and to admins of its cycle.
+
+
+        Fields the cycle marks as non-public are stripped for everyone except
+        the proposer and the cycle's admins, so signing in can widen the
+        response.
+      responses:
+        "200":
+          description: The proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "400":
+          description: Malformed proposal id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: A draft, and the caller is neither its proposer nor a cycle admin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: updateProposal
+      tags: [Proposals]
+      summary: Update a proposal
+      description: >
+        Replaces the proposal content. Only the proposer may update, and
+        archived proposals are read-only.
+
+
+        Updating a live proposal creates a version: the current content is
+        saved as an archived snapshot, the version counter is incremented, and
+        a reference to the snapshot is appended to `versions`. The update is
+        applied under an optimistic check on the version counter, so a
+        concurrent edit is rejected rather than silently lost. Once live, the
+        status cannot be changed and the treasury donation hash is fixed.
+
+
+        Edits to a live proposal close when the cycle's review period ends.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalUpdateRequest"
+      responses:
+        "200":
+          description: The updated proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "400":
+          description: >
+            Validation failed, the proposal is archived, a status change was
+            attempted on a live proposal, or the review period has ended.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller is not the proposer.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >
+            The live proposal was modified concurrently. Re-read it and retry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: >
+            The donation could not be verified because chain data was
+            unavailable.
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      operationId: deleteProposal
+      tags: [Proposals]
+      summary: Delete a draft
+      description: >
+        Deletes a proposal outright. Only the proposer may delete, and only
+        while the proposal is still a draft. Submitted proposals are withdrawn
+        rather than deleted.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Draft deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "400":
+          description: Malformed proposal id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Not the proposer, or the proposal is not a draft.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/proposals/{proposalId}/withdraw:
+    parameters:
+      - $ref: "#/components/parameters/ProposalId"
+    put:
+      operationId: withdrawProposal
+      tags: [Proposals]
+      summary: Withdraw a proposal
+      description: >
+        Withdraws a live proposal. The proposer may withdraw until the review
+        period ends; a cycle admin may withdraw until voting starts. The
+        resulting status records which of the two acted.
+
+
+        Both require a category and a written reason, and neither deletes the
+        proposal: it stays publicly visible with its withdrawal details
+        attached. Drafts cannot be withdrawn, they are deleted.
+
+
+        An admin withdrawal notifies the proposer by email where a confirmed
+        address exists.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawalRequest"
+      responses:
+        "200":
+          description: The withdrawn proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "400":
+          description: >
+            Malformed id, missing or unknown category, missing reason, a
+            proposal that is not live, or a window that has closed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller is neither the proposer nor a cycle admin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---------------------------------------------------------------------------
+  # Comments
+  # ---------------------------------------------------------------------------
+  /api/v0/comments:
+    get:
+      operationId: listComments
+      tags: [Comments]
+      summary: List top-level comments
+      description: >
+        Returns the top-level comments on a proposal, newest first by default.
+        Replies are not included; fetch them per comment.
+
+
+        Public callers see live comments only. A signed-in caller also sees
+        their own withdrawn comments, and a cycle admin sees all withdrawn
+        comments and may filter by status.
+
+
+        **Rate limit:** 200 requests per minute per IP, shared with the other
+        public read endpoints.
+      parameters:
+        - name: proposal
+          in: query
+          required: true
+          description: Proposal id, 24 characters.
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: >
+            Cycle admins only. One of `live`, `withdrawn` or `withdrawnByAdmin`.
+          schema:
+            type: string
+            enum: [live, withdrawn, withdrawnByAdmin]
+        - name: userType
+          in: query
+          description: >
+            Comma-separated author roles to include: `proposer`, `admin`,
+            `drep`.
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [date, replyCount, likeCount]
+            default: date
+        - name: direction
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of comments.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "400":
+          description: >
+            Missing or malformed `proposal`, an unknown sort key, a repeated
+            parameter, or a status filter the caller may not use.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      operationId: createComment
+      tags: [Comments]
+      summary: Post a comment or reply
+      description: >
+        Posts a comment on a live proposal, or a reply when `parentId` is
+        given. The author is taken from the session, never from the body.
+        Comments are accepted only while the cycle's feedback window is open,
+        and replies are accepted only on live parent comments.
+
+
+        The proposer is notified by email where a confirmed address exists,
+        unless they are the author.
+
+
+        **Rate limit:** 5 requests per minute and 20 per hour per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentCreateRequest"
+      responses:
+        "201":
+          description: Comment created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+        "400":
+          description: >
+            Missing content, content over 2000 characters, a proposal that is
+            not live, a feedback window that has not opened or has closed, a
+            withdrawn parent comment, or a duplicate of a comment this author
+            already posted on this proposal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No proposal or parent comment with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/comments/{commentId}:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    get:
+      operationId: getComment
+      tags: [Comments]
+      summary: Get a comment
+      description: >
+        Returns one comment. Public callers see live comments only. The author
+        sees their own comment in any status, along with its withdrawal
+        details, and so does a cycle admin.
+      parameters:
+        - name: status
+          in: query
+          description: Cycle admins only.
+          schema:
+            type: string
+            enum: [live, withdrawn, withdrawnByAdmin]
+      responses:
+        "200":
+          description: The comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Malformed comment id, or a status filter the caller may not use.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No comment with that id, or not visible to the caller.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: updateComment
+      tags: [Comments]
+      summary: Edit a comment
+      description: >
+        Replaces the content of a comment. The author may edit within 15
+        minutes of posting; after that the comment is fixed.
+
+
+        **Rate limit:** 5 requests per minute and 20 per hour per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentUpdateRequest"
+      responses:
+        "200":
+          description: The updated comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+        "400":
+          description: >
+            Missing content, content over 2000 characters, or the 15 minute
+            edit window has passed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller is not the author.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No comment with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/comments/{commentId}/replies:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    get:
+      operationId: listCommentReplies
+      tags: [Comments]
+      summary: List replies to a comment
+      description: >
+        Returns the direct replies to a live comment, oldest first. Each reply
+        carries a count of everything nested beneath it, not only its direct
+        children.
+      parameters:
+        - name: status
+          in: query
+          description: Cycle admins only.
+          schema:
+            type: string
+            enum: [live, withdrawn, withdrawnByAdmin]
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of replies.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+        "400":
+          description: Malformed comment id, or a status filter the caller may not use.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No live comment with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/comments/{commentId}/like:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    post:
+      operationId: toggleCommentLike
+      tags: [Comments]
+      summary: Like or unlike a comment
+      description: >
+        Toggles the caller's like on a live comment. A like that is added
+        returns 201, a like that is removed returns 200, and both return the
+        resulting count. Likes are accepted only while the cycle's feedback
+        window is open.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Like removed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+        "201":
+          description: Like added.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
+        "400":
+          description: >
+            Malformed id, a comment that is not live, or a feedback window that
+            has not opened or has closed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No comment with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/comments/{commentId}/withdraw:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    put:
+      operationId: withdrawComment
+      tags: [Comments]
+      summary: Withdraw a comment
+      description: >
+        Removes a live comment from public view. Cycle admins only, while the
+        feedback window is open. The comment is retained with its withdrawal
+        details and stays visible to its author and to cycle admins.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentWithdrawalRequest"
+      responses:
+        "200":
+          description: The withdrawn comment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentRecord"
+        "400":
+          description: >
+            Malformed id, missing or unknown category, a comment that is not
+            live, or a feedback window that has not opened or has closed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The caller is not an admin of the proposal's cycle.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No comment with that id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---------------------------------------------------------------------------
+  # Notifications
+  # ---------------------------------------------------------------------------
+  /api/v0/notifications:
+    get:
+      operationId: getNotificationSettings
+      tags: [Notifications]
+      summary: Get notification settings
+      description: >
+        Returns the notification settings for the signed-in identity: the
+        confirmed address, any address awaiting confirmation, the digest
+        schedule, when the address was confirmed, and the locale.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Current settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: updateNotificationSettings
+      tags: [Notifications]
+      summary: Update notification settings
+      description: >
+        Sets the digest schedule, the email address, or both. A new address is
+        never used directly: it is stored as a pending address and a
+        confirmation link is emailed to it. Sending an empty string clears the
+        address.
+
+
+        If the confirmation email cannot be sent, the settings are still saved
+        and the response reports `emailSendFailed`.
+
+
+        **Rate limit:** 10 requests per minute per IP, plus an hourly ceiling
+        on confirmation emails.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/NotificationSettings"
+                  - type: object
+                    properties:
+                      emailSendFailed:
+                        type: boolean
+                        description: >
+                          True when the settings were saved but the
+                          confirmation email could not be sent.
+        "400":
+          description: An unknown schedule value, or a malformed email address.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No user record for this identity.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: >
+            A different address is already awaiting confirmation. Cancel it
+            first.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/notifications/pending:
+    delete:
+      operationId: cancelPendingEmail
+      tags: [Notifications]
+      summary: Cancel a pending address
+      description: >
+        Discards an address that is awaiting confirmation, leaving any
+        previously confirmed address in place.
+
+
+        **Rate limit:** 10 requests per minute per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSettings"
+        "400":
+          description: No address is awaiting confirmation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/notifications/resend:
+    post:
+      operationId: resendVerificationEmail
+      tags: [Notifications]
+      summary: Resend a confirmation email
+      description: >
+        Issues a fresh confirmation link for the pending address and emails it.
+        Any link issued earlier stops working.
+
+
+        **Rate limit:** 3 requests per hour per IP.
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: >
+            A new link was issued. `emailSendFailed` reports whether it was
+            delivered to the mail transport.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, emailSendFailed]
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  emailSendFailed:
+                    type: boolean
+        "400":
+          description: No address is awaiting confirmation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/notifications/verify:
+    post:
+      operationId: verifyNotificationEmail
+      tags: [Notifications]
+      summary: Confirm an email address
+      description: >
+        Confirms a pending address using the token from the emailed link. No
+        session is needed: the token carries the identity. Links expire 30
+        minutes after they are issued, and only the most recently issued link
+        is accepted.
+
+
+        **Rate limit:** 20 requests per minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRequest"
+      responses:
+        "200":
+          description: Address confirmed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, notification]
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  notification:
+                    $ref: "#/components/schemas/NotificationSettings"
+        "400":
+          description: >
+            Missing, malformed, expired or superseded token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: No user record for the identity in the token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v0/notifications/unsubscribe:
+    post:
+      operationId: unsubscribeNotifications
+      tags: [Notifications]
+      summary: Unsubscribe from digests
+      description: >
+        Sets the digest schedule to `never` using the token from the
+        unsubscribe link in a notification email. No session is needed. A token
+        stops working once the identity rotates its unsubscribe secret.
+
+
+        **Rate limit:** 20 requests per minute per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRequest"
+      responses:
+        "200":
+          description: Digests disabled.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, notification]
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  notification:
+                    $ref: "#/components/schemas/NotificationSettings"
+        "400":
+          description: Missing, malformed or superseded token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ---------------------------------------------------------------------------
+  # Reference data
+  # ---------------------------------------------------------------------------
+  /api/v0/countries:
+    get:
+      operationId: listCountries
+      tags: [Reference]
+      summary: List countries
+      description: >
+        Returns every country with its English name and ISO 3166-1 alpha-2
+        code, sorted by name.
+      responses:
+        "200":
+          description: Countries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Country"
+
+  /api/v0/regions:
+    get:
+      operationId: listRegions
+      tags: [Reference]
+      summary: List regions
+      description: Returns every region, sorted by name.
+      responses:
+        "200":
+          description: Regions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Region"
+
+  # ---------------------------------------------------------------------------
+  # Share pages
+  # ---------------------------------------------------------------------------
+  /share/votes/{voteSlug}/{proposalId}:
+    get:
+      operationId: getProposalSharePage
+      tags: [Share]
+      summary: Link preview page for a proposal
+      description: >
+        Returns a small HTML document carrying Open Graph and Twitter card
+        metadata for a publicly visible proposal, then redirects to the
+        proposal on the frontend. Intended for social and chat clients
+        unrolling a link, not for API clients. Drafts are not served.
+      parameters:
+        - name: voteSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preview document.
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Malformed proposal id.
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: >
+            No such cycle or proposal, the proposal belongs to another cycle,
+            or it is not publicly visible.
+          content:
+            text/html:
+              schema:
+                type: string
+
+# -----------------------------------------------------------------------------
+# Components
+# -----------------------------------------------------------------------------
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: >
+        Session cookie set by PUT /api/v0/session. It is httpOnly, so browser
+        clients send it automatically with credentialed requests and never read
+        it.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number, from 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      description: Items per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    ProposalId:
+      name: proposalId
+      in: path
+      required: true
+      description: Proposal id, 24 characters.
+      schema:
+        type: string
+      example: 507f1f77bcf86cd799439011
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      description: Comment id, 24 characters.
+      schema:
+        type: string
+      example: 507f1f77bcf86cd799439012
+
+  schemas:
+    # -------------------------------------------------------------------------
+    # Common
+    # -------------------------------------------------------------------------
+    Error:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          description: Human-readable description of what was rejected.
+
+    ValidationError:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: object
+          description: >
+            Field-level errors, keyed by path and nested to mirror the request
+            body, so a client can attach each message to the input that caused
+            it.
+
+    Success:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        message:
+          type: string
+
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - limit
+        - total
+        - totalPages
+        - hasNextPage
+        - hasPreviousPage
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+          description: Total items matching the query, across all pages.
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+
+    # -------------------------------------------------------------------------
+    # Status
+    # -------------------------------------------------------------------------
+    ServiceStatus:
+      type: object
+      required: [status, message, timestamp, server, database]
+      description: >
+        Operational status. Instances may include further runtime fields beyond
+        those listed here.
+      properties:
+        status:
+          type: string
+          enum: [operational]
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        server:
+          type: object
+          properties:
+            version:
+              type: string
+              description: Release of the module.
+              example: 1.6.3
+            uptime:
+              type: string
+              example: 3d 4h 12m 8s
+        frontend:
+          type: object
+          description: Version information for the bundled frontend, when present.
+        database:
+          type: object
+          required: [status, message]
+          properties:
+            status:
+              type: string
+              enum: [connected, disconnected]
+            message:
+              type: string
+
+    # -------------------------------------------------------------------------
+    # Session
+    # -------------------------------------------------------------------------
+    NonceRequest:
+      type: object
+      required: [signerAddress, signType]
+      properties:
+        signerAddress:
+          type: string
+          description: Bech32 address of the signing credential.
+          example: stake1u8a9qstrmj4rvc3k5z8fems7f0j2vztz8det2klgakhfc8ce79fk
+        signType:
+          type: string
+          enum: [stake, drep, pool]
+          description: The kind of credential that will sign.
+        scriptAddress:
+          type: string
+          description: >
+            CIP-129 script address, for the multi-signature flow. When present
+            it becomes the session identity.
+
+    NonceResponse:
+      type: object
+      required: [dataHex, userId, userIdHex, signerAddressHex]
+      properties:
+        dataHex:
+          type: string
+          description: The challenge to sign.
+          example: "Sign in! 0f3ca1b2c3"
+        userId:
+          type: string
+          description: >
+            The identity the session will be opened under: the signer address,
+            or the script address on the multi-signature flow.
+        userIdHex:
+          type: string
+        signerAddressHex:
+          type: string
+        signerAddress:
+          type: string
+          description: Present on the multi-signature flow.
+        scriptAddress:
+          type: string
+          description: Present on the multi-signature flow.
+
+    VerifyRequest:
+      type: object
+      required: [signerAddress, signType, signature]
+      properties:
+        signerAddress:
+          type: string
+          description: The address used in the challenge request.
+        signType:
+          type: string
+          enum: [stake, drep, pool]
+        signature:
+          type: object
+          description: >
+            The signature object as the wallet returns it, carrying the COSE
+            signature and key. Submitted as an object, not as a string.
+          properties:
+            signature:
+              type: string
+            key:
+              type: string
+        scriptAddress:
+          type: string
+          description: CIP-129 script address, for the multi-signature flow.
+
+    AuthSession:
+      type: object
+      required: [expiresIn, userId]
+      properties:
+        expiresIn:
+          type: string
+          format: date-time
+          description: When the session expires.
+        userId:
+          type: string
+          description: The identity the session was opened under.
+
+    SessionResponse:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+          nullable: true
+          description: >
+            Display name resolved for the identity, a DRep name or an ADA
+            handle, where one exists.
+        expiresIn:
+          type: string
+          format: date-time
+        adminVoteIds:
+          type: array
+          description: >
+            Vote cycles on which this identity holds admin rights. Omitted when
+            there are none.
+          items:
+            type: string
+
+    # -------------------------------------------------------------------------
+    # Vote cycles
+    # -------------------------------------------------------------------------
+    VoteCycle:
+      type: object
+      required:
+        - _id
+        - title
+        - description
+        - slug
+        - submissionStartDate
+        - submissionEndDate
+        - feedbackStartDate
+        - feedbackEndDate
+        - reviewStartDate
+        - reviewEndDate
+        - votingStartDate
+        - votingEndDate
+        - form
+        - commentsEnabled
+        - depositOptions
+        - sortOptions
+        - filterOptions
+        - searchOptions
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          type: string
+          example: 507f1f77bcf86cd799439011
+        title:
+          type: string
+        description:
+          type: string
+        slug:
+          type: string
+          description: Stable, readable identifier used in URLs.
+          example: cardano-budget-2026
+        admins:
+          type: array
+          description: >
+            Stake addresses holding admin rights on this cycle. Not included in
+            list responses.
+          items:
+            type: string
+        submissionStartDate:
+          type: string
+          format: date-time
+        submissionEndDate:
+          type: string
+          format: date-time
+        feedbackStartDate:
+          type: string
+          format: date-time
+        feedbackEndDate:
+          type: string
+          format: date-time
+        reviewStartDate:
+          type: string
+          format: date-time
+        reviewEndDate:
+          type: string
+          format: date-time
+        votingStartDate:
+          type: string
+          format: date-time
+        votingEndDate:
+          type: string
+          format: date-time
+        form:
+          type: string
+          description: >
+            Name of the proposal form this cycle uses. Determines which fields
+            `metaData` carries and which rules are applied on submit.
+          example: budget2026
+        commentsEnabled:
+          type: boolean
+        depositOptions:
+          type: object
+          required: [treasuryDonation, depositAmount]
+          properties:
+            treasuryDonation:
+              type: integer
+              format: int64
+              minimum: 0
+              description: >
+                Treasury donation required before submission, in lovelace. 0
+                means none is required.
+            depositAddress:
+              type: string
+              description: Deposit address, or an empty string when no deposit applies.
+            depositAmount:
+              type: integer
+              format: int64
+              minimum: 0
+              description: Minimum deposit in lovelace, or 0 when none applies.
+        votingUrl:
+          type: string
+          description: Link to the voting platform for this cycle, when set.
+        resultsUrl:
+          type: string
+          description: Link to a published results page, when set.
+        resultsPublishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        sortOptions:
+          type: array
+          description: Sort keys this cycle exposes on its proposal list.
+          items:
+            type: object
+            required: [value, label, field]
+            properties:
+              value:
+                type: string
+                description: Value to pass as the `sort` parameter.
+              label:
+                type: string
+              field:
+                type: string
+        filterOptions:
+          type: array
+          description: >
+            Filters this cycle exposes. Each becomes an accepted query
+            parameter on the proposal list.
+          items:
+            type: object
+            required: [param, label, field, multiple]
+            properties:
+              param:
+                type: string
+                description: Query parameter name.
+              label:
+                type: string
+              field:
+                type: string
+              allowedValues:
+                type: array
+                items:
+                  type: string
+              multiple:
+                type: boolean
+                description: Whether comma-separated values are accepted.
+              optionsPath:
+                type: string
+                description: >
+                  Path within this cycle holding the option list, when the
+                  values come from the cycle rather than a fixed set.
+              optionValueKey:
+                type: string
+              optionLabelKey:
+                type: string
+        searchOptions:
+          type: array
+          description: Fields the `search` parameter matches against.
+          items:
+            type: object
+            required: [field, matchType]
+            properties:
+              field:
+                type: string
+              matchType:
+                type: string
+                enum: [like, exact, objectId]
+              caseSensitive:
+                type: boolean
+        metaData:
+          type: object
+          description: >
+            Cycle-specific configuration, such as the pillar list a proposal
+            form offers. Shape varies by cycle.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # -------------------------------------------------------------------------
+    # Proposals
+    # -------------------------------------------------------------------------
+    ProposalStatus:
+      type: string
+      enum: [draft, live, withdrawnByProposer, withdrawnByAdmin, archived]
+
+    WithdrawalCategory:
+      type: string
+      enum:
+        - Inappropriate content
+        - Spam
+        - Policy violation
+        - Duplicate submission
+        - Other
+
+    WithdrawalDetails:
+      type: object
+      properties:
+        category:
+          $ref: "#/components/schemas/WithdrawalCategory"
+        userId:
+          type: string
+          description: Identity that withdrew it.
+        comment:
+          type: string
+          description: Written reason.
+        date:
+          type: string
+          format: date-time
+
+    ProposalVersionRef:
+      type: object
+      required: [_id, createdAt]
+      properties:
+        _id:
+          type: string
+          description: Id of the archived snapshot.
+        createdAt:
+          type: string
+          format: date-time
+
+    Proposal:
+      type: object
+      required: [_id, proposerId, voteId, status, version, createdAt, updatedAt]
+      properties:
+        _id:
+          type: string
+        proposerId:
+          type: string
+          description: >
+            Bech32 credential of the proposer: a stake address, or a CIP-129
+            DRep id, or a script address for a group.
+        voteId:
+          type: string
+          description: The cycle this proposal belongs to.
+        title:
+          type: string
+        summary:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProposalStatus"
+        metaData:
+          type: object
+          description: >
+            The body of the proposal. Its fields are defined by the cycle's
+            form and validated on submit, so the shape varies by cycle. Fields
+            the cycle marks as non-public are stripped for callers other than
+            the proposer and the cycle's admins.
+        withdrawalDetails:
+          $ref: "#/components/schemas/WithdrawalDetails"
+        versions:
+          type: array
+          description: >
+            Archived snapshots of this proposal, oldest first. Each edit to a
+            live proposal appends one.
+          items:
+            $ref: "#/components/schemas/ProposalVersionRef"
+        currentProposalId:
+          type: string
+          description: >
+            On an archived snapshot, the live proposal that superseded it.
+        commentCount:
+          type: integer
+          description: Live comments and replies on this proposal.
+        submittedAt:
+          type: string
+          format: date-time
+          description: When it first went live.
+        version:
+          type: integer
+          description: >
+            Incremented on each edit of a live proposal. Set by the server, not
+            accepted from a request.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProposalListItem:
+      type: object
+      description: >
+        A proposal as it appears in a list. Cycles may project their list items
+        differently, so a list item can carry fewer fields than the full
+        proposal.
+      properties:
+        _id:
+          type: string
+        proposerId:
+          type: string
+        voteId:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProposalStatus"
+        metaData:
+          type: object
+          nullable: true
+        commentCount:
+          type: integer
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProposalVersionRef"
+        submittedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ProposalCreateRequest:
+      type: object
+      required: [voteId, status]
+      properties:
+        voteId:
+          type: string
+          description: Cycle id, 24 characters.
+        title:
+          type: string
+        summary:
+          type: string
+        status:
+          type: string
+          enum: [draft, live]
+          description: >
+            `draft` keeps it private and editable. `live` submits it, which
+            applies the cycle's full validation rules.
+        metaData:
+          type: object
+          description: >
+            The body of the proposal, in the shape the cycle's form defines.
+            Validated in full when status is `live`.
+
+    ProposalUpdateRequest:
+      allOf:
+        - $ref: "#/components/schemas/ProposalCreateRequest"
+        - type: object
+          description: >
+            Same body as creation. On a live proposal the status must stay
+            `live`, and the treasury donation hash is ignored in favour of the
+            one it was submitted with.
+
+    WithdrawalRequest:
+      type: object
+      required: [category, comment]
+      properties:
+        category:
+          $ref: "#/components/schemas/WithdrawalCategory"
+        comment:
+          type: string
+          maxLength: 1000
+          description: Written reason, required.
+
+    # -------------------------------------------------------------------------
+    # Comments
+    # -------------------------------------------------------------------------
+    CommentAuthor:
+      type: object
+      nullable: true
+      required: [_id, type]
+      properties:
+        _id:
+          type: string
+          description: The author's credential.
+        name:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [user, proposer, admin]
+          description: >
+            The author's standing on this proposal: its proposer, an admin of
+            its cycle, or neither.
+
+    Comment:
+      type: object
+      description: >
+        A comment as returned by the read endpoints. The proposal id, the
+        status and the raw author id are not included.
+      required: [_id, content, createdAt, replyCount, likeCount, userLiked]
+      properties:
+        _id:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+          description: The comment this one replies to, or null at top level.
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        replyCount:
+          type: integer
+          description: >
+            Everything nested beneath this comment that is visible to the
+            caller, not only its direct replies.
+        likeCount:
+          type: integer
+        userLiked:
+          type: boolean
+          description: Whether the calling session has liked this comment.
+        author:
+          $ref: "#/components/schemas/CommentAuthor"
+        withdrawalDetails:
+          allOf:
+            - $ref: "#/components/schemas/WithdrawalDetails"
+          description: >
+            Present only for the comment's author and for admins of its cycle.
+
+    CommentRecord:
+      type: object
+      description: >
+        The stored comment, as returned by the write endpoints.
+      required: [_id, proposalId, userId, content, status, createdAt]
+      properties:
+        _id:
+          type: string
+        proposalId:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+        userId:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+          enum: [live, withdrawnByAdmin]
+        withdrawalDetails:
+          $ref: "#/components/schemas/WithdrawalDetails"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CommentCreateRequest:
+      type: object
+      required: [proposalId, content]
+      properties:
+        proposalId:
+          type: string
+        content:
+          type: string
+          maxLength: 2000
+        parentId:
+          type: string
+          description: >
+            Id of a live comment on the same proposal, to post a reply.
+
+    CommentUpdateRequest:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          maxLength: 2000
+
+    CommentWithdrawalRequest:
+      type: object
+      required: [category]
+      properties:
+        category:
+          $ref: "#/components/schemas/WithdrawalCategory"
+        comment:
+          type: string
+          description: Written reason, optional.
+
+    LikeResponse:
+      type: object
+      required: [status, message, liked, likeCount]
+      properties:
+        status:
+          type: string
+          enum: [success]
+        message:
+          type: string
+        liked:
+          type: boolean
+          description: The caller's like state after the toggle.
+        likeCount:
+          type: integer
+
+    # -------------------------------------------------------------------------
+    # Notifications
+    # -------------------------------------------------------------------------
+    NotificationSettings:
+      type: object
+      required: [email, pendingEmail, schedule, verifiedAt, locale]
+      properties:
+        email:
+          type: string
+          nullable: true
+          description: The confirmed address, or null.
+        pendingEmail:
+          type: string
+          nullable: true
+          description: An address awaiting confirmation, or null.
+        schedule:
+          type: string
+          enum: [never, "6h", daily]
+          description: How often comment digests are sent.
+        verifiedAt:
+          type: string
+          format: date-time
+          nullable: true
+        locale:
+          type: string
+          example: en
+
+    NotificationSettingsUpdate:
+      type: object
+      description: Send either field, or both.
+      properties:
+        email:
+          type: string
+          description: >
+            Address to confirm. An empty string clears the current address.
+        schedule:
+          type: string
+          enum: [never, "6h", daily]
+
+    TokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: The token from the emailed link.
+
+    # -------------------------------------------------------------------------
+    # Reference data
+    # -------------------------------------------------------------------------
+    Country:
+      type: object
+      required: [_id, name, code]
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          example: Ireland
+        code:
+          type: string
+          description: ISO 3166-1 alpha-2 code.
+          example: IE
+
+    Region:
+      type: object
+      required: [_id, name]
+      properties:
+        _id:
+          type: string
+        name:
+          type: string

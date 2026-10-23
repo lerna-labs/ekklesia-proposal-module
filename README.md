@@ -68,6 +68,11 @@ npm run format:check
 
 ## Documentation
 
+Public API documentation is published from `docs-site/` to
+<https://proposals.docs.ekklesia.vote>. Update `docs-site/api/openapi.yaml` in
+the same pull request as any change to `routes/`.
+
+The documents below are internal references for working on the module itself.
 Update the relevant document below when a change affects an API contract,
 schema, auth flow, or route. `docs/audit/` holds audit records, not
 contributor onboarding material.
