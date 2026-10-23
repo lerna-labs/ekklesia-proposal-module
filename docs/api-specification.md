@@ -218,6 +218,14 @@ Module).
 - **Pagination** – All paginated list endpoints use the same `meta` shape:
   `page`, `limit`, `total`, `totalPages`, `hasNextPage`, `hasPreviousPage`. The
   list of items is in the `data` array.
+- **`GET /version`** – Public, outside the `/api` base and answered while the
+  database is down. Returns exactly `{ "name": "ekklesia-proposal-module",
+  "version", "gitSha", "buildTime" }` with `Cache-Control: public,
+  max-age=60`. `gitSha` is the first 7 characters of the build commit, or
+  `null`; `buildTime` is ISO 8601 (UTC) or `null`. The values come from a
+  `build-info.json` carried by the release package; the `GIT_SHA`,
+  `BUILD_TIME` and `APP_VERSION` environment variables apply only when that
+  file is absent. A release-candidate package reports its candidate version.
 - All timestamps use **ISO 8601 (UTC)**.
 - Monetary amounts are represented as **unsigned integers** in the smallest
   currency unit to avoid floating-point issues.
