@@ -36,14 +36,22 @@ export function liveHandler(req, res) {
  * @param {object} [options]
  * @param {number} [options.ttlMs]
  * @param {number} [options.timeoutMs]
- * @param {() => number} [options.now]
+ * @param {() => number} [options.now] Monotonic clock in milliseconds
+ * @param {() => boolean} [options.precheck] Cheap synchronous test; false answers false without a ping
  * @returns {() => Promise<boolean>}
  */
-export function createBoundedCheck(check, { ttlMs = 3000, timeoutMs = 2000, now = Date.now } = {}) {
+export function createBoundedCheck(
+  check,
+  { ttlMs = 3000, timeoutMs = 2000, now = () => performance.now(), precheck } = {},
+) {
   let cached = null;
   let inflight = null;
   return () => {
-    if (cached && now() - cached.at < ttlMs) return Promise.resolve(cached.value);
+    if (precheck && !precheck()) return Promise.resolve(false);
+    if (cached) {
+      const age = now() - cached.at;
+      if (age >= 0 && age < ttlMs) return Promise.resolve(cached.value);
+    }
     if (inflight) return inflight;
     let timer;
     const timeout = new Promise((resolve) => {

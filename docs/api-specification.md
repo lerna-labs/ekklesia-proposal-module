@@ -1100,14 +1100,16 @@ Exactly these four keys, with `Cache-Control: public, max-age=60`:
 
 ### 3.10 `GET /health/live` and `GET /health`
 
-Liveness and readiness probes. Both are served under `/health`, outside the `/api`
-base, require no authentication, and carry no environment, memory, release,
-frontend version or database detail.
+Liveness and readiness probes. Both are served under `/health`, outside the
+`/api` base, require no authentication, and carry no environment, memory,
+release, frontend version or database detail.
 
 #### Liveness — `200 OK`
 
-`GET /health/live` answers while the process is running, regardless of the
-database state:
+`GET /health/live` answers once startup has finished, for as long as the process
+runs, regardless of the database state. During a cold start the server does not
+accept connections until the database connection attempt has finished, which can
+take about 30 seconds when the database is unreachable.
 
 ```json
 { "status": "alive" }
@@ -1117,8 +1119,8 @@ database state:
 
 `GET /health` answers `200` when the database answers the same ping the API
 uses and every route has finished loading, and `503` otherwise. The server
-accepts connections only once startup has finished, so the routes-loaded state
-turns `503` when shutdown begins. The body has exactly these keys in both cases:
+accepts connections only once startup has finished, so readiness turns `503`
+when shutdown begins. The body has exactly these keys in both cases:
 
 ```json
 {
@@ -1129,9 +1131,13 @@ turns `503` when shutdown begins. The body has exactly these keys in both cases:
 ```
 
 - `status` is `ready` with `200` and `unavailable` with `503`.
-- `network` and `networkId` identify the Cardano network the instance serves; `network` is `null` when it is not configured.
-- The database result is reused for 3 seconds, and a ping that has not answered within 2 seconds counts as failed.
-- Any other path under `/health`, including the former `/health/health` and `/health/db`, answers `404` with `{"status": "error", "message": "Not found"}`.
+- `network` and `networkId` identify the Cardano network the instance serves;
+  `network` is `null` when it is not configured.
+- A database connection that reports closed turns readiness `503` at once.
+  Otherwise the ping result is reused for 3 seconds, and a ping that has not
+  answered within 2 seconds counts as failed.
+- Any other path under `/health`, including the former `/health/health` and
+  `/health/db`, answers `404` with `{"status": "error", "message": "Not found"}`.
 - The probes are not rate limited.
 
 ---

@@ -3,7 +3,7 @@ import { Router } from "express";
 const router = Router();
 
 // helper
-import { checkDatabaseConnection } from "../helper/dbManager.js";
+import { checkDatabaseConnection, isDatabaseConnected } from "../helper/dbManager.js";
 import {
   areRoutesLoaded,
   createBoundedCheck,
@@ -27,7 +27,7 @@ router.get("/live", liveHandler);
 router.get(
   "/",
   createReadinessHandler({
-    checkDatabase: createBoundedCheck(checkDatabaseConnection),
+    checkDatabase: createBoundedCheck(checkDatabaseConnection, { precheck: isDatabaseConnected }),
     routesLoaded: areRoutesLoaded,
   }),
 );

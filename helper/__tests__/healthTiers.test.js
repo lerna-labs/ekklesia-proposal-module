@@ -154,3 +154,37 @@ test("a passing database check is true and cached", async () => {
   assert.equal(await check(), true);
   assert.equal(calls, 1);
 });
+
+test("a clock stepping backwards does not freeze the cached result", async () => {
+  let calls = 0;
+  let clock = 10_000;
+  const check = createBoundedCheck(
+    async () => {
+      calls += 1;
+      return true;
+    },
+    { ttlMs: 3000, now: () => clock },
+  );
+  assert.equal(await check(), true);
+  clock = 5_000;
+  assert.equal(await check(), true);
+  assert.equal(calls, 2);
+});
+
+test("a connection that reports closed answers false at once, ignoring the cache", async () => {
+  let open = true;
+  let calls = 0;
+  const check = createBoundedCheck(
+    async () => {
+      calls += 1;
+      return true;
+    },
+    { precheck: () => open },
+  );
+  assert.equal(await check(), true);
+  open = false;
+  assert.equal(await check(), false);
+  assert.equal(calls, 1);
+  open = true;
+  assert.equal(await check(), true);
+});
