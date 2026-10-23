@@ -1100,14 +1100,14 @@ Exactly these four keys, with `Cache-Control: public, max-age=60`:
 
 ### 3.10 `GET /health/live` and `GET /health`
 
-Liveness and readiness probes. Both are served at `/health`, outside the `/api`
+Liveness and readiness probes. Both are served under `/health`, outside the `/api`
 base, require no authentication, and carry no environment, memory, release,
 frontend version or database detail.
 
 #### Liveness — `200 OK`
 
 `GET /health/live` answers while the process is running, regardless of the
-database or startup state:
+database state:
 
 ```json
 { "status": "alive" }
@@ -1115,9 +1115,10 @@ database or startup state:
 
 #### Readiness — `200 OK` and `503 Service Unavailable`
 
-`GET /health` answers `200` when the database is connected and every route has
-finished loading, and `503` otherwise, including during startup before routes
-have loaded. The body has exactly these keys in both cases:
+`GET /health` answers `200` when the database answers the same ping the API
+uses and every route has finished loading, and `503` otherwise. The server
+accepts connections only once startup has finished, so the routes-loaded state
+turns `503` when shutdown begins. The body has exactly these keys in both cases:
 
 ```json
 {
@@ -1128,7 +1129,9 @@ have loaded. The body has exactly these keys in both cases:
 ```
 
 - `status` is `ready` with `200` and `unavailable` with `503`.
-- `network` and `networkId` identify the Cardano network the instance serves.
+- `network` and `networkId` identify the Cardano network the instance serves; `network` is `null` when it is not configured.
+- The database result is reused for 3 seconds, and a ping that has not answered within 2 seconds counts as failed.
+- Any other path under `/health`, including the former `/health/health` and `/health/db`, answers `404` with `{"status": "error", "message": "Not found"}`.
 - The probes are not rate limited.
 
 ---
@@ -2773,7 +2776,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.6.0   | 2026-10-23 | Added §3.10 `GET /health/live` (liveness) and reworked `GET /health` into an anonymous readiness probe: `200` or `503` with only `status`, `network` and `networkId`. The former `GET /health` fields (environment, memory, release, frontend version, database block) and `GET /health/health` and `GET /health/db` are removed. |
+| 1.6.0   | 2026-10-23 | Added §3.10 `GET /health/live` (liveness) and reworked `GET /health` into an anonymous readiness probe: `200` or `503` with only `status`, `network` and `networkId`. The former `GET /health` fields (environment, memory, release, frontend version, database block) are removed, and `GET /health/health` and `GET /health/db` now answer `404`. |
 | 1.5.0   | 2026-10-23 | Added §3.9 `GET /version`: public build identity (`name`, `version`, `gitSha`, `buildTime`), served outside `/api` and answered while the database is down. |
 | 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |
 | 1.4.0   | 2026-07-24 | Document `503` on live `POST`/`PUT /proposals` when treasury donation verification cannot reach chain-data providers (fixed retry message; optional `Retry-After`). Clarify genuine verification failures remain `400` with `errors` for `metaData.treasuryDonationTxHash`. Add `503` to §7.2. |

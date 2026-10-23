@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import express from "express";
 import {
   areRoutesLoaded,
+  createBoundedCheck,
   createReadinessHandler,
   liveHandler,
   setRoutesLoaded,
@@ -34,7 +35,7 @@ function withNetwork(run) {
 }
 
 const ready = (db, loaded) =>
-  createReadinessHandler({ isDatabaseConnected: () => db, routesLoaded: () => loaded });
+  createReadinessHandler({ checkDatabase: () => db, routesLoaded: () => loaded });
 
 test("database connected and routes loaded: both answer 200, readiness has only the network fields", async () => {
   await withNetwork(() =>
@@ -78,7 +79,7 @@ test("routes not yet loaded: liveness 200, readiness 503", async () => {
 
 test("a throwing connectivity check answers 503 with the same body shape", async () => {
   const handler = createReadinessHandler({
-    isDatabaseConnected: () => {
+    checkDatabase: () => {
       throw new Error("mongodb://user:secret@host/db refused");
     },
     routesLoaded: () => true,
@@ -100,4 +101,56 @@ test("the load flag starts false and follows setRoutesLoaded", () => {
   assert.equal(areRoutesLoaded(), true);
   setRoutesLoaded(false);
   assert.equal(areRoutesLoaded(), false);
+});
+
+test("network is null, not absent, when NETWORK_NAME is unset", async () => {
+  const saved = process.env.NETWORK_NAME;
+  delete process.env.NETWORK_NAME;
+  try {
+    await withServer(ready(true, true), async (base) => {
+      const body = await (await fetch(`${base}/health`)).json();
+      assert.deepEqual(Object.keys(body).sort(), ["network", "networkId", "status"]);
+      assert.equal(body.network, null);
+    });
+  } finally {
+    if (saved !== undefined) process.env.NETWORK_NAME = saved;
+  }
+});
+
+test("a frozen database check times out as failed and is reused within the ttl", async () => {
+  let calls = 0;
+  let clock = 0;
+  const check = createBoundedCheck(
+    () => {
+      calls += 1;
+      return new Promise(() => {});
+    },
+    { ttlMs: 3000, timeoutMs: 20, now: () => clock },
+  );
+  const [a, b] = await Promise.all([check(), check()]);
+  assert.equal(a, false);
+  assert.equal(b, false);
+  assert.equal(calls, 1);
+  clock = 2999;
+  assert.equal(await check(), false);
+  assert.equal(calls, 1);
+  clock = 3000;
+  assert.equal(await check(), false);
+  assert.equal(calls, 2);
+});
+
+test("a rejecting database check is a failed check", async () => {
+  const check = createBoundedCheck(() => Promise.reject(new Error("boom")), { timeoutMs: 20 });
+  assert.equal(await check(), false);
+});
+
+test("a passing database check is true and cached", async () => {
+  let calls = 0;
+  const check = createBoundedCheck(async () => {
+    calls += 1;
+    return true;
+  });
+  assert.equal(await check(), true);
+  assert.equal(await check(), true);
+  assert.equal(calls, 1);
 });
