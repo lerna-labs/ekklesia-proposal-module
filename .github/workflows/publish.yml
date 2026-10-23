@@ -54,6 +54,10 @@ jobs:
           npm ci
           npm run build
 
+      - name: Write build information
+        run: |
+          printf '{"gitSha":"%s","buildTime":"%s"}\n' "${GITHUB_SHA:0:7}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > build-info.json
+
       - name: Package source tarball
         id: pkg
         run: |
@@ -70,9 +74,10 @@ jobs:
             ':(exclude)helper/__tests__/**' \
             ':(exclude)mailer/tests/**' ':(exclude)mailer/dev-tests/**' \
             > "$RUNNER_TEMP/manifest.lst"
-          # The built frontend lands in public/ (adapter-static); it is untracked, so add it explicitly.
-          { cat "$RUNNER_TEMP/manifest.lst"; find public -type f -print0; } \
+          # The built frontend lands in public/ (adapter-static); it and build-info.json are untracked, so add them explicitly.
+          { cat "$RUNNER_TEMP/manifest.lst"; find public -type f -print0; printf 'build-info.json\0'; } \
             | tar --null -T - -czf "$asset"
+          tar -xzOf "$asset" build-info.json | node -e 'const b=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!/^[0-9a-f]{7}$/.test(b.gitSha)) process.exit(1)'
           echo "asset=$asset" >> "$GITHUB_OUTPUT"
 
       - uses: actions/create-github-app-token@v3

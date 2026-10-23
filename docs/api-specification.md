@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.4.1                                                                  |
+| **Version**        | 1.5.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | September 7, 2026                                                      |
+| **Last Revised**   | October 23, 2026                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -69,6 +69,8 @@
       - [Success Response — `200 OK`](#success-response--200-ok-7)
       - [Error Response — `400 Bad Request`](#error-response--400-bad-request-6)
       - [Error Response — `404 Not Found`](#error-response--404-not-found-7)
+    - [3.9 `GET /version`](#39-get-version)
+      - [Response — `200 OK`](#response--200-ok)
   - [4. Authentication Endpoints](#4-authentication-endpoints)
     - [4.1 `POST /session`](#41-post-session)
       - [Request Body](#request-body)
@@ -1061,6 +1063,35 @@ live.
   "message": "Comment not found"
 }
 ```
+
+---
+
+### 3.9 `GET /version`
+
+Reports the running build. The route is served at `/version`, outside the
+`/api` base, so it answers while the database is down. No authentication.
+
+#### Response — `200 OK`
+
+Exactly these four keys, with `Cache-Control: public, max-age=60`:
+
+```json
+{
+  "name": "ekklesia-proposal-module",
+  "version": "1.7.0",
+  "gitSha": "0123456",
+  "buildTime": "2026-10-23T12:00:00Z"
+}
+```
+
+- `gitSha` is the first 7 characters of the build commit, or `null`.
+- `buildTime` is ISO 8601 (UTC), or `null`.
+- The values come from a `build-info.json` carried by the release package. The
+  `GIT_SHA`, `BUILD_TIME` and `APP_VERSION` environment variables apply only
+  when that file is absent. A release-candidate package reports its candidate
+  version.
+- `/version` is not rate limited; the response is cacheable for 60
+  seconds.
 
 ---
 
@@ -2704,6 +2735,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.5.0   | 2026-10-23 | Added §3.9 `GET /version`: public build identity (`name`, `version`, `gitSha`, `buildTime`), served outside `/api` and answered while the database is down. |
 | 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |
 | 1.4.0   | 2026-07-24 | Document `503` on live `POST`/`PUT /proposals` when treasury donation verification cannot reach chain-data providers (fixed retry message; optional `Retry-After`). Clarify genuine verification failures remain `400` with `errors` for `metaData.treasuryDonationTxHash`. Add `503` to §7.2. |
 | 1.3.0   | 2026-07-23 | Live `PUT /proposals/{proposalId}`: optimistic version CAS and `409 Conflict` on concurrent update (F-006). Added §5.9 notification settings endpoints. Documented `409` in §7.2. Aligned proposal withdraw windows with implementation (proposer ≤ `reviewEndDate`; admin before `votingStartDate`). Removed dangling Ekklesia Integration Plan reference. |
