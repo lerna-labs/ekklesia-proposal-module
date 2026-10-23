@@ -1090,6 +1090,8 @@ Exactly these four keys, with `Cache-Control: public, max-age=60`:
   `GIT_SHA`, `BUILD_TIME` and `APP_VERSION` environment variables apply only
   when that file is absent. A release-candidate package reports its candidate
   version.
+- `/version` is not rate limited; the response is cacheable for 60
+  seconds.
 
 ---
 
