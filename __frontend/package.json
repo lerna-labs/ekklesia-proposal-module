@@ -57,7 +57,7 @@
     "lucide-svelte": "^1.0.1",
     "markdown-it": "^14.3.1",
     "svelte-lexical": "^0.6.5",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "overrides": {
     "cookie": "^0.7.0"
