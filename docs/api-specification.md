@@ -5,7 +5,7 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.5.0                                                                  |
+| **Version**        | 1.6.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
 | **Last Revised**   | October 23, 2026                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
@@ -71,6 +71,9 @@
       - [Error Response — `404 Not Found`](#error-response--404-not-found-7)
     - [3.9 `GET /version`](#39-get-version)
       - [Response — `200 OK`](#response--200-ok)
+    - [3.10 `GET /health/live` and `GET /health`](#310-get-healthlive-and-get-health)
+      - [Liveness — `200 OK`](#liveness--200-ok)
+      - [Readiness — `200 OK` and `503 Service Unavailable`](#readiness--200-ok-and-503-service-unavailable)
   - [4. Authentication Endpoints](#4-authentication-endpoints)
     - [4.1 `POST /session`](#41-post-session)
       - [Request Body](#request-body)
@@ -1092,6 +1095,50 @@ Exactly these four keys, with `Cache-Control: public, max-age=60`:
   version.
 - `/version` is not rate limited; the response is cacheable for 60
   seconds.
+
+---
+
+### 3.10 `GET /health/live` and `GET /health`
+
+Liveness and readiness probes. Both are served under `/health`, outside the
+`/api` base, require no authentication, and carry no environment, memory,
+release, frontend version or database detail.
+
+#### Liveness — `200 OK`
+
+`GET /health/live` answers once startup has finished, for as long as the process
+runs, regardless of the database state. During a cold start the server does not
+accept connections until the database connection attempt has finished, which can
+take about 30 seconds when the database is unreachable.
+
+```json
+{ "status": "alive" }
+```
+
+#### Readiness — `200 OK` and `503 Service Unavailable`
+
+`GET /health` answers `200` when the database answers the same ping the API
+uses and every route has finished loading, and `503` otherwise. The server
+accepts connections only once startup has finished, so readiness turns `503`
+when shutdown begins. The body has exactly these keys in both cases:
+
+```json
+{
+  "status": "ready",
+  "network": "preprod",
+  "networkId": 0
+}
+```
+
+- `status` is `ready` with `200` and `unavailable` with `503`.
+- `network` and `networkId` identify the Cardano network the instance serves;
+  `network` is `null` when it is not configured.
+- A database connection that reports closed turns readiness `503` at once.
+  Otherwise the ping result is reused for 3 seconds, and a ping that has not
+  answered within 2 seconds counts as failed.
+- Any other path under `/health`, including the former `/health/health` and
+  `/health/db`, answers `404` with `{"status": "error", "message": "Not found"}`.
+- The probes are not rate limited.
 
 ---
 
@@ -2735,6 +2782,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.6.0   | 2026-10-23 | Added §3.10 `GET /health/live` (liveness) and reworked `GET /health` into an anonymous readiness probe: `200` or `503` with only `status`, `network` and `networkId`. The former `GET /health` fields (environment, memory, release, frontend version, database block) are removed, and `GET /health/health` and `GET /health/db` now answer `404`. |
 | 1.5.0   | 2026-10-23 | Added §3.9 `GET /version`: public build identity (`name`, `version`, `gitSha`, `buildTime`), served outside `/api` and answered while the database is down. |
 | 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |
 | 1.4.0   | 2026-07-24 | Document `503` on live `POST`/`PUT /proposals` when treasury donation verification cannot reach chain-data providers (fixed retry message; optional `Retry-After`). Clarify genuine verification failures remain `400` with `errors` for `metaData.treasuryDonationTxHash`. Add `503` to §7.2. |
