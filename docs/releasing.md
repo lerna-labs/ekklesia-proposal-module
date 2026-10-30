@@ -14,8 +14,9 @@ Production releases are published only from a signed annotated tag that GitHub v
 3. The tag push triggers `publish.yml`. Its first job runs `.github/scripts/verify-release-tag.sh`, and every other job needs it. Nothing is built or published unless all of these hold:
    - the ref is an annotated tag object, not a lightweight tag;
    - GitHub reports the tag object's signature as verified;
-   - the tagged commit is an ancestor of `origin/main`;
-   - the tag equals `v` plus the `version` in the tagged commit's `package.json`.
+   - the signed tag points directly at a commit, and that commit is the commit that was pushed (`GITHUB_SHA`);
+   - that commit is an ancestor of `origin/main`;
+   - the tag equals `v` plus the `version` in that commit's `package.json`.
 4. The publish job builds the frontend, packages the server tarball, and creates the GitHub Release with the `CHANGELOG.md` section as notes, unless a release for the tag already exists.
 5. `backport-release.yml` triggers on the same tag push and opens the backport PRs.
 
