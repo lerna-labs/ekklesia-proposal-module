@@ -85,5 +85,5 @@ contributor onboarding material.
 | [User Schema](docs/user-schema-description.md)         | User schema with Bech32 address keys and runtime role derivation                         |
 | [Notifications](docs/notification-system-implementation.md) | Email notifications, preferences API, cron milestones, and mail transport           |
 | [Proposal List Projection](docs/proposal-list-projection-contract.md) | Vote-specific `GET /proposals` list field contract                         |
-| [Releasing](docs/releasing.md) | Release flow: the Version Packages PR, the maintainer's signed tag, and the checks `publish.yml` runs on it |
+| [Releasing](docs/releasing.md) | Release flow: the `chore: release` pull request, the maintainer's signed tag, and the checks `publish.yml` runs on it |
 

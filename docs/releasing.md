@@ -2,7 +2,7 @@
 
 Production releases are published only from a signed annotated tag that GitHub verifies. Automation never creates a version tag.
 
-1. Promotions land on `main`, and the Release workflow (`release.yml`) opens and updates the Version Packages PR. Merging that PR bumps `package.json` and rolls the changesets into `CHANGELOG.md`. It does not tag or publish anything.
+1. Promotions land on `main`, and the Release workflow (`release.yml`) opens and updates the `chore: release` pull request (branch `changeset-release/main`). Merging that pull request bumps `package.json` and rolls the changesets into `CHANGELOG.md`. It does not tag or publish anything.
 2. The maintainer creates a signed annotated tag at the version commit on `main` and pushes it:
 
    ```
