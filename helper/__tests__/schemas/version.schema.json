@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Copy of docs/schemas/version.schema.json in the ekklesia-backend repository, which is the canonical version of this schema.",
+  "title": "Service version",
+  "type": "object",
+  "required": ["name", "version", "gitSha", "buildTime"],
+  "additionalProperties": false,
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "gitSha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{7}$" },
+    "buildTime": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

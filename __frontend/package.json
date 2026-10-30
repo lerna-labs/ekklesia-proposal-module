@@ -55,11 +55,14 @@
     "dayjs": "^1.11.19",
     "json-diff-ts": "^4.10.4",
     "lucide-svelte": "^1.0.1",
-    "markdown-it": "^14.2.0",
+    "markdown-it": "^14.3.1",
     "svelte-lexical": "^0.6.5",
-    "zod": "^4.4.3"
+    "zod": "^4.6.6"
   },
   "overrides": {
-    "cookie": "0.7.0"
+    "cookie": "^0.7.0",
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    }
   }
 }

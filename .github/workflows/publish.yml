@@ -1,0 +1,120 @@
+name: Publish release artifact
+
+# Packages the deployable source on a version tag and attaches it to the GitHub
+# Release. Runs only on a version tag (never on a plain push to main), so a
+# release publishes exactly once. "!v*-*" excludes prerelease tags. The tag must
+# be a signed annotated tag that GitHub verifies; the first job checks that and
+# every other job needs it.
+on:
+  push:
+    tags: ["v*", "!v*-*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify the release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/verify-release-tag.sh "$GITHUB_REF_NAME"
+
+  publish:
+    needs: verify-tag
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check frontend build variables
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_SERVER_STATUS: ${{ vars.VITE_SERVER_STATUS }}
+          VITE_NETWORK_ID: ${{ vars.VITE_NETWORK_ID }}
+          VITE_WALLETSIGNER_USER_TYPES: ${{ vars.VITE_WALLETSIGNER_USER_TYPES }}
+        run: |
+          missing=""
+          for name in VITE_API_URL VITE_SERVER_STATUS VITE_NETWORK_ID VITE_WALLETSIGNER_USER_TYPES; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required frontend variables in the 'production' environment:$missing"
+            exit 1
+          fi
+
+      - name: Build frontend
+        working-directory: __frontend
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_SERVER_STATUS: ${{ vars.VITE_SERVER_STATUS }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+          VITE_MAINTENANCE_MODE: ${{ vars.VITE_MAINTENANCE_MODE }}
+          VITE_NETWORK_ID: ${{ vars.VITE_NETWORK_ID }}
+          VITE_WALLETSIGNER_USER_TYPES: ${{ vars.VITE_WALLETSIGNER_USER_TYPES }}
+          VITE_WALLETSIGNER_USER_DEFAULT: ${{ vars.VITE_WALLETSIGNER_USER_DEFAULT }}
+          VITE_WALLETSIGNER_MULTISIG: ${{ vars.VITE_WALLETSIGNER_MULTISIG }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Write build information
+        run: |
+          printf '{"gitSha":"%s","buildTime":"%s"}\n' "${GITHUB_SHA:0:7}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > build-info.json
+
+      - name: Package source tarball
+        id: pkg
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Same manifest as the preprod build (staging-rc.yml): tracked runtime
+          # files only, no test suites, no untracked secrets or dumps, plus the
+          # built frontend.
+          asset="proposal-module-server-${version}.tgz"
+          git ls-files -z -- \
+            server.js package.json package-lock.json \
+            README.md LICENSE \
+            routes helper schema cron validation mailer backup \
+            development.config.cjs production.config.cjs \
+            ':(exclude)helper/__tests__/**' \
+            ':(exclude)mailer/tests/**' ':(exclude)mailer/dev-tests/**' \
+            > "$RUNNER_TEMP/manifest.lst"
+          # The built frontend lands in public/ (adapter-static); it and build-info.json are untracked, so add them explicitly.
+          { cat "$RUNNER_TEMP/manifest.lst"; find public -type f -print0; printf 'build-info.json\0'; } \
+            | tar --null -T - -czf "$asset"
+          tar -xzOf "$asset" build-info.json | node -e 'const b=JSON.parse(require("fs").readFileSync(0,"utf8")); if(!/^[0-9a-f]{7}$/.test(b.gitSha)) process.exit(1)'
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.RELEASE_MANAGER_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_MANAGER_APP_PRIVATE_KEY }}
+
+      - name: Create GitHub Release with the source tarball
+        # Attributed to the Release Manager App. Notes are the CHANGELOG section
+        # for this version.
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            echo "Release ${GITHUB_REF_NAME} already exists; skipping creation."
+            exit 0
+          fi
+          version="${GITHUB_REF_NAME#v}"
+          notes=$(awk -v v="## ${version}" '$0==v{f=1;next} /^## /{if(f)exit} f' CHANGELOG.md)
+          gh release create "${GITHUB_REF_NAME}" \
+            --verify-tag \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "${notes:-Release ${GITHUB_REF_NAME}}" \
+            "${{ steps.pkg.outputs.asset }}"
