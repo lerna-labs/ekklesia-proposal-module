@@ -1,6 +1,6 @@
 # Releasing
 
-Production releases are published only from a signed annotated tag that GitHub verifies. Automation never creates a tag.
+Production releases are published only from a signed annotated tag that GitHub verifies. Automation never creates a version tag.
 
 1. Promotions land on `main`, and the Release workflow (`release.yml`) opens and updates the Version Packages PR. Merging that PR bumps `package.json` and rolls the changesets into `CHANGELOG.md`. It does not tag or publish anything.
 2. The maintainer creates a signed annotated tag at the version commit on `main` and pushes it:
@@ -19,7 +19,7 @@ Production releases are published only from a signed annotated tag that GitHub v
 4. The publish job builds the frontend, packages the server tarball, and creates the GitHub Release with the `CHANGELOG.md` section as notes, unless a release for the tag already exists.
 5. `backport-release.yml` triggers on the same tag push and opens the backport PRs.
 
-To check a tag locally before relying on the workflow:
+To re-run the check against a tag that has already been pushed, for example after a failed run:
 
 ```
 GITHUB_REPOSITORY=lerna-labs/ekklesia-proposal-module GH_TOKEN=$(gh auth token) .github/scripts/verify-release-tag.sh vX.Y.Z
