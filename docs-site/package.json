@@ -1,0 +1,25 @@
+{
+  "name": "ekklesia-proposal-module-docs",
+  "version": "1.0.0",
+  "description": "Published documentation site for the Ekklesia Proposal Module",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "fmt": "prettier --write '**/*.md' --ignore-path .prettierignore",
+    "fmt:check": "prettier --check '**/*.md' --ignore-path .prettierignore",
+    "lint:specs": "redocly lint api/openapi.yaml",
+    "postman": "mkdir -p downloads/_files && openapi2postmanv2 -s api/openapi.yaml -o downloads/_files/ekklesia-proposals-api.postman_collection.json -p",
+    "version:data": "node scripts/write-version-data.mjs",
+    "build": "npm run lint:specs && npm run postman && npm run version:data && bundle exec jekyll build --destination ./_site",
+    "serve": "npm run version:data && bundle exec jekyll serve"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@redocly/cli": "^2.39.0",
+    "openapi-to-postmanv2": "^6.3.0",
+    "prettier": "^3.9.5"
+  }
+}
