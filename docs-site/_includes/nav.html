@@ -1,0 +1,25 @@
+<nav class="sidebar-nav" id="sidebar-nav">
+  <div class="nav-section">
+    <a href="{{ '/' | relative_url }}" class="nav-link {% if page.url == '/' %}active{% endif %}">Overview</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Platform</div>
+    <a href="{{ '/lifecycle/' | relative_url }}" class="nav-link {% if page.url contains '/lifecycle' %}active{% endif %}">Proposal Lifecycle</a>
+    <a href="{{ '/vote-cycles/' | relative_url }}" class="nav-link {% if page.url contains '/vote-cycles' %}active{% endif %}">Vote Cycles</a>
+    <a href="{{ '/roles/' | relative_url }}" class="nav-link {% if page.url contains '/roles' %}active{% endif %}">Roles and Access</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">For Developers</div>
+    <a href="{{ '/api/' | relative_url }}" class="nav-link {% if page.url == '/api/' %}active{% endif %}">API Overview</a>
+    <a href="{{ '/api/authentication/' | relative_url }}" class="nav-link {% if page.url contains '/api/authentication' %}active{% endif %}">Authentication</a>
+    <a href="{{ '/api/spec/' | relative_url }}" class="nav-link {% if page.url contains '/api/spec' %}active{% endif %}">API Specification</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Resources</div>
+    <a href="{{ '/downloads/' | relative_url }}" class="nav-link {% if page.url contains '/downloads' %}active{% endif %}">Downloads</a>
+    <a href="https://docs.ekklesia.vote/" class="nav-link">Ekklesia Platform Docs</a>
+  </div>
+</nav>
