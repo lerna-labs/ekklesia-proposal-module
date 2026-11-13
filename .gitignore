@@ -9,3 +9,4 @@ public/
 google_keys.json
 
 .cursor/plans
+build-info.json
