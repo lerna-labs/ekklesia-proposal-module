@@ -11,6 +11,7 @@ import {
   notificationsResendLimiter,
   notificationsVerifyLimiter,
   notificationsUnsubscribeLimiter,
+  publicReadLimiter,
 } from "../../../helper/rateLimiters.js";
 import { renderTransactional } from "../../../mailer/render.js";
 import { createTranslator } from "../../../mailer/i18n.js";
@@ -99,7 +100,7 @@ function hashRecipientEmail(email) {
   return crypto.createHash("sha256").update(email).digest("hex");
 }
 
-router.get("/", isAuthenticated, async (req, res) => {
+router.get("/", publicReadLimiter, isAuthenticated, async (req, res) => {
   try {
     const userDoc = await User.findById(req.userId).select("notification").lean();
     return res.status(200).json(getNotificationState(userDoc));

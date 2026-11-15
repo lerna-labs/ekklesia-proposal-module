@@ -73,10 +73,10 @@ async function findCollisions() {
   return Proposal.aggregate([
     {
       $match: {
-        status: { $nin: ["draft", "archived"] },
+        status: { $in: ["live", "withdrawnByProposer", "withdrawnByAdmin"] },
         "metaData.treasuryDonationTxHash": {
           $type: "string",
-          $ne: "",
+          $gt: "",
         },
       },
     },

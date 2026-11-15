@@ -2,6 +2,7 @@ import { Router } from "express";
 import mongoose from "mongoose";
 import { Vote } from "../../schema/Vote.js";
 import { Proposal } from "../../schema/Proposal.js";
+import { publicReadLimiter } from "../../helper/rateLimiters.js";
 
 const router = Router();
 
@@ -117,7 +118,7 @@ function shareHtml({ title, description, canonicalUrl, redirectUrl }) {
 </html>`;
 }
 
-router.get("/:voteSlug/:proposalId", async (req, res) => {
+router.get("/:voteSlug/:proposalId", publicReadLimiter, async (req, res) => {
   try {
     const { voteSlug, proposalId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(proposalId) || proposalId.length !== 24) {

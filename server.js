@@ -14,6 +14,7 @@ import {
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
+import { setRoutesLoaded } from "./helper/healthTiers.js";
 import { warnUnloadableExcludeScripts } from "./validation/applyPublicFieldExclusion.js";
 
 // Initialize console with timestamps
@@ -80,6 +81,7 @@ async function startServer() {
 
     // Load all routes from the routes directory (throws if any import fails)
     await loadRoutes(join(__dirname, "routes"), app);
+    setRoutesLoaded(true);
 
     // Serve static files from the public directory (SvelteKit assets)
     app.use(express.static(join(__dirname, "public")));
@@ -138,6 +140,7 @@ async function startServer() {
     function shutdown(signal) {
       if (shuttingDown) return;
       shuttingDown = true;
+      setRoutesLoaded(false);
       console.info(`Received ${signal}; draining HTTP server…`);
 
       const forceTimer = setTimeout(() => {

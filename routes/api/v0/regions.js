@@ -3,13 +3,14 @@ import { Router } from "express";
 const router = Router();
 
 import { Region } from "../../../schema/Region.js";
+import { publicReadLimiter } from "../../../helper/rateLimiters.js";
 
 /**
  * @route GET /api/v0/regions
  * @description List all regions. Sorted by name ascending.
  * @access Public
  */
-router.get("/", async (req, res) => {
+router.get("/", publicReadLimiter, async (req, res) => {
   try {
     const regions = await Region.find({}).sort({ name: 1 }).select("name _id").lean();
 

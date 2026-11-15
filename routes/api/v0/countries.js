@@ -3,13 +3,14 @@ import { Router } from "express";
 const router = Router();
 
 import { Country } from "../../../schema/Country.js";
+import { publicReadLimiter } from "../../../helper/rateLimiters.js";
 
 /**
  * @route GET /api/v0/countries
  * @description List all countries (English name + ISO 3166-1 alpha-2 code). Sorted by name.
  * @access Public
  */
-router.get("/", async (req, res) => {
+router.get("/", publicReadLimiter, async (req, res) => {
   try {
     const countries = await Country.find({}).sort({ name: 1 }).select("name code _id").lean();
 

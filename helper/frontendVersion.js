@@ -1,5 +1,5 @@
 /**
- * Frontend build version, as reported by the public health endpoint.
+ * Frontend build version, as read from the bundled `public/version.json`.
  *
  * This backend does not always ship co-located with the frontend build -
  * the frontend is commonly its own container or served from a CDN, so
