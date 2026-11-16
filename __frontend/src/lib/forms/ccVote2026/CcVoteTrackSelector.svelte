@@ -1,6 +1,6 @@
 <script>
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import { cn } from "$lib/utils.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import { cn } from "#lib/utils.js";
   import UserIcon from "@lucide/svelte/icons/user";
   import Building2Icon from "@lucide/svelte/icons/building-2";
   import UsersRoundIcon from "@lucide/svelte/icons/users-round";

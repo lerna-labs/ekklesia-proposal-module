@@ -4,13 +4,13 @@
    * Each item is { title: string, url: string }. Validated with zod: title required (max 100), url required and valid.
    */
   import { z } from "zod";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import Input from "$lib/components/form/Input.svelte";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Input from "#lib/components/form/Input.svelte";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
+  import PrivateFieldIndicator from "#lib/components/form/PrivateFieldIndicator.svelte";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";

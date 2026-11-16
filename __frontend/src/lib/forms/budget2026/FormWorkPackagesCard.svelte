@@ -2,19 +2,19 @@
   /**
    * Single work package card for the work packages list: shows name, edit/delete actions, milestones or milestone alternative.
    */
-  import * as Card from "$lib/components/ui/card/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-  import * as Field from "$lib/components/ui/field/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import { Checkbox } from "#lib/components/ui/checkbox/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
   import BoxIcon from "@lucide/svelte/icons/box";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import FormWorkPackagesMilestones from "./FormWorkPackagesMilestones.svelte";
   import FormWorkPackagesBudget from "./FormWorkPackagesBudget.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
   import WorkPackageFormFields from "./WorkPackageFormFields.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
 
   let {
     workPackage,

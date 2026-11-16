@@ -1,5 +1,5 @@
 <script>
-  import Navigation from "$lib/base/Navigation.svelte";
+  import Navigation from "#lib/base/Navigation.svelte";
 </script>
 
 <header class="relative bg-(--mbo-tangy-blue) text-white">

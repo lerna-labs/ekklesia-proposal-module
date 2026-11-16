@@ -1,9 +1,9 @@
 <script>
   import { goto } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "#lib/components/ui/button/index.js";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
-  import ProposalPageTitle from "$lib/votes/budget2026/ProposalPageTitle.svelte";
-  import ProposalPageComments from "$lib/votes/budget2026/ProposalPageComments.svelte";
+  import ProposalPageTitle from "#lib/votes/budget2026/ProposalPageTitle.svelte";
+  import ProposalPageComments from "#lib/votes/budget2026/ProposalPageComments.svelte";
   import ProposalPageKeyDetails from "./ProposalPageKeyDetails.svelte";
   import ProposalPageTrackIndividual from "./ProposalPageTrackIndividual.svelte";
   import ProposalPageTrackOrganisation from "./ProposalPageTrackOrganisation.svelte";

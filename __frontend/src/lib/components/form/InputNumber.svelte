@@ -4,8 +4,8 @@
    * Always normalizes comma to dot on input. When type="number", value is dot-form so step/spinner work.
    * Use decimalComma only with type="text" for comma display. maxDecimals caps decimal places (default 2).
    */
-  import * as Field from "$lib/components/ui/field/index.js";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
 
   let {
     id,

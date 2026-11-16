@@ -1,10 +1,10 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Badge } from "$lib/components/ui/badge";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Badge } from "#lib/components/ui/badge/index.js";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import { formatAda, formatUsd } from "$lib/utils.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import { formatAda, formatUsd } from "#lib/utils.js";
 
   let { proposal } = $props();
   let expandedPriorFunding = $state(true);

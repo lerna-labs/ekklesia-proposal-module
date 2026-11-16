@@ -1,6 +1,6 @@
 <script>
-  import * as Accordion from "$lib/components/ui/accordion/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
+  import * as Accordion from "#lib/components/ui/accordion/index.js";
+  import { Badge } from "#lib/components/ui/badge/index.js";
   import FormConsortiumDetails from "./FormConsortiumDetails.svelte";
   import FormConsortiumGovernanceStatement from "./FormConsortiumGovernanceStatement.svelte";
   import FormColdCredentials from "./FormColdCredentials.svelte";

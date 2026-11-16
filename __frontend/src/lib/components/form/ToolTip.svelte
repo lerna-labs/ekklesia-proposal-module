@@ -1,5 +1,5 @@
 <script>
-  import * as Popover from "$lib/components/ui/popover/index.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
   import CircleQuestionMarkIcon from "@lucide/svelte/icons/circle-question-mark";
   let { content, class: className, fieldLabel } = $props();
 

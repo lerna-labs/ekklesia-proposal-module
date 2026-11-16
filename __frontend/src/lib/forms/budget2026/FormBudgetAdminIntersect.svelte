@@ -1,10 +1,10 @@
 <script>
-  import Checkbox from "$lib/components/form/Checkbox.svelte";
-  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
-  import Input from "$lib/components/form/Input.svelte";
-  import SelectCountries from "$lib/components/form/SelectCountries.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import Checkbox from "#lib/components/form/Checkbox.svelte";
+  import RadioGroup from "#lib/components/form/RadioGroup.svelte";
+  import Input from "#lib/components/form/Input.svelte";
+  import SelectCountries from "#lib/components/form/SelectCountries.svelte";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   let { formData = $bindable(), validationErrors } = $props();
 
   const COMPANY_FIELDS = [

@@ -1,9 +1,9 @@
 <script>
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import * as Tabs from "$lib/components/ui/tabs/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Button } from "$lib/components/ui/button";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import * as Tabs from "#lib/components/ui/tabs/index.js";
+  import { Label } from "#lib/components/ui/label/index.js";
+  import { Switch } from "#lib/components/ui/switch/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { goto, invalidateAll } from "$app/navigation";
   import {
@@ -16,12 +16,12 @@
     safeRedirectPath,
   } from "$stores/sessionManager.js";
   import { get } from "svelte/store";
-  import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
-  import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
-  import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
+  import Wallet from "#lib/WalletSigner/SignerWallet.svelte";
+  import CardanoSigner from "#lib/WalletSigner/SignerCS.svelte";
+  import SelectSignType from "#lib/WalletSigner/SignerSignType.svelte";
   import WalletMinimalIcon from "@lucide/svelte/icons/wallet-minimal";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { log } from "$lib/WalletSigner/logger.js";
+  import { Input } from "#lib/components/ui/input/index.js";
+  import { log } from "#lib/WalletSigner/logger.js";
   import { onMount } from "svelte";
   let { ballot = false, mode, dark, tx, buttonText = "Submit Votes" } = $props();
   let open = $state(false);

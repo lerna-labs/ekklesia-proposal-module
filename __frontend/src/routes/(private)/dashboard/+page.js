@@ -1,5 +1,5 @@
 import { api } from "$stores/sessionManager.js";
-import { draftSubmissionOpen } from "$lib/voteWindowPolicy.js";
+import { draftSubmissionOpen } from "#lib/voteWindowPolicy.js";
 
 const PROPOSAL_FETCH_LIMIT = 100;
 

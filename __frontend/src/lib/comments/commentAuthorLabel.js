@@ -1,4 +1,4 @@
-import { shortenString } from "$lib/utils.js";
+import { shortenString } from "#lib/utils.js";
 
 /**
  * Display label for a comment author: "Name (shortId)", shortened id only, or "—".

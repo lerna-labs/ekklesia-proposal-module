@@ -1,6 +1,6 @@
 <script>
   import Command from "./command.svelte";
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
   let {
     open = $bindable(false),
     ref = $bindable(null),

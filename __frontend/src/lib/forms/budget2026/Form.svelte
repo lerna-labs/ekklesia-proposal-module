@@ -1,7 +1,7 @@
 <script>
   import "./form.css";
-  import * as Accordion from "$lib/components/ui/accordion/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
+  import * as Accordion from "#lib/components/ui/accordion/index.js";
+  import { Badge } from "#lib/components/ui/badge/index.js";
   import FormTreasuryDonation from "./FormTreasuryDonation.svelte";
   import FormProjectDefinition from "./FormProjectDefinition.svelte";
   import FormStrategyFramework from "./FormStrategyFramework.svelte";
@@ -10,7 +10,7 @@
   import FormProposerDetails from "./FormProposerDetails.svelte";
   import FormBudgetAdmin from "./FormBudgetAdmin.svelte";
   import FormAdditionalInfo from "./FormAdditionalInfo.svelte";
-  import FormControls from "$lib/components/form/FormControls.svelte";
+  import FormControls from "#lib/components/form/FormControls.svelte";
   import FormLegalDeclarations from "./FormLegalDeclarations.svelte";
   import TreasuryDonationAcknowledgmentModal from "./TreasuryDonationAcknowledgmentModal.svelte";
   import { normalizeWorkPackage } from "./workPackageUtils.js";

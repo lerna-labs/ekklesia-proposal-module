@@ -1,14 +1,14 @@
 <script>
   import { goto, invalidateAll } from "$app/navigation";
   import { page } from "$app/state";
-  import ProposalDelete from "$lib/ProposalDelete.svelte";
-  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
-  import NotificationSettings from "$lib/notifications/NotificationSettings.svelte";
-  import * as Card from "$lib/components/ui/card";
-  import * as Pagination from "$lib/components/ui/pagination";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
+  import ProposalDelete from "#lib/ProposalDelete.svelte";
+  import ProposalWithdrawal from "#lib/ProposalWithdrawal.svelte";
+  import NotificationSettings from "#lib/notifications/NotificationSettings.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import * as Pagination from "#lib/components/ui/pagination/index.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -21,7 +21,7 @@
     liveResubmitOpen,
     proposerWithdrawOpen,
     voteForProposalRow,
-  } from "$lib/voteWindowPolicy.js";
+  } from "#lib/voteWindowPolicy.js";
 
   /** Stake sign-in uses a Cardano stake address as userId (e.g. stake_test1… / stake1…). */
   function isStakeUserId(userId) {

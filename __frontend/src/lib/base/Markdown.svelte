@@ -1,6 +1,6 @@
 <script>
   import MarkdownIt from "markdown-it";
-  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import LinkWarningDialog from "#lib/components/LinkWarningDialog.svelte";
 
   const md = new MarkdownIt({ html: false, linkify: true });
 

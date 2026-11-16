@@ -1,6 +1,6 @@
 <script>
-  import * as Popover from "$lib/components/ui/popover";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
 
   let { value = null, class: className = "" } = $props();
 

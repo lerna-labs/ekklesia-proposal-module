@@ -1,5 +1,5 @@
 <script>
-  import Comments from "$lib/comments/Comments.svelte";
+  import Comments from "#lib/comments/Comments.svelte";
   let { proposal, vote, showComments = false, readOnly = false } = $props();
 </script>
 

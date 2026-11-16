@@ -1,13 +1,13 @@
 <script>
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import Input from "$lib/components/form/Input.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import SelectRegions from "$lib/components/form/SelectRegions.svelte";
-  import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
-  import SocialMediaLinkField from "$lib/components/form/SocialMediaLinkField.svelte";
-  import XBrandIcon from "$lib/components/form/icons/XBrandIcon.svelte";
-  import LinkedInBrandIcon from "$lib/components/form/icons/LinkedInBrandIcon.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Input from "#lib/components/form/Input.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import SelectRegions from "#lib/components/form/SelectRegions.svelte";
+  import LinkListEditor from "#lib/components/form/LinkListEditor.svelte";
+  import SocialMediaLinkField from "#lib/components/form/SocialMediaLinkField.svelte";
+  import XBrandIcon from "#lib/components/form/icons/XBrandIcon.svelte";
+  import LinkedInBrandIcon from "#lib/components/form/icons/LinkedInBrandIcon.svelte";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import UsersRoundIcon from "@lucide/svelte/icons/users-round";
   import { countErrorsInTree } from "./sectionErrorCounts.js";

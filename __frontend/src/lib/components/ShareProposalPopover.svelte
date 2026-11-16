@@ -1,13 +1,13 @@
 <script>
-  import * as Popover from "$lib/components/ui/popover";
-  import { Button } from "$lib/components/ui/button";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import Share2Icon from "@lucide/svelte/icons/share-2";
   import MailIcon from "@lucide/svelte/icons/mail";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import { toast } from "svelte-sonner";
-  import XBrandIcon from "$lib/components/form/icons/XBrandIcon.svelte";
-  import LinkedInBrandIcon from "$lib/components/form/icons/LinkedInBrandIcon.svelte";
-  import FacebookBrandIcon from "$lib/components/form/icons/FacebookBrandIcon.svelte";
+  import XBrandIcon from "#lib/components/form/icons/XBrandIcon.svelte";
+  import LinkedInBrandIcon from "#lib/components/form/icons/LinkedInBrandIcon.svelte";
+  import FacebookBrandIcon from "#lib/components/form/icons/FacebookBrandIcon.svelte";
 
   let { buttonLabel = "Share Proposal", defaultText = "", shareUrl = "" } = $props();
 

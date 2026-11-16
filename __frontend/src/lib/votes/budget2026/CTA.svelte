@@ -1,11 +1,11 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import {
     canShowVotingUi,
     draftSubmissionOpen,
     buildVoteVotingUrl,
-  } from "$lib/voteWindowPolicy.js";
+  } from "#lib/voteWindowPolicy.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import UserIcon from "@lucide/svelte/icons/user";
   import VoteIcon from "@lucide/svelte/icons/vote";

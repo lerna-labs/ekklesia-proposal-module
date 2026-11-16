@@ -1,6 +1,6 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { Copy } from "lucide-svelte";
 

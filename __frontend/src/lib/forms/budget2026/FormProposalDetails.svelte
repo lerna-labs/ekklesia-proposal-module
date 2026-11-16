@@ -1,6 +1,6 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import InputNumber from "$lib/components/form/InputNumber.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import InputNumber from "#lib/components/form/InputNumber.svelte";
   import FormWorkPackages from "./FormWorkPackages.svelte";
   let { formData = $bindable(), validationErrors } = $props();
 

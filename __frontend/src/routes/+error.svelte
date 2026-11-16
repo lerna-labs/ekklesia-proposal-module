@@ -1,8 +1,8 @@
 <script>
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
 
   const getErrorTitle = () => {
     if (page.status === 404) {

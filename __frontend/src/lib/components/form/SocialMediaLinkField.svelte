@@ -1,8 +1,8 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { Input } from "#lib/components/ui/input/index.js";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
+  import PrivateFieldIndicator from "#lib/components/form/PrivateFieldIndicator.svelte";
   import GlobeIcon from "@lucide/svelte/icons/globe";
 
   /**
