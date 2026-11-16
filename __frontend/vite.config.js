@@ -95,28 +95,11 @@ export default defineConfig(({ mode }) => ({
     viteCompression({ algorithm: "gzip", ext: ".gz" }),
     viteCompression({ algorithm: "brotliCompress", ext: ".br" }),
     // SvelteKit 3 sets build.cssMinify to true, so re-apply esbuild after its config hook.
+    // lightningcss rejects nested @keyframes from a dependency; esbuild minify needs the esbuild devDependency.
     {
       name: "css-minify-esbuild",
       enforce: "post",
       config: () => ({ build: { cssMinify: "esbuild" } }),
     },
   ],
-  // Vite 8 defaults to lightningcss minify, which rejects nested @keyframes
-  // from dependencies (e.g. mic-pulsate-color). Prefer esbuild minify (needs
-  // optional `esbuild` peer) for SSR + client.
-  build: {
-    cssMinify: "esbuild",
-  },
-  environments: {
-    ssr: {
-      build: {
-        cssMinify: "esbuild",
-      },
-    },
-    client: {
-      build: {
-        cssMinify: "esbuild",
-      },
-    },
-  },
 }));
