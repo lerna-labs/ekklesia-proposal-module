@@ -1,4 +1,4 @@
-@reference "$lib/css/layout.css";
+@reference "../../css/layout.css";
 
 /* Match global h3 (layout.css) — accordion uses h2 for semantics but same visual scale as field group titles */
 form .section-title {

@@ -1,8 +1,8 @@
 <script>
-  import Markdown from "$lib/base/Markdown.svelte";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
-  import ItemContainer from "$lib/votes/budget2026/ItemContainer.svelte";
-  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
+  import ItemContainer from "#lib/votes/budget2026/ItemContainer.svelte";
+  import LinkWarningDialog from "#lib/components/LinkWarningDialog.svelte";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import UsersRoundIcon from "@lucide/svelte/icons/users-round";

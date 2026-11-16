@@ -1,8 +1,8 @@
 <script>
   import { invalidateAll } from "$app/navigation";
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
   import { user } from "$stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
@@ -10,12 +10,12 @@
   import HashIcon from "@lucide/svelte/icons/hash";
   import UserIcon from "@lucide/svelte/icons/user";
   import ClockIcon from "@lucide/svelte/icons/clock";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
-  import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import ProposalCardDangerZone from "#lib/ProposalCardDangerZone.svelte";
+  import ProposalRevisionHistory from "#lib/ProposalRevisionHistory.svelte";
   import { toast } from "svelte-sonner";
-  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import { buildProposalVotingUrl, canShowVotingUi } from "#lib/voteWindowPolicy.js";
 
   let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
 

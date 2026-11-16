@@ -1,12 +1,12 @@
 <script>
   import { toast } from "svelte-sonner";
   import { api } from "$stores/sessionManager.js";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Button } from "$lib/components/ui/button";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import * as Input from "$lib/components/ui/input";
-  import * as Select from "$lib/components/ui/select";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import { Badge } from "#lib/components/ui/badge/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import * as Input from "#lib/components/ui/input/index.js";
+  import * as Select from "#lib/components/ui/select/index.js";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
 
   let { user = null, notification = null, onSaved = () => {} } = $props();
 

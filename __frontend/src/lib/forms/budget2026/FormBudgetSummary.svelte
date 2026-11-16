@@ -1,8 +1,8 @@
 <script>
   /** @see __frontend/docs/budget2026/form-budget-summary.md Version: 1.0.0 */
-  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import { formatAda, formatUsd } from "$lib/utils.js";
+  import RadioGroup from "#lib/components/form/RadioGroup.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import { formatAda, formatUsd } from "#lib/utils.js";
   let { formData = $bindable(), validationErrors } = $props();
 
   const workPackages = $derived(formData.metaData?.proposalDetails?.workPackages ?? []);

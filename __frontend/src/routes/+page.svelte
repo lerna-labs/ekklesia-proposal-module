@@ -1,9 +1,9 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { ExternalLinkIcon } from "lucide-svelte";
 
-  /** Matches [Navigation.svelte]($lib/base/Navigation.svelte) “All Voting Events”. */
+  /** Matches [Navigation.svelte](#lib/base/Navigation.svelte) “All Voting Events”. */
   const ALL_VOTING_EVENTS_HREF = "https://intersect.ekklesia.vote/ballots";
 
   /** Header grows to push footer down; title/description size to content (do not shrink description below content). */

@@ -1,5 +1,5 @@
 <script>
-  import Checkbox from "$lib/components/form/Checkbox.svelte";
+  import Checkbox from "#lib/components/form/Checkbox.svelte";
 
   let { formData = $bindable(), validationErrors, consortiumExtraCheckbox = false } = $props();
 

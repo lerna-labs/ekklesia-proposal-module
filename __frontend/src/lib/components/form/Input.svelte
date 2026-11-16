@@ -1,6 +1,6 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { Input } from "#lib/components/ui/input/index.js";
   import ToolTip from "./ToolTip.svelte";
   import PrivateFieldIndicator from "./PrivateFieldIndicator.svelte";
   let {

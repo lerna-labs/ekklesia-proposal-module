@@ -1,11 +1,11 @@
 <script>
   import { loggedIn, user } from "$stores/sessionManager.js";
   import { createEventDispatcher } from "svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import { Textarea } from "$lib/components/ui/textarea/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import { Textarea } from "#lib/components/ui/textarea/index.js";
+  import { Input } from "#lib/components/ui/input/index.js";
   import { toast } from "svelte-sonner";
-  import { getPayload, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
+  import { getPayload, submitSignature } from "#lib/WalletSigner/WalletSigner.js";
   import SignerCommand from "./SignerCommand.svelte";
 
   const dispatch = createEventDispatcher();

@@ -1,8 +1,8 @@
 <script>
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
-  import FormPillarCard from "$lib/forms/budget2026/FormPillarCard.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
+  import FormPillarCard from "#lib/forms/budget2026/FormPillarCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
 
   let { proposal, pillars = [] } = $props();
 

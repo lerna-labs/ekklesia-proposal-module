@@ -5,20 +5,20 @@
    * Table columns: Item name, Category, Quantity, Total (ADA).
    */
   import { z } from "zod";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import Input from "$lib/components/form/Input.svelte";
-  import InputNumber from "$lib/components/form/InputNumber.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import * as Select from "$lib/components/ui/select/index.js";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Input from "#lib/components/form/Input.svelte";
+  import InputNumber from "#lib/components/form/InputNumber.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import * as Select from "#lib/components/ui/select/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import { budgetRowSchema, COST_CATEGORIES_LIST } from "./Schema.js";
-  import { formatAda, formatUsd } from "$lib/utils.js";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import { formatAda, formatUsd } from "#lib/utils.js";
+  import Markdown from "#lib/base/Markdown.svelte";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
 
   let {
     value = $bindable([]),

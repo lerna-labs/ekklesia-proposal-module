@@ -1,8 +1,8 @@
 <script>
   /** @see __frontend/docs/budget2026/form-strategy-framework.md Version: 1.0.0 */
-  import * as Field from "$lib/components/ui/field/index.js";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
   import FormPillarCard from "./FormPillarCard.svelte";
 
   let { formData = $bindable(), pillars: pillarOptions = [], validationErrors } = $props();

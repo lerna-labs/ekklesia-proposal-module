@@ -1,10 +1,10 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import { shortenString } from "$lib/utils.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import { shortenString } from "#lib/utils.js";
+  import { Badge } from "#lib/components/ui/badge/index.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
   import Timestamp from "./CommentCardTimestamp.svelte";
   import { commentAuthorLabel } from "./commentAuthorLabel.js";
   import { Heart, MessageSquare, MessagesSquare, Pencil, Trash2Icon } from "lucide-svelte";

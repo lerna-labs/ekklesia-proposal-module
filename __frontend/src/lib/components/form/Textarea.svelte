@@ -1,12 +1,12 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
   import ToolTip from "./ToolTip.svelte";
   import PrivateFieldIndicator from "./PrivateFieldIndicator.svelte";
 
   let EditorComponent = $state(null);
   $effect(() => {
     if (EditorComponent) return;
-    import("$lib/editor/Editor.svelte").then((m) => {
+    import("#lib/editor/Editor.svelte").then((m) => {
       EditorComponent = m.default;
     });
   });

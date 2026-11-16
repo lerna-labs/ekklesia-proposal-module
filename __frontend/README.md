@@ -4,11 +4,11 @@ SvelteKit frontend for the Ekklesia Proposal Module. It talks to the backend API
 (see project root) for votes, proposals, categories, session, comments, and
 notification settings.
 
-Requires **Node.js 22.12+**.
+Requires **Node.js 22.17+**.
 
 ## Stack
 
-- **SvelteKit 2** with **Svelte 5** (runes, snippets)
+- **SvelteKit 3** with **Svelte 5** (runes, snippets)
 - **adapter-static** — build outputs to `../public` for serving from the Express backend
 - **Tailwind CSS 4** + [**shadcn-svelte**](https://shadcn-svelte.com/) for UI components
 - **Wallet sign-in** via stake/DRep (Mesh/CIP-30) with httpOnly JWT cookie session

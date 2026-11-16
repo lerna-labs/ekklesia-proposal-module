@@ -1,7 +1,7 @@
 <script>
-  import Input from "$lib/components/form/Input.svelte";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { cn } from "$lib/utils.js";
+  import Input from "#lib/components/form/Input.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { cn } from "#lib/utils.js";
 
   /** @typedef {'keyCredential' | 'scriptCredential'} ColdCredentialType */
 

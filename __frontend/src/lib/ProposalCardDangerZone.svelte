@@ -1,8 +1,8 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
-  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
+  import ProposalWithdrawal from "#lib/ProposalWithdrawal.svelte";
 
   /** @type {{ proposal: object, onSuccess?: () => void, title?: string, description?: string, isProposer?: boolean }} */
   let {

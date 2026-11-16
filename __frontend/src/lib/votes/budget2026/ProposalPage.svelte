@@ -1,6 +1,6 @@
 <script>
   import { goto } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "#lib/components/ui/button/index.js";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import ProposalPageTitle from "./ProposalPageTitle.svelte";
   import ProposalPageKeyDetails from "./ProposalPageKeyDetails.svelte";

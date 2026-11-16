@@ -1,13 +1,13 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { queryStringWithLiteralCommas } from "$lib/utils.js";
-  import * as Popover from "$lib/components/ui/popover";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
-  import * as Select from "$lib/components/ui/select/index.js";
-  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
-  import * as Separator from "$lib/components/ui/separator";
+  import { queryStringWithLiteralCommas } from "#lib/utils.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+  import * as Select from "#lib/components/ui/select/index.js";
+  import { Checkbox } from "#lib/components/ui/checkbox/index.js";
+  import { Label } from "#lib/components/ui/label/index.js";
+  import * as Separator from "#lib/components/ui/separator/index.js";
   import { user } from "$stores/sessionManager.js";
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";

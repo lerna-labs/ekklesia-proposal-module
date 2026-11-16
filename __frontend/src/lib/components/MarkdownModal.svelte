@@ -1,7 +1,7 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { buttonVariants } from "$lib/components/ui/button";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
+  import { buttonVariants } from "#lib/components/ui/button/index.js";
+  import Markdown from "#lib/base/Markdown.svelte";
 
   let {
     open = $bindable(false),

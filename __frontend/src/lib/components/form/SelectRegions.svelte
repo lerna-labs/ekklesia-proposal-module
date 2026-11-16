@@ -1,8 +1,8 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
-  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
-  import * as Select from "$lib/components/ui/select/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
+  import PrivateFieldIndicator from "#lib/components/form/PrivateFieldIndicator.svelte";
+  import * as Select from "#lib/components/ui/select/index.js";
 
   let {
     id,
