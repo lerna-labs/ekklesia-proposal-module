@@ -3,13 +3,13 @@
    * Core objectives list for a work package. List, add, edit, delete text objectives.
    */
   import { z } from "zod";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";

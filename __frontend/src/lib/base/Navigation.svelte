@@ -1,7 +1,7 @@
 <script>
   import { loggedIn, logout } from "$stores/sessionManager.js";
-  import Button from "$lib/components/ui/button/button.svelte";
-  import WalletSigner from "$lib/WalletSigner/WalletSigner.svelte";
+  import Button from "#lib/components/ui/button/button.svelte";
+  import WalletSigner from "#lib/WalletSigner/WalletSigner.svelte";
   import { User, LogOut, Menu, X, ExternalLinkIcon } from "lucide-svelte";
 
   /** Matches [+page.svelte](routes/+page.svelte) “View Docs”. */

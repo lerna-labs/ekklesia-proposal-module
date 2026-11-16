@@ -1,6 +1,6 @@
 <script>
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import RadioGroup from "#lib/components/form/RadioGroup.svelte";
   let { formData = $bindable(), validationErrors } = $props();
 
   const contractingPartyErrors = $derived({

@@ -1,13 +1,13 @@
 <script>
-  import * as Sheet from "$lib/components/ui/sheet";
-  import { Button } from "$lib/components/ui/button";
+  import * as Sheet from "#lib/components/ui/sheet/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { api } from "$stores/sessionManager.js";
-  import { getChangedSectionLabels, getChangedDetails } from "$lib/proposalRevisionUtils.js";
+  import { getChangedSectionLabels, getChangedDetails } from "#lib/proposalRevisionUtils.js";
   import {
     sectionMapping as budget2026SectionMapping,
     sectionOrder as budget2026SectionOrder,
-  } from "$lib/forms/budget2026/revisionSectionMapping.js";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
+  } from "#lib/forms/budget2026/revisionSectionMapping.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import ClockIcon from "@lucide/svelte/icons/clock";

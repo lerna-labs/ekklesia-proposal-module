@@ -1,5 +1,5 @@
 <script>
-  import * as Popover from "$lib/components/ui/popover/index.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
   import EyeOffIcon from "@lucide/svelte/icons/eye-off";
   let { class: className } = $props();
 

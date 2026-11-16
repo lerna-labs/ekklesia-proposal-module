@@ -5,10 +5,10 @@
    * Parent must call goto("/dashboard") on Cancel.
    * @see docs/treasury-donation-acknowledgment-modal-plan.md
    */
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
-  import Checkbox from "$lib/components/form/Checkbox.svelte";
-  import { Separator } from "$lib/components/ui/separator/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import Checkbox from "#lib/components/form/Checkbox.svelte";
+  import { Separator } from "#lib/components/ui/separator/index.js";
 
   let { open = $bindable(false), onContinue, onCancel } = $props();
 

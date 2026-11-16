@@ -4,11 +4,11 @@
    * Each card shows inline form fields; no modal. Data lives in the proposal.
    * @see __frontend/docs/budget2026/form-work-packages.md Version: 1.0.0
    */
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import ToolTip from "$lib/components/form/ToolTip.svelte";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ToolTip from "#lib/components/form/ToolTip.svelte";
   import FormWorkPackagesCard from "./FormWorkPackagesCard.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import { getDefaultDraft } from "./workPackageUtils.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
 

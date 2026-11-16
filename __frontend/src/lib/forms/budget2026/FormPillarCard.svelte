@@ -1,6 +1,6 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import Markdown from "#lib/base/Markdown.svelte";
   import LandmarkIcon from "@lucide/svelte/icons/landmark";
 
   let {

@@ -5,7 +5,7 @@ import { toast } from "svelte-sonner";
 const API_URL = import.meta.env.VITE_API_URL;
 
 // proposal-module specific function
-import { clearPreviewStorage } from "$lib/previewProposalStorage.js";
+import { clearPreviewStorage } from "#lib/previewProposalStorage.js";
 
 // Create a writable store to manage the session
 export const loggedIn = writable(false);

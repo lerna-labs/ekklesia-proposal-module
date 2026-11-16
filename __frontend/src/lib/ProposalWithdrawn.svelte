@@ -1,7 +1,7 @@
 <script>
-  import * as Alert from "$lib/components/ui/alert-dialog/index.js";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import * as Alert from "#lib/components/ui/alert-dialog/index.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import Markdown from "#lib/base/Markdown.svelte";
 
   let { proposal, open = $bindable(false) } = $props();
 </script>

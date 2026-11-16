@@ -18,8 +18,8 @@
 </script>
 
 <script>
-  import { cn } from "$lib/utils.js";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { cn } from "#lib/utils.js";
+  import { Button } from "#lib/components/ui/button/index.js";
 
   let {
     ref = $bindable(null),

@@ -1,9 +1,9 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/state";
-  import { queryStringWithLiteralCommas } from "$lib/utils.js";
-  import * as Input from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
+  import { queryStringWithLiteralCommas } from "#lib/utils.js";
+  import * as Input from "#lib/components/ui/input/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";
 

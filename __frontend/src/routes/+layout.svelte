@@ -1,10 +1,10 @@
 <script>
-  import "$lib/css/layout.css";
-  import Header from "$lib/base/Header.svelte";
-  import Footer from "$lib/base/Footer.svelte";
-  import { Toaster } from "$lib/components/ui/sonner/index.js";
-  import VersionCheck from "$lib/base/VersionCheck.svelte";
-  import SessionExpiryTimer from "$lib/session/SessionExpiryTimer.svelte";
+  import "#lib/css/layout.css";
+  import Header from "#lib/base/Header.svelte";
+  import Footer from "#lib/base/Footer.svelte";
+  import { Toaster } from "#lib/components/ui/sonner/index.js";
+  import VersionCheck from "#lib/base/VersionCheck.svelte";
+  import SessionExpiryTimer from "#lib/session/SessionExpiryTimer.svelte";
 
   let { children } = $props();
   const maintenanceModeEnabled = import.meta.env.VITE_MAINTENANCE_MODE === "true";

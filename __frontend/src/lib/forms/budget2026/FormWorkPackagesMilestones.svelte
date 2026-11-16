@@ -4,13 +4,13 @@
    * Fields: Milestone (and reference name), Deliverables, Acceptance Criteria, Duration.
    */
   import { z } from "zod";
-  import * as Field from "$lib/components/ui/field/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import Input from "$lib/components/form/Input.svelte";
-  import InputNumber from "$lib/components/form/InputNumber.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Input from "#lib/components/form/Input.svelte";
+  import InputNumber from "#lib/components/form/InputNumber.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import { milestoneSchema } from "./Schema.js";
   import TrashIcon from "@lucide/svelte/icons/trash-2";
   import PencilIcon from "@lucide/svelte/icons/pencil";

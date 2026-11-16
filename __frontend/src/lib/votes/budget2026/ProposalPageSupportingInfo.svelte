@@ -1,5 +1,5 @@
 <script>
-  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import LinkWarningDialog from "#lib/components/LinkWarningDialog.svelte";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 
   let { proposal } = $props();

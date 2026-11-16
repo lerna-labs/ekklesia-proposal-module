@@ -1,8 +1,8 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Card from "$lib/components/ui/card";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
-  import { formatUtcFullDateTime } from "$lib/formatUtc.js";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+  import { formatUtcFullDateTime } from "#lib/formatUtc.js";
   import CheckIcon from "@lucide/svelte/icons/check";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 

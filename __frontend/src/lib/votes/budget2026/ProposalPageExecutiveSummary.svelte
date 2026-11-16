@@ -1,7 +1,7 @@
 <script>
-  import Markdown from "$lib/base/Markdown.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
   import ItemContainer from "./ItemContainer.svelte";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
   let { proposal } = $props();
   let expandedSummary = $state(true);
   let expandedTrackRecord = $state(true);

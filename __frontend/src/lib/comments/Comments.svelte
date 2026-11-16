@@ -1,5 +1,5 @@
 <script>
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { untrack } from "svelte";
   import { user, showLogin, loggedIn } from "$stores/sessionManager.js";
@@ -13,7 +13,7 @@
   import {
     feedbackActionsOpen,
     feedbackWindowActionsDisabledTitle,
-  } from "$lib/voteWindowPolicy.js";
+  } from "#lib/voteWindowPolicy.js";
 
   let { proposalId, proposal, vote, readOnly = false } = $props();
 
@@ -375,7 +375,7 @@
           .join("\n")
       : "";
     submitError = null;
-    await import("$lib/editor/Editor.svelte");
+    await import("#lib/editor/Editor.svelte");
     addDialogOpen = true;
   }
 

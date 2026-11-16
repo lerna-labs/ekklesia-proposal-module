@@ -1,7 +1,7 @@
 <script>
-  import Markdown from "$lib/base/Markdown.svelte";
-  import { Badge } from "$lib/components/ui/badge";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import { Badge } from "#lib/components/ui/badge/index.js";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
   import ItemContainer from "./ItemContainer.svelte";
   let { proposal } = $props();
   let expandedAdministrator = $state(true);
