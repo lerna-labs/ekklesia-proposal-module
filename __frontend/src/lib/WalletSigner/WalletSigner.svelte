@@ -5,7 +5,7 @@
   import { Switch } from "#lib/components/ui/switch/index.js";
   import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import {
     api,
     loggedIn,
@@ -14,7 +14,7 @@
     showLogin,
     redirectAfterLogin,
     safeRedirectPath,
-  } from "$stores/sessionManager.js";
+  } from "#stores/sessionManager.js";
   import { get } from "svelte/store";
   import Wallet from "#lib/WalletSigner/SignerWallet.svelte";
   import CardanoSigner from "#lib/WalletSigner/SignerCS.svelte";
@@ -89,7 +89,7 @@
     toast.success(event.detail.message);
     // $user.pendingVoteCount = -1;
     // $user.lastTransaction = event.detail.transaction;
-    await invalidateAll();
+    await refreshAll();
     open = false;
     showLogin.set(false);
   }
@@ -112,7 +112,7 @@
       redirectAfterLogin.set(null);
       await goto(safeRedirectPath(path));
     } else {
-      await invalidateAll();
+      await refreshAll();
       // If we're on /login, go to dashboard so we don't stay on the login page
       if (typeof window !== "undefined" && window.location.pathname === "/login") {
         await goto("/dashboard");

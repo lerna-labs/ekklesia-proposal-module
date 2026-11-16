@@ -6,7 +6,7 @@
     sessionExpiresAt,
     sessionExpiryBannerVisible,
     expireSession,
-  } from "$stores/sessionManager.js";
+  } from "#stores/sessionManager.js";
 
   let { warningSeconds = 5 * 60 } = $props();
   let now = $state(Date.now());

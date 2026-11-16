@@ -1,4 +1,4 @@
-import { api } from "$stores/sessionManager.js";
+import { api } from "#stores/sessionManager.js";
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ url, fetch }) {

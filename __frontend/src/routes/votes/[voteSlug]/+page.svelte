@@ -11,7 +11,7 @@
   import { queryStringWithLiteralCommas, shortenString } from "#lib/utils.js";
   import BudgetProcessTimeline from "#lib/components/BudgetProcessTimeline.svelte";
   import XIcon from "@lucide/svelte/icons/x";
-  import { user } from "$stores/sessionManager.js";
+  import { user } from "#stores/sessionManager.js";
   import { canShowVotingUi } from "#lib/voteWindowPolicy.js";
 
   const voteTimelineModules = import.meta.glob("#lib/votes/*/timeline.js", {
@@ -200,7 +200,7 @@
         restored.set("page", "1");
         const path = page.url.pathname;
         const qs = queryStringWithLiteralCommas(restored);
-        goto(`${path}?${qs}`, { replaceState: true });
+        goto(`${path}?${qs}`, { replace: true });
       }
     } else {
       hasTriggeredRestore = false;

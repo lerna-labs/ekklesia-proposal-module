@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { api } from "$stores/sessionManager.js";
+import { api } from "#stores/sessionManager.js";
 import { draftSubmissionOpen, liveResubmitOpen } from "#lib/voteWindowPolicy.js";
 
 /** @type {import('./$types').PageLoad} */

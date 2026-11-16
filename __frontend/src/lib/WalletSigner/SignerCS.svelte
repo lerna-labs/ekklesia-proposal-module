@@ -1,5 +1,5 @@
 <script>
-  import { loggedIn, user } from "$stores/sessionManager.js";
+  import { loggedIn, user } from "#stores/sessionManager.js";
   import { createEventDispatcher } from "svelte";
   import { Button } from "#lib/components/ui/button/index.js";
   import { Textarea } from "#lib/components/ui/textarea/index.js";

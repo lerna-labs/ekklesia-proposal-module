@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { redirectAfterLogin } from "$stores/sessionManager.js";
+import { redirectAfterLogin } from "#stores/sessionManager.js";
 const API_URL = import.meta.env.VITE_API_URL;
 
 /** @type {import('./$types').LayoutLoad} */

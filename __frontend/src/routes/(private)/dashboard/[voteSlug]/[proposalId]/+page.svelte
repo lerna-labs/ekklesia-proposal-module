@@ -1,8 +1,8 @@
 <script>
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import DelayedFormLoader from "#lib/components/DelayedFormLoader.svelte";
-  import { api } from "$stores/sessionManager.js";
+  import { api } from "#stores/sessionManager.js";
   import { fade } from "svelte/transition";
 
   const FORM_CHUNKS = {
@@ -61,7 +61,7 @@
         } else {
           toast.success(payload.status === "live" ? "Proposal submitted." : "Proposal saved.");
         }
-        await invalidateAll();
+        await refreshAll();
         if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
           goto("/dashboard");
       } else {
