@@ -1,9 +1,9 @@
 <script>
-  import { invalidateAll } from "$app/navigation";
+  import { refreshAll } from "$app/navigation";
   import * as Card from "#lib/components/ui/card/index.js";
   import { Button } from "#lib/components/ui/button/index.js";
   import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
-  import { user } from "$stores/sessionManager.js";
+  import { user } from "#stores/sessionManager.js";
   import MessageSquareIcon from "@lucide/svelte/icons/message-square";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import VoteIcon from "@lucide/svelte/icons/vote";
@@ -258,7 +258,7 @@
           <ProposalCardDangerZone
             {proposal}
             isProposer={isOwnProposal}
-            onSuccess={() => invalidateAll()}
+            onSuccess={() => refreshAll()}
           />
         </div>
       {/if}

@@ -1,5 +1,5 @@
 <script>
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import { page } from "$app/state";
   import ProposalDelete from "#lib/ProposalDelete.svelte";
   import ProposalWithdrawal from "#lib/ProposalWithdrawal.svelte";
@@ -123,7 +123,7 @@
               </p>
             </div>
             <div class="border-t pt-6">
-              <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
+              <NotificationSettings {user} {notification} onSaved={() => refreshAll()} />
             </div>
           </Card.Content>
         </Card.Root>
@@ -470,12 +470,12 @@
 <ProposalDelete
   bind:open={deleteDialogOpen}
   proposal={deleteProposal}
-  onSuccess={() => invalidateAll()}
+  onSuccess={() => refreshAll()}
 />
 <ProposalWithdrawal
   bind:open={withdrawDialogOpen}
   proposal={withdrawProposal}
-  onSuccess={() => invalidateAll()}
+  onSuccess={() => refreshAll()}
 />
 
 <ProposalWithdrawn

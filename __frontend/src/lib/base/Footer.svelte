@@ -1,6 +1,6 @@
 <script>
   import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
-  import { versionInfo } from "$stores/versionStore.js";
+  import { versionInfo } from "#stores/versionStore.js";
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });

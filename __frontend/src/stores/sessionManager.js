@@ -102,8 +102,7 @@ export const api = {
         if (hadAuth) {
           await expireSession();
         }
-        throw error(401, {
-          message: hadAuth ? "Token expired, please log in again" : "Unauthorized",
+        throw error(401, hadAuth ? "Token expired, please log in again" : "Unauthorized", {
           code: hadAuth ? "SESSION_EXPIRED" : "UNAUTHORIZED",
         });
       }
@@ -120,8 +119,7 @@ export const api = {
         } catch {
           if (text) message = text;
         }
-        const body = errors != null ? { message, errors } : { message };
-        throw error(response.status, body);
+        throw error(response.status, message, errors != null ? { errors } : undefined);
       }
 
       return response;
