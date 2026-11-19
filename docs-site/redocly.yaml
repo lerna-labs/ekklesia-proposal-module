@@ -1,0 +1,20 @@
+extends:
+  - recommended
+
+# Keep lint tractable for the published proposals spec. Security is declared
+# per operation where it applies, and the same pragmatic allowances used for
+# the rest of the Ekklesia specs apply here.
+rules:
+  security-defined: off
+  operation-4xx-response: off
+  info-license-strict: off
+  operation-operationId: error
+  operation-operationId-unique: error
+  no-enum-type-mismatch: error
+  no-unused-components: warn
+  nullable-type-sibling: error
+  struct: error
+
+apis:
+  proposals@v0:
+    root: api/openapi.yaml

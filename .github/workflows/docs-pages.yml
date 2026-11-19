@@ -1,0 +1,91 @@
+name: Deploy documentation site
+
+# Publishes docs-site/ to GitHub Pages. The site is built from main, so what is
+# published always corresponds to a promoted release rather than to whatever
+# development has accumulated. A manual run is available for republishing after
+# an upstream change with no code push behind it.
+#
+# GitHub Pages must be enabled for the repository with "GitHub Actions" as the
+# source, and the custom domain in docs-site/CNAME must resolve, before the
+# deploy job can succeed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs-site/**"
+      - ".github/workflows/docs-pages.yml"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for the manual deploy"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - run: npm ci
+
+      - name: Check markdown formatting
+        run: npm run fmt:check
+
+      - name: Validate the OpenAPI specification
+        run: npm run lint:specs
+
+      - name: Generate the Postman collection
+        run: npm run postman
+
+      - name: Write the version data
+        run: npm run version:data
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: docs-site
+
+      - uses: actions/configure-pages@v6
+
+      - name: Build with Jekyll
+        run: bundle exec jekyll build --destination ./_site
+        env:
+          JEKYLL_ENV: production
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs-site/_site
+
+  deploy:
+    name: Deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
