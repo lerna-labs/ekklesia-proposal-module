@@ -1,6 +1,6 @@
 /**
  * Ratchet — root and __frontend package.json must declare engines.node
- * with a floor of at least Node 22.12.0 (Vite 8 / plugin-svelte 7).
+ * with a floor of at least Node 22.17.0 (SvelteKit 3.2).
  */
 import fs from "fs/promises";
 import path from "path";
@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../..");
 
 /** @type {[number, number, number]} */
-const MIN_VERSION = [22, 12, 0];
+const MIN_VERSION = [22, 17, 0];
 const manifests = [
   path.join(repoRoot, "package.json"),
   path.join(repoRoot, "__frontend", "package.json"),

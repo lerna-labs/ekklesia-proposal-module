@@ -1,7 +1,7 @@
 <script>
   import * as Sheet from "#lib/components/ui/sheet/index.js";
   import { Button } from "#lib/components/ui/button/index.js";
-  import { api } from "$stores/sessionManager.js";
+  import { api } from "#stores/sessionManager.js";
   import { getChangedSectionLabels, getChangedDetails } from "#lib/proposalRevisionUtils.js";
   import {
     sectionMapping as budget2026SectionMapping,

@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { loggedIn, expireSession } from "$stores/sessionManager.js";
+import { loggedIn, expireSession } from "#stores/sessionManager.js";
 
 const API_BASE =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL

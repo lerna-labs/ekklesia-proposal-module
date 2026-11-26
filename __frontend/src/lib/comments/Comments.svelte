@@ -2,7 +2,7 @@
   import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { untrack } from "svelte";
-  import { user, showLogin, loggedIn } from "$stores/sessionManager.js";
+  import { user, showLogin, loggedIn } from "#stores/sessionManager.js";
   import { fetchJson } from "./fetchJson.js";
   import { commentAuthorLabel as authorLabel } from "./commentAuthorLabel.js";
   import CommentsHeader from "./CommentsHeader.svelte";

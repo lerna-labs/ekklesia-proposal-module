@@ -6,7 +6,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { defineConfig, loadEnv } from "vite";
-import viteCompression from "vite-plugin-compression";
 
 /**
  * Inject or omit shell OG/Twitter URL+image meta from VITE_SITE_URL (F-017).
@@ -87,13 +86,7 @@ export default defineConfig(({ mode }) => ({
         assets: "../public",
         fallback: "index.html",
       }),
-
-      alias: {
-        $stores: path.resolve("./src/stores"),
-      },
     }),
-    viteCompression({ algorithm: "gzip", ext: ".gz" }),
-    viteCompression({ algorithm: "brotliCompress", ext: ".br" }),
     // SvelteKit 3 sets build.cssMinify to true, so re-apply esbuild after its config hook.
     // lightningcss rejects nested @keyframes from a dependency; esbuild minify needs the esbuild devDependency.
     {

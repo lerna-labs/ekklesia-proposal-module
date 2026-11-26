@@ -1,6 +1,6 @@
 <script>
   import { toast } from "svelte-sonner";
-  import { api } from "$stores/sessionManager.js";
+  import { api } from "#stores/sessionManager.js";
   import { Badge } from "#lib/components/ui/badge/index.js";
   import { Button } from "#lib/components/ui/button/index.js";
   import * as Field from "#lib/components/ui/field/index.js";
