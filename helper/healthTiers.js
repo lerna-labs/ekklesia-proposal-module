@@ -82,7 +82,7 @@ export function createBoundedCheck(
  */
 export function createReadinessHandler({ checkDatabase, routesLoaded: loaded }) {
   return async (req, res) => {
-    let ready = false;
+    let ready;
     try {
       ready = Boolean(await checkDatabase()) && Boolean(loaded());
     } catch {
