@@ -18,7 +18,7 @@
     "prepare": "svelte-kit sync || echo ''"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "@internationalized/date": "^3.10.1",
     "@lucide/svelte": "^1.27.0",
     "@sveltejs/adapter-static": "^4.0.1",
@@ -30,7 +30,7 @@
     "bits-ui": "^2.15.4",
     "clsx": "^2.1.1",
     "esbuild": "^0.28.1",
-    "eslint": "^9.39.1",
+    "eslint": "^10.16.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-svelte": "^3.13.0",
     "globals": "^16.5.0",
