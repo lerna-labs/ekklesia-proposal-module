@@ -41,7 +41,7 @@ const impersonate =
   "(not set — GMAIL_IMPERSONATE_USER / WORKSPACE_SENDER_EMAIL)";
 
 const keyPath = resolveServiceAccountKeyPath();
-let clientEmail = "(unreadable)";
+let clientEmail;
 try {
   if (fs.existsSync(keyPath)) {
     const key = JSON.parse(fs.readFileSync(keyPath, "utf8"));

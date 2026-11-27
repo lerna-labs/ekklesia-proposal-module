@@ -50,15 +50,14 @@
   "overrides": {
     "undici": "^6.29.1",
     "ip-address": "^10.7.4",
-    "nanoid": "^3.3.18",
-    "brace-expansion": "^2.1.7"
+    "nanoid": "^3.3.18"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "eslint": "^9.39.1",
+    "eslint": "^10.16.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.5.0",
     "prettier": "^3.6.2"
