@@ -212,3 +212,60 @@ test("a multisig session never manages proposals, whatever the settings say", ()
     },
   );
 });
+
+test("a multisig cosigner may sign with a payment, stake or DRep key, and no other", () => {
+  // Under the default WALLETSIGNER_USER_TYPES, which lists no payment address
+  withEnv({ WALLETSIGNER_MULTISIG: "true" }, () => {
+    for (const signType of ["addr", "stake", "drep"]) {
+      assert.equal(signInRefusal(signType, true), null, signType);
+    }
+    assert.match(signInRefusal("pool", true), /Cosigner key type "pool" is not allowed/);
+  });
+  // The cosigner's key type is not limited by WALLETSIGNER_USER_TYPES
+  withEnv(
+    {
+      WALLETSIGNER_MULTISIG: "true",
+      WALLETSIGNER_USER_TYPES: "drep,pool",
+      PROPOSAL_SIGNER_TYPES: "drep",
+      WALLETSIGNER_USER_DEFAULT: "drep",
+    },
+    () => {
+      assert.equal(signInRefusal("addr", true), null);
+      assert.equal(signInRefusal("stake", true), null);
+      assert.match(signInRefusal("pool", true), /not allowed/);
+    },
+  );
+});
+
+test("a direct addr sign-in is refused, since it is not a voter type", () => {
+  withEnv({}, () => {
+    assert.match(signInRefusal("addr", false), /"addr" is disabled/);
+  });
+  assert.throws(() => getSignInSettings({ WALLETSIGNER_USER_TYPES: "addr" }), /"addr"/);
+});
+
+test("validateSessionRequest lets a multisig addr cosigner past the refusal check", () => {
+  withEnv({ WALLETSIGNER_MULTISIG: "true" }, () => {
+    const req = {
+      body: {
+        signerAddress: "addr_test1vppz6uj2d0qkyelafxkta3ajm56xk3avp64hxr7yqwg7ezsp3p2fx",
+        signType: "addr",
+        scriptAddress: "drep1y2abc",
+      },
+    };
+    const res = fakeRes();
+    let called = false;
+    validateSessionRequest(req, res, () => (called = true));
+    assert.equal(res.code, null);
+    assert.equal(called, true);
+    assert.equal(req.signType, "addr");
+
+    const pool = fakeRes();
+    validateSessionRequest(
+      { body: { signerAddress: "pool1abc", signType: "pool", scriptAddress: "drep1y2abc" } },
+      pool,
+      () => {},
+    );
+    assert.equal(pool.code, 403);
+  });
+});

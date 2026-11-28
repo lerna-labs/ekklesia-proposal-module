@@ -1203,7 +1203,7 @@ nonce that the user must sign to prove identity.
 | Field           | Type   | Required | Description                                              |
 |-----------------|--------|----------|----------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (must be valid Bech32 address) |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`               |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`; with `scriptAddress`, the cosigner's key type: `addr`, `stake` or `drep` |
 | `scriptAddress` | string | No       | Multisig: CIP-0129 script address used as session identity |
 
 #### Success Response — `200 OK`
@@ -1251,12 +1251,16 @@ including `scriptAddress` on this same endpoint.)
 
 Returned when:
 
-- `signType` is not in the instance's allowed sign-in types (`walletSigner.userTypes`
-  in `GET /health`)
+- The body has no `scriptAddress` and `signType` is not in the instance's
+  allowed sign-in types (`walletSigner.userTypes` in `GET /health`)
 - The body includes `scriptAddress` and multisig sign-in is turned off
   (`walletSigner.multisig` is `false`), or DRep is not an allowed sign-in type.
-  For a multisig request the type checked is DRep, the script address's type,
-  whatever `signType` says.
+  For a multisig request the voter type checked is DRep, the script address's
+  type, whatever `signType` says.
+- The body includes `scriptAddress` and `signType` is not `addr`, `stake` or
+  `drep`. `signType` then names the cosigner's key type, which the script
+  decides, so `walletSigner.userTypes` does not limit it: a payment key
+  (`addr`), a stake key or a DRep key may sign.
 
 ```json
 {
@@ -1319,7 +1323,7 @@ The issued JWT `userId` is the script address.
 | Field           | Type   | Required | Description                                                                 |
 |-----------------|--------|----------|-----------------------------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (validated by middleware)                         |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`                                  |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`; with `scriptAddress`, the cosigner's key type: `addr`, `stake` or `drep` |
 | `signature`     | object | Yes      | Signature object containing the signed nonce (structure varies by signType) |
 | `scriptAddress` | string | No       | Multisig: CIP-0129 script address; triggers membership verification         |
 
@@ -1364,12 +1368,16 @@ information leakage (multisig membership failure may return a specific
 
 Returned when:
 
-- `signType` is not in the instance's allowed sign-in types (`walletSigner.userTypes`
-  in `GET /health`)
+- The body has no `scriptAddress` and `signType` is not in the instance's
+  allowed sign-in types (`walletSigner.userTypes` in `GET /health`)
 - The body includes `scriptAddress` and multisig sign-in is turned off
   (`walletSigner.multisig` is `false`), or DRep is not an allowed sign-in type.
-  For a multisig request the type checked is DRep, the script address's type,
-  whatever `signType` says.
+  For a multisig request the voter type checked is DRep, the script address's
+  type, whatever `signType` says.
+- The body includes `scriptAddress` and `signType` is not `addr`, `stake` or
+  `drep`. `signType` then names the cosigner's key type, which the script
+  decides, so `walletSigner.userTypes` does not limit it: a payment key
+  (`addr`), a stake key or a DRep key may sign.
 
 ```json
 {
@@ -2861,7 +2869,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1.7.0   | 2026-11-27 | `GET /health` adds `walletSigner`, `proposalSignerTypes` and `maintenanceMessage`. `POST` and `PUT /session` document `403` for a sign type the instance does not allow and for `scriptAddress` while multisig is off; `signType` accepts `pool`. `POST`, `PUT` and `DELETE /proposals` and the proposer path of `PUT /proposals/{proposalId}/withdraw` document `403` for a sign type outside `proposalSignerTypes` and for any multisig session. |
+| 1.7.0   | 2026-11-27 | `GET /health` adds `walletSigner`, `proposalSignerTypes` and `maintenanceMessage`. `POST` and `PUT /session` document `403` for a sign type the instance does not allow and for `scriptAddress` while multisig is off; `signType` accepts `pool`, and with `scriptAddress` it names the cosigner's key (`addr`, `stake` or `drep`). `POST`, `PUT` and `DELETE /proposals` and the proposer path of `PUT /proposals/{proposalId}/withdraw` document `403` for a sign type outside `proposalSignerTypes` and for any multisig session. |
 | 1.6.0   | 2026-10-23 | Added §3.10 `GET /health/live` (liveness) and reworked `GET /health` into an anonymous readiness probe: `200` or `503` with only `status`, `network` and `networkId`. The former `GET /health` fields (environment, memory, release, frontend version, database block) are removed, and `GET /health/health` and `GET /health/db` now answer `404`. |
 | 1.5.0   | 2026-10-23 | Added §3.9 `GET /version`: public build identity (`name`, `version`, `gitSha`, `buildTime`), served outside `/api` and answered while the database is down. |
 | 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |

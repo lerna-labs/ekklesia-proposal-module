@@ -7,6 +7,9 @@
 
 export const SIGNER_TYPES = ["drep", "stake", "pool"];
 
+// Key types a multisig cosigner may sign with: payment (addr), stake or DRep key
+const COSIGNER_KEY_TYPES = ["addr", "stake", "drep"];
+
 function parseTypeList(name, raw, fallback) {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) return [...fallback];
@@ -100,7 +103,8 @@ export function isProposalSigner(userId, multiSig = false) {
 
 /**
  * Refusal message for a sign-in request the deployment does not allow, or null when it is allowed.
- * For multisig the type checked is the script ID's (a DRep), not the client-supplied signType.
+ * For multisig the voter type checked is the script ID's (a DRep), not the client-supplied signType,
+ * and the cosigner's signType may be addr, stake or drep whatever WALLETSIGNER_USER_TYPES lists.
  *
  * @param {string} signType - client-supplied sign type
  * @param {boolean} isMultisig - whether the request carries a scriptAddress
@@ -108,9 +112,14 @@ export function isProposalSigner(userId, multiSig = false) {
  */
 export function signInRefusal(signType, isMultisig) {
   const { walletSigner } = getSignInSettings();
-  if (isMultisig && !walletSigner.multisig) return "MultiSig sign-in is disabled";
-  const type = isMultisig ? "drep" : signType;
-  if (!walletSigner.userTypes.includes(type)) return `Sign-in type "${type}" is disabled`;
+  if (isMultisig) {
+    if (!walletSigner.multisig) return "MultiSig sign-in is disabled";
+    if (!walletSigner.userTypes.includes("drep")) return 'Sign-in type "drep" is disabled';
+    if (!COSIGNER_KEY_TYPES.includes(signType))
+      return `Cosigner key type "${signType}" is not allowed`;
+    return null;
+  }
+  if (!walletSigner.userTypes.includes(signType)) return `Sign-in type "${signType}" is disabled`;
   return null;
 }
 

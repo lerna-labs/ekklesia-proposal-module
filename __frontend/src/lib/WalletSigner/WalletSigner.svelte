@@ -71,6 +71,11 @@
     if (!multisigEnabled) multiSig = false;
   });
 
+  // A multisig cosigner signs with a payment, stake or DRep key
+  $effect(() => {
+    if (multiSig && !["addr", "stake", "drep"].includes(signType)) signType = "drep";
+  });
+
   $effect(() => {
     if ($user?.userId.startsWith("stake")) signType = "stake";
     else if ($user?.userId.startsWith("pool")) signType = "pool";
@@ -187,6 +192,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />
@@ -197,6 +203,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />
