@@ -71,9 +71,11 @@
     if (!multisigEnabled) multiSig = false;
   });
 
-  // A multisig cosigner signs with a payment, stake or DRep key
+  // Keep signType valid for the active mode: a multisig cosigner signs with a payment, stake or DRep
+  // key, and a direct sign-in uses one of the instance's allowed types
   $effect(() => {
-    if (multiSig && !["addr", "stake", "drep"].includes(signType)) signType = "drep";
+    const validTypes = multiSig ? ["addr", "stake", "drep"] : allowedTypes;
+    if (!validTypes.includes(signType)) signType = multiSig ? "drep" : userDefault;
   });
 
   $effect(() => {

@@ -257,12 +257,13 @@ sequenceDiagram
   type checked is the script ID's (a DRep). In the multisig path `signType`
   names the cosigner's key, which the script decides, so
   `WALLETSIGNER_USER_TYPES` does not limit it: a payment key (`addr`), a stake
-  key or a DRep key may sign, and any other type answers 403. Creating, updating and deleting a
-  proposal, and the proposer's withdrawal, answer 403 for a session whose
-  `userId` is not of a type in `PROPOSAL_SIGNER_TYPES`. `MAINTENANCE_MESSAGE`
-  is the banner text; unset or empty shows no banner. `GET /health` returns
-  these settings as `walletSigner`, `proposalSignerTypes` and
-  `maintenanceMessage`, and the frontend reads them there at runtime.
+  key or a DRep key may sign, and any other type answers 403. Creating,
+  updating and deleting a proposal, and the proposer's withdrawal, answer 403
+  for a session whose `userId` is not of a type in `PROPOSAL_SIGNER_TYPES`.
+  `MAINTENANCE_MESSAGE` is the banner text; unset or empty shows no banner.
+  `GET /health` returns these settings as `walletSigner`,
+  `proposalSignerTypes` and `maintenanceMessage`, and the frontend reads them
+  there at runtime.
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
   Session auth relies on the server-set httpOnly cookie only.
 - Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
