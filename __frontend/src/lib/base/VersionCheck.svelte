@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { fly } from "svelte/transition";
-  import { versionChange, startVersionPolling, stopVersionPolling } from "$stores/versionStore.js";
+  import { versionChange, startVersionPolling, stopVersionPolling } from "#stores/versionStore.js";
 
   onMount(() => {
     startVersionPolling();

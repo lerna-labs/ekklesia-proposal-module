@@ -4,8 +4,8 @@
    * Legal declarations form section (regular section after accordion).
    * Must be re-submitted on every submit or re-submit; never prefilled.
    */
-  import Input from "$lib/components/form/Input.svelte";
-  import Checkbox from "$lib/components/form/Checkbox.svelte";
+  import Input from "#lib/components/form/Input.svelte";
+  import Checkbox from "#lib/components/form/Checkbox.svelte";
 
   let { value = $bindable(), validationErrors } = $props();
 </script>

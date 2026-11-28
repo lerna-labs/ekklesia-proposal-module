@@ -1,8 +1,8 @@
 <script>
-  import { cn } from "$lib/utils.js";
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import * as Popover from "$lib/components/ui/popover";
+  import { cn } from "#lib/utils.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import CircleHelpIcon from "@lucide/svelte/icons/circle-help";

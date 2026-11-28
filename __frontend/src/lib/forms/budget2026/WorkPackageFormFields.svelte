@@ -3,10 +3,10 @@
    * Shared work package top-level form fields (name, summary, objectives, etc.).
    * Used on the card above the milestone section. No dialog, no footer.
    */
-  import Input from "$lib/components/form/Input.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
-  import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
+  import Input from "#lib/components/form/Input.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import RadioGroup from "#lib/components/form/RadioGroup.svelte";
+  import LinkListEditor from "#lib/components/form/LinkListEditor.svelte";
   import FormWorkPackagesObjectives from "./FormWorkPackagesObjectives.svelte";
 
   let { draft = $bindable({}), draftErrors = null, idPrefix = "wp" } = $props();

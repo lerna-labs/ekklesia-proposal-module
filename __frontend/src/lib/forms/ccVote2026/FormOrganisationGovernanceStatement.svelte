@@ -1,5 +1,5 @@
 <script>
-  import Textarea from "$lib/components/form/Textarea.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
 
   const LONG_TEXT_MAX = 2000;
 

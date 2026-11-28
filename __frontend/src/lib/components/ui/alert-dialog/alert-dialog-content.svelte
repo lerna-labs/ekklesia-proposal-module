@@ -2,7 +2,7 @@
   import { AlertDialog as AlertDialogPrimitive } from "bits-ui";
   import AlertDialogPortal from "./alert-dialog-portal.svelte";
   import AlertDialogOverlay from "./alert-dialog-overlay.svelte";
-  import { cn } from "$lib/utils.js";
+  import { cn } from "#lib/utils.js";
   let { ref = $bindable(null), class: className, portalProps, ...restProps } = $props();
 </script>
 

@@ -1,5 +1,5 @@
-import { api } from "$stores/sessionManager.js";
-import { draftSubmissionOpen } from "$lib/voteWindowPolicy.js";
+import { api } from "#stores/sessionManager.js";
+import { draftSubmissionOpen } from "#lib/voteWindowPolicy.js";
 
 const PROPOSAL_FETCH_LIMIT = 100;
 
@@ -17,6 +17,7 @@ function emptyVotePagination(page, limit) {
 export async function load({ fetch, url, parent }) {
   const parentData = await parent();
   const user = parentData?.user;
+  const proposalSignerTypes = parentData?.serverStatus?.proposalSignerTypes ?? [];
   const userId = user?.userId;
   let notification = null;
   if (userId) {
@@ -49,7 +50,7 @@ export async function load({ fetch, url, parent }) {
     };
   }
 
-  if (!String(userId).startsWith("stake")) {
+  if (!proposalSignerTypes.some((type) => String(userId).startsWith(type))) {
     return {
       user,
       notification,

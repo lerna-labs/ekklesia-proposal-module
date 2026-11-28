@@ -1,10 +1,10 @@
 <script>
-  import Input from "$lib/components/form/Input.svelte";
-  import SelectRegions from "$lib/components/form/SelectRegions.svelte";
-  import LinkListEditor from "$lib/components/form/LinkListEditor.svelte";
-  import SocialMediaLinkField from "$lib/components/form/SocialMediaLinkField.svelte";
-  import XBrandIcon from "$lib/components/form/icons/XBrandIcon.svelte";
-  import LinkedInBrandIcon from "$lib/components/form/icons/LinkedInBrandIcon.svelte";
+  import Input from "#lib/components/form/Input.svelte";
+  import SelectRegions from "#lib/components/form/SelectRegions.svelte";
+  import LinkListEditor from "#lib/components/form/LinkListEditor.svelte";
+  import SocialMediaLinkField from "#lib/components/form/SocialMediaLinkField.svelte";
+  import XBrandIcon from "#lib/components/form/icons/XBrandIcon.svelte";
+  import LinkedInBrandIcon from "#lib/components/form/icons/LinkedInBrandIcon.svelte";
 
   let { formData = $bindable(), validationErrors } = $props();
 

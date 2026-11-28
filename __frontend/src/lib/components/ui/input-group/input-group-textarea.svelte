@@ -1,6 +1,6 @@
 <script>
-  import { cn } from "$lib/utils.js";
-  import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { cn } from "#lib/utils.js";
+  import { Textarea } from "#lib/components/ui/textarea/index.js";
   let { ref = $bindable(null), value = $bindable(), class: className, ...props } = $props();
 </script>
 

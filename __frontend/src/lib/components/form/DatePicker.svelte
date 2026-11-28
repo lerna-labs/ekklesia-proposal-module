@@ -1,10 +1,10 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import Calendar from "$lib/components/ui/calendar/calendar.svelte";
-  import * as Popover from "$lib/components/ui/popover/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import Calendar from "#lib/components/ui/calendar/calendar.svelte";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import PrivateFieldIndicator from "$lib/components/form/PrivateFieldIndicator.svelte";
+  import PrivateFieldIndicator from "#lib/components/form/PrivateFieldIndicator.svelte";
   import { getLocalTimeZone } from "@internationalized/date";
 
   let {

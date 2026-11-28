@@ -1,8 +1,8 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
-  import { budgetPhases } from "$lib/votes/ccVote2026/timeline.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import BudgetProcessTimeline from "#lib/components/BudgetProcessTimeline.svelte";
+  import { budgetPhases } from "#lib/votes/ccVote2026/timeline.js";
 
   /** Pin “now” for the timeline while testing (`undefined` = real time). Example: `"2026-05-26T12:00:00.000Z"` or `1716724800000`. */
   // const timelineTestNow = "2026-07-29T12:00:00.000Z";

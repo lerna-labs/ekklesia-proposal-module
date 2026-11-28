@@ -1,8 +1,8 @@
 <script>
   /** @see __frontend/docs/budget2026/form-treasury-donation.md Version: 1.0.0 */
   /** Pre-submission step: Treasury Donation Verification (content aligned with spec). */
-  import Input from "$lib/components/form/Input.svelte";
-  import Checkbox from "$lib/components/form/Checkbox.svelte";
+  import Input from "#lib/components/form/Input.svelte";
+  import Checkbox from "#lib/components/form/Checkbox.svelte";
   let { formData = $bindable(), proposal, validationErrors } = $props();
 
   /** Errors for this section: metaData.treasuryDonation* so Input/Checkbox can resolve by id. */

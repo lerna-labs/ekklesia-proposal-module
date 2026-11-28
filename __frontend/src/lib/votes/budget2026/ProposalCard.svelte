@@ -1,18 +1,18 @@
 <script>
-  import { invalidateAll } from "$app/navigation";
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
-  import { user } from "$stores/sessionManager.js";
+  import { refreshAll } from "$app/navigation";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
+  import { user } from "#stores/sessionManager.js";
   import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import VoteIcon from "@lucide/svelte/icons/vote";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
-  import { formatAda } from "$lib/utils.js";
-  import { formatUsd } from "$lib/utils.js";
-  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import ProposalCardDangerZone from "#lib/ProposalCardDangerZone.svelte";
+  import { formatAda } from "#lib/utils.js";
+  import { formatUsd } from "#lib/utils.js";
+  import { buildProposalVotingUrl, canShowVotingUi } from "#lib/voteWindowPolicy.js";
   let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
 
   function capitalizeFirst(val) {
@@ -222,7 +222,7 @@
           <ProposalCardDangerZone
             {proposal}
             isProposer={isOwnProposal}
-            onSuccess={() => invalidateAll()}
+            onSuccess={() => refreshAll()}
           />
         </div>
       {/if}

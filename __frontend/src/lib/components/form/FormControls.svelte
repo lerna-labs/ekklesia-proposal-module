@@ -1,10 +1,10 @@
 <script>
-  import { Button, buttonVariants } from "$lib/components/ui/button/index.js";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import { beforeNavigate, goto } from "$app/navigation";
   import EyeIcon from "@lucide/svelte/icons/eye";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
-  import { writePreviewPayload, clearPreviewStorage } from "$lib/previewProposalStorage.js";
+  import { writePreviewPayload, clearPreviewStorage } from "#lib/previewProposalStorage.js";
 
   /** Set to true to log auto-save lifecycle, ticks, and outcomes to the console. */
   const DEBUG_AUTOSAVE = false;

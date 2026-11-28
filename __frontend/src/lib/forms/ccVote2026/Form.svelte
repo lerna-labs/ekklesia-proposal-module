@@ -5,7 +5,7 @@
   import FormTrackIndividual from "./FormTrackIndividual.svelte";
   import FormTrackOrganisation from "./FormTrackOrganisation.svelte";
   import FormTrackConsortium from "./FormTrackConsortium.svelte";
-  import FormControls from "$lib/components/form/FormControls.svelte";
+  import FormControls from "#lib/components/form/FormControls.svelte";
   import {
     getDefaultConsortiumMember,
     normalizeConsortiumMember,

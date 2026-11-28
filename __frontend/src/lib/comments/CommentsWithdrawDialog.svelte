@@ -1,8 +1,8 @@
 <script>
-  import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import { Button } from "$lib/components/ui/button";
-  import * as Select from "$lib/components/ui/select/index.js";
-  import Input from "$lib/components/form/Input.svelte";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import * as Select from "#lib/components/ui/select/index.js";
+  import Input from "#lib/components/form/Input.svelte";
 
   let {
     comment = null,

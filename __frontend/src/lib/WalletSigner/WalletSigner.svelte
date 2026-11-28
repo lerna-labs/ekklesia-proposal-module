@@ -1,11 +1,12 @@
 <script>
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import * as Tabs from "$lib/components/ui/tabs/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Button } from "$lib/components/ui/button";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import * as Tabs from "#lib/components/ui/tabs/index.js";
+  import { Label } from "#lib/components/ui/label/index.js";
+  import { Switch } from "#lib/components/ui/switch/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
+  import { page } from "$app/state";
   import {
     api,
     loggedIn,
@@ -14,14 +15,14 @@
     showLogin,
     redirectAfterLogin,
     safeRedirectPath,
-  } from "$stores/sessionManager.js";
+  } from "#stores/sessionManager.js";
   import { get } from "svelte/store";
-  import Wallet from "$lib/WalletSigner/SignerWallet.svelte";
-  import CardanoSigner from "$lib/WalletSigner/SignerCS.svelte";
-  import SelectSignType from "$lib/WalletSigner/SignerSignType.svelte";
+  import Wallet from "#lib/WalletSigner/SignerWallet.svelte";
+  import CardanoSigner from "#lib/WalletSigner/SignerCS.svelte";
+  import SelectSignType from "#lib/WalletSigner/SignerSignType.svelte";
   import WalletMinimalIcon from "@lucide/svelte/icons/wallet-minimal";
-  import { Input } from "$lib/components/ui/input/index.js";
-  import { log } from "$lib/WalletSigner/logger.js";
+  import { Input } from "#lib/components/ui/input/index.js";
+  import { log } from "#lib/WalletSigner/logger.js";
   import { onMount } from "svelte";
   let { ballot = false, mode, dark, tx, buttonText = "Submit Votes" } = $props();
   let open = $state(false);
@@ -29,15 +30,16 @@
   let noWallets = $state(false);
   let walletLoading = $state(false);
   const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
-  const allowedTypes = (import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake").split(",");
-  const defaultFromEnv = import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const walletSigner = page.data.serverStatus.walletSigner;
+  const allowedTypes = walletSigner.userTypes;
+  const userDefault = walletSigner.userDefault;
   const storedSignType =
     typeof window !== "undefined" ? localStorage.getItem(SIGNTYPE_STORAGE_KEY) : null;
   const initialSignType =
     storedSignType && allowedTypes.includes(storedSignType)
       ? storedSignType
-      : allowedTypes.includes(defaultFromEnv)
-        ? defaultFromEnv
+      : allowedTypes.includes(userDefault)
+        ? userDefault
         : allowedTypes[0] || "stake";
   let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
@@ -63,10 +65,17 @@
     return () => window.removeEventListener("click", handleClick, true);
   });
 
-  const multisigEnabledByEnv = import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+  const multisigEnabled = walletSigner.multisig;
 
   $effect(() => {
-    if (!multisigEnabledByEnv) multiSig = false;
+    if (!multisigEnabled) multiSig = false;
+  });
+
+  // Keep signType valid for the active mode: a multisig cosigner signs with a payment, stake or DRep
+  // key, and a direct sign-in uses one of the instance's allowed types
+  $effect(() => {
+    const validTypes = multiSig ? ["addr", "stake", "drep"] : allowedTypes;
+    if (!validTypes.includes(signType)) signType = multiSig ? "drep" : userDefault;
   });
 
   $effect(() => {
@@ -89,7 +98,7 @@
     toast.success(event.detail.message);
     // $user.pendingVoteCount = -1;
     // $user.lastTransaction = event.detail.transaction;
-    await invalidateAll();
+    await refreshAll();
     open = false;
     showLogin.set(false);
   }
@@ -112,7 +121,7 @@
       redirectAfterLogin.set(null);
       await goto(safeRedirectPath(path));
     } else {
-      await invalidateAll();
+      await refreshAll();
       // If we're on /login, go to dashboard so we don't stay on the login page
       if (typeof window !== "undefined" && window.location.pathname === "/login") {
         await goto("/dashboard");
@@ -149,7 +158,7 @@
     <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
-        {#if multisigEnabledByEnv}
+        {#if multisigEnabled}
           <div class="flex items-center gap-2">
             <Label
               for="multisigsupport"
@@ -185,6 +194,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />
@@ -195,6 +205,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />

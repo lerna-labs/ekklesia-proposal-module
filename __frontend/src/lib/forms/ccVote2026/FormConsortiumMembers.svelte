@@ -1,7 +1,7 @@
 <script>
-  import * as Field from "$lib/components/ui/field/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
   import FormConsortiumMemberCard from "./FormConsortiumMemberCard.svelte";
   import { getDefaultConsortiumMember } from "./consortiumMemberUtils.js";
   import PlusIcon from "@lucide/svelte/icons/plus";

@@ -1,4 +1,4 @@
-import { loggedIn, user, sessionExpiresAt } from "$stores/sessionManager.js";
+import { loggedIn, user, sessionExpiresAt } from "#stores/sessionManager.js";
 const VITE_SERVER_STATUS = import.meta.env.VITE_SERVER_STATUS;
 const API_URL = import.meta.env.VITE_API_URL;
 import { error } from "@sveltejs/kit";
@@ -11,19 +11,13 @@ export async function load({ fetch }) {
   try {
     serverStatus = await fetch(VITE_SERVER_STATUS);
     if (!serverStatus.ok) {
-      throw error(503, {
-        message: "Server not available",
-        code: "SERVER_STATUS_NOT_AVAILABLE",
-      });
+      throw error(503, "Server not available", { code: "SERVER_STATUS_NOT_AVAILABLE" });
     }
   } catch (err) {
     if (err?.status) {
       throw err;
     }
-    throw error(503, {
-      message: "Server not available",
-      code: "SERVER_STATUS_FETCH_FAILED",
-    });
+    throw error(503, "Server not available", { code: "SERVER_STATUS_FETCH_FAILED" });
   }
 
   // Session probe: plain fetch only — do not use api.fetch (401 there can run expireSession/goto).

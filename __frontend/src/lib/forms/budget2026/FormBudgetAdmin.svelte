@@ -1,9 +1,9 @@
 <script>
   /** @see __frontend/docs/budget2026/form-budget-admin.md Version: 1.0.0 */
-  import RadioGroup from "$lib/components/form/RadioGroup.svelte";
-  import Textarea from "$lib/components/form/Textarea.svelte";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import RadioGroup from "#lib/components/form/RadioGroup.svelte";
+  import Textarea from "#lib/components/form/Textarea.svelte";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   import FormBudgetAdministrationIntersect from "./FormBudgetAdminIntersect.svelte";
   import FormBudgetAdminOther from "./FormBudgetAdminOther.svelte";
   let { formData = $bindable(), vote, proposal, validationErrors } = $props();

@@ -1,11 +1,11 @@
 <script>
-  import { Button, buttonVariants } from "$lib/components/ui/button";
-  import * as Popover from "$lib/components/ui/popover";
-  import * as RadioGroup from "$lib/components/ui/radio-group";
-  import * as Separator from "$lib/components/ui/separator";
-  import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
-  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import * as RadioGroup from "#lib/components/ui/radio-group/index.js";
+  import * as Separator from "#lib/components/ui/separator/index.js";
+  import { Switch } from "#lib/components/ui/switch/index.js";
+  import { Label } from "#lib/components/ui/label/index.js";
+  import { Checkbox } from "#lib/components/ui/checkbox/index.js";
   import ArrowUpDownIcon from "@lucide/svelte/icons/arrow-up-down";
   import FilterIcon from "@lucide/svelte/icons/sliders-horizontal";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";

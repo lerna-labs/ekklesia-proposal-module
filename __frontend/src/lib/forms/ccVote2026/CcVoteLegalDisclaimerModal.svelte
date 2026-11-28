@@ -1,5 +1,5 @@
 <script>
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
 
   let { open = $bindable(false), onContinue, onCancel } = $props();
 </script>

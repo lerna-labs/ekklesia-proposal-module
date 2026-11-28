@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { api } from "$stores/sessionManager.js";
+import { api } from "#stores/sessionManager.js";
 
 export async function load({ params, fetch, url }) {
   const policyNowMs = Date.now();

@@ -1,7 +1,7 @@
 <script>
   import { toast } from "svelte-sonner";
   import { Copy } from "lucide-svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
   let { signType, signerAddress, payload } = $props();
   // FIXME: IMPORT FROM HEALTH ENDPOINT INSTEAD
   const NETWORK = import.meta.env.VITE_NETWORK_ID;

@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
-import { api } from "$stores/sessionManager.js";
-import { draftSubmissionOpen, liveResubmitOpen } from "$lib/voteWindowPolicy.js";
+import { api } from "#stores/sessionManager.js";
+import { draftSubmissionOpen, liveResubmitOpen } from "#lib/voteWindowPolicy.js";
 
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch, params, parent }) {

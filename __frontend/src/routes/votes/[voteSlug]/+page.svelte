@@ -1,24 +1,24 @@
 <script>
   import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
   import { page } from "$app/state";
-  import * as Card from "$lib/components/ui/card";
-  import * as Pagination from "$lib/components/ui/pagination";
-  import ProposalCard from "$lib/ProposalCard.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import Search from "$lib/Search.svelte";
-  import SearchFilter from "$lib/SearchFilter.svelte";
-  import SearchSort from "$lib/SearchSort.svelte";
-  import { queryStringWithLiteralCommas, shortenString } from "$lib/utils.js";
-  import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import * as Pagination from "#lib/components/ui/pagination/index.js";
+  import ProposalCard from "#lib/ProposalCard.svelte";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Search from "#lib/Search.svelte";
+  import SearchFilter from "#lib/SearchFilter.svelte";
+  import SearchSort from "#lib/SearchSort.svelte";
+  import { queryStringWithLiteralCommas, shortenString } from "#lib/utils.js";
+  import BudgetProcessTimeline from "#lib/components/BudgetProcessTimeline.svelte";
   import XIcon from "@lucide/svelte/icons/x";
-  import { user } from "$stores/sessionManager.js";
-  import { canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import { user } from "#stores/sessionManager.js";
+  import { canShowVotingUi } from "#lib/voteWindowPolicy.js";
 
-  const voteTimelineModules = import.meta.glob("$lib/votes/*/timeline.js", {
+  const voteTimelineModules = import.meta.glob("#lib/votes/*/timeline.js", {
     eager: true,
   });
 
-  const voteCtaModules = import.meta.glob("$lib/votes/*/CTA.svelte", { eager: true });
+  const voteCtaModules = import.meta.glob("#lib/votes/*/CTA.svelte", { eager: true });
 
   /** @param {string} path */
   function voteFormFromTimelinePath(path) {
@@ -97,7 +97,7 @@
   let isDrepUser = $derived(Boolean($user?.userId?.startsWith?.("drep")));
   let showVoteListCta = $derived(!isDrepUser || canShowVotingUi(vote, policyNow));
 
-  /** CTA for `vote.form` from `$lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
+  /** CTA for `vote.form` from `#lib/votes/<form>/CTA.svelte`, else `default/CTA.svelte`. */
   const VoteListCta = $derived.by(() => {
     const form = vote?.form;
     const formStr = typeof form === "string" ? form : "";
@@ -200,7 +200,7 @@
         restored.set("page", "1");
         const path = page.url.pathname;
         const qs = queryStringWithLiteralCommas(restored);
-        goto(`${path}?${qs}`, { replaceState: true });
+        goto(`${path}?${qs}`, { replace: true });
       }
     } else {
       hasTriggeredRestore = false;

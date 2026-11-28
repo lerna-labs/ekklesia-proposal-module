@@ -1,7 +1,7 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import * as Popover from "$lib/components/ui/popover";
-  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import LinkWarningDialog from "#lib/components/LinkWarningDialog.svelte";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import MapPinIcon from "@lucide/svelte/icons/map-pin";
@@ -9,12 +9,12 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import UserIcon from "@lucide/svelte/icons/user";
   import { toast } from "svelte-sonner";
-  import ShareProposalPopover from "$lib/components/ShareProposalPopover.svelte";
-  import { Badge } from "$lib/components/ui/badge";
+  import ShareProposalPopover from "#lib/components/ShareProposalPopover.svelte";
+  import { Badge } from "#lib/components/ui/badge/index.js";
 
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import { shortenString } from "$lib/utils.js";
-  import Markdown from "$lib/base/Markdown.svelte";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import { shortenString } from "#lib/utils.js";
+  import Markdown from "#lib/base/Markdown.svelte";
   import { buildSocialRows, toText } from "./proposalPageUtils.js";
 
   let { proposal, vote } = $props();

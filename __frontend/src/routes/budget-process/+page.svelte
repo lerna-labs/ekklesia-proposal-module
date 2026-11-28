@@ -1,9 +1,9 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import BudgetProcessTimeline from "$lib/components/BudgetProcessTimeline.svelte";
-  import { budgetPhases } from "$lib/votes/budget2026/timeline.js";
-  import { buildVoteVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import BudgetProcessTimeline from "#lib/components/BudgetProcessTimeline.svelte";
+  import { budgetPhases } from "#lib/votes/budget2026/timeline.js";
+  import { buildVoteVotingUrl, canShowVotingUi } from "#lib/voteWindowPolicy.js";
   import VoteIcon from "@lucide/svelte/icons/vote";
 
   let { data } = $props();

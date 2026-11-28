@@ -1,7 +1,7 @@
 <script>
   import { goto } from "$app/navigation";
-  import { Button } from "$lib/components/ui/button";
-  import Comments from "$lib/comments/Comments.svelte";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import Comments from "#lib/comments/Comments.svelte";
 
   let {
     proposal,

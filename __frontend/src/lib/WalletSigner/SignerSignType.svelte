@@ -1,12 +1,15 @@
 <script>
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { createEventDispatcher } from "svelte";
+  import { page } from "$app/state";
 
   const dispatch = createEventDispatcher();
-  let { value = undefined, disabled = false } = $props();
+  let { value = undefined, disabled = false, multisig = false } = $props();
 
-  const USER_TYPES = import.meta.env.VITE_WALLETSIGNER_USER_TYPES;
-  const userTypes = USER_TYPES.split(",");
+  // A cosigner's key type is decided by the script, not by the voter types the instance lists.
+  const userTypes = $derived(
+    multisig ? ["addr", "stake", "drep"] : page.data.serverStatus.walletSigner.userTypes,
+  );
 
   function handleValueChange(newValue) {
     dispatch("change", newValue);

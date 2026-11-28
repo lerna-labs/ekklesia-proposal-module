@@ -1,12 +1,12 @@
 <script>
   import { z } from "zod";
   import { toast } from "svelte-sonner";
-  import { api } from "$stores/sessionManager.js";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import * as Label from "$lib/components/ui/label";
-  import * as Select from "$lib/components/ui/select";
-  import * as Field from "$lib/components/ui/field";
-  import Textarea from "$lib/components/form/Textarea.svelte";
+  import { api } from "#stores/sessionManager.js";
+  import * as AlertDialog from "#lib/components/ui/alert-dialog/index.js";
+  import * as Label from "#lib/components/ui/label/index.js";
+  import * as Select from "#lib/components/ui/select/index.js";
+  import * as Field from "#lib/components/ui/field/index.js";
+  import Textarea from "#lib/components/form/Textarea.svelte";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
 
   let { open = $bindable(false), proposal = null, onSuccess = () => {} } = $props();

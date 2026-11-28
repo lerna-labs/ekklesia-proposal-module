@@ -1,5 +1,5 @@
 <script>
-  import * as Card from "$lib/components/ui/card";
+  import * as Card from "#lib/components/ui/card/index.js";
   import Loader2Icon from "@lucide/svelte/icons/loader-2";
 
   let { loading = false, delayMs = 2000 } = $props();

@@ -1,8 +1,8 @@
 <script>
   import { toast } from "svelte-sonner";
-  import { api } from "$stores/sessionManager.js";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import { Button } from "$lib/components/ui/button";
+  import { api } from "#stores/sessionManager.js";
+  import * as Dialog from "#lib/components/ui/dialog/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
 
   let { open = $bindable(false), proposal = null, onSuccess = () => {} } = $props();
 

@@ -1,8 +1,8 @@
 <script>
-  import ProposalRevisionHistory from "$lib/ProposalRevisionHistory.svelte";
-  import { Button } from "$lib/components/ui/button";
+  import ProposalRevisionHistory from "#lib/ProposalRevisionHistory.svelte";
+  import { Button } from "#lib/components/ui/button/index.js";
   import VoteIcon from "@lucide/svelte/icons/vote";
-  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import { buildProposalVotingUrl, canShowVotingUi } from "#lib/voteWindowPolicy.js";
 
   let {
     proposal,

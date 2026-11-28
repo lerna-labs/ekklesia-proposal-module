@@ -1,11 +1,11 @@
 <script>
-  import { page } from "$app/stores";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { page } from "$app/state";
+  import { Button } from "#lib/components/ui/button/index.js";
   import { getWallets, enableWallet, getSignerAddress } from "./WalletConnect.js";
   import { onMount, createEventDispatcher } from "svelte";
   import { toast } from "svelte-sonner";
   const dispatch = createEventDispatcher();
-  const NETWORK_ID = $derived.by(() => $page.data.serverStatus.networkId);
+  const NETWORK_ID = $derived.by(() => page.data.serverStatus.networkId);
 
   let { signType = "stake", loading = $bindable(false) } = $props();
   let allWallets = $state([]);

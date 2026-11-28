@@ -1,14 +1,14 @@
 <script>
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import { page } from "$app/state";
-  import ProposalDelete from "$lib/ProposalDelete.svelte";
-  import ProposalWithdrawal from "$lib/ProposalWithdrawal.svelte";
-  import NotificationSettings from "$lib/notifications/NotificationSettings.svelte";
-  import * as Card from "$lib/components/ui/card";
-  import * as Pagination from "$lib/components/ui/pagination";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
+  import ProposalDelete from "#lib/ProposalDelete.svelte";
+  import ProposalWithdrawal from "#lib/ProposalWithdrawal.svelte";
+  import NotificationSettings from "#lib/notifications/NotificationSettings.svelte";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import * as Pagination from "#lib/components/ui/pagination/index.js";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -21,17 +21,18 @@
     liveResubmitOpen,
     proposerWithdrawOpen,
     voteForProposalRow,
-  } from "$lib/voteWindowPolicy.js";
+  } from "#lib/voteWindowPolicy.js";
 
-  /** Stake sign-in uses a Cardano stake address as userId (e.g. stake_test1… / stake1…). */
-  function isStakeUserId(userId) {
-    return userId != null && String(userId).startsWith("stake");
+  /** A userId starts with its sign-in type (stake_test1…, stake1…, drep1…, pool1…). */
+  function isProposalSignerUserId(userId) {
+    const types = page.data.serverStatus?.proposalSignerTypes ?? [];
+    return userId != null && types.some((type) => String(userId).startsWith(type));
   }
 
   let { data } = $props();
   let user = $derived(data.user ?? null);
   let notification = $derived(data.notification ?? null);
-  let showMyProposals = $derived(isStakeUserId(user?.userId));
+  let showMyProposals = $derived(isProposalSignerUserId(user?.userId));
   let voteSections = $derived(data.voteSections ?? []);
   let votePagination = $derived(data.votePagination);
   /** Single instant for all policy checks (UTC timeline via Date). */
@@ -123,7 +124,7 @@
               </p>
             </div>
             <div class="border-t pt-6">
-              <NotificationSettings {user} {notification} onSaved={() => invalidateAll()} />
+              <NotificationSettings {user} {notification} onSaved={() => refreshAll()} />
             </div>
           </Card.Content>
         </Card.Root>
@@ -470,12 +471,12 @@
 <ProposalDelete
   bind:open={deleteDialogOpen}
   proposal={deleteProposal}
-  onSuccess={() => invalidateAll()}
+  onSuccess={() => refreshAll()}
 />
 <ProposalWithdrawal
   bind:open={withdrawDialogOpen}
   proposal={withdrawProposal}
-  onSuccess={() => invalidateAll()}
+  onSuccess={() => refreshAll()}
 />
 
 <ProposalWithdrawn

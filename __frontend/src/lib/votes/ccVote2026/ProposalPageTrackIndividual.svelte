@@ -1,7 +1,7 @@
 <script>
-  import Markdown from "$lib/base/Markdown.svelte";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
-  import ItemContainer from "$lib/votes/budget2026/ItemContainer.svelte";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
+  import ItemContainer from "#lib/votes/budget2026/ItemContainer.svelte";
   import { hasText, toText } from "./proposalPageUtils.js";
 
   let { proposal } = $props();

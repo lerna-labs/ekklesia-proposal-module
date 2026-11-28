@@ -2,9 +2,9 @@
   import { createEventDispatcher } from "svelte";
   import WalletConnect from "./WalletConnect.svelte";
   import { getSignerAddress } from "./WalletConnect.js";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
+  import { Button, buttonVariants } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
-  import { getPayload, signData, submitSignature } from "$lib/WalletSigner/WalletSigner.js";
+  import { getPayload, signData, submitSignature } from "#lib/WalletSigner/WalletSigner.js";
 
   const dispatch = createEventDispatcher();
   let {

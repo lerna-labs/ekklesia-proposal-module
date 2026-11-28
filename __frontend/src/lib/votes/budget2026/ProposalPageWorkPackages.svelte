@@ -1,15 +1,15 @@
 <script>
-  import { Badge } from "$lib/components/ui/badge";
-  import { buttonVariants } from "$lib/components/ui/button";
-  import { cn, formatAda, formatUsd } from "$lib/utils.js";
-  import * as Popover from "$lib/components/ui/popover";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import LinkWarningDialog from "$lib/components/LinkWarningDialog.svelte";
+  import { Badge } from "#lib/components/ui/badge/index.js";
+  import { buttonVariants } from "#lib/components/ui/button/index.js";
+  import { cn, formatAda, formatUsd } from "#lib/utils.js";
+  import * as Popover from "#lib/components/ui/popover/index.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import LinkWarningDialog from "#lib/components/LinkWarningDialog.svelte";
   import BoxIcon from "@lucide/svelte/icons/box";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import InfoIcon from "@lucide/svelte/icons/info";
   import ItemContainer from "./ItemContainer.svelte";
-  import CollapsibleCard from "$lib/components/CollapsibleCard.svelte";
+  import CollapsibleCard from "#lib/components/CollapsibleCard.svelte";
   let { proposal } = $props();
   let linkWarningDialog;
 

@@ -1,16 +1,16 @@
 <script>
-  import { invalidateAll } from "$app/navigation";
-  import * as Card from "$lib/components/ui/card";
-  import { Button } from "$lib/components/ui/button";
-  import ProposalWithdrawn from "$lib/ProposalWithdrawn.svelte";
-  import { user } from "$stores/sessionManager.js";
+  import { refreshAll } from "$app/navigation";
+  import * as Card from "#lib/components/ui/card/index.js";
+  import { Button } from "#lib/components/ui/button/index.js";
+  import ProposalWithdrawn from "#lib/ProposalWithdrawn.svelte";
+  import { user } from "#stores/sessionManager.js";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import VoteIcon from "@lucide/svelte/icons/vote";
   import MessageSquareMoreIcon from "@lucide/svelte/icons/message-square-more";
-  import Markdown from "$lib/base/Markdown.svelte";
-  import ProposalCardDangerZone from "$lib/ProposalCardDangerZone.svelte";
-  import { formatUtcInstant } from "$lib/formatUtc.js";
-  import { buildProposalVotingUrl, canShowVotingUi } from "$lib/voteWindowPolicy.js";
+  import Markdown from "#lib/base/Markdown.svelte";
+  import ProposalCardDangerZone from "#lib/ProposalCardDangerZone.svelte";
+  import { formatUtcInstant } from "#lib/formatUtc.js";
+  import { buildProposalVotingUrl, canShowVotingUi } from "#lib/voteWindowPolicy.js";
 
   let { proposal, vote, showLink = true, class: className, policyNow = new Date() } = $props();
   let withdrawalDetailsDialogOpen = $state(false);
@@ -211,7 +211,7 @@
           <ProposalCardDangerZone
             {proposal}
             isProposer={isOwnProposal}
-            onSuccess={() => invalidateAll()}
+            onSuccess={() => refreshAll()}
           />
         </div>
       {/if}

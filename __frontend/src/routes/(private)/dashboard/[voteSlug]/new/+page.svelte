@@ -1,14 +1,14 @@
 <script>
-  import { goto, invalidateAll } from "$app/navigation";
+  import { goto, refreshAll } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import DelayedFormLoader from "$lib/components/DelayedFormLoader.svelte";
-  import { api } from "$stores/sessionManager.js";
+  import DelayedFormLoader from "#lib/components/DelayedFormLoader.svelte";
+  import { api } from "#stores/sessionManager.js";
   import { fade } from "svelte/transition";
 
   const FORM_CHUNKS = {
-    budget2026: () => import("$lib/forms/budget2026/Form.svelte"),
-    ccVote2026: () => import("$lib/forms/ccVote2026/Form.svelte"),
-    default: () => import("$lib/forms/default/Form.svelte"),
+    budget2026: () => import("#lib/forms/budget2026/Form.svelte"),
+    ccVote2026: () => import("#lib/forms/ccVote2026/Form.svelte"),
+    default: () => import("#lib/forms/default/Form.svelte"),
   };
 
   let FormComponent = $state(null);
@@ -68,7 +68,7 @@
         } else {
           toast.success(payload.status === "live" ? "Proposal submitted." : "Draft saved.");
         }
-        await invalidateAll();
+        await refreshAll();
         if (payload.status === "live" || (options?.exitAfterSave && !options?.skipGoto))
           goto("/dashboard");
         return json;
