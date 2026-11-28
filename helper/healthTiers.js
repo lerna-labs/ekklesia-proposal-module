@@ -1,3 +1,5 @@
+import { getSignInSettings } from "./signInSettings.js";
+
 let routesLoaded = false;
 
 /**
@@ -72,8 +74,9 @@ export function createBoundedCheck(
 
 /**
  * Build the readiness handler. It answers 200 only when the database check passes and every route
- * has loaded, and 503 otherwise. The body carries the network fields and nothing else, and a
- * failing check answers 503 rather than throwing.
+ * has loaded, and 503 otherwise. The body carries the status, the network fields and the public
+ * sign-in and proposal settings (see getSignInSettings), and a failing check answers 503 rather
+ * than throwing.
  *
  * @param {object} deps
  * @param {() => boolean | Promise<boolean>} deps.checkDatabase
@@ -92,6 +95,7 @@ export function createReadinessHandler({ checkDatabase, routesLoaded: loaded }) 
       status: ready ? "ready" : "unavailable",
       network: process.env.NETWORK_NAME ?? null,
       networkId: parseInt(process.env.NETWORK_ID),
+      ...getSignInSettings(),
     });
   };
 }

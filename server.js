@@ -15,6 +15,7 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import { publicReadLimiter } from "./helper/rateLimiters.js";
 import { setRoutesLoaded } from "./helper/healthTiers.js";
+import { getSignInSettings } from "./helper/signInSettings.js";
 import { warnUnloadableExcludeScripts } from "./validation/applyPublicFieldExclusion.js";
 
 // Initialize console with timestamps
@@ -27,6 +28,13 @@ try {
   loadEnvironmentVariables(__dirname);
 } catch (error) {
   console.warn(`Error loading environment variables: ${error.message}`);
+  process.exit(1);
+}
+
+try {
+  getSignInSettings();
+} catch (error) {
+  console.error(error.message);
   process.exit(1);
 }
 

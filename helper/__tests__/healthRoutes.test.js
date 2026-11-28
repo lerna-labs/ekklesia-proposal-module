@@ -19,7 +19,7 @@ async function withServer(run) {
   }
 }
 
-test("the real health router answers 503 with only the network fields when no database is connected", async () => {
+test("the real health router answers 503 with the network fields and sign-in settings when no database is connected", async () => {
   process.env.NETWORK_NAME = "preprod";
   process.env.NETWORK_ID = "0";
   // Routes are loaded, so the 503 below can only come from the database check.
@@ -32,6 +32,9 @@ test("the real health router answers 503 with only the network fields when no da
         status: "unavailable",
         network: "preprod",
         networkId: 0,
+        walletSigner: { userTypes: ["stake", "drep"], userDefault: "drep", multisig: false },
+        proposalSignerTypes: ["stake"],
+        maintenanceMessage: null,
       });
     }
     const live = await fetch(`${base}/health/live`);

@@ -15,6 +15,7 @@ import {
   rejectDuplicateParams,
   parsePagination,
 } from "../../../helper/middleWare.js";
+import { refuseNonProposalSigner, isProposalSigner } from "../../../helper/signInSettings.js";
 import { authenticatedWriteLimiter } from "../../../helper/rateLimiters.js";
 import { verifyToken } from "../../../helper/verifyToken.js";
 import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
@@ -231,11 +232,13 @@ function getByPath(obj, path) {
  * @returns {Object} 201 - Created proposal document
  * @returns {Object} 400 - Validation error (Zod errors in body)
  * @returns {Object} 401 - Not authenticated
+ * @returns {Object} 403 - The session's sign-in type is not in PROPOSAL_SIGNER_TYPES
  * @returns {Object} 404 - Vote not found
  * @returns {Object} 500 - Server error
  */
 router.post("/", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
+    if (refuseNonProposalSigner(req, res)) return;
     const proposerId = req.userId;
 
     const rawVoteId = req.body?.voteId;
@@ -434,7 +437,7 @@ const WITHDRAWAL_CATEGORIES = [
  * @access Private (proposer or vote admin)
  * @returns {Object} 200 - Withdrawn proposal (status set to withdrawnByProposer or withdrawnByAdmin)
  * @returns {Object} 400 - Invalid proposalId/category/comment; or proposal not live/draft (e.g. archived); or date limits exceeded
- * @returns {Object} 403 - Not the proposer or a vote admin
+ * @returns {Object} 403 - Not the proposer or a vote admin; the proposer path also needs a single-key session of a type in PROPOSAL_SIGNER_TYPES
  * @returns {Object} 404 - Proposal not found
  */
 router.put(
@@ -501,7 +504,11 @@ router.put(
       // Require: authenticated user must be the proposer or a vote admin
       const authUserId = String(userId ?? "").trim();
       const proposerIdStr = proposal.proposerId ? String(proposal.proposerId).trim() : "";
-      const isProposer = proposerIdStr && authUserId && proposerIdStr === authUserId;
+      const isProposer =
+        proposerIdStr &&
+        authUserId &&
+        proposerIdStr === authUserId &&
+        isProposalSigner(authUserId, req.multiSig);
       const isVoteAdmin =
         Array.isArray(voteDoc.admins) &&
         voteDoc.admins.some((id) => String(id).trim() === authUserId);
@@ -580,11 +587,12 @@ router.put(
  * @returns {Object} 200 - { status: "success", message: "Proposal deleted" }
  * @returns {Object} 400 - Invalid proposalId
  * @returns {Object} 401 - Not authenticated
- * @returns {Object} 403 - Not the proposer or proposal is not a draft
+ * @returns {Object} 403 - Not the proposer, sign-in type not in PROPOSAL_SIGNER_TYPES, or proposal is not a draft
  * @returns {Object} 404 - Proposal not found
  */
 router.delete("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
+    if (refuseNonProposalSigner(req, res)) return;
     const userId = String(req.userId ?? "").trim();
     const { proposalId } = req.params;
 
@@ -644,12 +652,13 @@ router.delete("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async 
  * @access Private (proposer only)
  * @returns {Object} 200 - Updated proposal (with versions array when previous version was archived)
  * @returns {Object} 400 - Invalid proposalId; validation error; archived (read-only); status change when live; or locked after reviewEndDate
- * @returns {Object} 403 - Not the proposer
+ * @returns {Object} 403 - Not the proposer, or sign-in type not in PROPOSAL_SIGNER_TYPES
  * @returns {Object} 404 - Proposal not found
  * @returns {Object} 409 - Live proposal was modified concurrently (optimistic lock conflict); retry
  */
 router.put("/:proposalId", isAuthenticated, authenticatedWriteLimiter, async (req, res) => {
   try {
+    if (refuseNonProposalSigner(req, res)) return;
     const userId = String(req.userId ?? "").trim();
     const { proposalId } = req.params;
 

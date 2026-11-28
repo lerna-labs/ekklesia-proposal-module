@@ -8,6 +8,7 @@ import { Proposal } from "../schema/Proposal.js";
 import { verifyToken } from "../helper/verifyToken.js";
 import { validateAddress } from "@lerna-labs/ekklesia-helpers/validation";
 import { PublicKey } from "@emurgo/cardano-serialization-lib-nodejs";
+import { signInRefusal } from "./signInSettings.js";
 
 /**
  * Middleware to verify user authentication token
@@ -101,6 +102,7 @@ export async function isAuthenticated(req, res, next) {
     } else {
       req.userId = userToken.userId;
       req.signType = userToken.signType;
+      req.multiSig = userToken.multiSig;
       req.exp = userToken.exp;
       next();
     }
@@ -184,7 +186,7 @@ export async function getProposal(req, res, next) {
  * @description
  * This middleware validates:
  * 1. Signer address (presence and format)
- * 2. Sign type (presence)
+ * 2. Sign type (presence), and that the deployment allows it (and multisig, when requested)
  * 3. For DRep addresses, ensures CIP129 compliance
  * 4. Handles conversions for different address formats
  *
@@ -227,6 +229,12 @@ export function validateSessionRequest(req, res, next) {
       status: "error",
       message: "Invalid signType format",
     });
+  }
+
+  // Refuse a sign type, or the multisig path, that this deployment does not allow
+  const refusal = signInRefusal(signType, Boolean(req.body?.scriptAddress));
+  if (refusal) {
+    return res.status(403).json({ status: "error", message: refusal });
   }
 
   // Validate address format

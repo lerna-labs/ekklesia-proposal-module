@@ -6,6 +6,7 @@
   import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { goto, refreshAll } from "$app/navigation";
+  import { page } from "$app/state";
   import {
     api,
     loggedIn,
@@ -29,8 +30,9 @@
   let noWallets = $state(false);
   let walletLoading = $state(false);
   const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
-  const allowedTypes = (import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake").split(",");
-  const defaultFromEnv = import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const walletSigner = page.data.serverStatus.walletSigner;
+  const allowedTypes = walletSigner.userTypes;
+  const defaultFromEnv = walletSigner.userDefault;
   const storedSignType =
     typeof window !== "undefined" ? localStorage.getItem(SIGNTYPE_STORAGE_KEY) : null;
   const initialSignType =
@@ -63,10 +65,10 @@
     return () => window.removeEventListener("click", handleClick, true);
   });
 
-  const multisigEnabledByEnv = import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+  const multisigEnabled = walletSigner.multisig;
 
   $effect(() => {
-    if (!multisigEnabledByEnv) multiSig = false;
+    if (!multisigEnabled) multiSig = false;
   });
 
   $effect(() => {
@@ -149,7 +151,7 @@
     <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
-        {#if multisigEnabledByEnv}
+        {#if multisigEnabled}
           <div class="flex items-center gap-2">
             <Label
               for="multisigsupport"

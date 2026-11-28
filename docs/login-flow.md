@@ -245,6 +245,21 @@ sequenceDiagram
   token lifetime. CORS is configured with `credentials: true` and an allowed
   origin (e.g. `FRONTEND_URL`). Login JWTs include `sv` (`User.sessionVersion`);
   logout increments that version so prior tokens are rejected.
+- **Sign-in settings (backend):** `WALLETSIGNER_USER_TYPES` (`drep`, `stake`,
+  `pool`; default `stake,drep`), `WALLETSIGNER_USER_DEFAULT` (default `drep`),
+  `WALLETSIGNER_MULTISIG` (`true` or `false`; default `false`) and
+  `PROPOSAL_SIGNER_TYPES` (subset of the sign-in types; default `stake`; multisig
+  sessions are always refused those actions, because a multisig sign-in proves
+  only that the signing key is named in the script, not that its threshold is met)
+  are validated at startup, and a bad value stops the server with a message
+  naming it. Both steps of `/api/v0/session` answer 403 for a sign type that is
+  not allowed and for the multisig path when it is off; for multisig the type
+  checked is the script ID's (a DRep). Creating, updating and deleting a
+  proposal, and the proposer's withdrawal, answer 403 for a session whose
+  `userId` is not of a type in `PROPOSAL_SIGNER_TYPES`. `MAINTENANCE_MESSAGE`
+  is the banner text; unset or empty shows no banner. `GET /health` returns
+  these settings as `walletSigner`, `proposalSignerTypes` and
+  `maintenanceMessage`, and the frontend reads them there at runtime.
 - **Frontend:** `VITE_API_URL` is the API base (e.g. `/api/v0` or full URL).
   Session auth relies on the server-set httpOnly cookie only.
 - Nonce are stored in MongoDB (`Session`), single-use and short-lived; sessions
