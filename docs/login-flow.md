@@ -5,9 +5,9 @@
 | Field              | Detail                                                                                                  |
 |--------------------|---------------------------------------------------------------------------------------------------------|
 | **Document Title** | Login Flow (Frontend & Backend)                                                                         |
-| **Version**        | 0.1.4                                                                                                   |
+| **Version**        | 0.2.0                                                                                                   |
 | **Created**        | February 3, 2026                                                                                        |
-| **Last Revised**   | July 23, 2026                                                                                       |
+| **Last Revised**   | November 27, 2026                                                                                       |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md) · [API Specification](api-specification.md) |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com>                                  |
 | **Status**         | Draft                                                                                                   |
@@ -50,7 +50,7 @@ wallet.
 | Field           | Type   | Required | Description                           |
 |-----------------|--------|----------|---------------------------------------|
 | `signerAddress` | string | Yes      | Bech32 address (stake or DRep) or hex |
-| `signType`      | string | Yes      | `'drep'` or `'stake'`                 |
+| `signType`      | string | Yes      | `'drep'`, `'stake'` or `'pool'`       |
 
 **Middleware:** `validateSessionRequest` (validates address and `signType`),
 `nonceRequestLimiter` (five requests/min per IP).
@@ -309,6 +309,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                         |
 |---------|------------|-----------------------------------------------------|
+| 0.2.0   | 2026-11-27 | Document the server-side sign-in and proposal settings (`WALLETSIGNER_USER_TYPES`, `WALLETSIGNER_USER_DEFAULT`, `WALLETSIGNER_MULTISIG`, `PROPOSAL_SIGNER_TYPES`, `MAINTENANCE_MESSAGE`), their enforcement at login and on proposal writes, and their delivery to the frontend in `GET /health`. |
 | 0.1.4   | 2026-07-23 | Document `sessionVersion` / JWT `sv` and logout invalidation (F-023); clarify httpOnly-only JWT. |
 | 0.1.3   | 2026-07-17 | Document multisig membership-only session semantics (F-002). |
 | 0.1.2   | 2026-02-20 | Update to rename "Budget" to "Vote"                 |

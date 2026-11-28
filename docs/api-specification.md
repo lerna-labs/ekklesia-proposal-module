@@ -5,9 +5,9 @@
 | Field              | Detail                                                                 |
 |--------------------|------------------------------------------------------------------------|
 | **Document Title** | API Specification                                                      |
-| **Version**        | 1.6.0                                                                  |
+| **Version**        | 1.7.0                                                                  |
 | **Created**        | February 3, 2026                                                       |
-| **Last Revised**   | October 23, 2026                                                       |
+| **Last Revised**   | November 27, 2026                                                      |
 | **Companion Doc**  | [System Architecture Specification](system-architecture.md)            |
 | **Prepared By**    | Adam Dean · <adam@crypto2099.io>, Mad Orkestra · <mad@madorkestra.com> |
 | **Status**         | Draft                                                                  |
@@ -1126,13 +1126,27 @@ when shutdown begins. The body has exactly these keys in both cases:
 {
   "status": "ready",
   "network": "preprod",
-  "networkId": 0
+  "networkId": 0,
+  "walletSigner": {
+    "userTypes": ["stake", "drep"],
+    "userDefault": "drep",
+    "multisig": false
+  },
+  "proposalSignerTypes": ["stake"],
+  "maintenanceMessage": null
 }
 ```
 
 - `status` is `ready` with `200` and `unavailable` with `503`.
 - `network` and `networkId` identify the Cardano network the instance serves;
   `network` is `null` when it is not configured.
+- `walletSigner` carries the sign-in settings the instance enforces on
+  `POST` and `PUT /session`: `userTypes` (allowed sign types, from `drep`,
+  `stake`, `pool`), `userDefault` (the type a client preselects) and `multisig`
+  (whether a request carrying `scriptAddress` is accepted).
+- `proposalSignerTypes` lists the sign types allowed to create and manage their
+  own proposals (§5.1 to §5.4).
+- `maintenanceMessage` is the banner text, or `null` when there is no banner.
 - A database connection that reports closed turns readiness `503` at once.
   Otherwise the ping result is reused for 3 seconds, and a ping that has not
   answered within 2 seconds counts as failed.
@@ -1186,7 +1200,7 @@ nonce that the user must sign to prove identity.
 | Field           | Type   | Required | Description                                              |
 |-----------------|--------|----------|----------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (must be valid Bech32 address) |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`                       |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`               |
 | `scriptAddress` | string | No       | Multisig: CIP-0129 script address used as session identity |
 
 #### Success Response — `200 OK`
@@ -1229,6 +1243,26 @@ Returned when:
 
 (Message text may refer to the multisig flow; the supported mechanism is
 including `scriptAddress` on this same endpoint.)
+
+#### Error Response — `403 Forbidden`
+
+Returned when:
+
+- `signType` is not in the instance's allowed sign-in types (`walletSigner.userTypes`
+  in `GET /health`)
+- The body includes `scriptAddress` and multisig sign-in is turned off
+  (`walletSigner.multisig` is `false`), or DRep is not an allowed sign-in type.
+  For a multisig request the type checked is DRep, the script address's type,
+  whatever `signType` says.
+
+```json
+{
+  "status": "error",
+  "message": "MultiSig sign-in is disabled"
+}
+```
+
+The message for a sign type that is not allowed is `Sign-in type "<type>" is disabled`.
 
 #### Error Response — `500 Internal Server Error`
 
@@ -1282,7 +1316,7 @@ The issued JWT `userId` is the script address.
 | Field           | Type   | Required | Description                                                                 |
 |-----------------|--------|----------|-----------------------------------------------------------------------------|
 | `signerAddress` | string | Yes      | The address of the signer (validated by middleware)                         |
-| `signType`      | string | Yes      | Type of signature: `drep`, `stake`                                          |
+| `signType`      | string | Yes      | Type of signature: `drep`, `stake`, `pool`                                  |
 | `signature`     | object | Yes      | Signature object containing the signed nonce (structure varies by signType) |
 | `scriptAddress` | string | No       | Multisig: CIP-0129 script address; triggers membership verification         |
 
@@ -1322,6 +1356,26 @@ information leakage (multisig membership failure may return a specific
   "message": "Authentication failed. Please request a new nonce and try again."
 }
 ```
+
+#### Error Response — `403 Forbidden`
+
+Returned when:
+
+- `signType` is not in the instance's allowed sign-in types (`walletSigner.userTypes`
+  in `GET /health`)
+- The body includes `scriptAddress` and multisig sign-in is turned off
+  (`walletSigner.multisig` is `false`), or DRep is not an allowed sign-in type.
+  For a multisig request the type checked is DRep, the script address's type,
+  whatever `signType` says.
+
+```json
+{
+  "status": "error",
+  "message": "MultiSig sign-in is disabled"
+}
+```
+
+The message for a sign type that is not allowed is `Sign-in type "<type>" is disabled`.
 
 #### Error Response — `500 Internal Server Error`
 
@@ -1721,6 +1775,22 @@ Returned when:
 }
 ```
 
+#### Error Response — `403 Forbidden`
+
+Returned when the session's sign type is not in the instance's
+`proposalSignerTypes` (see `GET /health`), or when the session is a multisig
+session. The type is taken from the session's `userId`, not from the request. A
+multisig sign-in proves only that the signing key is named in the DRep's
+script, not that the script's threshold is met, so a multisig session is
+refused whatever the settings say.
+
+```json
+{
+  "status": "error",
+  "message": "This sign-in type cannot create or manage proposals on this instance"
+}
+```
+
 #### Error Response — `503 Service Unavailable`
 
 Returned when `status` is `"live"`, the vote requires a treasury donation, and
@@ -1887,6 +1957,8 @@ Returned when:
 
 - The authenticated user is not the proposal owner (`proposerId` does not match
   the token's `userId`).
+- The session's sign type is not in `proposalSignerTypes`, or the session is a
+  multisig session (see §5.1).
 
 ```json
 {
@@ -2077,7 +2149,9 @@ Returned when the token is missing or invalid or expired.
 #### Error Response — `403 Forbidden`
 
 Returned when the authenticated user is neither the proposal owner nor a vote
-admin for the proposal's vote.
+admin for the proposal's vote. A session counts as the proposal owner only if its
+sign type is in `proposalSignerTypes` and it is not a multisig session (see
+§5.1); a vote admin can still withdraw.
 
 ```json
 {
@@ -2171,7 +2245,9 @@ Returned when the token is missing or invalid or expired.
 
 #### Error Response — `403 Forbidden`
 
-Returned when the authenticated user is not the proposal owner.
+Returned when the authenticated user is not the proposal owner, or the
+session's sign type is not in `proposalSignerTypes`, or the session is a
+multisig session (see §5.1).
 
 ```json
 {
@@ -2782,6 +2858,7 @@ numbers use the form **MAJOR.MINOR.PATCH**:
 
 | Version | Date       | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |---------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.7.0   | 2026-11-27 | `GET /health` adds `walletSigner`, `proposalSignerTypes` and `maintenanceMessage`. `POST` and `PUT /session` document `403` for a sign type the instance does not allow and for `scriptAddress` while multisig is off; `signType` accepts `pool`. `POST`, `PUT` and `DELETE /proposals` and the proposer path of `PUT /proposals/{proposalId}/withdraw` document `403` for a sign type outside `proposalSignerTypes` and for any multisig session. |
 | 1.6.0   | 2026-10-23 | Added §3.10 `GET /health/live` (liveness) and reworked `GET /health` into an anonymous readiness probe: `200` or `503` with only `status`, `network` and `networkId`. The former `GET /health` fields (environment, memory, release, frontend version, database block) are removed, and `GET /health/health` and `GET /health/db` now answer `404`. |
 | 1.5.0   | 2026-10-23 | Added §3.9 `GET /version`: public build identity (`name`, `version`, `gitSha`, `buildTime`), served outside `/api` and answered while the database is down. |
 | 1.4.1   | 2026-09-07 | Clarify treasury donation hash uniqueness is global (any vote) for non-draft/non-archived proposals; concurrent draft→live promotes that collide return the same `400` `errors` tree for `metaData.treasuryDonationTxHash` (#418). |

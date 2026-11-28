@@ -32,14 +32,14 @@
   const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
   const walletSigner = page.data.serverStatus.walletSigner;
   const allowedTypes = walletSigner.userTypes;
-  const defaultFromEnv = walletSigner.userDefault;
+  const userDefault = walletSigner.userDefault;
   const storedSignType =
     typeof window !== "undefined" ? localStorage.getItem(SIGNTYPE_STORAGE_KEY) : null;
   const initialSignType =
     storedSignType && allowedTypes.includes(storedSignType)
       ? storedSignType
-      : allowedTypes.includes(defaultFromEnv)
-        ? defaultFromEnv
+      : allowedTypes.includes(userDefault)
+        ? userDefault
         : allowedTypes[0] || "stake";
   let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
