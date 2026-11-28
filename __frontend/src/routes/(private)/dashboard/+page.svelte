@@ -23,15 +23,16 @@
     voteForProposalRow,
   } from "#lib/voteWindowPolicy.js";
 
-  /** Stake sign-in uses a Cardano stake address as userId (e.g. stake_test1… / stake1…). */
-  function isStakeUserId(userId) {
-    return userId != null && String(userId).startsWith("stake");
+  /** A userId starts with its sign-in type (stake_test1…, stake1…, drep1…, pool1…). */
+  function isProposalSignerUserId(userId) {
+    const types = page.data.serverStatus?.proposalSignerTypes ?? [];
+    return userId != null && types.some((type) => String(userId).startsWith(type));
   }
 
   let { data } = $props();
   let user = $derived(data.user ?? null);
   let notification = $derived(data.notification ?? null);
-  let showMyProposals = $derived(isStakeUserId(user?.userId));
+  let showMyProposals = $derived(isProposalSignerUserId(user?.userId));
   let voteSections = $derived(data.voteSections ?? []);
   let votePagination = $derived(data.votePagination);
   /** Single instant for all policy checks (UTC timeline via Date). */

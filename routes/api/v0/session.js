@@ -306,14 +306,13 @@ router.put("/", sessionVerificationLimiter, validateSessionRequest, async (req, 
       });
     }
 
-    if (signType === "drep") {
-      const drepValid = await validateDrep(validatedScriptAddress);
-      if (!drepValid) {
-        return res.status(400).json({
-          status: "error",
-          message: "DRep is not registered or validation failed",
-        });
-      }
+    // The script ID is a DRep ID whatever signType the client sent
+    const drepValid = await validateDrep(validatedScriptAddress);
+    if (!drepValid) {
+      return res.status(400).json({
+        status: "error",
+        message: "DRep is not registered or validation failed",
+      });
     }
 
     let token;

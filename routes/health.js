@@ -21,7 +21,8 @@ router.get("/live", liveHandler);
 /**
  * @route   GET /health
  * @desc    Readiness: 200 when the database answers the same ping the API gate uses and every route
- *          has loaded, 503 otherwise. The body carries only the status and the network.
+ *          has loaded, 503 otherwise. The body carries the status, the network, and the public
+ *          sign-in and proposal settings (walletSigner, proposalSignerTypes, maintenanceMessage).
  * @access  Public
  */
 router.get(

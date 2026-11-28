@@ -34,10 +34,24 @@ function withNetwork(run) {
   });
 }
 
+const BODY_KEYS = [
+  "maintenanceMessage",
+  "network",
+  "networkId",
+  "proposalSignerTypes",
+  "status",
+  "walletSigner",
+];
+const DEFAULT_SETTINGS = {
+  walletSigner: { userTypes: ["stake", "drep"], userDefault: "drep", multisig: false },
+  proposalSignerTypes: ["stake"],
+  maintenanceMessage: null,
+};
+
 const ready = (db, loaded) =>
   createReadinessHandler({ checkDatabase: () => db, routesLoaded: () => loaded });
 
-test("database connected and routes loaded: both answer 200, readiness has only the network fields", async () => {
+test("database connected and routes loaded: both answer 200, readiness carries the network and sign-in settings", async () => {
   await withNetwork(() =>
     withServer(ready(true, true), async (base) => {
       const live = await fetch(`${base}/health/live`);
@@ -47,8 +61,13 @@ test("database connected and routes loaded: both answer 200, readiness has only 
       const res = await fetch(`${base}/health`);
       assert.equal(res.status, 200);
       const body = await res.json();
-      assert.deepEqual(Object.keys(body).sort(), ["network", "networkId", "status"]);
-      assert.deepEqual(body, { status: "ready", network: "preprod", networkId: 0 });
+      assert.deepEqual(Object.keys(body).sort(), BODY_KEYS);
+      assert.deepEqual(body, {
+        status: "ready",
+        network: "preprod",
+        networkId: 0,
+        ...DEFAULT_SETTINGS,
+      });
     }),
   );
 });
@@ -63,6 +82,7 @@ test("database disconnected: liveness 200, readiness 503 with no database detail
         status: "unavailable",
         network: "preprod",
         networkId: 0,
+        ...DEFAULT_SETTINGS,
       });
     }),
   );
@@ -90,9 +110,35 @@ test("a throwing connectivity check answers 503 with the same body shape", async
       assert.equal(res.status, 503);
       const text = await res.text();
       assert.doesNotMatch(text, /secret|mongodb/);
-      assert.deepEqual(Object.keys(JSON.parse(text)).sort(), ["network", "networkId", "status"]);
+      assert.deepEqual(Object.keys(JSON.parse(text)).sort(), BODY_KEYS);
     }),
   );
+});
+
+test("readiness reports the configured sign-in settings and banner text", async () => {
+  const saved = { ...process.env };
+  Object.assign(process.env, {
+    WALLETSIGNER_USER_TYPES: "drep,stake,pool",
+    WALLETSIGNER_USER_DEFAULT: "stake",
+    WALLETSIGNER_MULTISIG: "true",
+    PROPOSAL_SIGNER_TYPES: "stake,drep",
+    MAINTENANCE_MESSAGE: "Back at 20:00 UTC",
+  });
+  try {
+    await withServer(ready(true, true), async (base) => {
+      const body = await (await fetch(`${base}/health`)).json();
+      assert.deepEqual(body.walletSigner, {
+        userTypes: ["drep", "stake", "pool"],
+        userDefault: "stake",
+        multisig: true,
+      });
+      assert.deepEqual(body.proposalSignerTypes, ["stake", "drep"]);
+      assert.equal(body.maintenanceMessage, "Back at 20:00 UTC");
+    });
+  } finally {
+    for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
+    Object.assign(process.env, saved);
+  }
 });
 
 test("the load flag starts false and follows setRoutesLoaded", () => {
@@ -109,7 +155,7 @@ test("network is null, not absent, when NETWORK_NAME is unset", async () => {
   try {
     await withServer(ready(true, true), async (base) => {
       const body = await (await fetch(`${base}/health`)).json();
-      assert.deepEqual(Object.keys(body).sort(), ["network", "networkId", "status"]);
+      assert.deepEqual(Object.keys(body).sort(), BODY_KEYS);
       assert.equal(body.network, null);
     });
   } finally {

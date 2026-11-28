@@ -6,6 +6,7 @@
   import { Button } from "#lib/components/ui/button/index.js";
   import { toast } from "svelte-sonner";
   import { goto, refreshAll } from "$app/navigation";
+  import { page } from "$app/state";
   import {
     api,
     loggedIn,
@@ -29,15 +30,16 @@
   let noWallets = $state(false);
   let walletLoading = $state(false);
   const SIGNTYPE_STORAGE_KEY = "walletSigner_signType";
-  const allowedTypes = (import.meta.env.VITE_WALLETSIGNER_USER_TYPES || "stake").split(",");
-  const defaultFromEnv = import.meta.env.VITE_WALLETSIGNER_USER_DEFAULT || "stake";
+  const walletSigner = page.data.serverStatus.walletSigner;
+  const allowedTypes = walletSigner.userTypes;
+  const userDefault = walletSigner.userDefault;
   const storedSignType =
     typeof window !== "undefined" ? localStorage.getItem(SIGNTYPE_STORAGE_KEY) : null;
   const initialSignType =
     storedSignType && allowedTypes.includes(storedSignType)
       ? storedSignType
-      : allowedTypes.includes(defaultFromEnv)
-        ? defaultFromEnv
+      : allowedTypes.includes(userDefault)
+        ? userDefault
         : allowedTypes[0] || "stake";
   let signType = $state(initialSignType);
   let multiSig = $state($user?.multiSig || "");
@@ -63,10 +65,17 @@
     return () => window.removeEventListener("click", handleClick, true);
   });
 
-  const multisigEnabledByEnv = import.meta.env.VITE_WALLETSIGNER_MULTISIG === "true";
+  const multisigEnabled = walletSigner.multisig;
 
   $effect(() => {
-    if (!multisigEnabledByEnv) multiSig = false;
+    if (!multisigEnabled) multiSig = false;
+  });
+
+  // Keep signType valid for the active mode: a multisig cosigner signs with a payment, stake or DRep
+  // key, and a direct sign-in uses one of the instance's allowed types
+  $effect(() => {
+    const validTypes = multiSig ? ["addr", "stake", "drep"] : allowedTypes;
+    if (!validTypes.includes(signType)) signType = multiSig ? "drep" : userDefault;
   });
 
   $effect(() => {
@@ -149,7 +158,7 @@
     <AlertDialog.Header class="mb-1 shrink-0">
       <AlertDialog.Title class="flex justify-between">
         {mode == "login" ? "Login" : "Submit Votes"}
-        {#if multisigEnabledByEnv}
+        {#if multisigEnabled}
           <div class="flex items-center gap-2">
             <Label
               for="multisigsupport"
@@ -185,6 +194,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />
@@ -195,6 +205,7 @@
             <SelectSignType
               value={signType}
               mode={selected}
+              multisig
               disabled={walletLoading}
               on:change={onSignTypeChange}
             />

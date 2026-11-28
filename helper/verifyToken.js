@@ -75,6 +75,7 @@ export async function verifyToken(req) {
       message: "Token is valid",
       userId: decoded.userId,
       signType: decoded.signType,
+      multiSig: decoded.multiSig === true,
       exp: decoded.exp,
     };
   } catch (error) {
